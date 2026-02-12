@@ -28,26 +28,26 @@ interface cartProductsProps {
 const CartProduct = ({ item }: cartProductsProps) => {
   const dispatch = useDispatch();
   return (
-    <div className="bg-gray-100 rounded-lg flex items-center gap-4">
+    <div className="bg-gray-100 rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center gap-4">
       <Image
-        className="object-cover"
+        className="object-contain sm:object-cover w-24 h-24 sm:w-[150px] sm:h-[150px]"
         width={150}
         height={150}
         src={((): string => { const s = String(item.image || ""); let u = s.replace(/\\/g, "/"); if (/^https?:\/\//i.test(u)) return u; return u ? (u.startsWith("/") ? u : "/" + u) : "/favicon-96x96.png"; })()}
         alt="productImage"
       />
-      <div className="flex items-center px-2 gap-4">
-        <div className="flex flex-col gap-1">
-          <p className="text-lg font-semibold text-amazon_blue">{item.title}</p>
-          <p className="text-sm text-gray-600">{item.description}</p>
-          <p className="text-sm text-gray-600">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3 sm:gap-4">
+        <div className="flex-1 flex flex-col gap-1">
+          <p className="text-base sm:text-lg font-semibold text-amazon_blue break-words">{item.title}</p>
+          <p className="text-xs sm:text-sm text-gray-600">{item.description}</p>
+          <p className="text-xs sm:text-sm text-gray-600">
             Precio unitario{" "}
             <span className="font-semibold text-amazon_blue">
               <FormattedPrice amount={item.price} />
             </span>
           </p>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center mt-1 justify-between border border-gray-300 px-4 py-1 rounded-full w-28 shadow-lg shadow-gray-300">
+          <div className="flex items-center gap-4 sm:gap-6 mt-1">
+            <div className="flex items-center justify-between border border-gray-300 px-4 py-1 rounded-full w-28 shadow-lg shadow-gray-300">
               <span
                 onClick={() =>
                   dispatch(
@@ -65,7 +65,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
                     })
                   )
                 }
-                className="w-6 h-6 flex items-center justify-center rounded-full text-base bg-transparent hover:bg-gray-300 cursor-pointer decoration-purple-300"
+                className="w-6 h-6 flex items-center justify-center rounded-full text-base bg-transparent hover:bg-gray-300 cursor-pointer"
               >
                 <LuPlus />
               </span>
@@ -87,7 +87,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
                     })
                   )
                 }
-                className="w-6 h-6 flex items-center justify-center rounded-full text-base bg-transparent hover:bg-gray-300 cursor-pointer decoration-purple-300"
+                className="w-6 h-6 flex items-center justify-center rounded-full text-base bg-transparent hover:bg-gray-300 cursor-pointer"
               >
                 <LuMinus />
               </span>
@@ -100,7 +100,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
             </div>
           </div>
         </div>
-        <div className="text-lg font-semibold text-amazon_blue">
+        <div className="text-sm sm:text-lg font-semibold text-amazon_blue ml-auto sm:ml-0">
           <FormattedPrice amount={item.price * item.quantity} />
         </div>
       </div>

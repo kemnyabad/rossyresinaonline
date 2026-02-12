@@ -79,7 +79,7 @@ export default function TrackOrdersPage() {
               />
             </div>
             <div className="md:col-span-2">
-              <button type="submit" className="px-4 py-2 rounded-md bg-gradient-to-r from-brand_purple via-brand_pink to-brand_teal text-white hover:brightness-105">Buscar pedido</button>
+              <button type="submit" className="px-4 py-2 rounded-md bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">Buscar pedido</button>
             </div>
           </form>
         </div>
@@ -115,7 +115,7 @@ export default function TrackOrdersPage() {
         )}
 
         <div className="px-6 py-6 border-t border-gray-200 flex items-center justify-between">
-          <Link href="/" className="px-4 py-2 rounded-md bg-gradient-to-r from-brand_purple via-brand_pink to-brand_teal text-white hover:brightness-105">Ir al inicio</Link>
+          <Link href="/" className="px-4 py-2 rounded-md bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">Ir al inicio</Link>
           <Link href="/checkout" className="px-4 py-2 rounded-md bg-gray-100 text-amazon_blue hover:text-brand_teal">Ir al checkout</Link>
         </div>
       </div>

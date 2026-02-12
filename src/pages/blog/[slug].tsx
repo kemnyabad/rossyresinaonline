@@ -1,5 +1,5 @@
 import Head from "next/head";
-import Image from "next/image";
+ 
 import Link from "next/link";
 import { FaFacebook, FaTwitter, FaLinkedin, FaPinterest, FaRss } from "react-icons/fa";
 import fs from "fs";
@@ -47,11 +47,11 @@ export default function BlogDetailPage({ post, recent }: Props) {
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
             {post?.image ? (
               <div className="relative h-48 md:h-64">
-                <Image src={((): string => { const s = String(post.image || ""); let u = s.replace(/\\/g, "/"); if (/^https?:\/\//i.test(u)) return u; return u ? (u.startsWith("/") ? u : "/" + u) : "/favicon-96x96.png"; })()} alt={post.title} fill className="object-cover" />
+                <img src={((): string => { const s = String(post.image || ""); let u = s.replace(/\\/g, "/"); if (/^https?:\/\//i.test(u)) return u; return u ? (u.startsWith("/") ? u : "/" + u) : "/favicon-96x96.png"; })()} alt={post.title} className="object-cover w-full h-full" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-200/60 to-transparent" />
               </div>
             ) : (
-              <div className="h-40 bg-gradient-to-r from-brand_purple via-brand_pink to-brand_teal" />
+              <div className="h-40 bg-amazon_blue" />
             )}
             <div className="p-5">
               <h1 className="text-2xl font-semibold text-amazon_blue">{post?.title}</h1>
@@ -78,8 +78,8 @@ export default function BlogDetailPage({ post, recent }: Props) {
             </div>
           </div>
           <div className="mt-6 bg-white rounded-lg border border-gray-200 p-5">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-brand_purple to-brand_teal" />
+            <div className="mt-6 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-amazon_blue" />
               <div>
                 <p className="font-semibold">{post?.author}</p>
                 <p className="text-sm text-gray-600">Sigue nuestras novedades y tips en resina.</p>

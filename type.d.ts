@@ -7,6 +7,7 @@ export interface ProductProps {
   category: string;
   description: string;
   image: string;
+  images?: string[];
   isNew: boolean;
   oldPrice?: number;
   price: number;
@@ -22,6 +23,7 @@ export interface StoreProduct {
   category: string;
   description: string;
   image: string;
+  images?: string[];
   isNew: boolean;
   oldPrice?: number;
   price: number;

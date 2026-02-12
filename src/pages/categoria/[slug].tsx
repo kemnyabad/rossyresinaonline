@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import Products from "@/components/Products";
 import type { ProductProps } from "../../../type";
+import { useMemo, useState } from "react";
 
 const slugToCategory: Record<string, string> = {
   resina: "Resinas",
@@ -21,10 +22,58 @@ interface Props {
 }
 
 export default function CategoryPage({ slug, label, items }: Props) {
+  const [query, setQuery] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [sortBy, setSortBy] = useState("featured");
+  const filtered = useMemo(() => {
+    let list = [...items];
+    const q = query.trim().toLowerCase();
+    if (q) {
+      list = list.filter((p) =>
+        [p.title, p.brand, p.category, p.code].join(" ").toLowerCase().includes(q)
+      );
+    }
+    const min = minPrice ? Number(minPrice) : null;
+    const max = maxPrice ? Number(maxPrice) : null;
+    if (min !== null && !Number.isNaN(min)) {
+      list = list.filter((p) => Number(p.price) >= min);
+    }
+    if (max !== null && !Number.isNaN(max)) {
+      list = list.filter((p) => Number(p.price) <= max);
+    }
+    switch (sortBy) {
+      case "price-asc":
+        list.sort((a, b) => Number(a.price) - Number(b.price));
+        break;
+      case "price-desc":
+        list.sort((a, b) => Number(b.price) - Number(a.price));
+        break;
+      case "name-asc":
+        list.sort((a, b) => String(a.title).localeCompare(String(b.title)));
+        break;
+      case "newest":
+        list.sort((a, b) => Number(b._id) - Number(a._id));
+        break;
+      default:
+        break;
+    }
+    return list;
+  }, [items, query, minPrice, maxPrice, sortBy]);
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-8">
       <Head>
         <title>Rossy Resina — {label || "Categoría"}</title>
+        <meta
+          name="description"
+          content={label ? `Compra ${label} en Rossy Resina. Resina, moldes, pigmentos y más.` : "Explora nuestras categorías de productos."}
+        />
+        <meta property="og:title" content={`Rossy Resina — ${label || "Categoría"}`} />
+        <meta
+          property="og:description"
+          content={label ? `Compra ${label} en Rossy Resina.` : "Explora nuestras categorías de productos."}
+        />
+        <meta property="og:type" content="website" />
       </Head>
       <div className="mb-6">
         <ul className="text-sm text-gray-600 flex items-center gap-2">
@@ -44,7 +93,42 @@ export default function CategoryPage({ slug, label, items }: Props) {
         <>
           <h1 className="text-2xl font-semibold mb-4">{label}</h1>
           {items.length > 0 ? (
-            <Products productData={items} />
+            <>
+              <div className="bg-white border border-gray-200 rounded-lg p-4 mb-5">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Buscar en la categoría..."
+                    className="border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    placeholder="Precio mínimo"
+                    className="border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    placeholder="Precio máximo"
+                    className="border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 text-sm bg-white"
+                  >
+                    <option value="featured">Destacados</option>
+                    <option value="newest">Más nuevos</option>
+                    <option value="price-asc">Precio: menor a mayor</option>
+                    <option value="price-desc">Precio: mayor a menor</option>
+                    <option value="name-asc">Nombre A-Z</option>
+                  </select>
+                </div>
+              </div>
+              <Products productData={filtered} />
+            </>
           ) : (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <p className="text-gray-700">No hay productos en esta categoría por ahora.</p>

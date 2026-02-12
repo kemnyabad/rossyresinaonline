@@ -50,7 +50,7 @@ export default function ComparePage() {
                 <p className="text-sm font-medium line-clamp-1">{p.title}</p>
                 <p className="text-xs text-gray-600 line-clamp-1">{p.category}</p>
                 <div className="mt-2 flex items-center gap-2">
-                  <button onClick={() => addSel(p)} className="text-xs px-3 py-1 rounded bg-gradient-to-r from-brand_purple via-brand_pink to-brand_teal text-white hover:brightness-105">Añadir</button>
+                  <button onClick={() => addSel(p)} className="text-xs px-3 py-1 rounded bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">Añadir</button>
                   <Link href={{ pathname: `/${p._id}`, query: { ...p } }} className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-100">Ver</Link>
                 </div>
               </div>
@@ -123,7 +123,7 @@ export default function ComparePage() {
               <div className="border p-3">Acciones</div>
               {selected.map((p) => (
                 <div key={`act-${p._id}`} className="border p-3 flex items-center gap-2">
-                  <button onClick={() => dispatch(addToCart({ _id: p._id, brand: p.brand, category: p.category, description: p.description, image: p.image, isNew: p.isNew, oldPrice: p.oldPrice, price: p.price, title: p.title, quantity: 1 }))} className="text-xs px-3 py-1 rounded bg-gradient-to-r from-brand_purple via-brand_pink to-brand_teal text-white hover:brightness-105">Agregar al carrito</button>
+                  <button onClick={() => dispatch(addToCart({ _id: p._id, brand: p.brand, category: p.category, description: p.description, image: p.image, isNew: p.isNew, oldPrice: p.oldPrice, price: p.price, title: p.title, quantity: 1 }))} className="text-xs px-3 py-1 rounded bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">Agregar al carrito</button>
                   <button onClick={() => dispatch(addToFavorite({ _id: p._id, brand: p.brand, category: p.category, description: p.description, image: p.image, isNew: p.isNew, oldPrice: p.oldPrice, price: p.price, title: p.title, quantity: 1 }))} className="text-xs px-3 py-1 rounded border border-brand_teal text-brand_teal hover:bg-brand_teal hover:text-white">Favorito</button>
                 </div>
               ))}

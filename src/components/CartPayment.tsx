@@ -15,6 +15,7 @@ const CartPayment = ({ email }: Props) => {
   const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "Banco";
   const accountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "00000000000";
   const cci = process.env.NEXT_PUBLIC_BANK_CCI || "00000000000000000000";
+  const holder = process.env.NEXT_PUBLIC_ACCOUNT_HOLDER || "";
   const contactPhoneRaw = process.env.NEXT_PUBLIC_CONTACT_PHONE || yapeNumber;
   const contactPhone = useMemo(() => contactPhoneRaw.replace(/[^0-9]/g, ""), [contactPhoneRaw]);
   useEffect(() => {
@@ -39,9 +40,10 @@ const CartPayment = ({ email }: Props) => {
       "Datos de pago:",
       `Yape: ${yapeNumber}`,
       `Transferencia: ${bankName} Cuenta: ${accountNumber} CCI: ${cci}`,
+      holder ? `Titular: ${holder}` : "",
     ].filter(Boolean);
     return base.join("\n");
-  }, [productData, totalAmount, method, email, yapeNumber, bankName, accountNumber, cci]);
+  }, [productData, totalAmount, method, email, yapeNumber, bankName, accountNumber, cci, holder]);
 
   const handleConfirm = () => {
     if (!contactPhone) {
@@ -58,8 +60,7 @@ const CartPayment = ({ email }: Props) => {
           <SiMediamarkt />
         </span>
         <p className="text-sm">
-          Tu pedido califica para envío GRATIS si eliges esta opción al pagar.
-          Ver detalles...
+          Pedidos despues de las 4:00 pm los envios salen al siguiente día, los pedidos salen a partir de las 4.00 pm
         </p>
       </div>
       <p className="flex items-center justify-between px-2 font-semibold">
@@ -83,6 +84,7 @@ const CartPayment = ({ email }: Props) => {
       {method === "yape" ? (
         <div className="text-sm text-gray-700">
           <p className="mt-2">Paga al número Yape <span className="font-semibold">{yapeNumber}</span> y confirma por WhatsApp.</p>
+          {holder && <p className="mt-1">Titular: <span className="font-semibold">{holder}</span></p>}
           <p className="mt-1">En el mensaje se incluirá el detalle de tu pedido.</p>
         </div>
       ) : (
@@ -90,6 +92,7 @@ const CartPayment = ({ email }: Props) => {
           <p className="mt-2">Transfiere a <span className="font-semibold">{bankName}</span>.</p>
           <p>Cuenta: <span className="font-semibold">{accountNumber}</span></p>
           <p>CCI: <span className="font-semibold">{cci}</span></p>
+          {holder && <p>Titular: <span className="font-semibold">{holder}</span></p>}
         </div>
       )}
 

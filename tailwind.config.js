@@ -18,16 +18,14 @@ module.exports = {
         xl: "1280px",
       },
       colors: {
-        // Paleta Rossy Resina
-        brand_purple: "#6E2CA1",
-        brand_pink: "#F03AA8",
-        brand_teal: "#10C4C4",
-        brand_yellow: "#FFDD3C",
+        brand_purple: "#cb299e",
+        brand_pink: "#cb299e",
+        brand_teal: "#fae20a",
+        brand_yellow: "#fae20a",
         brand_green: "#7CD957",
-        // Mantener clases existentes apuntando a la nueva paleta
-        amazon_blue: "#6E2CA1",
-        amazon_light: "#5A3A8E",
-        amazon_yellow: "#FFDD3C",
+        amazon_blue: "#cb299e",
+        amazon_light: "#a81f7f",
+        amazon_yellow: "#fae20a",
         lightText: "#ccc",
       },
       fontFamily: {

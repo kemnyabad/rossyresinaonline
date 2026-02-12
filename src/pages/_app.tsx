@@ -29,7 +29,7 @@ export default function App({
             </Head>
             
             <RootLayout>
-              <div className="rr-page bg-white min-h-screen">
+              <div className="rr-page bg-gray-50 min-h-screen">
                 <Component {...pageProps} />
               </div>
             </RootLayout>

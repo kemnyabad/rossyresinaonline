@@ -1,10 +1,11 @@
-import { LuMenu } from "react-icons/lu";
+﻿import { LuMenu } from "react-icons/lu";
 import { StateProps } from "../../../type";
 import { signOut } from "next-auth/react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeUser } from "@/store/nextSlice";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { BiCaretDown } from "react-icons/bi";
 
 const BottomHeader = () => {
   const dispatch = useDispatch();
@@ -14,7 +15,9 @@ const BottomHeader = () => {
     dispatch(removeUser());
   };
   const [open, setOpen] = useState(false);
-  const [openPages, setOpenPages] = useState(false);
+  const [openMobile, setOpenMobile] = useState(false);
+  const [openBrands, setOpenBrands] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const mega = [
     { title: "Moldes de silicona", slug: "moldes-de-silicona", items: ["Redondos", "Rectangulares", "Geométricos", "Letras y números", "Personalizados"] },
     { title: "Pigmentos", slug: "pigmentos", items: ["Líquidos", "En polvo", "Glitter", "Perlado"] },
@@ -23,13 +26,43 @@ const BottomHeader = () => {
     { title: "Creaciones", slug: "creaciones", items: ["Joyas", "Llaveros", "Decoración", "Arte"] },
     { title: "Talleres", slug: "talleres", items: ["Principiantes", "Avanzados", "Fechas"] },
   ];
+  const brands = ["Rossy Resina", "Ecoresina", "Resina UV", "Pigmentos Pro"];
+  useEffect(() => {
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const el = menuRef.current;
+      if ((open || openBrands || openMobile) && el && !el.contains(e.target as Node)) {
+        setOpen(false);
+        setOpenBrands(false);
+        setOpenMobile(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        setOpenBrands(false);
+        setOpenMobile(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown, true);
+    document.addEventListener("touchstart", onDown, true);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("mousedown", onDown, true);
+      document.removeEventListener("touchstart", onDown, true);
+      document.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+
   return (
-    <div className="w-full h-10 bg-gradient-to-r from-brand_purple to-brand_teal text-sm text-white px-4 flex items-center relative">
-      <button onClick={() => setOpen((v) => !v)} className="flex items-center gap-1 h-8 px-2 cursor-pointer duration-300">
-        <LuMenu className="text-xl" /> Todo
+    <div ref={menuRef} className="w-full h-12 bg-white text-sm text-gray-700 px-4 flex items-center relative border-b border-gray-200">
+      <button onClick={() => { setOpen((v) => !v); setOpenBrands(false); setOpenMobile(false); }} className="hidden md:flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200 hover:border-amazon_blue">
+        <LuMenu className="text-lg" /> Ver categorías
+      </button>
+      <button onClick={() => { setOpenMobile(true); setOpen(false); setOpenBrands(false); }} className="md:hidden flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200">
+        <LuMenu className="text-lg" /> Menú
       </button>
       {open && (
-        <div className="absolute top-10 left-0 right-0 bg-white text-black shadow-xl z-50" onMouseLeave={() => setOpen(false)}>
+        <div className="absolute top-12 left-0 right-0 bg-white text-black shadow-xl z-50 border-t border-gray-200" onMouseLeave={() => setOpen(false)}>
           <div className="max-w-screen-2xl mx-auto p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {mega.map((col) => (
               <div key={col.slug}>
@@ -47,107 +80,96 @@ const BottomHeader = () => {
                 </ul>
               </div>
             ))}
-            <div className="col-span-2 md:col-span-3 lg:col-span-2 bg-gradient-to-r from-brand_purple to-brand_teal rounded-md p-6 text-white flex flex-col justify-center">
+            <div className="col-span-2 md:col-span-3 lg:col-span-2 bg-amazon_blue rounded-md p-6 text-white flex flex-col justify-center">
               <p className="text-lg font-semibold">Descubre nuevas resinas</p>
               <p className="text-sm opacity-90">Ofertas y novedades de la semana</p>
-              <Link href="/categoria/resina" className="mt-4 inline-block px-4 py-2 rounded-md bg-white text-amazon_blue hover:bg-amazon_yellow hover:text-black" onClick={() => setOpen(false)}>
+              <Link href="/categoria/resina" className="mt-4 inline-block px-4 py-2 rounded-md bg-white text-amazon_blue hover:brightness-95" onClick={() => setOpen(false)}>
                 Ver catálogo
               </Link>
             </div>
           </div>
         </div>
       )}
-      <Link href="/" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">Inicio</Link>
-      <Link href="/categoria/talleres" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">Capacítate</Link>
-      <Link href="/categoria/resina" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">Promoción</Link>
-      <Link href="/categoria/creaciones" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">Creaciones</Link>
-      <Link href="/categoria/resina" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">
-        Resina
-      </Link>
-      <Link href="/categoria/moldes-de-silicona" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">
-        Moldes de silicona
-      </Link>
-      <Link href="/categoria/accesorios" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">
-        Accesorios
-      </Link>
-      <Link href="/categoria/pigmentos" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">
-        Pigmentos
-      </Link>
-      <Link href="/" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">
-        Novedades
-        <span className="ml-2 px-2 py-0.5 text-xs rounded bg-amazon_yellow text-black hidden sm:inline">new</span>
-      </Link>
-      <Link href="/admin" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">
-        Vende
-      </Link>
-      <div className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300 relative" onMouseLeave={() => setOpenPages(false)}>
-        <button onClick={() => setOpenPages((v) => !v)} className="inline-flex items-center gap-1">
-          Explorar
+
+      <div className="hidden md:flex items-center gap-6 ml-6">
+        <Link href="/" className="inline-flex items-center h-9">Inicio</Link>
+        <Link href="/productos" className="inline-flex items-center h-9">Productos</Link>
+        <Link href="/blog" className="inline-flex items-center h-9">Blog</Link>
+        <Link href="/faq" className="inline-flex items-center h-9">Páginas</Link>
+        <Link href="/productos" className="inline-flex items-center h-9">Tienda</Link>
+        <button onClick={() => { setOpenBrands((v) => !v); setOpen(false); }} className="inline-flex items-center gap-1 h-9">
+          Marcas <BiCaretDown />
         </button>
-        {openPages && (
-          <div className="absolute top-8 left-0 bg-white text-black rounded-md shadow-lg p-3 w-64 z-50">
-            <ul className="text-sm grid gap-1">
-              <li>
-                <Link href="/" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Inicio</Link>
-              </li>
-              <li>
-                <Link href="/blog" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Blog</Link>
-              </li>
-              <li>
-                <Link href="/faq" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Preguntas frecuentes</Link>
-              </li>
-              <li>
-                <Link href="/about-us" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Sobre nosotros</Link>
-              </li>
-              <li>
-                <Link href="/contact" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Contacto</Link>
-              </li>
-              <li>
-                <Link href="/cart" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Carrito</Link>
-              </li>
-              <li>
-                <Link href="/favorite" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Favoritos</Link>
-              </li>
-              <li>
-                <Link href="/compare" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Comparar productos</Link>
-              </li>
-              <li className="mt-2 px-2 text-xs text-gray-700 font-semibold">Categorías</li>
-              <li>
-                <Link href="/categoria/moldes-de-silicona" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Moldes de silicona</Link>
-              </li>
-              <li>
-                <Link href="/categoria/pigmentos" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Pigmentos</Link>
-              </li>
-              <li>
-                <Link href="/categoria/accesorios" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Accesorios</Link>
-              </li>
-              <li>
-                <Link href="/categoria/resina" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Resina</Link>
-              </li>
-              <li>
-                <Link href="/categoria/creaciones" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Creaciones</Link>
-              </li>
-              <li>
-                <Link href="/categoria/talleres" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Talleres</Link>
-              </li>
-              <li className="mt-2">
-                <Link href="/admin" className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => setOpenPages(false)}>Admin</Link>
-              </li>
+        {openBrands && (
+          <div className="absolute top-12 left-64 bg-white text-black rounded-md shadow-lg border border-gray-200 z-50 min-w-[200px]">
+            <ul className="py-2 text-sm">
+              {brands.map((b) => (
+                <li key={b}>
+                  <Link href="/productos" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setOpenBrands(false)}>
+                    {b}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         )}
       </div>
-      <Link href="/blog" className="hidden md:inline-flex items-center h-8 px-2 cursor-pointer duration-300">
-        Blog
-      </Link>
-      <div className="ml-auto" />
+
+      <div className="ml-auto hidden md:flex items-center gap-2 text-amazon_blue">
+        <span className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-amazon_blue">%</span>
+          Descuento en tu primera compra
+        </span>
+      </div>
+
       {userInfo && (
         <button
           onClick={handleSignOut}
-          className="hidden md:inline-flex items-center h-8 px-2 text-amazon_yellow cursor-pointer duration-300"
+          className="hidden md:inline-flex items-center h-9 px-2 text-amazon_blue cursor-pointer duration-300"
         >
           Cerrar sesión
         </button>
+      )}
+
+      {openMobile && (
+        <div className="fixed inset-0 z-[60]">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpenMobile(false)} />
+          <div className="absolute left-0 top-0 h-full w-full max-w-sm bg-white text-black shadow-xl p-4 overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-base font-semibold">Categorías</span>
+              <button onClick={() => setOpenMobile(false)} className="text-gray-500 hover:text-gray-800" aria-label="Cerrar">
+                ✕
+              </button>
+            </div>
+            <div className="grid gap-3">
+              {mega.map((col) => (
+                <div key={col.slug} className="border border-gray-200 rounded-lg">
+                  <Link href={`/categoria/${col.slug}`} className="block px-3 py-2 font-semibold bg-gray-50" onClick={() => setOpenMobile(false)}>
+                    {col.title}
+                  </Link>
+                  <ul className="text-sm">
+                    {col.items.map((it) => (
+                      <li key={it}>
+                        <Link href={`/categoria/${col.slug}`} className="block px-3 py-2 hover:bg-gray-100" onClick={() => setOpenMobile(false)}>
+                          {it}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="mt-5">
+              <span className="text-base font-semibold">Accesos rápidos</span>
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <Link href="/productos" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Productos</Link>
+                <Link href="/categoria/talleres" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Capacítate</Link>
+                <Link href="/blog" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Blog</Link>
+                <Link href="/faq" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Ayuda</Link>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

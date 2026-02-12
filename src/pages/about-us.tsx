@@ -16,7 +16,7 @@ export default function AboutUsPage() {
         <span className="font-medium text-gray-800">Sobre nosotros</span>
       </nav>
 
-      <header className="rounded-lg bg-gradient-to-r from-brand_purple via-brand_pink to-brand_teal text-white p-6 shadow">
+      <header className="rounded-lg bg-amazon_blue text-white p-6 shadow">
         <h1 className="text-2xl md:text-3xl font-semibold">Somos Rossy Resina</h1>
         <p className="mt-2 text-sm md:text-base opacity-95">Pasión por la resina epoxi y UV, asesoría cercana y productos de calidad para que tus proyectos brillen.</p>
         <div className="mt-4 flex items-center gap-3">
@@ -48,10 +48,10 @@ export default function AboutUsPage() {
             <p>Hoy ofrecemos resinas epoxi y UV, moldes de silicona, pigmentos y accesorios, además de talleres para principiantes y avanzados.</p>
           </div>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Link href="/categoria/resina" className="rounded-lg p-4 bg-gradient-to-r from-brand_purple to-brand_teal text-white shadow hover:opacity-95">Resinas epoxi y UV</Link>
-            <Link href="/categoria/moldes-de-silicona" className="rounded-lg p-4 bg-gradient-to-r from-brand_teal to-brand_pink text-white shadow hover:opacity-95">Moldes de silicona</Link>
-            <Link href="/categoria/pigmentos" className="rounded-lg p-4 bg-gradient-to-r from-brand_pink to-brand_purple text-white shadow hover:opacity-95">Pigmentos y glitter</Link>
-            <Link href="/categoria/accesorios" className="rounded-lg p-4 bg-gradient-to-r from-brand_purple to-brand_pink text-white shadow hover:opacity-95">Accesorios</Link>
+            <Link href="/categoria/resina" className="rounded-lg p-4 bg-amazon_blue text-white shadow hover:bg-amazon_yellow hover:text-black">Resinas epoxi y UV</Link>
+            <Link href="/categoria/moldes-de-silicona" className="rounded-lg p-4 bg-amazon_blue text-white shadow hover:bg-amazon_yellow hover:text-black">Moldes de silicona</Link>
+            <Link href="/categoria/pigmentos" className="rounded-lg p-4 bg-amazon_blue text-white shadow hover:bg-amazon_yellow hover:text-black">Pigmentos y glitter</Link>
+            <Link href="/categoria/accesorios" className="rounded-lg p-4 bg-amazon_blue text-white shadow hover:bg-amazon_yellow hover:text-black">Accesorios</Link>
           </div>
         </div>
         <aside className="rounded-lg p-6 bg-white shadow border border-gray-200">
@@ -87,4 +87,3 @@ export default function AboutUsPage() {
     </div>
   );
 }
-

@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import { StateProps, StoreProduct } from "../../type";
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import FormattedPrice from "@/components/FormattedPrice";
 import CartPayment from "@/components/CartPayment";
 
@@ -34,6 +33,14 @@ export default function CheckoutPage() {
     const total = subtotal + shipping;
     return { subtotal, shipping, total };
   }, [productData]);
+  const normImg = (s?: string) => {
+    const t = String(s || "");
+    if (!t) return "/favicon-96x96.png";
+    let u = t.replace(/\\/g, "/");
+    if (/^https?:\/\//i.test(u)) return u;
+    if (!u.startsWith("/")) u = "/" + u;
+    return u;
+  };
 
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-6">
@@ -90,13 +97,13 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          <aside className="md:col-span-1">
-            <div className="bg-white rounded-lg p-6 shadow mb-4">
+          <aside className="md:col-span-1 md:sticky md:top-24 h-fit space-y-4">
+            <div className="bg-white rounded-lg p-6 shadow">
               <h2 className="text-xl font-semibold mb-4">Resumen del pedido</h2>
               <ul className="divide-y divide-gray-200">
                 {productData.map((p: StoreProduct) => (
                   <li key={p._id} className="py-3 flex items-center gap-3">
-                    <Image src={p.image} alt={p.title} width={60} height={60} className="rounded object-cover" />
+                    <img src={normImg(p.image)} alt={p.title} className="rounded object-cover w-[60px] h-[60px]" loading="lazy" />
                     <div className="flex-1">
                       <p className="font-medium">{p.title}</p>
                       <p className="text-sm text-gray-600">Cantidad: {p.quantity}</p>
@@ -114,7 +121,7 @@ export default function CheckoutPage() {
 
             <div className="bg-white rounded-lg p-6 shadow">
               <CartPayment email={email} />
-              <p className="text-xs text-gray-600 mt-2">Medios de pago disponibles: Yape y transferencia bancaria.</p>
+              <p className="text-xs text-gray-600 mt-2">Medios de pago disponibles: Yape y transferencia bancaria BCP.</p>
             </div>
           </aside>
         </div>

@@ -384,7 +384,18 @@ export default function AdminProducts() {
           {items.map((p) => (
             <div key={p._id} className="bg-white rounded-lg border border-gray-200 p-4">
               {p.image && (
-                <Image src={p.image} alt={p.title} width={300} height={200} className="w-full h-40 object-cover rounded" />
+                <Image
+                  src={((): string => {
+                    const s = String(p.image || "");
+                    let u = s.replace(/\\/g, "/");
+                    if (/^https?:\/\//i.test(u)) return u;
+                    return u ? (u.startsWith("/") ? u : "/" + u) : "/favicon-96x96.png";
+                  })()}
+                  alt={p.title}
+                  width={300}
+                  height={200}
+                  className="w-full h-40 object-cover rounded"
+                />
               )}
               <h2 className="mt-2 text-lg font-semibold">{p.title}</h2>
               {p.code && <p className="text-xs text-gray-500">Código: {p.code}</p>}

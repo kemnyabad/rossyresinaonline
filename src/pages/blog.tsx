@@ -1,5 +1,5 @@
 import Head from "next/head";
-import Image from "next/image";
+ 
 import Link from "next/link";
 import fs from "fs";
 import path from "path";
@@ -45,11 +45,11 @@ export default function BlogPage({ posts }: Props) {
             <article key={p.slug} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
               {p.image ? (
                 <div className="relative h-40">
-                  <Image src={((): string => { const s = String(p.image || ""); let u = s.replace(/\\/g, "/"); if (/^https?:\/\//i.test(u)) return u; return u ? (u.startsWith("/") ? u : "/" + u) : "/favicon-96x96.png"; })()} alt={p.title} fill className="object-cover" />
+                  <img src={((): string => { const s = String(p.image || ""); let u = s.replace(/\\/g, "/"); if (/^https?:\/\//i.test(u)) return u; return u ? (u.startsWith("/") ? u : "/" + u) : "/favicon-96x96.png"; })()} alt={p.title} className="object-cover w-full h-full" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-200/60 to-transparent" />
                 </div>
               ) : (
-                <div className="h-40 bg-gradient-to-r from-brand_purple via-brand_pink to-brand_teal" />
+                <div className="h-40 bg-amazon_blue" />
               )}
               <div className="p-5">
                 <h2 className="text-xl font-semibold text-amazon_blue">
@@ -64,7 +64,7 @@ export default function BlogPage({ posts }: Props) {
                 </div>
                 <p className="mt-3 text-gray-700">{p.excerpt}</p>
                 <div className="mt-4 flex items-center gap-3">
-                  <Link href={`/blog/${p.slug}`} className="px-3 py-2 rounded-md bg-gradient-to-r from-brand_purple via-brand_pink to-brand_teal text-white hover:brightness-105">Leer más</Link>
+                  <Link href={`/blog/${p.slug}`} className="px-3 py-2 rounded-md bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">Leer más</Link>
                 </div>
               </div>
             </article>
