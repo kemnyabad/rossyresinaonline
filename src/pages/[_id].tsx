@@ -54,9 +54,9 @@ const DynamicPage = ({ product, recs }: Props) => {
   }, [product]);
 
   const productImages = useMemo(() => {
-    const list = Array.isArray(product?.images) ? product?.images : [];
+    const list = Array.isArray(product?.images) ? product.images : [];
     const base = product?.image ? [product.image] : [];
-    const combined = [...base, ...list]
+    const combined = [...base, ...(list ?? [])]
       .map((img) => normalizeImage(img))
       .filter(Boolean);
     return combined.length > 0 ? Array.from(new Set(combined)) : ["/favicon-96x96.png"];
