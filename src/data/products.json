@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "code": "RR-0001-M",
     "title": "MOLDE BOTONES",
@@ -39,22 +39,22 @@
   },
   {
     "code": "RR-0004-M",
-    "title": "OSITO CARIÑOSO",
+    "title": "OSITO CARIÃ‘OSO",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
-    "image": "products/oso-cariñoso.avif",
+    "image": "products/oso-cariÃ±oso.avif",
     "isNew": true,
     "price": 12,
     "_id": 1765504356954
   },
   {
     "code": "RR-0005-M",
-    "title": "ZAPATO QUINCEÑAERA",
+    "title": "ZAPATO QUINCEÃ‘AERA",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
-    "image": "products/zapato-quinceañera.avif",
+    "image": "products/zapato-quinceaÃ±era.avif",
     "isNew": true,
     "price": 10,
     "_id": 1765504357009
@@ -162,7 +162,7 @@
   },
   {
     "code": "RR-0015",
-    "title": "LAPICERO SHAKER CORAZÓN",
+    "title": "LAPICERO SHAKER CORAZÃ“N",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
@@ -173,7 +173,7 @@
   },
   {
     "code": "RR-0016",
-    "title": "LAPICERO SHAKER CORAZÓN",
+    "title": "LAPICERO SHAKER CORAZÃ“N",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
@@ -1218,7 +1218,7 @@
   },
   {
     "code": "RR-0111",
-    "title": "SEÑORITA",
+    "title": "SEÃ‘ORITA",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
