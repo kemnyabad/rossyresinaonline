@@ -46,3 +46,7 @@ dev.err
 next-env.d.ts
 
 /generated/prisma
+# Local env files
+.env
+.env.local
+
