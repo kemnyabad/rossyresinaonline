@@ -15,7 +15,7 @@ import catalogData from "../../data/products.json";
 
 const Header = () => {
   const { data: session } = useSession();
-  const [allData, setAllData] = useState<any[]>([]);
+  const [allData, setAllData] = useState<StoreProduct[]>([]);
 
   const { productData, favoriteData, userInfo, allProducts } = useSelector(
     (state: StateProps) => state.next
@@ -41,7 +41,7 @@ const Header = () => {
 
   // Search area
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState<StoreProduct[]>([]);
   const mobileSearchRef = useRef<HTMLDivElement | null>(null);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
