@@ -75,6 +75,14 @@ const DynamicPage = ({ product, recs }: Props) => {
     return `https://wa.me/?text=${encodeURIComponent(text)}`;
   }, [product]);
 
+  const waBuyHref = useMemo(() => {
+    const title = product?.title || product?.code || "Producto";
+    const price = Number(product?.price) || 0;
+    const total = price * qty;
+    const text = `Hola Rossy Resina, quiero comprar:\nProducto: ${title}\nCantidad: ${qty}\nPrecio unitario: S/ ${price.toFixed(2)}\nTotal estimado: S/ ${total.toFixed(2)}\n\nPor favor, ayudame con el pedido.`;
+    return `https://wa.me/?text=${encodeURIComponent(text)}`;
+  }, [product, qty]);
+
   const productImages = useMemo(() => {
     const list = Array.isArray(product?.images) ? product.images : [];
     const base = product?.image ? [product.image] : [];
@@ -172,6 +180,35 @@ const DynamicPage = ({ product, recs }: Props) => {
   const pageImage = product?.image
     ? (String(product.image).startsWith("/") ? product.image : `/${product.image}`)
     : "/favicon-96x96.png";
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://rossyresinaonlineweb.vercel.app";
+  const productJsonLd = product
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.title || product.code || "Producto",
+        image: [pageImage.startsWith("http") ? pageImage : `${siteUrl}${pageImage}`],
+        description: product.description || "",
+        sku: String(product.code || product._id || ""),
+        category: product.category || "",
+        brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+        offers: {
+          "@type": "Offer",
+          priceCurrency: "PEN",
+          price: Number(product.price || 0).toFixed(2),
+          availability: "https://schema.org/InStock",
+          url: `${siteUrl}/${encodeURIComponent(String(product.code || product._id))}`,
+        },
+        aggregateRating:
+          reviewCount > 0
+            ? {
+                "@type": "AggregateRating",
+                ratingValue: Number(reviewAverage || 0).toFixed(1),
+                reviewCount,
+              }
+            : undefined,
+      }
+    : null;
 
   const fmtReviewDate = (iso?: string) => {
     if (!iso) return "";
@@ -230,6 +267,12 @@ const DynamicPage = ({ product, recs }: Props) => {
         <meta property="og:description" content={pageDesc} />
         <meta property="og:type" content="product" />
         <meta property="og:image" content={pageImage} />
+        {productJsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+          />
+        )}
       </Head>
 
       {!product ? (
@@ -272,10 +315,18 @@ const DynamicPage = ({ product, recs }: Props) => {
                   <p className="text-sm text-gray-500">Se envia a Peru</p>
                   <button
                     onClick={() => addProductToCart(qty)}
-                    className="mt-3 h-11 w-full rounded-full bg-brand_yellow text-black text-base font-semibold"
+                    className="mt-3 h-11 w-full rounded-full bg-orange-500 text-white text-base font-semibold hover:brightness-95"
                   >
                     Agregar al carrito
                   </button>
+                  <a
+                    href={waBuyHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 h-11 w-full rounded-full border border-brand_green text-brand_green text-base font-semibold flex items-center justify-center hover:bg-brand_green hover:text-white"
+                  >
+                    Comprar por WhatsApp
+                  </a>
                 </div>
               </div>
             </div>
@@ -449,6 +500,9 @@ const DynamicPage = ({ product, recs }: Props) => {
                 <div className="mt-3 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-md px-3 py-2">
                   {shippingText} · S/ 4.00 de credito por retraso
                 </div>
+                <div className="mt-3 rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700">
+                  Ideal para emprender: crea piezas para vender y recuperar tu inversion rapido.
+                </div>
 
                 <div className="mt-4">
                   <p className="text-sm text-gray-600">Cantidad:</p>
@@ -467,7 +521,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                 <div className="mt-5 grid gap-2">
                   <button
                     onClick={() => addProductToCart(qty)}
-                    className="w-full h-12 rounded-full text-base font-semibold bg-brand_purple text-white hover:bg-amazon_light"
+                    className="w-full h-12 rounded-full text-base font-semibold bg-orange-500 text-white hover:brightness-95"
                   >
                     ¡Agregar al carrito!
                   </button>
@@ -477,6 +531,14 @@ const DynamicPage = ({ product, recs }: Props) => {
                   >
                     Comprar ahora
                   </button>
+                  <a
+                    href={waBuyHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full h-12 rounded-full text-base font-semibold border border-brand_green text-brand_green hover:bg-brand_green hover:text-white flex items-center justify-center"
+                  >
+                    Comprar por WhatsApp
+                  </a>
                 </div>
 
                 <div className="mt-4 text-sm text-gray-600 grid gap-1">

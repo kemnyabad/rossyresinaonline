@@ -2,7 +2,8 @@ import { getServerSession } from "next-auth";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "../auth/[...nextauth]";
 import prisma from "@/lib/prisma";
-import { OrderStatus } from "@prisma/client";
+type DbOrderStatus = "PENDING" | "PAID" | "SHIPPED";
+const db = prisma as any;
 
 type IncomingItem = {
   _id?: string | number;
@@ -11,7 +12,7 @@ type IncomingItem = {
   quantity?: number;
 };
 
-const toLegacyStatus = (status: OrderStatus): string => {
+const toLegacyStatus = (status: DbOrderStatus): string => {
   if (status === "PAID") return "Confirmado";
   if (status === "SHIPPED") return "Enviado";
   return "Pendiente por confirmar";
@@ -20,7 +21,7 @@ const toLegacyStatus = (status: OrderStatus): string => {
 const serializeOrder = (order: any) => ({
   id: order.id,
   date: new Date(order.createdAt).toISOString().slice(0, 10),
-  status: toLegacyStatus(order.status as OrderStatus),
+  status: toLegacyStatus(order.status as DbOrderStatus),
   total: Number(order.total || 0),
   items: Array.isArray(order.items) ? order.items : [],
   customer: {
@@ -40,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const email = String(req.query.email || "").trim().toLowerCase();
     try {
       if (email) {
-        const orders = await prisma.order.findMany({
+        const orders = await db.order.findMany({
           where: { customerEmail: email },
           orderBy: { createdAt: "desc" },
         });
@@ -49,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const session = await getServerSession(req, res, authOptions as any);
       const ok = session && (session.user as any)?.role === "ADMIN";
       if (!ok) return res.status(401).json({ error: "No autorizado" });
-      const orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
+      const orders = await db.order.findMany({ orderBy: { createdAt: "desc" } });
       return res.status(200).json(orders.map(serializeOrder));
     } catch {
       return res.status(500).json({ error: "No se pudieron obtener pedidos" });
@@ -84,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
       if (keys.length === 0) return res.status(400).json({ error: "Items invalidos" });
 
-      const products = await prisma.product.findMany({
+      const products = await db.product.findMany({
         where: {
           OR: [
             { id: { in: keys } },
@@ -140,10 +141,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .trim()
         .toLowerCase();
       const user = sessionEmail
-        ? await prisma.user.findUnique({ where: { email: sessionEmail } })
-        : await prisma.user.findUnique({ where: { email } });
+        ? await db.user.findUnique({ where: { email: sessionEmail } })
+        : await db.user.findUnique({ where: { email } });
 
-      const created = await prisma.order.create({
+      const created = await db.order.create({
         data: {
           userId: user?.id || null,
           status: "PENDING",

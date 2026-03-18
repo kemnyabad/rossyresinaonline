@@ -5,37 +5,16 @@ import { useEffect, useRef, useState } from "react";
 import prisma from "@/lib/prisma";
 
 export default function SuscriptorProfilePage({ profile }: any) {
-  if (!profile) {
-    return (
-      <div className="min-h-screen bg-[#fafafa] px-6 py-14 text-[#111111]">
-        <div className="mx-auto max-w-[760px] rounded-3xl border border-[#e5e7eb] bg-white p-10 text-center shadow-sm">
-          <h1 className="text-3xl font-semibold">Perfil no encontrado</h1>
-          <p className="mt-3 text-base text-[#6b7280]">
-            Este perfil no existe o fue eliminado.
-          </p>
-          <div className="mt-8">
-            <Link
-              href="/capacitaciones"
-              className="inline-flex rounded-full bg-[#111111] px-6 py-3 text-sm font-semibold text-white"
-            >
-              Volver a capacitaciones
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const { data: session } = useSession();
-  const isOwner = !!session?.user?.email && session.user.email === profile.user?.email;
+  const isOwner = !!session?.user?.email && session.user.email === profile?.user?.email;
 
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [displayName, setDisplayName] = useState(profile.displayName || "");
-  const [bio, setBio] = useState(profile.bio || "");
-  const [avatar, setAvatar] = useState(profile.avatar || "");
-  const [location, setLocation] = useState(profile.location || "");
+  const [displayName, setDisplayName] = useState(profile?.displayName || "");
+  const [bio, setBio] = useState(profile?.bio || "");
+  const [avatar, setAvatar] = useState(profile?.avatar || "");
+  const [location, setLocation] = useState(profile?.location || "");
   const [newTitle, setNewTitle] = useState("");
   const [newCover, setNewCover] = useState("");
   const [newType, setNewType] = useState<"FOTO" | "VIDEO">("FOTO");
@@ -47,12 +26,12 @@ export default function SuscriptorProfilePage({ profile }: any) {
   const reelInputRef = useRef<HTMLInputElement | null>(null);
   const modalScrollRef = useRef<HTMLDivElement | null>(null);
 
-  const creations = Array.isArray(profile.creations) ? profile.creations : [];
+  const creations = Array.isArray(profile?.creations) ? profile.creations : [];
   const filteredCreations =
     activeTab === "ALL" ? creations : creations.filter((item: any) => item.type === activeTab);
   const photoCount = creations.filter((item: any) => item.type === "FOTO").length;
   const videoCount = creations.filter((item: any) => item.type === "VIDEO").length;
-  const joinedText = profile.joined
+  const joinedText = profile?.joined
     ? new Date(profile.joined).toLocaleDateString("es-PE", {
         month: "short",
         year: "numeric",
@@ -119,6 +98,27 @@ export default function SuscriptorProfilePage({ profile }: any) {
       window.requestAnimationFrame(resetScroll);
     }
   }, [selectedCreation]);
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-[#fafafa] px-6 py-14 text-[#111111]">
+        <div className="mx-auto max-w-[760px] rounded-3xl border border-[#e5e7eb] bg-white p-10 text-center shadow-sm">
+          <h1 className="text-3xl font-semibold">Perfil no encontrado</h1>
+          <p className="mt-3 text-base text-[#6b7280]">
+            Este perfil no existe o fue eliminado.
+          </p>
+          <div className="mt-8">
+            <Link
+              href="/capacitaciones"
+              className="inline-flex rounded-full bg-[#111111] px-6 py-3 text-sm font-semibold text-white"
+            >
+              Volver a capacitaciones
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

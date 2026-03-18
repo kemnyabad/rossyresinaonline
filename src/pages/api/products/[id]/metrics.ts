@@ -1,8 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
+const db = prisma as any;
 
 const findProductByIdentifier = async (identifier: string) => {
-  return prisma.product.findFirst({
+  return db.product.findFirst({
     where: {
       OR: [{ id: identifier }, { legacyId: identifier }, { code: identifier }],
     },
@@ -19,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!product) {
         return res.status(200).json({ productId: productIdentifier, paidUnits: 0, salesCount: 0 });
       }
-      const orders = await prisma.order.findMany({
+      const orders = await db.order.findMany({
         where: { status: { in: ["PAID", "SHIPPED"] } },
         select: { items: true },
       });
