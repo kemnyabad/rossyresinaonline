@@ -8,16 +8,17 @@ import { useRouter } from "next/router";
 export default function SignInPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (session) {
-      const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/";
-      router.replace(cb);
-    }
-  }, [session, router]);
+    // Evita redireccionar automaticamente para que el usuario pueda ver el formulario.
+  }, []);
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-6 py-12 bg-gradient-to-b from-gray-100 to-transparent">
@@ -30,12 +31,41 @@ export default function SignInPage() {
           <div className="bg-white rounded-full p-1 shadow-md ring-2 ring-white/60">
             <Image src={require("@/images/logo.jpg")} alt="Logo Rossy Resina" width={64} height={64} className="rounded-full object-contain" />
           </div>
-          <h1 className="mt-4 text-2xl font-semibold text-amazon_blue">Bienvenida/o a Rossy Resina</h1>
-          <p className="mt-2 text-sm text-gray-600 text-center">Inicia sesión para continuar con tu compra y guardar tus favoritos.</p>
+          <h1 className="mt-4 text-2xl font-semibold text-amazon_blue">
+            {mode === "login" ? "Bienvenida/o a Rossy Resina" : "Crear cuenta"}
+          </h1>
+          <p className="mt-2 text-sm text-gray-600 text-center">
+            {mode === "login"
+              ? "Inicia sesión para comentar y tener tu perfil."
+              : "Registra tu cuenta para comentar y crear tu portafolio."}
+          </p>
         </div>
 
         <div className="mt-6 grid gap-3">
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <button
+              onClick={() => setMode("login")}
+              className={`px-4 py-2 rounded-full border ${mode === "login" ? "bg-amazon_blue text-white border-amazon_blue" : "border-gray-300"}`}
+            >
+              Iniciar sesión
+            </button>
+            <button
+              onClick={() => setMode("register")}
+              className={`px-4 py-2 rounded-full border ${mode === "register" ? "bg-amazon_blue text-white border-amazon_blue" : "border-gray-300"}`}
+            >
+              Registrarme
+            </button>
+          </div>
+
           <div className="grid gap-2">
+            {mode === "register" && (
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nombre completo"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+            )}
             <input
               type="email"
               value={email}
@@ -50,15 +80,53 @@ export default function SignInPage() {
               placeholder="Contraseña"
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
+            {mode === "register" && (
+              <input
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="Confirmar contraseña"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+            )}
+            {error && <div className="text-sm text-red-600">{error}</div>}
             <button
-              onClick={() => {
+              onClick={async () => {
+                setError(null);
                 setLoading(true);
-                const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/";
-                signIn("credentials", { email, password, callbackUrl: cb }).finally(() => setLoading(false));
+                try {
+                  if (mode === "login") {
+                    const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/";
+                    await signIn("credentials", { email, password, callbackUrl: cb });
+                    return;
+                  }
+                  if (!email || !password || !name) {
+                    setError("Completa todos los campos");
+                    return;
+                  }
+                  if (password !== confirm) {
+                    setError("Las contraseñas no coinciden");
+                    return;
+                  }
+                  const res = await fetch("/api/auth/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, email, password }),
+                  });
+                  if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    setError(data.error || "No se pudo registrar");
+                    return;
+                  }
+                  const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/";
+                  await signIn("credentials", { email, password, callbackUrl: cb });
+                } finally {
+                  setLoading(false);
+                }
               }}
               className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black"
             >
-              {loading ? "Ingresando..." : "Ingresar"}
+              {loading ? "Procesando..." : mode === "login" ? "Ingresar" : "Crear cuenta"}
             </button>
           </div>
           <button
@@ -84,8 +152,7 @@ export default function SignInPage() {
         </div>
 
         <div className="mt-4 text-center text-sm text-gray-600">
-          <span>¿No tienes cuenta?</span>{" "}
-          <Link href="/register" className="text-amazon_blue hover:underline">Regístrate</Link>
+          {mode === "login" ? "¿No tienes cuenta? Usa Registrarme arriba." : "¿Ya tienes cuenta? Usa Iniciar sesión arriba."}
         </div>
 
         <div className="mt-6 text-center">

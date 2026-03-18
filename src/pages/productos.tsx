@@ -1,15 +1,13 @@
-﻿import Head from "next/head";
+import Head from "next/head";
 import Products from "@/components/Products";
 import type { ProductProps } from "../../type";
-import Link from "next/link";
-import { useMemo } from "react";
-import productData from "../data/products.json";
+import { readCatalog } from "@/lib/catalogStore";
 
-export default function ProductosPage() {
-  const allProducts = useMemo(
-    () => (Array.isArray(productData) ? (productData as ProductProps[]) : []),
-    []
-  );
+interface Props {
+  allProducts: ProductProps[];
+}
+
+export default function ProductosPage({ allProducts }: Props) {
   const total = allProducts.length;
 
   return (
@@ -23,7 +21,7 @@ export default function ProductosPage() {
       </div>
       {total === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
-          No se encontraron productos. Revisa el archivo src/data/products.json.
+          No se encontraron productos.
         </div>
       ) : (
         <Products productData={allProducts} />
@@ -31,3 +29,8 @@ export default function ProductosPage() {
     </div>
   );
 }
+
+export async function getServerSideProps() {
+  return { props: { allProducts: readCatalog() } };
+}
+

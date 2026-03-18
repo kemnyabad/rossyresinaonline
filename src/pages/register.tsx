@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/router";
+import { signIn } from "next-auth/react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -35,7 +36,8 @@ export default function RegisterPage() {
         setError(data.error || "No se pudo registrar");
         return;
       }
-      router.push("/sign-in");
+      const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/capacitaciones";
+      await signIn("credentials", { email, password, callbackUrl: cb });
     } finally {
       setLoading(false);
     }

@@ -1,0 +1,40 @@
+[
+  {
+    "id": "rossy-fan-01",
+    "name": "Camila R.",
+    "handle": "cami.resina",
+    "avatar": "/logo.png",
+    "status": "activo",
+    "bio": "Amante de la resina epoxica. Creo accesorios y detalles personalizados.",
+    "location": "Lima, Peru",
+    "joined": "Feb 2025",
+    "creationsCount": 24,
+    "followers": "1.2K",
+    "following": "185",
+    "gallery": [
+      { "id": "g1", "type": "foto", "cover": "/sliderImg_1.svg", "title": "Llaveros pastel" },
+      { "id": "g2", "type": "foto", "cover": "/sliderImg_2.svg", "title": "Dijes glitter" },
+      { "id": "g3", "type": "video", "cover": "/sliderImg_3.svg", "title": "Proceso resina UV" },
+      { "id": "g4", "type": "foto", "cover": "/sliderImg_6.svg", "title": "Bandeja ecoresina" },
+      { "id": "g5", "type": "video", "cover": "/sliderImg_1.svg", "title": "Pulido espejo" },
+      { "id": "g6", "type": "foto", "cover": "/sliderImg_2.svg", "title": "Aretes flor" }
+    ]
+  },
+  {
+    "id": "rossy-fan-02",
+    "name": "Luis A.",
+    "handle": "luis.taller",
+    "avatar": "/logo.png",
+    "status": "desactivado",
+    "bio": "Aprendiendo desde cero. Me gustan los moldes personalizados.",
+    "location": "Arequipa, Peru",
+    "joined": "Nov 2024",
+    "creationsCount": 8,
+    "followers": "340",
+    "following": "98",
+    "gallery": [
+      { "id": "g7", "type": "foto", "cover": "/sliderImg_6.svg", "title": "Molde oso" },
+      { "id": "g8", "type": "foto", "cover": "/sliderImg_3.svg", "title": "Portavasos" }
+    ]
+  }
+]

@@ -1,77 +1,87 @@
-﻿import { Carousel } from "react-responsive-carousel";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+import type { ProductProps } from "../../type";
 
-const slides = [
-  {
-    title: "Resina epóxica 1 en 1",
-    subtitle: "Resina para elaboración de proyectos personalizados en resina",
-    href: "/categoria/resina",
-    image: "/sliderImg_2.svg"
-  },
+const banner = {
+  title: "Banner principal",
+  image: "/sliderImg_1.svg",
+};
 
- {
-    title: "Nueva Ecoresina Ecológica",
-    subtitle: "Resina ecológica no tóxica para proyectos resineros artesanales",
-    href: "/categoria/resina",
-    image: "/sliderImg_3.svg",
-  },
+interface Props {
+  remateProducts?: ProductProps[];
+}
 
-  {
-    title: "Novedades Navideñas",
-    subtitle: "Descubre nuestras novedades de temporada navideña 2025",
-    href: "/categoria/resina",
-    image: "/sliderImg_6.svg",
-  },
+export default function HeroCarousel({ remateProducts = [] }: Props) {
+  const normImg = (s?: string) => {
+    const t = String(s || "");
+    if (!t) return "/favicon-96x96.png";
+    let u = t.replace(/\\/g, "/");
+    if (/^https?:\/\//i.test(u)) return u;
+    if (!u.startsWith("/")) u = "/" + u;
+    return u;
+  };
 
-
-  {
-    title: "Moldes de silicona",
-    subtitle: "Geométricos, personalizados y alta durabilidad",
-    href: "/categoria/moldes-de-silicona",
-    bg: "bg-amazon_blue"
-  },
-  {
-    title: "Pigmentos Perlados",
-    subtitle: "Pigmentos perlados en polvo para colorear piezas",
-    href: "/categoria/pigmentos",
-    image: "/sliderImg_1.svg"
-  }
-];
-
-export default function HeroCarousel() {
   return (
-    <Carousel autoPlay infiniteLoop showStatus={false} showIndicators showThumbs={false} interval={5000}>
-      {slides.map((s) => {
-        const img: any = (s as any).image || (s as any).images;
-        const gradient = (s as any).bg ? (s as any).bg : "";
-        return (
-          <div key={s.title} className={`relative overflow-hidden rounded-xl min-h-[240px] md:min-h-[320px] lg:min-h-[384px] border border-gray-200`}>
-            {img && (
-              <Image
-                src={img}
-                alt={s.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 80vw"
-                className="object-cover"
-              />
-            )}
-            {gradient ? (
-              <div className={`absolute inset-0 ${gradient} ${img ? "opacity-50" : "opacity-100"}`}></div>
-            ) : (
-              img ? <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div> : null
-            )}
-            <div className="absolute inset-0 z-10 flex items-center justify-start text-white">
-              <div className="w-full max-w-4xl px-6 md:px-12 lg:px-16 py-6 text-left">
-                <span className="inline-block text-xs font-semibold bg-amazon_yellow text-black px-2 py-1 rounded">Destacado</span>
-                <h2 className="text-2xl md:text-4xl lg:text-5xl font-semibold" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}>{s.title}</h2>
-                <p className="mt-2 text-sm md:text-lg opacity-95" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.35)" }}>{s.subtitle}</p>
-                <Link href={s.href} className="inline-block mt-4 px-4 py-2 rounded bg-amazon_yellow text-black hover:brightness-95 font-semibold text-sm">Ver productos</Link>
+    <div className="relative w-full min-h-[220px] md:min-h-[320px] lg:min-h-[380px] bg-[#b90000] overflow-hidden">
+      <div className="absolute inset-0">
+        <Image
+          src={banner.image}
+          alt={banner.title}
+          fill
+          sizes="100vw"
+          className="object-contain md:object-cover object-center"
+          priority
+        />
+      </div>
+
+      {remateProducts.length > 0 && (
+        <div className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-10 flex gap-2 md:gap-4">
+          {remateProducts.slice(0, 2).map((p) => (
+            <Link
+              key={`remate-${p._id}`}
+              href={`/${p.code || p._id}`}
+              className="w-[118px] md:w-[220px] rounded-xl overflow-hidden bg-white/95 shadow-lg"
+            >
+              <div className="relative h-[94px] md:h-[170px]">
+                {(() => {
+                  const src = normImg(p.image);
+                  const isReference =
+                    !p.image ||
+                    src.includes("sliderImg_") ||
+                    src.includes("favicon-96x96.png") ||
+                    src.includes("favicon");
+                  if (isReference) {
+                    return (
+                      <div className="absolute inset-0 bg-gray-50 text-gray-400 text-xs font-semibold uppercase tracking-wide flex items-center justify-center">
+                        Producto en Proceso
+                      </div>
+                    );
+                  }
+                  return (
+                    <Image
+                      src={src}
+                      alt={p.title || "Producto en remate"}
+                      fill
+                      className="object-cover"
+                    />
+                  );
+                })()}
+                <span className="absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] md:text-xs text-white">
+                  Anuncio
+                </span>
               </div>
-            </div>
-          </div>
-        );
-      })}
-    </Carousel>
+              <div className="px-2 md:px-3 py-1.5 md:py-2">
+                <p className="text-[10px] md:text-xs text-gray-500 line-through">
+                  {typeof p.oldPrice === "number" ? `S/ ${Number(p.oldPrice).toFixed(2)}` : ""}
+                </p>
+                <p className="text-base md:text-[34px] leading-none font-semibold text-gray-900">
+                  S/ {Number(p.price || 0).toFixed(2)}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

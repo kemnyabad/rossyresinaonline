@@ -15,6 +15,22 @@ enum UserRole {
   CUSTOMER
 }
 
+enum SubscriberStatus {
+  ACTIVO
+  DESACTIVADO
+}
+
+enum CreationType {
+  FOTO
+  VIDEO
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -22,4 +38,85 @@ model User {
   passwordHash String
   role         UserRole @default(CUSTOMER)
   createdAt    DateTime @default(now())
+  subscriber   SubscriberProfile?
+  orders       Order[]
+  reviews      Review[]
+}
+
+model SubscriberProfile {
+  id          String           @id @default(cuid())
+  userId      String           @unique
+  user        User             @relation(fields: [userId], references: [id])
+  displayName String
+  handle      String           @unique
+  avatar      String
+  bio         String
+  status      SubscriberStatus @default(ACTIVO)
+  location    String
+  joined      DateTime         @default(now())
+  creations   Creation[]
+}
+
+model Creation {
+  id         String       @id @default(cuid())
+  profileId  String
+  profile    SubscriberProfile @relation(fields: [profileId], references: [id])
+  type       CreationType
+  title      String
+  cover      String
+  createdAt  DateTime     @default(now())
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  legacyId    String?  @unique
+  code        String?  @unique
+  title       String
+  description String
+  brand       String
+  category    String
+  image       String
+  price       Decimal  @db.Decimal(10, 2)
+  oldPrice    Decimal? @db.Decimal(10, 2)
+  isNew       Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  reviews     Review[]
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  userId         String?
+  user           User?       @relation(fields: [userId], references: [id])
+  status         OrderStatus @default(PENDING)
+  total          Decimal     @db.Decimal(10, 2)
+  items          Json
+  customerName   String
+  customerEmail  String
+  customerPhone  String
+  customerAddress String
+  customerCity   String
+  customerDistrict String
+  customerNotes  String?
+  paymentImage   String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([customerEmail])
+  @@index([status])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, userId])
+  @@index([productId])
 }

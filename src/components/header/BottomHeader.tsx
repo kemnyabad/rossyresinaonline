@@ -90,7 +90,9 @@ const BottomHeader = () => {
         <Link href="/" className="inline-flex items-center h-9">Inicio</Link>
         <Link href="/productos" className="inline-flex items-center h-9">Productos</Link>
         <Link href="/blog" className="inline-flex items-center h-9">Blog</Link>
-        <Link href="/categoria/talleres" className="inline-flex items-center h-9">Capacitaciones</Link>
+        <Link href="/capacitaciones" target="_blank" rel="noreferrer" className="inline-flex items-center h-9">
+          Capacitaciones
+        </Link>
       </div>
 
       <div className="ml-auto hidden md:flex items-center gap-2 text-amazon_blue">
@@ -100,14 +102,6 @@ const BottomHeader = () => {
         </span>
       </div>
 
-      {userInfo && (
-        <button
-          onClick={handleSignOut}
-          className="hidden md:inline-flex items-center h-9 px-2 text-amazon_blue cursor-pointer duration-300"
-        >
-          Cerrar sesión
-        </button>
-      )}
 
       {openMobile && (
         <div className="fixed inset-0 z-[60]">
@@ -143,7 +137,15 @@ const BottomHeader = () => {
                 <Link href="/" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Inicio</Link>
                 <Link href="/productos" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Productos</Link>
                 <Link href="/blog" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Blog</Link>
-                <Link href="/categoria/talleres" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Capacitaciones</Link>
+                <Link
+                  href="/capacitaciones"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-2 text-sm border rounded"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  Capacitaciones
+                </Link>
               </div>
             </div>
           </div>

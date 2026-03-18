@@ -6,5 +6,13 @@
     "passwordHash": "$2a$10$fhANZiBPq3rg8WlmIMwaEeqeZCNCt2rJ3du9YWoSsPeOfcIChKTL2",
     "role": "ADMIN",
     "createdAt": "2026-03-04T21:29:04.201Z"
+  },
+  {
+    "id": "1775123400000",
+    "name": "Camila R.",
+    "email": "camila@rossyresina.pe",
+    "passwordHash": "$2a$10$2S02n4br0yT4EB3Ot9lJAeWstR/mWwt7oNn2NTqgGSz3yM8hwqKkO",
+    "role": "USER",
+    "createdAt": "2026-03-16T10:00:00.000Z"
   }
 ]

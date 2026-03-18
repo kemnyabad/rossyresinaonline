@@ -1,5 +1,6 @@
 ﻿import type { NextApiRequest, NextApiResponse } from "next";
 import { createUser } from "@/lib/users";
+import { ensureSubscriberProfile } from "@/lib/capacitaciones";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -21,6 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       password: pass,
       role: "CUSTOMER",
     });
+    await ensureSubscriberProfile({ userId: user.id, name: user.name, email: user.email });
     return res.status(201).json({ id: user.id, email: user.email, name: user.name });
   } catch (e: any) {
     if (e?.message === "EMAIL_EXISTS") {

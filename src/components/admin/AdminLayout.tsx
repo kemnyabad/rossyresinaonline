@@ -1,6 +1,7 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { signOut } from "next-auth/react";
 import type { ReactNode } from "react";
+import { useRouter } from "next/router";
 
 interface Props {
   children: ReactNode;
@@ -15,13 +16,20 @@ const links = [
 ];
 
 export default function AdminLayout({ children }: Props) {
+  const router = useRouter();
+  const isAuthRoute = router.pathname === "/admin/sign-in";
+
+  if (isAuthRoute) {
+    return <div className="min-h-screen bg-slate-100 text-slate-900">{children}</div>;
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <div className="flex min-h-screen">
         <aside className="w-64 bg-slate-900 text-white flex flex-col px-4 py-6">
           <div className="text-lg font-semibold tracking-wide">Panel Admin</div>
           <div className="mt-2 text-xs text-slate-300">Rossy Resina</div>
-          <div className="mt-6 flex-1 grid gap-2">
+          <div className="mt-6 flex-1 flex flex-col gap-2">
             {links.map((l) => (
               <Link key={l.href} href={l.href} className="px-3 py-2 rounded-md hover:bg-slate-800 text-sm">
                 {l.label}
@@ -33,7 +41,7 @@ export default function AdminLayout({ children }: Props) {
               Ir a la tienda
             </Link>
             <button
-              onClick={() => signOut({ callbackUrl: "/sign-in" })}
+              onClick={() => signOut({ callbackUrl: "/admin/sign-in" })}
               className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 text-sm text-left"
             >
               Cerrar sesion

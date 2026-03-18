@@ -1,4 +1,89 @@
-﻿[
+[
+  {
+    "_id": 9006,
+    "code": "vasos-mezcladores-y-palitos",
+    "title": "VASOS MEZCLADORES",
+    "brand": "Rossy Resina",
+    "category": "Accesorios",
+    "description": "",
+    "image": "/products/vaso_mezclador_021.avif",
+    "isNew": true,
+    "oldPrice": 0,
+    "price": 5,
+    "images": [
+      "/products/vaso_mezclador_021.avif",
+      "/products/vaso_mezclador_022.avif",
+      "/products/vaso_mezclador_026.avif",
+      "/products/vaso_mezclado_023.avif",
+      "/products/vaso_mezclador_024.avif",
+      "/products/vaso_mezclador_023.avif"
+    ]
+  },
+  {
+    "_id": 9005,
+    "code": "kit-accesorios-bisuteria",
+    "title": "KIT ACCESORIOS BISUTERIA",
+    "brand": "Rossy Resina",
+    "category": "Accesorios",
+    "description": "Set de argollas, ganchos y terminales para armar tus creaciones.",
+    "image": "/sliderImg_3.svg",
+    "isNew": true,
+    "oldPrice": 28,
+    "price": 22
+  },
+  {
+    "_id": 9004,
+    "code": "pigmento-perlado-rosa",
+    "title": "PIGMENTO PERLADO ROSA",
+    "brand": "Rossy Resina",
+    "category": "Pigmentos",
+    "description": "",
+    "image": "/products/pigmento_perlado_rosa_028.avif",
+    "isNew": true,
+    "oldPrice": 0,
+    "price": 8,
+    "images": [
+      "/products/Pigmento_perlado_rosa_027.avif",
+      "/products/pigmento_perlado_rosa_028.avif",
+      "/products/pigmento_perlado_rosa_029.avif"
+    ]
+  },
+  {
+    "_id": 9003,
+    "code": "pigmento-metalico-dorado",
+    "title": "PIGMENTO METALICO DORADO",
+    "brand": "Rossy Resina",
+    "category": "Pigmentos",
+    "description": "Pigmento en polvo efecto metalico para resina y ecoresina.",
+    "image": "/sliderImg_3.svg",
+    "isNew": true,
+    "oldPrice": 18,
+    "price": 12
+  },
+  {
+    "_id": 9002,
+    "code": "resina-uv-200ml",
+    "title": "RESINA UV 200ML",
+    "brand": "Rossy Resina",
+    "category": "Resina UV",
+    "description": "Resina UV de curado rapido para piezas pequenas y acabados brillantes.",
+    "image": "/sliderImg_2.svg",
+    "isNew": true,
+    "oldPrice": 42,
+    "price": 35
+  },
+  {
+    "_id": 9001,
+    "code": "resina-epoxica-a-b-1kg",
+    "title": "RESINA EPOXICA A+B 1KG",
+    "brand": "Rossy Resina",
+    "category": "Resina epoxica",
+    "description": "Kit de resina epoxica transparente para proyectos de arte y bisuteria.",
+    "image": "/sliderImg_1.svg",
+    "isNew": true,
+    "oldPrice": 58,
+    "price": 49
+  },
   {
     "code": "RR-0001-M",
     "title": "MOLDE BOTONES",
@@ -8,7 +93,12 @@
     "image": "products/molde-botones.avif",
     "isNew": true,
     "price": 12,
-    "_id": 1765504356838
+    "_id": 1765504356838,
+    "images": [
+      "/products/molde_botones_004.avif",
+      "/products/molde_botones_003.avif",
+      "/products/molde_botones_002.avif"
+    ]
   },
   {
     "code": "RR-0002-M",
@@ -19,7 +109,15 @@
     "image": "products/camiseta-medico.avif",
     "isNew": true,
     "price": 8,
-    "_id": 1765504356867
+    "_id": 1765504356867,
+    "images": [
+      "/products/molde_camiseta_medico_005.avif",
+      "/products/molde_camiseta_medico_006.avif",
+      "/products/molde_camiseta_medico_007.avif",
+      "/products/molde_camiseta_medico_008.avif",
+      "/products/molde_camiseta_medico_009.avif",
+      "/products/molde_camiseta_medico_010.avif"
+    ]
   },
   {
     "code": "RR-0003-M",
@@ -33,31 +131,45 @@
     "_id": 1765504356905,
     "images": [
       "/products/1770094016762-virgen-de-guadalupe2imagen.avif",
-      "/products/1770094188677-virgen-de-guadalupe3imagen.avif"
+      "/products/1770094188677-virgen-de-guadalupe3imagen.avif",
+      "/products/molde_virgen_guadalupe_011.avif",
+      "/products/molde_virgen_guadalupe_012.avif"
     ],
     "cid": 2
   },
   {
     "code": "RR-0004-M",
-    "title": "OSITO CARIÃ‘OSO",
+    "title": "OSITO CARIÑOSITO",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
-    "image": "products/oso-cariÃ±oso.avif",
+    "image": "/products/molde_osito_cari_oso_013.avif",
     "isNew": true,
     "price": 12,
-    "_id": 1765504356954
+    "_id": 1765504356954,
+    "images": [
+      "/products/molde_osito_cari_oso_013.avif",
+      "/products/molde_osito_cari_oso_014.avif",
+      "/products/molde_osito_cari_oso_015.avif",
+      "/products/molde_osito_cari_oso_016.avif",
+      "/products/molde_osito_cari_oso_017.avif"
+    ]
   },
   {
     "code": "RR-0005-M",
-    "title": "ZAPATO QUINCEÃ‘AERA",
+    "title": "ZAPATO QUINCEAÑERA",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
-    "image": "products/zapato-quinceaÃ±era.avif",
+    "image": "products/zapato-quinceanera.avif",
     "isNew": true,
     "price": 10,
-    "_id": 1765504357009
+    "_id": 1765504357009,
+    "images": [
+      "/products/molde_zapato_quincea_era_018.avif",
+      "/products/molde_zapato_quincea_era_019.avif",
+      "/products/molde_zapato_quincea_era_020.avif"
+    ]
   },
   {
     "code": "RR-0006-M",

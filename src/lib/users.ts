@@ -70,7 +70,15 @@ export async function ensureAdminFromEnv() {
   if (allowed.length === 0 || !adminPass) return;
   const email = allowed[0];
   const existing = await findUserByEmail(email);
-  if (existing) return;
+  if (existing) {
+    if (existing.role !== "ADMIN") {
+      await prisma.user.update({
+        where: { email },
+        data: { role: "ADMIN" },
+      });
+    }
+    return;
+  }
   const passwordHash = await bcrypt.hash(adminPass, 10);
   await prisma.user.create({
     data: {

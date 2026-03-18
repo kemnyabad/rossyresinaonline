@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { filename, data } = (req.body || {}) as any;
   if (!data || typeof data !== "string") return res.status(400).json({ error: "Datos inválidos" });
 
-  const match = data.match(/^data:(image\/(png|jpe?g|webp));base64,(.+)$/i);
+  const match = data.match(/^data:(image\/(png|jpe?g|webp|avif));base64,(.+)$/i);
   if (!match) return res.status(400).json({ error: "Formato de imagen inválido" });
   const ext = match[2].toLowerCase() === "jpeg" ? "jpg" : match[2].toLowerCase();
   const base64 = match[3];

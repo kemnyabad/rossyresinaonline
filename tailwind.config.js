@@ -29,7 +29,7 @@ module.exports = {
         lightText: "#ccc",
       },
       fontFamily: {
-        bodyFont: ["Barlow", "Montserrat", "Roboto", "Open Sans", "sans-serif"],
+        bodyFont: ["Arial", "Helvetica", "sans-serif"],
       },
     },
   },

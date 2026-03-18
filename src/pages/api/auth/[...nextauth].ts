@@ -26,7 +26,8 @@ export const authOptions = {
         }
         const user = await verifyUser(email, pass);
         if (user) {
-          return { id: user.id, email: user.email, name: user.name, role: user.role } as any;
+          const role = isAdminEmail(user.email) ? "ADMIN" : user.role;
+          return { id: user.id, email: user.email, name: user.name, role } as any;
         }
         return null;
       },

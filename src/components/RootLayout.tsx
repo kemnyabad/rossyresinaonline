@@ -1,4 +1,5 @@
 import React, { ReactElement } from "react";
+import { useRouter } from "next/router";
 import Header from "./header/Header";
 import BottomHeader from "./header/BottomHeader";
 import Footer from "./Footer";
@@ -9,21 +10,14 @@ interface Props {
 }
 
 const RootLayout = ({ children }: Props) => {
+  const router = useRouter();
+  const hideBottomHeader = router.pathname === "/cart";
   return (
     <>
       <TopBar />
       <Header />
-      <BottomHeader />
+      {!hideBottomHeader && <BottomHeader />}
       {children}
-      <a
-        href="https://wa.me/51966357648"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-5 right-5 z-[60] flex items-center gap-2 rounded-full bg-brand_green text-black px-4 py-3 shadow-lg hover:brightness-95"
-        aria-label="Abrir WhatsApp"
-      >
-        <span className="text-base font-semibold">WhatsApp</span>
-      </a>
       <Footer />
     </>
   );

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import type { GetServerSideProps } from "next";
@@ -111,6 +111,6 @@ export default function AdminBlogPage() {
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const session = await getServerSession(ctx.req, ctx.res, authOptions);
   const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return { redirect: { destination: "/sign-in?callbackUrl=/admin/blog", permanent: false } };
+  if (!ok) return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/blog", permanent: false } };
   return { props: {} };
 };

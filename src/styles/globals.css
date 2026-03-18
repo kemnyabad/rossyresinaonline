@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html,body,button,input,select,textarea{
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
 .rr-page{animation:rrFade .25s ease both}
 @keyframes rrFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
@@ -31,6 +35,9 @@
 .slideInRight{animation-name:rrSlideInRight}
 .animate-fast{--animate-duration:.5s}
 .animate-slow{--animate-duration:1.5s}
+:root{--rr-scrollbar-hidden:1}
+.no-scrollbar::-webkit-scrollbar{display:none}
+.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
 :root{--rr-marquee-speed:22s}
 .rr-marquee{position:relative;overflow:hidden;white-space:nowrap}
 .rr-marquee>span{display:inline-block;padding-left:100%;animation:rrMarquee var(--rr-marquee-speed) linear infinite}

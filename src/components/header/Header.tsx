@@ -6,12 +6,11 @@ import { FaHeart } from "react-icons/fa";
 import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
 import { StateProps, StoreProduct } from "../../../type";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState, useRef } from "react";
 import { addUser } from "@/store/nextSlice";
 import SearchProducts from "../SearchProducts";
 import FormattedPrice from "@/components/FormattedPrice";
-import catalogData from "../../data/products.json";
 
 const Header = () => {
   const { data: session } = useSession();
@@ -22,10 +21,26 @@ const Header = () => {
   );
   const dispatch = useDispatch();
   useEffect(() => {
-    const list = Array.isArray(allProducts?.allProducts) && allProducts.allProducts.length > 0
-      ? allProducts.allProducts
-      : (Array.isArray(catalogData) ? catalogData : []);
-    setAllData(list);
+    const list = Array.isArray(allProducts?.allProducts) ? allProducts.allProducts : [];
+    if (list.length > 0) {
+      setAllData(list);
+      return;
+    }
+
+    let mounted = true;
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((rows) => {
+        if (!mounted) return;
+        setAllData(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setAllData([]);
+      });
+    return () => {
+      mounted = false;
+    };
   }, [allProducts]);
   useEffect(() => {
     if (session) {
@@ -43,6 +58,8 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProducts, setFilteredProducts] = useState<StoreProduct[]>([]);
   const mobileSearchRef = useRef<HTMLDivElement | null>(null);
+  const profileRef = useRef<HTMLDivElement | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -69,6 +86,18 @@ const Header = () => {
     });
     setFilteredProducts(filtered);
   }, [searchQuery, allData]);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (!profileRef.current) return;
+      if (!profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [profileOpen]);
 
   const cartSubtotal = productData.reduce((s: number, p: any) => s + p.price * p.quantity, 0);
   const favoriteCount = favoriteData ? favoriteData.length : 0;
@@ -148,16 +177,78 @@ const Header = () => {
 
         {/* actions */}
         <div className="ml-auto md:ml-0 flex items-center gap-4">
-          <Link
-            href={userInfo ? "/account" : "/sign-in"}
-            className="hidden md:flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue"
-          >
-            <HiOutlineUser className="text-xl" />
-            <div className="leading-tight">
-              <div className="text-xs text-gray-500">Cuenta</div>
-              <div className="font-semibold">Mi perfil</div>
-            </div>
-          </Link>
+          <div className="relative hidden md:block" ref={profileRef}>
+            <button
+              type="button"
+              onClick={() => setProfileOpen((v) => !v)}
+              className="flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue"
+              aria-haspopup="menu"
+              aria-expanded={profileOpen}
+            >
+              <HiOutlineUser className="text-xl" />
+              <div className="leading-tight text-left">
+                <div className="text-xs text-gray-500">Cuenta</div>
+                <div className="font-semibold">Mi perfil</div>
+              </div>
+            </button>
+
+            {profileOpen && (
+              <div className="absolute right-0 top-[calc(100%+10px)] w-72 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
+                <div className="p-4 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    {userInfo?.image ? (
+                      <Image
+                        src={userInfo.image}
+                        alt="Avatar"
+                        width={44}
+                        height={44}
+                        className="rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-11 w-11 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-semibold">
+                        {(userInfo?.name || userInfo?.email || "U").slice(0, 1)}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-gray-600">Bienvenido de nuevo</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {userInfo?.name || userInfo?.email || "Invitado"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    {userInfo ? (
+                      <button
+                        type="button"
+                        onClick={() => signOut()}
+                        className="text-sm text-amazon_blue hover:underline"
+                      >
+                        Cerrar sesión
+                      </button>
+                    ) : (
+                      <Link href="/sign-in" className="text-sm text-amazon_blue hover:underline">
+                        Iniciar sesión
+                      </Link>
+                    )}
+                  </div>
+                </div>
+                <div className="py-2">
+                  <Link href="/account" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                    Mi Cuenta
+                  </Link>
+                  <Link href="/track-orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                    Mis pedidos
+                  </Link>
+                  <Link href="/favorite" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                    Lista de deseos
+                  </Link>
+                  <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                    Centro de mensajes
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
           <Link
             href="/favorite"
             className="hidden md:flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue relative"
