@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 import prisma from "@/lib/prisma";
+import { readCatalog, writeCatalog } from "@/lib/catalogStore";
 
 const db = prisma as any;
 const productBaseSelect = {
@@ -517,6 +518,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         images: cloudinaryImages,
       };
 
+      // CRÍTICO: Sincronizar cambios al catálogo JSON local
+      syncCatalogProduct(responseRow);
+
       return res.status(201).json(responseRow);
     } catch (error: any) {
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo crear producto") });
@@ -636,6 +640,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         images: finalImages.length > 0 ? finalImages : cloudinaryImages,
       };
 
+      // CRÍTICO: Sincronizar cambios al catálogo JSON local
+      syncCatalogProduct(responseRow);
+
       return res.status(200).json(responseRow);
     } catch (error: any) {
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo actualizar producto") });
@@ -664,7 +671,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }));
 
       if (existing) {
+        // Eliminar de la BD
         await withDbRetry(() => db.product.delete({ where: { id: existing.id } }));
+        
+        // CRÍTICO: También eliminar del catálogo JSON local
+        try {
+          const catalog = readCatalog();
+          const filtered = (Array.isArray(catalog) ? catalog : []).filter((p: any) => {
+            const pCode = String(p?.code || "").trim().toLowerCase();
+            const pId = String(p?._id ?? p?.id ?? "").trim().toLowerCase();
+            const targetCode = String(existing.code || "").trim().toLowerCase();
+            const targetId = String(existing.id ?? existing.legacyId ?? "").trim().toLowerCase();
+            return pCode !== targetCode && pId !== targetId;
+          });
+          if (filtered.length !== catalog.length) {
+            writeCatalog(filtered);
+          }
+        } catch {
+          // Ignorar si el filesystem no permite escritura (ej: Vercel production)
+        }
       }
 
       return res.status(204).end();
