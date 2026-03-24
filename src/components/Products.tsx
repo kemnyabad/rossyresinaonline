@@ -1,21 +1,29 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ProductProps } from "../../type";
-import { HiShoppingCart } from "react-icons/hi";
+import { HiCheck, HiShoppingCart } from "react-icons/hi";
 import { FaStar } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/nextSlice";
 import Link from "next/link";
 import FormattedPrice from "./FormattedPrice";
+import { formatProductTitle } from "@/lib/textFormat";
+
+interface ProductsProps {
+  productData: ProductProps[];
+  gridClass?: string;
+}
 
 const Products = ({
   productData,
-  gridClass = "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6",
-}: any) => {
+  gridClass = "grid-cols-2 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-5",
+}: ProductsProps) => {
   const dispatch = useDispatch();
   const [stats, setStats] = useState<
     Record<string, { salesCount: number; avgRating: number; reviewCount: number }>
   >({});
+  const [addedMap, setAddedMap] = useState<Record<string, boolean>>({});
+
   const normImg = (s?: string) => {
     const t = String(s || "");
     if (!t) return "/favicon-96x96.png";
@@ -24,6 +32,29 @@ const Products = ({
     if (!u.startsWith("/")) u = "/" + u;
     return u;
   };
+
+  const isProcessImage = (src?: string) => {
+    const imgSrc = normImg(src).toLowerCase();
+    return (
+      !src ||
+      String(src).trim() === "" ||
+      imgSrc.includes("sliderimg_") ||
+      imgSrc.includes("favicon-96x96.png") ||
+      imgSrc.includes("favicon") ||
+      imgSrc.includes("/logo.png") ||
+      imgSrc.includes("/logo.jpg") ||
+      imgSrc.endsWith("/logo")
+    );
+  };
+
+  const pickDisplayImage = (image?: string, images?: any): string => {
+    const gallery = Array.isArray(images)
+      ? images.map((x) => String(x || "").trim()).filter(Boolean)
+      : [];
+    const preferred = [String(image || "").trim(), ...gallery].find((img) => !isProcessImage(img));
+    return preferred || String(image || "").trim() || gallery[0] || "/favicon-96x96.png";
+  };
+
   const productSlug = (code?: string, id?: number) => {
     return code ? `/${code}` : `/${id}`;
   };
@@ -56,118 +87,181 @@ const Products = ({
     };
   }, [idsParam]);
 
+  const toProductHref = (
+    code: string | undefined,
+    _id: number,
+    brand: string,
+    category: string,
+    description: string,
+    image: string,
+    isNew: boolean,
+    oldPrice: number | undefined,
+    price: number,
+    title: string
+  ) => ({
+    pathname: productSlug(code, _id),
+    query: {
+      _id,
+      brand,
+      category,
+      description,
+      image,
+      isNew,
+      oldPrice,
+      price,
+      title,
+    },
+  });
+
+  const showAddedFeedback = (id: number) => {
+    const key = String(id);
+    setAddedMap((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => {
+      setAddedMap((prev) => {
+        if (!prev[key]) return prev;
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }, 1700);
+  };
+
   return (
-    <div className={`w-full px-2 md:px-0 grid ${gridClass}`}>
-      {productData.map(
-        ({
-          _id,
-          code,
-          title,
-          brand,
-          category,
-          description,
-          image,
-          isNew,
-          oldPrice,
-          price,
-        }: ProductProps) => {
+    <div className={`grid w-full items-stretch px-1 md:px-0 ${gridClass}`}>
+      {(Array.isArray(productData) ? productData : []).map(
+        ({ _id, code, title, brand, category, description, image, images, isNew, oldPrice, price }: ProductProps) => {
           const itemStats = stats[String(_id)] || { salesCount: 0, avgRating: 0, reviewCount: 0 };
+          const wasAdded = Boolean(addedMap[String(_id)]);
+          const hasDiscount = typeof oldPrice === "number" && oldPrice > price;
+          const displayTitle = formatProductTitle(title || "Producto");
+          const displayImage = pickDisplayImage(image, images);
+          const href = toProductHref(
+            code,
+            _id,
+            brand,
+            category,
+            description,
+            displayImage,
+            isNew,
+            oldPrice,
+            price,
+            title
+          );
+
           return (
-          <div key={_id} className="w-full bg-white text-black border border-gray-200 rounded-lg p-2 hover:border-gray-300 transition-colors">
-            <div className="relative w-full h-44 sm:h-52 md:h-56 lg:h-60 bg-white rounded-lg overflow-hidden">
-              <Link
-                href={{
-                  pathname: productSlug(code, _id),
-                  query: {
-                    _id: _id,
-                    brand: brand,
-                    category: category,
-                    description: description,
-                    image: image,
-                    isNew: isNew,
-                    oldPrice: oldPrice,
-                    price: price,
-                    title: title,
-                  },
-                }}
-                className="absolute inset-0"
-              >
-                {(() => {
-                  const imgSrc = normImg(image);
-                  const isPlaceholder =
-                    !image ||
-                    String(image).trim() === "" ||
-                    imgSrc.includes("favicon-96x96.png") ||
-                    imgSrc.includes("favicon");
-                  if (isPlaceholder) {
+            <div
+              key={_id}
+              className="snap-start flex h-full flex-col rounded-xl border border-gray-200 bg-white p-2.5 text-black transition-colors hover:border-gray-300"
+            >
+              <Link href={href} className="block">
+                <div className="relative w-full overflow-hidden rounded-lg bg-white pb-[100%]">
+                  {(() => {
+                    const imgSrc = normImg(displayImage);
+                    const isPlaceholder = isProcessImage(displayImage);
+                    if (isPlaceholder) {
+                      return (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-2 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                          Producto en Proceso
+                        </div>
+                      );
+                    }
                     return (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-50 text-gray-400 text-xs font-semibold uppercase tracking-wide">
-                        Producto en Proceso
-                      </div>
+                      <Image
+                        src={imgSrc}
+                        alt={displayTitle}
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                        className="object-cover"
+                      />
                     );
-                  }
-                  return (
-                    <Image
-                      src={imgSrc}
-                      alt={title || "Producto"}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                      className="object-cover"
-                    />
-                  );
-                })()}
+                  })()}
+
+                  <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1">
+                    {isNew ? (
+                      <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
+                        Nuevo
+                      </span>
+                    ) : null}
+                    {hasDiscount ? (
+                      <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
+                        Oferta
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
               </Link>
-            </div>
-            <div className="pt-2 pb-1">
-              <p className="text-xs text-gray-800 truncate">{title}</p>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="text-base font-semibold text-gray-900">
-                  <FormattedPrice amount={price} />
-                </span>
-                {typeof oldPrice === "number" && oldPrice > price && (
-                  <span className="text-xs line-through text-gray-400">
-                    <FormattedPrice amount={oldPrice} />
-                  </span>
-                )}
-                <span className="text-xs text-gray-500">{itemStats.salesCount} ventas</span>
+
+              <div className="mt-2 flex flex-1 flex-col">
+                <Link href={href} className="block">
+                  <p className="line-clamp-2 overflow-hidden text-sm font-medium leading-[1.15rem] text-gray-800">
+                    {displayTitle}
+                  </p>
+                </Link>
+
+                <div className="mt-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-semibold text-gray-900 md:text-xl">
+                      <FormattedPrice amount={price} />
+                    </span>
+                    {hasDiscount ? (
+                      <span className="text-xs text-gray-400 line-through md:text-sm">
+                        <FormattedPrice amount={oldPrice as number} />
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-gray-500">
+                    <span>{itemStats.salesCount} ventas</span>
+                    <span>
+                      {itemStats.reviewCount > 0
+                        ? `${itemStats.avgRating.toFixed(1)} (${itemStats.reviewCount})`
+                        : "Sin reseñas"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-2 flex items-center gap-0.5 text-xs text-gray-900">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <FaStar
+                      key={i}
+                      className={`h-3.5 w-3.5 ${
+                        i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                </div>
+
                 <button
                   onClick={() => {
                     dispatch(
                       addToCart({
-                        _id: _id,
-                        brand: brand,
-                        category: category,
-                        description: description,
-                        image: image,
-                        isNew: isNew,
-                        oldPrice: oldPrice,
-                        price: price,
-                        title: title,
+                        _id,
+                        brand,
+                        category,
+                        description,
+                        image: displayImage,
+                        isNew,
+                        oldPrice,
+                        price,
+                        title,
                         quantity: 1,
                       })
                     );
+                    showAddedFeedback(_id);
                   }}
-                  className="ml-auto h-8 w-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                  className={
+                    "mt-3 flex h-9 w-full items-center justify-center gap-1 rounded-full border text-xs font-semibold duration-200 " +
+                    (wasAdded
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                      : "border-gray-300 hover:bg-gray-50")
+                  }
                   aria-label="Agregar al carrito"
                 >
-                  <HiShoppingCart />
+                  {wasAdded ? <HiCheck className="h-4 w-4" /> : <HiShoppingCart className="h-4 w-4" />}
+                  {wasAdded ? "Producto añadido" : "Agregar"}
                 </button>
               </div>
-              <div className="mt-1 flex items-center gap-0.5 text-xs text-gray-900">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <FaStar
-                    key={i}
-                    className={`h-3.5 w-3.5 ${i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-300"}`}
-                  />
-                ))}
-                <span className="ml-1 text-[11px] text-gray-500">
-                  {itemStats.reviewCount > 0
-                    ? `${itemStats.avgRating.toFixed(1)} (${itemStats.reviewCount})`
-                    : "Sin resenas"}
-                </span>
-              </div>
             </div>
-          </div>
           );
         }
       )}

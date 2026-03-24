@@ -5,6 +5,27 @@
 html,body,button,input,select,textarea{
   font-family: Arial, Helvetica, sans-serif !important;
 }
+a,button,input,select,textarea,[role="button"]{
+  -webkit-tap-highlight-color: transparent;
+}
+a:focus,a:active,
+button:focus,button:active,
+input:focus,input:active,
+select:focus,select:active,
+textarea:focus,textarea:active,
+[role="button"]:focus,[role="button"]:active{
+  outline: none;
+  box-shadow: none;
+}
+html,body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+img,video,canvas,svg{
+  max-width:100%;
+  height:auto;
+}
 
 .rr-page{animation:rrFade .25s ease both}
 @keyframes rrFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}

@@ -7,6 +7,7 @@ const findProductByIdentifier = async (identifier: string) => {
     where: {
       OR: [{ id: identifier }, { legacyId: identifier }, { code: identifier }],
     },
+    select: { id: true },
   });
 };
 
@@ -39,9 +40,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         salesCount: paidUnits,
       });
     } catch {
-      return res.status(500).json({ error: "No se pudo obtener metricas" });
+      return res.status(500).json({ error: "No se pudo obtener m?tricas" });
     }
   }
 
-  return res.status(405).json({ error: "Metodo no permitido" });
+  return res.status(405).json({ error: "M?todo no permitido" });
 }

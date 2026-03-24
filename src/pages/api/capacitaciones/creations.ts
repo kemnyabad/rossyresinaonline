@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
 
-    if (req.method !== "POST") return res.status(405).json({ error: "Metodo no permitido" });
+    if (req.method !== "POST") return res.status(405).json({ error: "M?todo no permitido" });
 
     const profile = await prisma.subscriberProfile.findUnique({ where: { userId: user.id } });
     if (!profile) return res.status(404).json({ error: "Perfil no encontrado" });
@@ -30,6 +30,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     return res.status(201).json(created);
   } catch {
-    return res.status(500).json({ error: "No se pudo crear la publicacion" });
+    return res.status(500).json({ error: "No se pudo crear la publicaci?n" });
   }
 }

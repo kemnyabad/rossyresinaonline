@@ -9,6 +9,7 @@ const findProductByIdentifier = async (identifier: string) => {
     where: {
       OR: [{ id: identifier }, { legacyId: identifier }, { code: identifier }],
     },
+    select: { id: true },
   });
 };
 
@@ -44,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === "POST") {
     const session = await getServerSession(req, res, authOptions as any);
-    if (!session?.user?.email) return res.status(401).json({ error: "Debes iniciar sesion" });
+    if (!session?.user?.email) return res.status(401).json({ error: "Debes iniciar sesión" });
 
     const body = req.body || {};
     const productIdentifier = String(body.productId || "").trim();
@@ -89,5 +90,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  return res.status(405).json({ error: "Metodo no permitido" });
+  return res.status(405).json({ error: "Método no permitido" });
 }

@@ -71,14 +71,17 @@ model Product {
   id          String   @id @default(cuid())
   legacyId    String?  @unique
   code        String?  @unique
+  barcode     String?  @unique
   title       String
   description String
   brand       String
   category    String
   image       String
+  images      Json?
   price       Decimal  @db.Decimal(10, 2)
   oldPrice    Decimal? @db.Decimal(10, 2)
   isNew       Boolean  @default(false)
+  stock       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   reviews     Review[]
@@ -119,4 +122,50 @@ model Review {
 
   @@unique([productId, userId])
   @@index([productId])
+}
+
+model WebVisitEvent {
+  id        String   @id @default(cuid())
+  visitedAt DateTime @default(now())
+  path      String
+  country   String   @default("DESCONOCIDO")
+  city      String   @default("DESCONOCIDA")
+  visitorId String
+  userEmail String?
+  userName  String?
+
+  visitor WebVisitorProfile? @relation(fields: [visitorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([visitedAt])
+  @@index([path])
+  @@index([country])
+  @@index([city])
+  @@index([visitorId])
+  @@index([userEmail])
+}
+
+model WebVisitorProfile {
+  id         String   @id
+  firstSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  visitCount Int      @default(0)
+  userEmail  String?
+  userName   String?
+  country    String   @default("DESCONOCIDO")
+  city       String   @default("DESCONOCIDA")
+  lastPath   String?
+
+  events WebVisitEvent[]
+
+  @@index([lastSeenAt])
+  @@index([visitCount])
+  @@index([country])
+  @@index([city])
+  @@index([userEmail])
+}
+
+model VisitExcludedIp {
+  ip        String   @id
+  note      String?
+  createdAt DateTime @default(now())
 }

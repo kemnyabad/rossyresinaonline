@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const body = req.body || {};
     const id = body._id;
     const idx = items.findIndex((c: any) => c._id == id);
-    if (idx === -1) return res.status(404).json({ error: "Categoría no encontrada" });
+    if (idx === -1) return res.status(404).json({ error: "Categora no encontrada" });
     items[idx] = { ...items[idx], ...body };
     writeCategories(items);
     return res.status(200).json(items[idx]);
@@ -52,9 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const id = (req.query._id as string) || (req.body?._id as string);
     const before = items.length;
     const filtered = items.filter((c: any) => String(c._id) !== String(id));
-    if (filtered.length === before) return res.status(404).json({ error: "Categoría no encontrada" });
+    if (filtered.length === before) return res.status(404).json({ error: "Categora no encontrada" });
     writeCategories(filtered);
     return res.status(204).end();
   }
-  return res.status(405).json({ error: "Método no permitido" });
+  return res.status(405).json({ error: "Mtodo no permitido" });
 }

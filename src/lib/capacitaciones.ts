@@ -27,7 +27,7 @@ export async function ensureSubscriberProfile(input: { userId: string; name: str
       handle,
       avatar: "/logo.png",
       bio: "Nuevo suscriptor en Rossy Resina.",
-      location: "Peru",
+      location: "Per?",
     },
   });
 }

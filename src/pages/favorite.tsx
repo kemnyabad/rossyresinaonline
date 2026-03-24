@@ -55,10 +55,10 @@ const FavoritePage = () => {
         </div>
       ) : (
         <div className="bg-white h-96 flex flex-col items-center justify-center py-5 rounded-lg shadow-lg">
-          <h1 className="text-lg font-semibold">Aún no tienes favoritos</h1>
-          <p className="text-sm text-gray-600 mt-1">Marca con el corazón los productos que te interesen.</p>
+          <h1 className="text-lg font-semibold">A?n no tienes favoritos</h1>
+          <p className="text-sm text-gray-600 mt-1">Marca con el corazn los productos que te interesen.</p>
           <div className="mt-3 flex items-center gap-2">
-            <Link href="/" className="w-40 h-10 bg-amazon_blue text-white rounded-lg text-sm font-semibold hover:bg-amazon_yellow hover:text-black duration-300 flex items-center justify-center">Ir al catálogo</Link>
+            <Link href="/" className="w-40 h-10 bg-amazon_blue text-white rounded-lg text-sm font-semibold hover:bg-amazon_yellow hover:text-black duration-300 flex items-center justify-center">Ir al catlogo</Link>
             <Link href="/categoria/resina" className="w-40 h-10 bg-white border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-100 duration-300 flex items-center justify-center">Ver resinas</Link>
           </div>
         </div>

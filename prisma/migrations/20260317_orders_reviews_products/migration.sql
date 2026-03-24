@@ -5,7 +5,7 @@ CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'PAID', 'SHIPPED');
 CREATE TABLE "Product" (
     "id" TEXT NOT NULL,
     "legacyId" TEXT,
-    "code" TEXT,
+    "code" TEXT UNIQUE,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "brand" TEXT NOT NULL,
@@ -16,6 +16,7 @@ CREATE TABLE "Product" (
     "isNew" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "stock" DECIMAL (10,2) NOT NULL,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
 );

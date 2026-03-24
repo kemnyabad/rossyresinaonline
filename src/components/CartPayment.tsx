@@ -1,4 +1,4 @@
-﻿import { SiMediamarkt } from "react-icons/si";
+import { SiMediamarkt } from "react-icons/si";
 import FormattedPrice from "./FormattedPrice";
 import { useSelector } from "react-redux";
 import { StateProps, StoreProduct } from "../../type";
@@ -33,7 +33,7 @@ const CartPayment = ({ email, onConfirm, confirmLabel = "Confirmar pedido por Wh
     const lines = productData.map((p: StoreProduct) => `- ${p.title} x ${p.quantity} = S/ ${(p.price * p.quantity).toFixed(2)}`);
     const base = [
       `Hola, quiero confirmar mi pedido`,
-      `Metodo: Yape`,
+      `Método: Yape`,
       `Total: S/ ${totalAmount.toFixed(2)}`,
       email ? `Email: ${email}` : "",
       "",
@@ -67,7 +67,7 @@ const CartPayment = ({ email, onConfirm, confirmLabel = "Confirmar pedido por Wh
           <SiMediamarkt />
         </span>
         <p className="text-sm">
-          Pedidos despues de las 4:00 pm los envios salen al siguiente dia, los pedidos salen a partir de las 4.00 pm
+          Pedidos después de las 4:00 pm los envíos salen al siguiente día, los pedidos salen a partir de las 4:00 pm.
         </p>
       </div>
       <p className="flex items-center justify-between px-2 font-semibold">
@@ -91,7 +91,7 @@ const CartPayment = ({ email, onConfirm, confirmLabel = "Confirmar pedido por Wh
           {confirmLabel}
         </button>
         {!userInfo && (
-          <p className="text-xs mt-1 text-gray-600">Puedes comprar sin iniciar sesion, pero anade tu correo en Checkout para coordinar.</p>
+          <p className="text-xs mt-1 text-gray-600">Puedes comprar sin iniciar sesión, pero añade tu correo en Checkout para coordinar.</p>
         )}
       </div>
     </div>

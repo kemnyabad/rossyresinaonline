@@ -11,7 +11,10 @@ export default function ComparePage() {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<any[]>([]);
   useEffect(() => {
-    fetch("/api/products").then((r) => r.json()).then((data) => setAll(Array.isArray(data) ? data : [])).catch(() => setAll([]));
+    fetch(`/api/products?_=${Date.now()}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => setAll(Array.isArray(data) ? data : []))
+      .catch(() => setAll([]));
   }, []);
 
   const filtered = useMemo(() => {
@@ -28,15 +31,15 @@ export default function ComparePage() {
   const removeSel = (_id: any) => setSelected(selected.filter((x) => x._id !== _id));
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-6 py-6">
+    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-6">
 <div className="bg-white rounded-lg shadow p-4">
         <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between">
           <div className="flex-1">
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Busca por nombre o categoría" className="w-full md:w-96 px-3 py-2 border border-gray-300 rounded" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Busca por nombre o categora" className="w-full md:w-96 px-3 py-2 border border-gray-300 rounded" />
           </div>
           <div className="text-sm text-gray-700">Seleccionados: {selected.length} / 3</div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
           {filtered.map((p) => (
             <div key={p._id} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <Image src={((): string => { const s = String(p.image || ""); let u = s.replace(/\\/g, "/"); if (/^https?:\/\//i.test(u)) return u; return u ? (u.startsWith("/") ? u : "/" + u) : "/favicon-96x96.png"; })()} alt={p.title} width={300} height={200} className="w-full h-32 object-cover" />
@@ -44,7 +47,7 @@ export default function ComparePage() {
                 <p className="text-sm font-medium line-clamp-1">{p.title}</p>
                 <p className="text-xs text-gray-600 line-clamp-1">{p.category}</p>
                 <div className="mt-2 flex items-center gap-2">
-                  <button onClick={() => addSel(p)} className="text-xs px-3 py-1 rounded bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">Añadir</button>
+                  <button onClick={() => addSel(p)} className="text-xs px-3 py-1 rounded bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">Aadir</button>
                   <Link href={{ pathname: `/${p._id}`, query: { ...p } }} className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-100">Ver</Link>
                 </div>
               </div>
@@ -55,9 +58,9 @@ export default function ComparePage() {
 
       {selected.length > 0 && (
         <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-3">Comparación</h2>
+          <h2 className="text-xl font-semibold mb-3">Comparacin</h2>
           <div className="overflow-x-auto">
-            <div className="min-w-[800px] grid" style={{ gridTemplateColumns: `200px repeat(${selected.length}, minmax(220px,1fr))` }}>
+            <div className="min-w-[640px] sm:min-w-[800px] grid" style={{ gridTemplateColumns: `minmax(120px,160px) repeat(${selected.length}, minmax(180px,1fr))` }}>
               <div className="bg-gray-50 border p-3 font-semibold">Campo</div>
               {selected.map((p) => (
                 <div key={`h-${p._id}`} className="bg-gray-50 border p-3 flex items-center justify-between">
@@ -89,34 +92,34 @@ export default function ComparePage() {
                   {p.oldPrice ? (
                     <FormattedPrice amount={p.oldPrice - p.price} />
                   ) : (
-                    <span className="text-sm text-gray-500">—</span>
+                    <span className="text-sm text-gray-500"> - </span>
                   )}
                 </div>
               ))}
 
-              <div className="border p-3">Categoría</div>
+              <div className="border p-3">Categora</div>
               {selected.map((p) => (
                 <div key={`cat-${p._id}`} className="border p-3">{p.category}</div>
               ))}
 
               <div className="border p-3">Marca</div>
               {selected.map((p) => (
-                <div key={`brand-${p._id}`} className="border p-3">{p.brand || "—"}</div>
+                <div key={`brand-${p._id}`} className="border p-3">{p.brand || " - "}</div>
               ))}
 
               <div className="border p-3">Nuevo</div>
               {selected.map((p) => (
-                <div key={`new-${p._id}`} className="border p-3">{p.isNew ? "Sí" : "No"}</div>
+                <div key={`new-${p._id}`} className="border p-3">{p.isNew ? "S" : "No"}</div>
               ))}
 
-              <div className="border p-3">Descripción</div>
+              <div className="border p-3">Descripcin</div>
               {selected.map((p) => (
                 <div key={`desc-${p._id}`} className="border p-3 text-sm text-gray-700 line-clamp-3">{p.description}</div>
               ))}
 
               <div className="border p-3">Acciones</div>
               {selected.map((p) => (
-                <div key={`act-${p._id}`} className="border p-3 flex items-center gap-2">
+                <div key={`act-${p._id}`} className="border p-3 flex flex-wrap items-center gap-2">
                   <button onClick={() => dispatch(addToCart({ _id: p._id, brand: p.brand, category: p.category, description: p.description, image: p.image, isNew: p.isNew, oldPrice: p.oldPrice, price: p.price, title: p.title, quantity: 1 }))} className="text-xs px-3 py-1 rounded bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">Agregar al carrito</button>
                   <button onClick={() => dispatch(addToFavorite({ _id: p._id, brand: p.brand, category: p.category, description: p.description, image: p.image, isNew: p.isNew, oldPrice: p.oldPrice, price: p.price, title: p.title, quantity: 1 }))} className="text-xs px-3 py-1 rounded border border-brand_teal text-brand_teal hover:bg-brand_teal hover:text-white">Favorito</button>
                 </div>

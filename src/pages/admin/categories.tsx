@@ -45,7 +45,7 @@ export default function AdminCategoriesPage() {
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-6">
       <Head>
-        <title>Admin — Categorías</title>
+        <title>Admin - Categorías</title>
       </Head>
 
       <div className="flex items-center justify-between mb-6">

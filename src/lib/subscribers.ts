@@ -66,7 +66,7 @@ export function ensureSubscriberForUser(input: { name: string; email: string }) 
     avatar: "/logo.png",
     status: "activo",
     bio: "Nuevo suscriptor en Rossy Resina.",
-    location: "Peru",
+    location: "Per?",
     joined: new Date().toLocaleDateString("es-PE", { month: "short", year: "numeric" }),
     creationsCount: 0,
     followers: "0",

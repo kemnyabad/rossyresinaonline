@@ -18,7 +18,7 @@ export default function SuscripcionPage() {
 
   const whatsappHref = useMemo(() => {
     const methodLabel = subMethod === "yape" ? "Yape" : "Transferencia";
-    const text = `Hola, quiero suscribirme a Capacitaciones (S/ ${subscriptionPrice} mensual).\n\nNombre: ${subName || "-"}\nCorreo: ${subEmail || "-"}\nTelefono: ${subPhone || "-"}\nMetodo: ${methodLabel}\n\nAdjunto mi comprobante.`;
+    const text = `Hola, quiero suscribirme a Capacitaciones (S/ ${subscriptionPrice} mensual).\n\nNombre: ${subName || "-"}\nCorreo: ${subEmail || "-"}\nTeléfono: ${subPhone || "-"}\nMétodo: ${methodLabel}\n\nAdjunto mi comprobante.`;
     return `https://wa.me/${whatsapp}?text=${encodeURIComponent(text)}`;
   }, [whatsapp, subMethod, subName, subEmail, subPhone, subscriptionPrice]);
 
@@ -32,10 +32,10 @@ export default function SuscripcionPage() {
   return (
     <>
       <Head>
-        <title>Rossy Resina Studio | Suscripcion</title>
+        <title>Rossy Resina Studio | Suscripción</title>
         <meta
           name="description"
-          content="Suscripcion mensual para capacitaciones de Rossy Resina. Pago por Yape o transferencia."
+          content="Suscripción mensual para capacitaciones de Rossy Resina. Pago por Yape o transferencia."
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -70,7 +70,7 @@ export default function SuscripcionPage() {
 
         <div className="mx-auto max-w-screen-2xl px-5 py-10">
           <div className="text-center max-w-2xl mx-auto">
-            <p className="text-xs uppercase tracking-[0.3em] text-pink-600">Suscripcion mensual</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-pink-600">Suscripción mensual</p>
             <h1 className="text-3xl md:text-4xl font-semibold mt-2" style={{ fontFamily: '"Oswald", sans-serif' }}>
               Potencia tu aprendizaje
             </h1>
@@ -88,7 +88,7 @@ export default function SuscripcionPage() {
                   <span className="text-4xl font-semibold">S/ {subscriptionPrice}</span>
                   <span className="text-sm opacity-90">/ mes</span>
                 </div>
-                <p className="text-xs opacity-90 mt-2">Renovacion mensual automatica por confirmacion.</p>
+                <p className="text-xs opacity-90 mt-2">Renovación mensual automática por confirmación.</p>
               </div>
               <div className="p-6">
                 <ul className="text-sm text-gray-700 grid gap-3">
@@ -112,9 +112,9 @@ export default function SuscripcionPage() {
             </div>
 
             <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900">Completa tu suscripcion</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Completa tu suscripción</h3>
               <p className="text-sm text-gray-600 mt-1">
-                Selecciona tu metodo de pago y confirma por WhatsApp.
+                Selecciona tu método de pago y confirma por WhatsApp.
               </p>
 
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -137,7 +137,7 @@ export default function SuscripcionPage() {
                   />
                 </div>
                 <div className="sm:col-span-1">
-                  <label className="text-xs text-gray-600">Telefono</label>
+                  <label className="text-xs text-gray-600">Teléfono</label>
                   <input
                     value={subPhone}
                     onChange={(e) => setSubPhone(e.target.value)}
@@ -148,7 +148,7 @@ export default function SuscripcionPage() {
               </div>
 
               <div className="mt-4">
-                <p className="text-xs text-gray-600 mb-2">Metodo de pago</p>
+                <p className="text-xs text-gray-600 mb-2">Método de pago</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     onClick={() => setSubMethod("yape")}
@@ -162,7 +162,7 @@ export default function SuscripcionPage() {
                     className={`text-left rounded-xl border px-4 py-3 ${subMethod === "transferencia" ? "border-pink-500 bg-pink-50" : "border-gray-200 bg-white"}`}
                   >
                     <p className="text-sm font-semibold">Transferencia</p>
-                    <p className="text-xs text-gray-500 mt-1">Deposito bancario mensual.</p>
+                    <p className="text-xs text-gray-500 mt-1">Depósito bancario mensual.</p>
                   </button>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export default function SuscripcionPage() {
                 {subMethod === "yape" ? (
                   <div className="mt-2 text-gray-700">
                     <p>Yape a: <span className="font-semibold">{yapeNumber}</span></p>
-                    <p className="text-xs text-gray-500 mt-1">Luego envia tu comprobante por WhatsApp.</p>
+                    <p className="text-xs text-gray-500 mt-1">Luego envía tu comprobante por WhatsApp.</p>
                   </div>
                 ) : (
                   <div className="mt-2 text-gray-700">
@@ -189,7 +189,7 @@ export default function SuscripcionPage() {
                 </button>
                 {subStatus === "pending" && (
                   <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                    Pago en verificacion. Estado: esperando comprobacion.
+                    Pago en verificación. Estado: esperando comprobación.
                   </div>
                 )}
               </div>

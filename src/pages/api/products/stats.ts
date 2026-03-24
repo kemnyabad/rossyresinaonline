@@ -9,7 +9,7 @@ type Stat = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "GET") return res.status(405).json({ error: "Metodo no permitido" });
+  if (req.method !== "GET") return res.status(405).json({ error: "M?todo no permitido" });
 
   const idsRaw = String(req.query.ids || "").trim();
   if (!idsRaw) return res.status(200).json({});
@@ -89,6 +89,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json(out);
   } catch {
-    return res.status(500).json({ error: "No se pudieron obtener estadisticas" });
+    return res.status(500).json({ error: "No se pudieron obtener estad?sticas" });
   }
 }

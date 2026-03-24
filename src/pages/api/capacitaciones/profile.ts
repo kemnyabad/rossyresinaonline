@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json(profile);
     }
 
-    return res.status(405).json({ error: "Metodo no permitido" });
+    return res.status(405).json({ error: "M?todo no permitido" });
   } catch {
     return res.status(500).json({ error: "No se pudo procesar la solicitud" });
   }

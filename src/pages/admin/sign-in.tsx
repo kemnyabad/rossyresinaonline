@@ -25,7 +25,7 @@ export default function AdminSignInPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-12">
       <Head>
-        <title>Acceso administrador â€” Rossy Resina</title>
+        <title>Acceso administrador - Rossy Resina</title>
         <meta name="description" content="Accede al panel administrativo de Rossy Resina." />
       </Head>
       <div className="w-full max-w-md bg-white rounded-lg shadow border border-gray-200 p-8">
@@ -41,7 +41,7 @@ export default function AdminSignInPage() {
           </div>
           <h1 className="mt-4 text-2xl font-semibold text-slate-900">Acceso administrador</h1>
           <p className="mt-2 text-sm text-gray-600 text-center">
-            Inicia sesion para gestionar productos, precios y contenido.
+            Inicia sesión para gestionar productos, precios y contenido.
           </p>
         </div>
 
@@ -59,14 +59,14 @@ export default function AdminSignInPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Contrasena"
+                placeholder="Contraseña"
                 className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
-                aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {showPassword ? (
                   <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
@@ -106,15 +106,15 @@ export default function AdminSignInPage() {
                       router.replace(res.url || cb);
                       return;
                     }
-                    setDebugMsg("SesiÃ³n creada, pero sin rol ADMIN.");
+                    setDebugMsg("Sesión creada, pero sin rol ADMIN.");
                     setErrorMsg("Tu usuario no tiene permisos de administrador.");
                   } else {
                     setDebugMsg(`Error de login: ${res?.error || "desconocido"} (${res?.status || "?"})`);
-                    setErrorMsg("Credenciales invÃ¡lidas para el panel admin.");
+                    setErrorMsg("Credenciales inválidas para el panel admin.");
                   }
                 } catch (err: any) {
-                  setDebugMsg(`ExcepciÃ³n: ${err?.message || String(err)}`);
-                  setErrorMsg("No se pudo iniciar sesiÃ³n.");
+                  setDebugMsg(`Excepción: ${err?.message || String(err)}`);
+                  setErrorMsg("No se pudo iniciar sesión.");
                 } finally {
                   setLoading(false);
                 }

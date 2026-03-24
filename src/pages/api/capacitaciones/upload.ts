@@ -32,7 +32,7 @@ function getExtension(mimeType: string) {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    if (req.method !== "POST") return res.status(405).json({ error: "Metodo no permitido" });
+    if (req.method !== "POST") return res.status(405).json({ error: "M?todo no permitido" });
 
     const session = (await getServerSession(req, res, authOptions as any)) as any;
     if (!session?.user?.email) return res.status(401).json({ error: "No autenticado" });

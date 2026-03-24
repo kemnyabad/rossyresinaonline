@@ -1,4 +1,4 @@
-﻿import type { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
 import fs from "fs";
 import path from "path";
 import { getServerSession } from "next-auth";
@@ -60,5 +60,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(204).end();
   }
 
-  return res.status(405).json({ error: "Metodo no permitido" });
+  return res.status(405).json({ error: "M?todo no permitido" });
 }

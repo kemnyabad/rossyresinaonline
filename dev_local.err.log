@@ -1,0 +1,15 @@
+Error: spawn EPERM
+    at ChildProcess.spawn (node:internal/child_process:421:11)
+    at spawn (node:child_process:796:9)
+    at fork (node:child_process:174:10)
+    at ChildProcessWorker.initialize (C:\Users\rossy\Documents\trae_projects\rossyresinaonline\node_modules\next\dist\compiled\jest-worker\index.js:1:10927)
+    at new ChildProcessWorker (C:\Users\rossy\Documents\trae_projects\rossyresinaonline\node_modules\next\dist\compiled\jest-worker\index.js:1:10815)
+    at WorkerPool.createWorker (C:\Users\rossy\Documents\trae_projects\rossyresinaonline\node_modules\next\dist\compiled\jest-worker\index.js:1:6315)
+    at new BaseWorkerPool (C:\Users\rossy\Documents\trae_projects\rossyresinaonline\node_modules\next\dist\compiled\jest-worker\index.js:1:8183)
+    at new WorkerPool (C:\Users\rossy\Documents\trae_projects\rossyresinaonline\node_modules\next\dist\compiled\jest-worker\index.js:1:6111)
+    at new Worker (C:\Users\rossy\Documents\trae_projects\rossyresinaonline\node_modules\next\dist\compiled\jest-worker\index.js:1:23381)
+    at startServer (C:\Users\rossy\Documents\trae_projects\rossyresinaonline\node_modules\next\dist\server\lib\start-server.js:166:34) {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'spawn'
+}

@@ -1,4 +1,4 @@
-﻿import Head from "next/head";
+import Head from "next/head";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
@@ -101,8 +101,8 @@ export default function SuscriptorProfilePage({ profile }: any) {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-[#fafafa] px-6 py-14 text-[#111111]">
-        <div className="mx-auto max-w-[760px] rounded-3xl border border-[#e5e7eb] bg-white p-10 text-center shadow-sm">
+      <div className="min-h-screen bg-[#fafafa] px-4 py-10 sm:px-6 sm:py-14 text-[#111111]">
+        <div className="mx-auto max-w-[760px] rounded-3xl border border-[#e5e7eb] bg-white p-6 sm:p-10 text-center shadow-sm">
           <h1 className="text-3xl font-semibold">Perfil no encontrado</h1>
           <p className="mt-3 text-base text-[#6b7280]">
             Este perfil no existe o fue eliminado.
@@ -140,7 +140,7 @@ export default function SuscriptorProfilePage({ profile }: any) {
         <div className="mx-auto min-h-screen max-w-[1440px]">
           <main>
             <header className="border-b border-[#dbdbdb] bg-white">
-              <div className="mx-auto flex max-w-[1060px] items-center justify-between px-4 py-4 sm:px-6">
+              <div className="mx-auto flex max-w-[1060px] flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 overflow-hidden rounded-full border border-[#dbdbdb] bg-white">
                     <img src="/logo.png" alt="Rossy Resina" className="h-full w-full object-cover" />
@@ -212,7 +212,7 @@ export default function SuscriptorProfilePage({ profile }: any) {
                     {isOwner ? (
                       <button
                         onClick={() => setEditOpen((value) => !value)}
-                        className="min-w-[170px] rounded-lg bg-[#efefef] px-4 py-2 text-sm font-semibold hover:bg-[#e5e5e5]"
+                        className="w-full sm:w-auto sm:min-w-[170px] rounded-lg bg-[#efefef] px-4 py-2 text-sm font-semibold hover:bg-[#e5e5e5]"
                       >
                         {editOpen ? "Cerrar edicion" : "Editar perfil"}
                       </button>
@@ -235,10 +235,10 @@ export default function SuscriptorProfilePage({ profile }: any) {
                     </span>
                   </div>
 
-                  <div className="max-w-[520px] space-y-1.5 text-sm">
+                  <div className="max-w-full sm:max-w-[520px] space-y-1.5 text-sm">
                     <p className="font-semibold">{profile.displayName}</p>
                     <p className="text-[#262626]">{profile.bio || "Creadora en Rossy Resina."}</p>
-                    <p className="text-[#737373]">{profile.location || "Peru"}</p>
+                    <p className="text-[#737373]">{profile.location || "Per?"}</p>
                     <p className="text-[#737373]">{joinedText ? `Miembro desde ${joinedText}` : ""}</p>
                   </div>
 
@@ -382,7 +382,7 @@ export default function SuscriptorProfilePage({ profile }: any) {
                       <button
                         type="button"
                         onClick={() => photoInputRef.current?.click()}
-                        className={`flex min-w-[150px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                        className={`flex w-full sm:w-auto sm:min-w-[150px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                           newType === "FOTO" && selectedFileName
                             ? "bg-[#eaf8ee] text-[#16a34a]"
                             : "bg-[#f4f4f5] text-[#5f6368] hover:bg-[#ededed]"
@@ -394,7 +394,7 @@ export default function SuscriptorProfilePage({ profile }: any) {
                       <button
                         type="button"
                         onClick={() => reelInputRef.current?.click()}
-                        className={`flex min-w-[150px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                        className={`flex w-full sm:w-auto sm:min-w-[150px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                           newType === "VIDEO" && selectedFileName
                             ? "bg-[#ffe8ee] text-[#fb7185]"
                             : "bg-[#f4f4f5] text-[#fb7185] hover:bg-[#ededed]"
@@ -426,7 +426,7 @@ export default function SuscriptorProfilePage({ profile }: any) {
                             setCreating(false);
                           }
                         }}
-                        className="rounded-full bg-[#111111] px-8 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:ml-auto"
+                        className="w-full rounded-full bg-[#111111] px-8 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:ml-auto sm:w-auto"
                         disabled={creating || uploadingFile}
                       >
                         {creating ? "Publicando..." : "Publicar"}
@@ -552,17 +552,17 @@ export default function SuscriptorProfilePage({ profile }: any) {
             <button
               type="button"
               onClick={() => setSelectedCreation(null)}
-              className="absolute left-5 top-5 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-4xl text-white"
+              className="absolute left-3 top-3 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-3xl text-white sm:left-5 sm:top-5 sm:h-14 sm:w-14 sm:text-4xl"
             >
               x
             </button>
 
             <div
               key={selectedCreation.id}
-              className="flex h-screen w-screen overflow-hidden bg-black"
+              className="flex h-screen w-screen flex-col overflow-hidden bg-black lg:flex-row"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex min-w-0 flex-1 items-center justify-center bg-black">
+              <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center bg-black">
                 {selectedCreation.type === "VIDEO" ? (
                   <video
                     src={selectedCreation.cover}
@@ -581,7 +581,7 @@ export default function SuscriptorProfilePage({ profile }: any) {
               </div>
 
               <aside
-                className="flex h-full min-h-0 w-[520px] min-w-[520px] flex-col border-l border-[#1f2937] bg-[#0f1419] text-white"
+                className="flex h-[48vh] min-h-0 w-full min-w-0 flex-col border-t border-[#1f2937] bg-[#0f1419] text-white lg:h-full lg:w-[420px] lg:min-w-[420px] lg:border-l lg:border-t-0"
               >
                 <div className="flex items-center gap-4 border-b border-white/10 px-6 py-5">
                   <div className="h-14 w-14 overflow-hidden rounded-full bg-white/10">
@@ -604,9 +604,9 @@ export default function SuscriptorProfilePage({ profile }: any) {
                   <p className="mt-4 text-base text-white/60">Publicado en tu portafolio de capacitaciones.</p>
 
                   <div className="mt-8 flex items-center gap-8 border-y border-white/10 py-5 text-lg text-white/80">
-                    <span>♡ {Math.max(17, selectedCreation.title.length * 3)}</span>
-                    <span>↻ {Math.max(6, selectedCreation.title.length)}</span>
-                    <span>◷ {Math.max(120, selectedCreation.title.length * 12)}</span>
+                    <span>a {Math.max(17, selectedCreation.title.length * 3)}</span>
+                    <span> {Math.max(6, selectedCreation.title.length)}</span>
+                    <span> {Math.max(120, selectedCreation.title.length * 12)}</span>
                   </div>
 
                   <div className="mt-7 space-y-7">

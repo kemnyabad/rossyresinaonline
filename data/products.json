@@ -26,7 +26,7 @@
     "brand": "Rossy Resina",
     "category": "Accesorios",
     "description": "Set de argollas, ganchos y terminales para armar tus creaciones.",
-    "image": "/sliderImg_3.svg",
+    "image": "",
     "isNew": true,
     "oldPrice": 28,
     "price": 22
@@ -73,7 +73,7 @@
     "brand": "Rossy Resina",
     "category": "Resina UV",
     "description": "Resina UV de curado rapido para piezas pequenas y acabados brillantes.",
-    "image": "/sliderImg_2.svg",
+    "image": "",
     "isNew": true,
     "oldPrice": 42,
     "price": 35
@@ -85,7 +85,7 @@
     "brand": "Rossy Resina",
     "category": "Resina epoxica",
     "description": "Kit de resina epoxica transparente para proyectos de arte y bisuteria.",
-    "image": "/sliderImg_1.svg",
+    "image": "",
     "isNew": true,
     "oldPrice": 58,
     "price": 49
@@ -145,7 +145,7 @@
   },
   {
     "code": "RR-0004-M",
-    "title": "OSITO CARIÑOSITO",
+    "title": "OSITO CARIÃ‘OSITO",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
@@ -163,7 +163,7 @@
   },
   {
     "code": "RR-0005-M",
-    "title": "ZAPATO QUINCEAÑERA",
+    "title": "ZAPATO QUINCEAÃ‘ERA",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
@@ -293,7 +293,7 @@
   },
   {
     "code": "RR-0015",
-    "title": "LAPICERO SHAKER CORAZÃ“N",
+    "title": "LAPICERO SHAKER CORAZÃƒâ€œN",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
@@ -304,11 +304,11 @@
   },
   {
     "code": "RR-0016",
-    "title": "LAPICERO SHAKER CORAZÃ“N",
+    "title": "LAPICERO SHAKER CORAZÃƒâ€œN",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
-    "image": "products/lapicero-shaker-ceorazon.avif",
+    "image": "products/lapicero-shaker-corazon.avif",
     "isNew": true,
     "price": 12,
     "_id": 1765504357264
@@ -1349,7 +1349,7 @@
   },
   {
     "code": "RR-0111",
-    "title": "SEÃ‘ORITA",
+    "title": "SEÃƒâ€˜ORITA",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
     "description": "",
