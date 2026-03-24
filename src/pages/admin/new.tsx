@@ -38,6 +38,7 @@ export default function NewProduct() {
     category: "Resinas",
     description: "",
     barcode: "",
+    sku: "",
     stock: 0,
     image: "",
     images: [],
@@ -133,7 +134,7 @@ export default function NewProduct() {
       }
       setFiles([]);
     } catch (err: any) {
-      setUploadError(err?.message || "Error al subir imÃ¡genes");
+      setUploadError(err?.message || "Error al subir imágenes");
     } finally {
       setUploading(false);
     }
@@ -159,7 +160,7 @@ export default function NewProduct() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-1 md:col-span-2">
-              <span className="text-sm text-gray-700">TÃ­tulo</span>
+              <span className="text-sm text-gray-700">Título</span>
               <input
                 className="rounded-md border border-gray-300 px-3 py-2"
                 value={form.title || ""}
@@ -177,7 +178,7 @@ export default function NewProduct() {
             </label>
 
             <label className="grid gap-1">
-              <span className="text-sm text-gray-700">CategorÃ­a</span>
+              <span className="text-sm text-gray-700">Categoría</span>
               <input
                 className="rounded-md border border-gray-300 px-3 py-2"
                 value={form.category || ""}
@@ -186,7 +187,7 @@ export default function NewProduct() {
             </label>
 
             <label className="grid gap-1 md:col-span-2">
-              <span className="text-sm text-gray-700">DescripciÃ³n</span>
+              <span className="text-sm text-gray-700">Descripción</span>
               <textarea
                 rows={5}
                 className="rounded-md border border-gray-300 px-3 py-2"
@@ -236,6 +237,16 @@ export default function NewProduct() {
               />
             </label>
 
+            <label className="grid gap-1">
+              <span className="text-sm text-gray-700">SKU (Código de inventario)</span>
+              <input
+                className="rounded-md border border-gray-300 px-3 py-2"
+                value={form.sku || ""}
+                onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                placeholder="Ej: ACC-2026-0001"
+              />
+            </label>
+
             <label className="inline-flex items-center gap-2 md:col-span-2">
               <input
                 type="checkbox"
@@ -270,10 +281,10 @@ export default function NewProduct() {
         </section>
 
         <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-4 lg:col-span-5">
-          <h2 className="text-sm font-semibold text-gray-700">ImÃ¡genes (Cloudinary)</h2>
+          <h2 className="text-sm font-semibold text-gray-700">Imágenes (Cloudinary)</h2>
 
           <div className="grid gap-2">
-            <span className="text-sm text-gray-700">Subir imÃ¡genes</span>
+            <span className="text-sm text-gray-700">Subir imágenes</span>
             <div className="flex flex-wrap items-center gap-2">
               <input
                 type="file"
@@ -305,12 +316,12 @@ export default function NewProduct() {
                 <p className="mt-2 break-all text-xs text-gray-500">{mainImagePreview}</p>
               </div>
             ) : (
-              <p className="mt-2 text-xs text-gray-500">Sube imÃ¡genes para establecer la principal.</p>
+              <p className="mt-2 text-xs text-gray-500">Sube imágenes para establecer la principal.</p>
             )}
           </div>
 
           <div className="grid gap-2">
-            <span className="text-sm text-gray-700">GalerÃ­a del producto</span>
+            <span className="text-sm text-gray-700">Galería del producto</span>
             {galleryImages.length > 0 ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {galleryImages.map((img) => (
@@ -339,7 +350,7 @@ export default function NewProduct() {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-500">No hay imÃ¡genes. Sube al menos una.</p>
+              <p className="text-xs text-gray-500">No hay imágenes. Sube al menos una.</p>
             )}
           </div>
         </section>

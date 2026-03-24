@@ -692,6 +692,38 @@ const DynamicPage = ({ product, recs }: Props) => {
                   {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
                 </div>
 
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Información del producto</h4>
+                  <div className="space-y-1.5 text-sm">
+                    {product.sku && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">SKU:</span>
+                        <span className="font-mono font-semibold text-gray-900">{product.sku}</span>
+                      </div>
+                    )}
+                    {product.barcode && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Código de barras:</span>
+                        <span className="font-mono font-semibold text-gray-900">{product.barcode}</span>
+                      </div>
+                    )}
+                    {product.code && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Código:</span>
+                        <span className="font-mono font-semibold text-gray-900">{product.code}</span>
+                      </div>
+                    )}
+                    {product.stock !== undefined && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Stock disponible:</span>
+                        <span className={`font-semibold ${product.stock > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {product.stock > 0 ? `${product.stock} unidades` : 'Agotado'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="mt-4">
                   <p className="text-sm text-gray-600">Cantidad:</p>
                   <div className="mt-2 flex items-center gap-3">

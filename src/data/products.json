@@ -17,7 +17,8 @@
       "/products/vaso_mezclado_023.avif",
       "/products/vaso_mezclador_024.avif",
       "/products/vaso_mezclador_023.avif"
-    ]
+    ],
+    "sku": "ACC-2026-0001"
   },
   {
     "_id": 9005,
@@ -29,7 +30,8 @@
     "image": "/sliderImg_3.svg",
     "isNew": true,
     "oldPrice": 28,
-    "price": 22
+    "price": 22,
+    "sku": "ACC-2026-0002"
   },
   {
     "_id": 9004,
@@ -46,7 +48,8 @@
       "/products/Pigmento_perlado_rosa_027.avif",
       "/products/pigmento_perlado_rosa_028.avif",
       "/products/pigmento_perlado_rosa_029.avif"
-    ]
+    ],
+    "sku": "PIG-2026-0003"
   },
   {
     "_id": 9003,
@@ -58,7 +61,8 @@
     "image": "/sliderImg_3.svg",
     "isNew": true,
     "oldPrice": 18,
-    "price": 12
+    "price": 12,
+    "sku": "PIG-2026-0004"
   },
   {
     "_id": 9002,
@@ -70,7 +74,8 @@
     "image": "/sliderImg_2.svg",
     "isNew": true,
     "oldPrice": 42,
-    "price": 35
+    "price": 35,
+    "sku": "RES-2026-0005"
   },
   {
     "_id": 9001,
@@ -82,7 +87,8 @@
     "image": "/sliderImg_1.svg",
     "isNew": true,
     "oldPrice": 58,
-    "price": 49
+    "price": 49,
+    "sku": "RES-2026-0006"
   },
   {
     "code": "RR-0001-M",
@@ -98,7 +104,8 @@
       "/products/molde_botones_004.avif",
       "/products/molde_botones_003.avif",
       "/products/molde_botones_002.avif"
-    ]
+    ],
+    "sku": "MOL-2026-0007"
   },
   {
     "code": "RR-0002-M",
@@ -117,7 +124,8 @@
       "/products/molde_camiseta_medico_008.avif",
       "/products/molde_camiseta_medico_009.avif",
       "/products/molde_camiseta_medico_010.avif"
-    ]
+    ],
+    "sku": "MOL-2026-0008"
   },
   {
     "code": "RR-0003-M",
@@ -135,7 +143,8 @@
       "/products/molde_virgen_guadalupe_011.avif",
       "/products/molde_virgen_guadalupe_012.avif"
     ],
-    "cid": 2
+    "cid": 2,
+    "sku": "MOL-2026-0009"
   },
   {
     "code": "RR-0004-M",
@@ -153,7 +162,8 @@
       "/products/molde_osito_cari_oso_015.avif",
       "/products/molde_osito_cari_oso_016.avif",
       "/products/molde_osito_cari_oso_017.avif"
-    ]
+    ],
+    "sku": "MOL-2026-0010"
   },
   {
     "code": "RR-0005-M",
@@ -169,7 +179,8 @@
       "/products/molde_zapato_quincea_era_018.avif",
       "/products/molde_zapato_quincea_era_019.avif",
       "/products/molde_zapato_quincea_era_020.avif"
-    ]
+    ],
+    "sku": "MOL-2026-0011"
   },
   {
     "code": "RR-0006-M",
@@ -180,7 +191,8 @@
     "image": "products/fresa-joyero.avif",
     "isNew": true,
     "price": 20,
-    "_id": 1765504357060
+    "_id": 1765504357060,
+    "sku": "MOL-2026-0012"
   },
   {
     "code": "RR-0007-M",
@@ -191,7 +203,8 @@
     "image": "products/Lapicero-1.avif",
     "isNew": true,
     "price": 10,
-    "_id": 1765504357100
+    "_id": 1765504357100,
+    "sku": "MOL-2026-0013"
   },
   {
     "code": "RR-0008-M",
@@ -202,7 +215,8 @@
     "image": "products/Lapicero-2.avif",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357180
+    "_id": 1765504357180,
+    "sku": "MOL-2026-0014"
   },
   {
     "code": "RR-0009-M",
@@ -213,7 +227,8 @@
     "image": "products/Lapicero-3.avif",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357226
+    "_id": 1765504357226,
+    "sku": "MOL-2026-0015"
   },
   {
     "code": "RR-0010",
@@ -224,7 +239,8 @@
     "image": "products/aretes-pendientes.avif",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357264
+    "_id": 1765504357264,
+    "sku": "MOL-2026-0016"
   },
   {
     "code": "RR-0011",
@@ -236,7 +252,8 @@
     "isNew": true,
     "price": 12,
     "_id": 1765504357264,
-    "cid": 10
+    "cid": 10,
+    "sku": "MOL-2026-0017"
   },
   {
     "code": "RR-0012",
@@ -248,7 +265,8 @@
     "isNew": true,
     "price": 12,
     "_id": 1765504357264,
-    "cid": 11
+    "cid": 11,
+    "sku": "MOL-2026-0018"
   },
   {
     "code": "RR-0013",
@@ -259,7 +277,8 @@
     "image": "products/lapicero-shaker-formas.avif",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357264
+    "_id": 1765504357264,
+    "sku": "MOL-2026-0019"
   },
   {
     "code": "RR-0014",
@@ -270,7 +289,8 @@
     "image": "products/lapicero-shaker-orejitas.avif",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357264
+    "_id": 1765504357264,
+    "sku": "MOL-2026-0020"
   },
   {
     "code": "RR-0015",
@@ -281,7 +301,8 @@
     "image": "products/lapicero-shaker-corazon.avif",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357264
+    "_id": 1765504357264,
+    "sku": "MOL-2026-0021"
   },
   {
     "code": "RR-0016",
@@ -292,7 +313,8 @@
     "image": "products/lapicero-shaker-ceorazon.avif",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357264
+    "_id": 1765504357264,
+    "sku": "MOL-2026-0022"
   },
   {
     "code": "RR-0017",
@@ -303,7 +325,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504357298
+    "_id": 1765504357298,
+    "sku": "MOL-2026-0023"
   },
   {
     "code": "RR-0018",
@@ -314,7 +337,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504357322
+    "_id": 1765504357322,
+    "sku": "MOL-2026-0024"
   },
   {
     "code": "RR-0019",
@@ -325,7 +349,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357349
+    "_id": 1765504357349,
+    "sku": "MOL-2026-0025"
   },
   {
     "code": "RR-0020",
@@ -336,7 +361,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357395
+    "_id": 1765504357395,
+    "sku": "MOL-2026-0026"
   },
   {
     "code": "RR-0021",
@@ -347,7 +373,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 23,
-    "_id": 1765504357425
+    "_id": 1765504357425,
+    "sku": "MOL-2026-0027"
   },
   {
     "code": "RR-0022",
@@ -358,7 +385,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357456
+    "_id": 1765504357456,
+    "sku": "MOL-2026-0028"
   },
   {
     "code": "RR-0023",
@@ -369,7 +397,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 18,
-    "_id": 1765504357479
+    "_id": 1765504357479,
+    "sku": "MOL-2026-0029"
   },
   {
     "code": "RR-0024",
@@ -380,7 +409,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504357555
+    "_id": 1765504357555,
+    "sku": "MOL-2026-0030"
   },
   {
     "code": "RR-0025",
@@ -391,7 +421,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 20,
-    "_id": 1765504357588
+    "_id": 1765504357588,
+    "sku": "MOL-2026-0031"
   },
   {
     "code": "RR-0026",
@@ -402,7 +433,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 5,
-    "_id": 1765504357623
+    "_id": 1765504357623,
+    "sku": "MOL-2026-0032"
   },
   {
     "code": "RR-0027",
@@ -413,7 +445,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 18,
-    "_id": 1765504357693
+    "_id": 1765504357693,
+    "sku": "MOL-2026-0033"
   },
   {
     "code": "RR-0028",
@@ -424,7 +457,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 18,
-    "_id": 1765504357721
+    "_id": 1765504357721,
+    "sku": "MOL-2026-0034"
   },
   {
     "code": "RR-0029",
@@ -435,7 +469,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 5,
-    "_id": 1765504357759
+    "_id": 1765504357759,
+    "sku": "MOL-2026-0035"
   },
   {
     "code": "RR-0030",
@@ -446,7 +481,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504357799
+    "_id": 1765504357799,
+    "sku": "MOL-2026-0036"
   },
   {
     "code": "RR-0031",
@@ -457,7 +493,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504357837
+    "_id": 1765504357837,
+    "sku": "MOL-2026-0037"
   },
   {
     "code": "RR-0032",
@@ -468,7 +505,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 5,
-    "_id": 1765504357862
+    "_id": 1765504357862,
+    "sku": "MOL-2026-0038"
   },
   {
     "code": "RR-0033",
@@ -479,7 +517,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504357903
+    "_id": 1765504357903,
+    "sku": "MOL-2026-0039"
   },
   {
     "code": "RR-0034",
@@ -490,7 +529,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504357939
+    "_id": 1765504357939,
+    "sku": "MOL-2026-0040"
   },
   {
     "code": "RR-0035",
@@ -501,7 +541,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504357983
+    "_id": 1765504357983,
+    "sku": "MOL-2026-0041"
   },
   {
     "code": "RR-0036",
@@ -512,7 +553,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 13,
-    "_id": 1765504358009
+    "_id": 1765504358009,
+    "sku": "MOL-2026-0042"
   },
   {
     "code": "RR-0037",
@@ -523,7 +565,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 28,
-    "_id": 1765504358036
+    "_id": 1765504358036,
+    "sku": "MOL-2026-0043"
   },
   {
     "code": "RR-0038",
@@ -534,7 +577,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504358064
+    "_id": 1765504358064,
+    "sku": "MOL-2026-0044"
   },
   {
     "code": "RR-0039",
@@ -545,7 +589,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504358090
+    "_id": 1765504358090,
+    "sku": "MOL-2026-0045"
   },
   {
     "code": "RR-0040",
@@ -556,7 +601,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 28,
-    "_id": 1765504358123
+    "_id": 1765504358123,
+    "sku": "MOL-2026-0046"
   },
   {
     "code": "RR-0041",
@@ -567,7 +613,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 25,
-    "_id": 1765504358166
+    "_id": 1765504358166,
+    "sku": "MOL-2026-0047"
   },
   {
     "code": "RR-0042",
@@ -578,7 +625,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504358205
+    "_id": 1765504358205,
+    "sku": "MOL-2026-0048"
   },
   {
     "code": "RR-0043",
@@ -589,7 +637,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504358242
+    "_id": 1765504358242,
+    "sku": "MOL-2026-0049"
   },
   {
     "code": "RR-0044",
@@ -600,7 +649,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 18,
-    "_id": 1765504358285
+    "_id": 1765504358285,
+    "sku": "MOL-2026-0050"
   },
   {
     "code": "RR-0045",
@@ -611,7 +661,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504358329
+    "_id": 1765504358329,
+    "sku": "MOL-2026-0051"
   },
   {
     "code": "RR-0046",
@@ -622,7 +673,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 23,
-    "_id": 1765504358372
+    "_id": 1765504358372,
+    "sku": "MOL-2026-0052"
   },
   {
     "code": "RR-0047",
@@ -633,7 +685,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504358403
+    "_id": 1765504358403,
+    "sku": "MOL-2026-0053"
   },
   {
     "code": "RR-0048",
@@ -644,7 +697,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 28,
-    "_id": 1765504358461
+    "_id": 1765504358461,
+    "sku": "MOL-2026-0054"
   },
   {
     "code": "RR-0049",
@@ -655,7 +709,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504358500
+    "_id": 1765504358500,
+    "sku": "MOL-2026-0055"
   },
   {
     "code": "RR-0050",
@@ -666,7 +721,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 28,
-    "_id": 1765504358532
+    "_id": 1765504358532,
+    "sku": "MOL-2026-0056"
   },
   {
     "code": "RR-0051",
@@ -677,7 +733,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504358573
+    "_id": 1765504358573,
+    "sku": "MOL-2026-0057"
   },
   {
     "code": "RR-0052",
@@ -688,7 +745,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 28,
-    "_id": 1765504358655
+    "_id": 1765504358655,
+    "sku": "MOL-2026-0058"
   },
   {
     "code": "RR-0053",
@@ -699,7 +757,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504358737
+    "_id": 1765504358737,
+    "sku": "MOL-2026-0059"
   },
   {
     "code": "RR-0054",
@@ -710,7 +769,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504358778
+    "_id": 1765504358778,
+    "sku": "MOL-2026-0060"
   },
   {
     "code": "RR-0055",
@@ -721,7 +781,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504358807
+    "_id": 1765504358807,
+    "sku": "MOL-2026-0061"
   },
   {
     "code": "RR-0056",
@@ -732,7 +793,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 8,
-    "_id": 1765504358879
+    "_id": 1765504358879,
+    "sku": "MOL-2026-0062"
   },
   {
     "code": "RR-0057",
@@ -743,7 +805,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504358930
+    "_id": 1765504358930,
+    "sku": "MOL-2026-0063"
   },
   {
     "code": "RR-0058",
@@ -754,7 +817,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 8,
-    "_id": 1765504358964
+    "_id": 1765504358964,
+    "sku": "MOL-2026-0064"
   },
   {
     "code": "RR-0059",
@@ -765,7 +829,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504358996
+    "_id": 1765504358996,
+    "sku": "MOL-2026-0065"
   },
   {
     "code": "RR-0060",
@@ -776,7 +841,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504359034
+    "_id": 1765504359034,
+    "sku": "MOL-2026-0066"
   },
   {
     "code": "RR-0061",
@@ -787,7 +853,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504359080
+    "_id": 1765504359080,
+    "sku": "MOL-2026-0067"
   },
   {
     "code": "RR-0062",
@@ -798,7 +865,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504359123
+    "_id": 1765504359123,
+    "sku": "MOL-2026-0068"
   },
   {
     "code": "RR-0063",
@@ -809,7 +877,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504359168
+    "_id": 1765504359168,
+    "sku": "MOL-2026-0069"
   },
   {
     "code": "RR-0064",
@@ -820,7 +889,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 35,
-    "_id": 1765504359209
+    "_id": 1765504359209,
+    "sku": "MOL-2026-0070"
   },
   {
     "code": "RR-0065",
@@ -831,7 +901,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504359251
+    "_id": 1765504359251,
+    "sku": "MOL-2026-0071"
   },
   {
     "code": "RR-0066",
@@ -842,7 +913,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504359289
+    "_id": 1765504359289,
+    "sku": "MOL-2026-0072"
   },
   {
     "code": "RR-0067",
@@ -853,7 +925,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 25,
-    "_id": 1765504359326
+    "_id": 1765504359326,
+    "sku": "MOL-2026-0073"
   },
   {
     "code": "RR-0068",
@@ -864,7 +937,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504359362
+    "_id": 1765504359362,
+    "sku": "MOL-2026-0074"
   },
   {
     "code": "RR-0069",
@@ -875,7 +949,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504359406
+    "_id": 1765504359406,
+    "sku": "MOL-2026-0075"
   },
   {
     "code": "RR-0070",
@@ -886,7 +961,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504359450
+    "_id": 1765504359450,
+    "sku": "MOL-2026-0076"
   },
   {
     "code": "RR-0071",
@@ -897,7 +973,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504359487
+    "_id": 1765504359487,
+    "sku": "MOL-2026-0077"
   },
   {
     "code": "RR-0072",
@@ -908,7 +985,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504359532
+    "_id": 1765504359532,
+    "sku": "MOL-2026-0078"
   },
   {
     "code": "RR-0073",
@@ -919,7 +997,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504359563
+    "_id": 1765504359563,
+    "sku": "MOL-2026-0079"
   },
   {
     "code": "RR-0074",
@@ -930,7 +1009,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 35,
-    "_id": 1765504359597
+    "_id": 1765504359597,
+    "sku": "MOL-2026-0080"
   },
   {
     "code": "RR-0075",
@@ -941,7 +1021,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504359641
+    "_id": 1765504359641,
+    "sku": "MOL-2026-0081"
   },
   {
     "code": "RR-0076",
@@ -952,7 +1033,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504359686
+    "_id": 1765504359686,
+    "sku": "MOL-2026-0082"
   },
   {
     "code": "RR-0077",
@@ -963,7 +1045,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504359724
+    "_id": 1765504359724,
+    "sku": "MOL-2026-0083"
   },
   {
     "code": "RR-0078",
@@ -974,7 +1057,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504359762
+    "_id": 1765504359762,
+    "sku": "MOL-2026-0084"
   },
   {
     "code": "RR-0079",
@@ -985,7 +1069,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 7,
-    "_id": 1765504359798
+    "_id": 1765504359798,
+    "sku": "MOL-2026-0085"
   },
   {
     "code": "RR-0080",
@@ -996,7 +1081,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504359836
+    "_id": 1765504359836,
+    "sku": "MOL-2026-0086"
   },
   {
     "code": "RR-0081",
@@ -1007,7 +1093,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 13,
-    "_id": 1765504359874
+    "_id": 1765504359874,
+    "sku": "MOL-2026-0087"
   },
   {
     "code": "RR-0082",
@@ -1018,7 +1105,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 23,
-    "_id": 1765504359909
+    "_id": 1765504359909,
+    "sku": "MOL-2026-0088"
   },
   {
     "code": "RR-0083",
@@ -1029,7 +1117,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 23,
-    "_id": 1765504359944
+    "_id": 1765504359944,
+    "sku": "MOL-2026-0089"
   },
   {
     "code": "RR-0084",
@@ -1040,7 +1129,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504359983
+    "_id": 1765504359983,
+    "sku": "MOL-2026-0090"
   },
   {
     "code": "RR-0085",
@@ -1051,7 +1141,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504360016
+    "_id": 1765504360016,
+    "sku": "MOL-2026-0091"
   },
   {
     "code": "RR-0086",
@@ -1062,7 +1153,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 23,
-    "_id": 1765504360050
+    "_id": 1765504360050,
+    "sku": "MOL-2026-0092"
   },
   {
     "code": "RR-0087",
@@ -1073,7 +1165,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 35,
-    "_id": 1765504360073
+    "_id": 1765504360073,
+    "sku": "MOL-2026-0093"
   },
   {
     "code": "RR-0088",
@@ -1084,7 +1177,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 22,
-    "_id": 1765504360104
+    "_id": 1765504360104,
+    "sku": "MOL-2026-0094"
   },
   {
     "code": "RR-0089",
@@ -1095,7 +1189,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504360154
+    "_id": 1765504360154,
+    "sku": "MOL-2026-0095"
   },
   {
     "code": "RR-0090",
@@ -1106,7 +1201,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 30,
-    "_id": 1765504360181
+    "_id": 1765504360181,
+    "sku": "MOL-2026-0096"
   },
   {
     "code": "RR-0091",
@@ -1117,7 +1213,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 7,
-    "_id": 1765504360214
+    "_id": 1765504360214,
+    "sku": "MOL-2026-0097"
   },
   {
     "code": "RR-0092",
@@ -1128,7 +1225,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 5,
-    "_id": 1765504360245
+    "_id": 1765504360245,
+    "sku": "MOL-2026-0098"
   },
   {
     "code": "RR-0093",
@@ -1139,7 +1237,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 18,
-    "_id": 1765504360276
+    "_id": 1765504360276,
+    "sku": "MOL-2026-0099"
   },
   {
     "code": "RR-0094",
@@ -1150,7 +1249,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 18,
-    "_id": 1765504360313
+    "_id": 1765504360313,
+    "sku": "MOL-2026-0100"
   },
   {
     "code": "RR-0095",
@@ -1161,7 +1261,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504360353
+    "_id": 1765504360353,
+    "sku": "MOL-2026-0101"
   },
   {
     "code": "RR-0096",
@@ -1172,7 +1273,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 18,
-    "_id": 1765504360390
+    "_id": 1765504360390,
+    "sku": "MOL-2026-0102"
   },
   {
     "code": "RR-0097",
@@ -1183,7 +1285,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504360429
+    "_id": 1765504360429,
+    "sku": "MOL-2026-0103"
   },
   {
     "code": "RR-0098",
@@ -1194,7 +1297,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504360467
+    "_id": 1765504360467,
+    "sku": "MOL-2026-0104"
   },
   {
     "code": "RR-0099",
@@ -1205,7 +1309,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504360502
+    "_id": 1765504360502,
+    "sku": "MOL-2026-0105"
   },
   {
     "code": "RR-0100",
@@ -1216,7 +1321,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504360541
+    "_id": 1765504360541,
+    "sku": "MOL-2026-0106"
   },
   {
     "code": "RR-0101",
@@ -1227,7 +1333,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504360579
+    "_id": 1765504360579,
+    "sku": "MOL-2026-0107"
   },
   {
     "code": "RR-0102",
@@ -1238,7 +1345,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504360619
+    "_id": 1765504360619,
+    "sku": "MOL-2026-0108"
   },
   {
     "code": "RR-0103",
@@ -1249,7 +1357,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504360666
+    "_id": 1765504360666,
+    "sku": "MOL-2026-0109"
   },
   {
     "code": "RR-0104",
@@ -1260,7 +1369,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 18,
-    "_id": 1765504360715
+    "_id": 1765504360715,
+    "sku": "MOL-2026-0110"
   },
   {
     "code": "RR-0105",
@@ -1271,7 +1381,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504360751
+    "_id": 1765504360751,
+    "sku": "MOL-2026-0111"
   },
   {
     "code": "RR-0106",
@@ -1282,7 +1393,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504360783
+    "_id": 1765504360783,
+    "sku": "MOL-2026-0112"
   },
   {
     "code": "RR-0107",
@@ -1293,7 +1405,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504360815
+    "_id": 1765504360815,
+    "sku": "MOL-2026-0113"
   },
   {
     "code": "RR-0108",
@@ -1304,7 +1417,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504360847
+    "_id": 1765504360847,
+    "sku": "MOL-2026-0114"
   },
   {
     "code": "RR-0109",
@@ -1315,7 +1429,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504360879
+    "_id": 1765504360879,
+    "sku": "MOL-2026-0115"
   },
   {
     "code": "RR-0110",
@@ -1326,7 +1441,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504360913
+    "_id": 1765504360913,
+    "sku": "MOL-2026-0116"
   },
   {
     "code": "RR-0111",
@@ -1337,7 +1453,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 13,
-    "_id": 1765504360950
+    "_id": 1765504360950,
+    "sku": "MOL-2026-0117"
   },
   {
     "code": "RR-0112",
@@ -1348,7 +1465,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504360988
+    "_id": 1765504360988,
+    "sku": "MOL-2026-0118"
   },
   {
     "code": "RR-0113",
@@ -1359,7 +1477,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504361024
+    "_id": 1765504361024,
+    "sku": "MOL-2026-0119"
   },
   {
     "code": "RR-0114",
@@ -1370,7 +1489,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504361069
+    "_id": 1765504361069,
+    "sku": "MOL-2026-0120"
   },
   {
     "code": "RR-0115",
@@ -1381,7 +1501,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 15,
-    "_id": 1765504361115
+    "_id": 1765504361115,
+    "sku": "MOL-2026-0121"
   },
   {
     "code": "RR-0116",
@@ -1392,7 +1513,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 3,
-    "_id": 1765504361152
+    "_id": 1765504361152,
+    "sku": "MOL-2026-0122"
   },
   {
     "code": "RR-0117",
@@ -1403,7 +1525,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504361206
+    "_id": 1765504361206,
+    "sku": "MOL-2026-0123"
   },
   {
     "code": "RR-0118",
@@ -1414,7 +1537,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 12,
-    "_id": 1765504361254
+    "_id": 1765504361254,
+    "sku": "MOL-2026-0124"
   },
   {
     "code": "RR-0119",
@@ -1425,7 +1549,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504361293
+    "_id": 1765504361293,
+    "sku": "MOL-2026-0125"
   },
   {
     "code": "RR-0120",
@@ -1436,7 +1561,8 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 10,
-    "_id": 1765504361328
+    "_id": 1765504361328,
+    "sku": "MOL-2026-0126"
   },
   {
     "code": "RR-0001",
@@ -1447,6 +1573,7 @@
     "image": "favicon-96x96.png",
     "isNew": true,
     "price": 5,
-    "_id": 1765504361364
+    "_id": 1765504361364,
+    "sku": "MOL-2026-0127"
   }
 ]

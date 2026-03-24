@@ -1,6 +1,7 @@
 export interface ProductProps {
   code?: string;
   barcode?: string;
+  sku?: string;
   stock?: number;
   measure?: string;
   priceBulk12?: number;
@@ -19,6 +20,7 @@ export interface ProductProps {
 export interface StoreProduct {
   code?: string;
   barcode?: string;
+  sku?: string;
   stock?: number;
   measure?: string;
   priceBulk12?: number;
