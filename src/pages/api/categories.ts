@@ -17,7 +17,13 @@ function readCategories() {
 }
 
 function writeCategories(items: any[]) {
-  fs.writeFileSync(dataPath, JSON.stringify(items, null, 2), "utf-8");
+  try {
+    fs.writeFileSync(dataPath, JSON.stringify(items, null, 2), "utf-8");
+    return true;
+  } catch (error) {
+    console.error('writeCategories error', error);
+    return false;
+  }
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -34,7 +40,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const id = body._id ?? Date.now();
     const item = { ...body, _id: id };
     items.push(item);
-    writeCategories(items);
+    if (!writeCategories(items)) {
+      return res.status(500).json({ error: "No se pudo guardar la categoría (archivo de solo lectura)." });
+    }
     return res.status(201).json(item);
   }
   if (req.method === "PUT") {
@@ -42,9 +50,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const body = req.body || {};
     const id = body._id;
     const idx = items.findIndex((c: any) => c._id == id);
-    if (idx === -1) return res.status(404).json({ error: "Categora no encontrada" });
+    if (idx === -1) return res.status(404).json({ error: "Categoría no encontrada" });
     items[idx] = { ...items[idx], ...body };
-    writeCategories(items);
+    if (!writeCategories(items)) {
+      return res.status(500).json({ error: "No se pudo actualizar la categoría (archivo de solo lectura)." });
+    }
     return res.status(200).json(items[idx]);
   }
   if (req.method === "DELETE") {
@@ -52,8 +62,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const id = (req.query._id as string) || (req.body?._id as string);
     const before = items.length;
     const filtered = items.filter((c: any) => String(c._id) !== String(id));
-    if (filtered.length === before) return res.status(404).json({ error: "Categora no encontrada" });
-    writeCategories(filtered);
+    if (filtered.length === before) return res.status(404).json({ error: "Categoría no encontrada" });
+    if (!writeCategories(filtered)) {
+      return res.status(500).json({ error: "No se pudo eliminar la categoría (archivo de solo lectura)." });
+    }
     return res.status(204).end();
   }
   return res.status(405).json({ error: "Mtodo no permitido" });
