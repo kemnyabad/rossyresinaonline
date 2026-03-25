@@ -27,19 +27,33 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
   const leftProduct = featured[0];
   const rightTop = featured[1] || featured[0];
   const rightBottom = featured[2] || featured[1] || featured[0];
-  
-  // Filtro solo moldes para el slide 2 (Moldes de silicona)
-  const moldProducts = remateProducts.filter(p => {
+
+  const moldProducts = remateProducts.filter((p) => {
     const cat = String(p?.category || "").toLowerCase();
     const title = String(p?.title || "").toLowerCase();
     const code = String(p?.code || "").toLowerCase();
     return cat.includes("molde") || title.includes("molde") || code.includes("mol_");
   });
-  
-  const nextFeatured = moldProducts.length > 0 ? moldProducts.slice(0, 7) : remateProducts.slice(3, 7);
-  const secondLeft = nextFeatured[0] || featured[0];
-  const secondCenter = nextFeatured[1] || featured[1] || featured[0];
-  const secondRight = nextFeatured[2] || featured[2] || featured[1] || featured[0];
+
+  const makeUniqueProducts = (items: any[]) => {
+    const seen = new Set();
+    const unique: any[] = [];
+    for (const item of items) {
+      const key = String(item?.code || item?._id || "").trim().toLowerCase();
+      if (!key) continue;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(item);
+    }
+    return unique;
+  };
+
+  const candidates = makeUniqueProducts([...moldProducts, ...remateProducts]);
+  const selected = candidates.slice(0, 3);
+
+  const secondLeft = selected[0] || featured[0];
+  const secondCenter = selected[1] || featured[1] || featured[0];
+  const secondRight = selected[2] || featured[2] || featured[1] || featured[0];
   const thirdFeatured = (topVisitedProducts.length > 0 ? topVisitedProducts : remateProducts).slice(0, 5);
 
   const discountPercent = (() => {
