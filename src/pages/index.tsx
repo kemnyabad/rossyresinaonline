@@ -106,6 +106,15 @@ export default function Home({ productData, behavior }: Props) {
     () => (realTopProducts.length > 0 ? realTopProducts : allProducts).slice(0, 8),
     [realTopProducts, allProducts]
   );
+
+  const moldProductsForHero = useMemo(() => {
+    return allProducts.filter((p) => {
+      const cat = String(p?.category || "").toLowerCase();
+      const title = String(p?.title || "").toLowerCase();
+      const code = String(p?.code || "").toLowerCase();
+      return cat.includes("molde") || title.includes("molde") || code.includes("mol_");
+    });
+  }, [allProducts]);
   const mobileOfferProducts = useMemo(() => offerProducts.slice(0, 8), [offerProducts]);
   const interestProducts = diversifiedProducts.slice(0, visibleCount);
   const interestsRef = useRef<HTMLDivElement | null>(null);
@@ -241,7 +250,7 @@ export default function Home({ productData, behavior }: Props) {
       <main>
         {/* Hero desktop */}
         <section className="hidden md:block w-full">
-          <HeroCarousel remateProducts={remateProducts} topVisitedProducts={topVisitedForHero} />
+          <HeroCarousel remateProducts={remateProducts} topVisitedProducts={topVisitedForHero} moldProducts={moldProductsForHero} />
         </section>
 
         {/* Home mobile app-like */}

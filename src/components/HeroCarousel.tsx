@@ -6,9 +6,10 @@ import type { ProductProps } from "../../type";
 interface Props {
   remateProducts?: ProductProps[];
   topVisitedProducts?: ProductProps[];
+  moldProducts?: ProductProps[]; // nuevo
 }
 
-export default function HeroCarousel({ remateProducts = [], topVisitedProducts = [] }: Props) {
+export default function HeroCarousel({ remateProducts = [], topVisitedProducts = [], moldProducts = [] }: Props) {
   const [slideIndex, setSlideIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const totalSlides = 4;
@@ -28,12 +29,14 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
   const rightTop = featured[1] || featured[0];
   const rightBottom = featured[2] || featured[1] || featured[0];
 
-  const moldProducts = remateProducts.filter((p) => {
-    const cat = String(p?.category || "").toLowerCase();
-    const title = String(p?.title || "").toLowerCase();
-    const code = String(p?.code || "").toLowerCase();
-    return cat.includes("molde") || title.includes("molde") || code.includes("mol_");
-  });
+  const filteredMoldProducts = moldProducts.length > 0
+    ? moldProducts
+    : remateProducts.filter((p) => {
+        const cat = String(p?.category || "").toLowerCase();
+        const title = String(p?.title || "").toLowerCase();
+        const code = String(p?.code || "").toLowerCase();
+        return cat.includes("molde") || title.includes("molde") || code.includes("mol_");
+      });
 
   const makeUniqueProducts = (items: any[]) => {
     const seen = new Set();
@@ -48,20 +51,15 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
     return unique;
   };
 
-  const moldUnique = makeUniqueProducts(moldProducts);
+  const moldUnique = makeUniqueProducts(filteredMoldProducts);
   let selected = moldUnique.slice(0, 3);
 
-  if (selected.length < 3) {
-    const remaining = makeUniqueProducts(remateProducts).filter((item) => {
-      const key = String(item?.code || item?._id || "").trim().toLowerCase();
-      return !selected.some((sel) => String(sel?.code || sel?._id || "").trim().toLowerCase() === key);
-    });
-    selected = [...selected, ...remaining.slice(0, 3 - selected.length)];
-  }
+  // No fallback a productos no-molde para evitar pigmentos/figuras en la sección de moldes.
+  // Si hay menos de 3 moldes, mostraremos sólo los disponibles.
 
-  const secondLeft = selected[0] || featured[0];
-  const secondCenter = selected[1] || featured[1] || featured[0];
-  const secondRight = selected[2] || featured[2] || featured[1] || featured[0];
+  const secondLeft = selected[0] || null;
+  const secondCenter = selected[1] || null;
+  const secondRight = selected[2] || null;
   const thirdFeatured = (topVisitedProducts.length > 0 ? topVisitedProducts : remateProducts).slice(0, 5);
 
   const discountPercent = (() => {
