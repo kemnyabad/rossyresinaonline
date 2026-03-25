@@ -27,7 +27,11 @@ const pickMainFromGallery = (currentImage: any, nextImages: string[]): string =>
   const firstCloudinary = nextImages.find((img) => /cloudinary\.com/i.test(String(img)));
   if (firstCloudinary && !/cloudinary\.com/i.test(current)) return firstCloudinary;
   if (current && nextImages.includes(current) && !isPlaceholderImage(current)) return current;
-  return nextImages[0] || "";
+
+  const firstReal = nextImages.find((img) => !isPlaceholderImage(img));
+  if (firstReal) return firstReal;
+
+  return "";
 };
 
 export default function EditProduct() {
@@ -44,8 +48,12 @@ export default function EditProduct() {
   const [categories, setCategories] = useState<Array<{ _id: number; name: string; slug: string }>>([]);
 
   const galleryImages = useMemo(() => normalizeUrls(form?.images), [form?.images]);
-  const mainImagePreview = String(form?.image || galleryImages[0] || "").trim();
-
+const mainImagePreview = useMemo(() => {
+  const current = String(form?.image || "").trim();
+  if (current && !isPlaceholderImage(current)) return current;
+  const goodFromGallery = galleryImages.find((img) => !isPlaceholderImage(img));
+  return String(goodFromGallery || "").trim();
+}, [form?.image, galleryImages]);
   useEffect(() => {
     const load = async () => {
       if (!id) return;

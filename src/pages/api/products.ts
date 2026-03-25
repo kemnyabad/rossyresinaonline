@@ -176,10 +176,13 @@ const pickMainImage = (image: any, images: any): string => {
   if (current && !isPlaceholderImage(current)) {
     return current;
   }
-  if (gallery.length > 0) {
-    return gallery[0];
+
+  const firstReal = gallery.find((img) => !isPlaceholderImage(img));
+  if (firstReal) {
+    return firstReal;
   }
-  return "/favicon-96x96.png";
+  // No explicit placeholder saved in DB; allow consumers a fallback visual in UI.
+  return "";
 };
 
 const toLegacyProduct = (p: any) => ({
