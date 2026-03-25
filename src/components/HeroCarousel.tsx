@@ -108,7 +108,7 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
         href={`/${p.code || p._id}`}
         className={`group relative overflow-hidden rounded-xl bg-white transition duration-300 hover:shadow-2xl ${isFeature ? 'shadow-2xl' : 'shadow-lg'}`}
       >
-        <div className={`relative overflow-hidden bg-gray-100 ${isFeature ? 'h-80 md:h-96' : 'h-56 md:h-64'}`}>
+        <div className={`relative overflow-hidden bg-gray-100 ${isFeature ? 'h-96' : 'h-72'}`}>
           {isReference ? (
             <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-gray-400">
               Producto en carga
@@ -118,7 +118,7 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
               src={src} 
               alt={p.title || "Producto"} 
               fill 
-              className="object-contain p-2 transition duration-300 group-hover:scale-105"
+              className="object-contain p-3 transition duration-300 group-hover:scale-105"
             />
           )}
           
@@ -265,11 +265,11 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
             <div className="absolute top-20 right-10 h-96 w-96 rounded-full bg-red-200/30 blur-3xl" />
             
             <div className="relative mx-auto h-full max-w-7xl px-4 py-6 md:px-8 md:py-8 flex items-center">
-              <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-3 items-center">
+              <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-4 items-center">
                 {/* Producto izquierda */}
                 {leftProduct && !isReferenceProductImage(leftProduct) && (
                   <div className="hidden md:flex justify-end">
-                    <div className="relative">
+                    <div className="relative w-full max-w-[280px]">
                       <div className="rounded-2xl overflow-hidden shadow-2xl">
                         <ProductCard p={leftProduct} isFeature={true} />
                       </div>
@@ -283,7 +283,7 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
                 )}
 
                 {/* Centro - Contenido principal */}
-                <div className="z-10 text-center">
+                <div className="col-span-2 z-10 text-center">
                   <div className="inline-flex items-center rounded-full bg-red-100 px-4 py-1.5 text-xs md:text-sm font-bold text-red-700 uppercase tracking-wider mb-3">
                     🔥 OFERTAS Limitadas
                   </div>
@@ -314,9 +314,13 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
                 </div>
 
                 {/* Productos derecha */}
-                <div className="hidden md:flex flex-col gap-3 justify-center">
-                  {rightTop && <ProductCard p={rightTop} />}
-                  {rightBottom && <ProductCard p={rightBottom} />}
+                <div className="hidden md:flex flex-col gap-4 justify-center items-start">
+                  <div className="w-full max-w-[260px]">
+                    {rightTop && <ProductCard p={rightTop} />}
+                  </div>
+                  <div className="w-full max-w-[260px]">
+                    {rightBottom && <ProductCard p={rightBottom} />}
+                  </div>
                 </div>
               </div>
             </div>
