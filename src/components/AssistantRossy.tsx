@@ -49,10 +49,12 @@ export default function AssistantRossy() {
     const msg = text.trim();
     if (!msg || loading) return;
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", text: msg, time: now() }]);
+    const newMessages = [...messages, { role: "user" as const, text: msg, time: now() }];
+    setMessages(newMessages);
     setLoading(true);
     try {
-      const res  = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: msg }) });
+      const history = newMessages.slice(1).map((m) => ({ role: m.role, text: m.text }));
+      const res  = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: msg, history: history.slice(0, -1) }) });
       const data = await res.json();
       setMessages((prev) => [...prev, { role: "assistant", text: data.answer || "Lo siento, no pude procesar tu pregunta.", time: now() }]);
     } catch {
