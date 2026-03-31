@@ -136,13 +136,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json({ answer });
   } catch (e: any) {
-    const errMsg = String(e?.message || e?.toString() || "unknown");
-    console.error("Gemini error:", errMsg);
-
-    // Devolver el error real para poder diagnosticarlo
-    return res.status(500).json({
-      error: "No se pudo procesar tu pregunta. Intenta de nuevo.",
-      detail: errMsg,
-    });
+    console.error("Gemini error:", String(e?.message || ""));
+    return res.status(500).json({ error: "No se pudo procesar tu pregunta. Intenta de nuevo." });
   }
 }
