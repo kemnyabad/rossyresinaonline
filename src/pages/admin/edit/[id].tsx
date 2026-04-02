@@ -63,20 +63,12 @@ const mainImagePreview = useMemo(() => {
       if (!id) return;
       try {
         setLoadError("");
-        const res = await fetch("/api/products");
-        const items = await res.json();
-        if (!res.ok || !Array.isArray(items)) {
-          setLoadError("No se pudo cargar la lista de productos.");
+        const res = await fetch(`/api/products/${encodeURIComponent(id)}`);
+        const found = res.ok ? await res.json() : null;
+        if (!found) {
+          setLoadError("No se encontró el producto solicitado.");
           return;
         }
-        const needle = String(id || "").trim().toLowerCase();
-        const found = items.find((p: any) => {
-          const pCode = String(p?.code || "").trim().toLowerCase();
-          const pId = String(p?._id || "").trim().toLowerCase();
-          const pRawId = String(p?.id || "").trim().toLowerCase();
-          return (needle && pCode === needle) || (needle && pId === needle) || (needle && pRawId === needle);
-        });
-        if (found) {
           const images = normalizeUrls(found.images);
           const normalizedImages = images.length > 0 ? images : found.image ? [String(found.image)] : [];
           setForm({ ...found, images: normalizedImages, image: String(found.image || normalizedImages[0] || "") });
@@ -85,9 +77,6 @@ const mainImagePreview = useMemo(() => {
           setProductDbId(String(dbId));
           const vRes = await fetch(`/api/products/variants?productId=${dbId}`);
           if (vRes.ok) setVariants(await vRes.json());
-        } else {
-          setLoadError("No se encontró el producto solicitado.");
-        }
       } catch {
         setLoadError("Ocurrió un error cargando el producto.");
       } finally {
