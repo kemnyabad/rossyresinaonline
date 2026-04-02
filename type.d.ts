@@ -15,7 +15,7 @@ export interface ProductProps {
   oldPrice?: number;
   price: number;
   title: string;
-  _id: number;
+  _id: number | string;
 }
 export interface StoreProduct {
   code?: string;
@@ -34,7 +34,7 @@ export interface StoreProduct {
   oldPrice?: number;
   price: number;
   title: string;
-  _id: number;
+  _id: number | string;
   quantity: number;
 }
 

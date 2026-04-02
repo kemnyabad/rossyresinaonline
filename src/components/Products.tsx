@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { forwardRef, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ProductProps } from "../../type";
 import { CheckIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
@@ -14,10 +14,13 @@ interface ProductsProps {
   gridClass?: string;
 }
 
-const Products = ({
-  productData,
-  gridClass = "grid-cols-2 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-5",
-}: ProductsProps) => {
+const Products = forwardRef<HTMLDivElement, ProductsProps>((
+  {
+    productData,
+    gridClass = "grid-cols-2 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-5",
+  },
+  ref
+) => {
   const dispatch = useDispatch();
   const [stats, setStats] = useState<
     Record<string, { salesCount: number; avgRating: number; reviewCount: number }>
@@ -127,7 +130,7 @@ const Products = ({
   };
 
   return (
-    <div className={`grid w-full items-stretch px-1 md:px-0 ${gridClass}`}>
+    <div ref={ref} className={`grid w-full items-stretch px-1 md:px-0 ${gridClass}`}>
       {(Array.isArray(productData) ? productData : []).map(
         ({ _id, code, title, brand, category, description, image, images, isNew, oldPrice, price }: ProductProps) => {
           const itemStats = stats[String(_id)] || { salesCount: 0, avgRating: 0, reviewCount: 0 };
@@ -268,6 +271,6 @@ const Products = ({
       )}
     </div>
   );
-};
+});
 
 export default Products;

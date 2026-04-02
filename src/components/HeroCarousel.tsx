@@ -1,16 +1,6 @@
 ﻿import Link from "next/link";
 import { useEffect, useState } from "react";
-
-interface ProductProps {
-  _id?: string;
-  code?: string;
-  title?: string;
-  price?: number;
-  oldPrice?: number;
-  image?: string;
-  category?: string;
-  brand?: string;
-}
+import type { ProductProps } from "../../type";
 
 interface SlideItem {
   id: number;
