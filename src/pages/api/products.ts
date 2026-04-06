@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 import prisma from "@/lib/prisma";
+import { ProductSchema } from "@/lib/validations";
 
 const db = prisma as any;
 const productBaseSelect = {
@@ -255,6 +256,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "POST") {
     const ok = await isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
+
+    const parsed = ProductSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    }
 
     try {
       const data = toDbData(req.body || {});

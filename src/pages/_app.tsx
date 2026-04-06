@@ -8,18 +8,25 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Provider } from "react-redux";
 import { persistor, store } from "@/store/store";
 import { PersistGate } from "redux-persist/integration/react";
-import { SessionProvider } from "next-auth/react";
-
+import { SessionProvider, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-export default function App({
+function AppContent({
   Component,
-  pageProps: { session, ...pageProps },
-}: AppProps) {
+  pageProps,
+  session,
+}: {
+  Component: any;
+  pageProps: any;
+  session: any;
+}) {
   const [isClient, setIsClient] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
+  const { data: clientSession, status } = useSession();
+
   const isAdminRoute = router.pathname.startsWith("/admin");
   const isCapacitaciones =
     router.pathname.startsWith("/capacitaciones") ||
@@ -32,9 +39,12 @@ export default function App({
   const pageShellClass = "rr-page min-h-screen";
   const pageTransitionStyle = { animation: "rrPageEnter .22s ease-out both" } as const;
 
+  useEffect(() => { setIsClient(true); }, []);
+
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    const role = (clientSession?.user as any)?.role;
+    setIsAdmin(role === "ADMIN");
+  }, [clientSession]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -65,32 +75,30 @@ export default function App({
         userName: String((session as any)?.user?.name || ""),
       }),
       keepalive: true,
-    }).catch(() => {
-      // Silencioso: no afecta UX.
-    });
+    }).catch(() => {});
   }, [isClient, isAdminRoute, router.asPath, session]);
 
   useEffect(() => {
     if (!isClient) return;
 
     const rules: Array<[RegExp, string]> = [
-      [/Env[?�]os/gi, "Envíos"],
-      [/Env[?�]o/gi, "Envío"],
-      [/r[?�]pido/gi, "rápido"],
-      [/sesi[?�]n/gi, "sesión"],
-      [/m[?�]s/gi, "más"],
-      [/A[?�]n/gi, "Aún"],
-      [/a[?�]n/gi, "aún"],
-      [/V[?�]lido/gi, "Válido"],
-      [/Participaci[?�]n/gi, "Participación"],
-      [/atenci[?�]n/gi, "atención"],
-      [/Per[?�]/gi, "Perú"],
-      [/rel[?�]mpago/gi, "relámpago"],
-      [/cat[?�]logo/gi, "catálogo"],
-      [/Categor[?�]a/gi, "Categoría"],
-      [/categor[?�]a/gi, "categoría"],
-      [/rese[?�]a/gi, "reseña"],
-      [/rese[?�]as/gi, "reseñas"],
+      [/Env[?]os/gi, "Envíos"],
+      [/Env[?]o/gi, "Envío"],
+      [/r[?]pido/gi, "rápido"],
+      [/sesi[?]n/gi, "sesión"],
+      [/m[?]s/gi, "más"],
+      [/A[?]n/gi, "Aún"],
+      [/a[?]n/gi, "aún"],
+      [/V[?]lido/gi, "Válido"],
+      [/Participaci[?]n/gi, "Participación"],
+      [/atenci[?]n/gi, "atención"],
+      [/Per[?]/gi, "Perú"],
+      [/rel[?]mpago/gi, "relámpago"],
+      [/cat[?]logo/gi, "catálogo"],
+      [/Categor[?]a/gi, "Categoría"],
+      [/categor[?]a/gi, "categoría"],
+      [/rese[?]a/gi, "reseña"],
+      [/rese[?]as/gi, "reseñas"],
     ];
 
     const fixText = (value: string): string => {
@@ -103,20 +111,19 @@ export default function App({
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       let node = walker.nextNode();
       while (node) {
-        const textNode = node as Text;
-        const nextValue = fixText(textNode.nodeValue || "");
-        if (nextValue !== textNode.nodeValue) textNode.nodeValue = nextValue;
+        const t = node as Text;
+        const next = fixText(t.nodeValue || "");
+        if (next !== t.nodeValue) t.nodeValue = next;
         node = walker.nextNode();
       }
     };
 
     const fixElementAttrs = (el: Element) => {
-      const attrs = ["title", "placeholder", "aria-label", "alt"];
-      for (const attr of attrs) {
+      for (const attr of ["title", "placeholder", "aria-label", "alt"]) {
         const raw = el.getAttribute(attr);
         if (!raw) continue;
-        const nextValue = fixText(raw);
-        if (nextValue !== raw) el.setAttribute(attr, nextValue);
+        const next = fixText(raw);
+        if (next !== raw) el.setAttribute(attr, next);
       }
     };
 
@@ -127,18 +134,16 @@ export default function App({
       for (const m of mutations) {
         if (m.type === "characterData" && m.target.nodeType === Node.TEXT_NODE) {
           const t = m.target as Text;
-          const nextValue = fixText(t.nodeValue || "");
-          if (nextValue !== t.nodeValue) t.nodeValue = nextValue;
+          const next = fixText(t.nodeValue || "");
+          if (next !== t.nodeValue) t.nodeValue = next;
         }
-        if (m.type === "attributes" && m.target instanceof Element) {
-          fixElementAttrs(m.target);
-        }
+        if (m.type === "attributes" && m.target instanceof Element) fixElementAttrs(m.target);
         if (m.type === "childList") {
           m.addedNodes.forEach((n) => {
             if (n.nodeType === Node.TEXT_NODE) {
               const t = n as Text;
-              const nextValue = fixText(t.nodeValue || "");
-              if (nextValue !== t.nodeValue) t.nodeValue = nextValue;
+              const next = fixText(t.nodeValue || "");
+              if (next !== t.nodeValue) t.nodeValue = next;
             } else if (n instanceof Element) {
               fixNode(n);
               fixElementAttrs(n);
@@ -160,53 +165,62 @@ export default function App({
     return () => observer.disconnect();
   }, [isClient]);
 
-  const MAINTENANCE = true;
+  const MAINTENANCE = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
   const isPreview = typeof window !== "undefined" && window.location.search.includes("preview=rossyresina2025");
+  const showMaintenance = MAINTENANCE && !isAdminRoute && !isPreview && !isAdmin;
 
-  const appContent = (
-    <SessionProvider session={session}>
-      <div className="font-bodyFont">
-        <Head>
-          <title>Rossy Resina</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-        </Head>
-        {MAINTENANCE && !isAdminRoute && !isPreview ? (
-          <MaintenancePage />
-        ) : (
-          <>
-            {!isAdminRoute && <TopBar />}
-            {isAdminRoute ? (
-              <AdminLayout>
-                <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
-                  <Component {...pageProps} />
-                </div>
-              </AdminLayout>
-            ) : isCapacitaciones ? (
+  // Evita FOUC: mientras la sesión carga, no evalúa mantenimiento
+  if (status === "loading") {
+    return <div className="min-h-screen bg-white" />;
+  }
+
+  const content = (
+    <div className="font-bodyFont">
+      <Head>
+        <title>Rossy Resina</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+      {showMaintenance ? (
+        <MaintenancePage />
+      ) : (
+        <>
+          {!isAdminRoute && <TopBar />}
+          {isAdminRoute ? (
+            <AdminLayout>
               <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
                 <Component {...pageProps} />
               </div>
-            ) : (
-              <RootLayout>
-                <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
-                  <Component {...pageProps} />
-                </div>
-              </RootLayout>
-            )}
-          </>
-        )}
-      </div>
-    </SessionProvider>
+            </AdminLayout>
+          ) : isCapacitaciones ? (
+            <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
+              <Component {...pageProps} />
+            </div>
+          ) : (
+            <RootLayout>
+              <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
+                <Component {...pageProps} />
+              </div>
+            </RootLayout>
+          )}
+        </>
+      )}
+    </div>
   );
 
+  return isClient ? (
+    <PersistGate persistor={persistor} loading={null}>{content}</PersistGate>
+  ) : content;
+}
+
+export default function App({
+  Component,
+  pageProps: { session, ...pageProps },
+}: AppProps) {
   return (
     <Provider store={store}>
-      {isClient ? (
-        <PersistGate persistor={persistor} loading={null}>
-          {appContent}
-        </PersistGate>
-      ) : (
-        appContent
-      )}
+      <SessionProvider session={session}>
+        <AppContent Component={Component} pageProps={pageProps} session={session} />
+      </SessionProvider>
     </Provider>
   );
 }
