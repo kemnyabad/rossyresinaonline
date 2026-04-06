@@ -1,4 +1,4 @@
-﻿import Head from "next/head";
+import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -46,7 +46,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-6 py-12 bg-gradient-to-b from-gray-100 to-transparent">
       <Head>
-        <title>Crear cuenta — Rossy Resina</title>
+        <title>Crear cuenta  -  Rossy Resina</title>
       </Head>
       <div className="w-full max-w-md bg-white rounded-lg shadow border border-gray-200 p-8">
         <div className="flex flex-col items-center">
@@ -54,7 +54,7 @@ export default function RegisterPage() {
             <Image src={require("@/images/logo.jpg")} alt="Logo Rossy Resina" width={64} height={64} className="rounded-full object-contain" />
           </div>
           <h1 className="mt-4 text-2xl font-semibold text-amazon_blue">Crear cuenta</h1>
-          <p className="mt-2 text-sm text-gray-600 text-center">Registra tu cuenta para guardar favoritos y comprar mas rapido.</p>
+          <p className="mt-2 text-sm text-gray-600 text-center">Registra tu cuenta para guardar favoritos y comprar m?s r?pido.</p>
         </div>
 
         <div className="mt-6 grid gap-3">
@@ -95,7 +95,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <span>Ya tienes cuenta?</span> <Link href="/sign-in" className="text-amazon_blue hover:underline">Inicia sesion</Link>
+          <span>Ya tienes cuenta?</span> <Link href="/sign-in" className="text-amazon_blue hover:underline">Inicia sesi?n</Link>
         </div>
       </div>
     </div>

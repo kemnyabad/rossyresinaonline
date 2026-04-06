@@ -1,11 +1,12 @@
-﻿import Head from "next/head";
+import Head from "next/head";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Products from "@/components/Products";
 import type { ProductProps } from "../../type";
 import FormattedPrice from "@/components/FormattedPrice";
+import { useSession } from "next-auth/react";
 
-const statusTabs = ["Ver todo", "Pendiente por confirmar", "Confirmado", "En proceso de envio", "Enviado"] as const;
+const statusTabs = ["Ver todo", "Pendiente por confirmar", "Confirmado", "En proceso de envío", "Enviado"] as const;
 
 type TabKey = (typeof statusTabs)[number];
 
@@ -18,9 +19,17 @@ type OrderItem = {
 
 type Order = {
   id: string;
+  orderCode?: string;
   date: string;
   status: string;
   total: number;
+  paymentMethod?: "YAPE" | "TRANSFER";
+  paymentMethodLabel?: string;
+  shippingCarrier?: "SHALOM" | "OLVA";
+  shippingCarrierLabel?: string;
+  shalomVoucherImage?: string;
+  shalomPickupCode?: string;
+  olvaTrackingImage?: string;
   items: OrderItem[];
   customer: {
     email: string;
@@ -29,6 +38,7 @@ type Order = {
 };
 
 export default function TrackOrdersPage() {
+  const { data: session } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<TabKey>("Ver todo");
   const [search, setSearch] = useState("");
@@ -43,10 +53,11 @@ export default function TrackOrdersPage() {
   }, []);
 
   const fetchOrders = async () => {
-    if (!email.trim()) return;
+    const lookupEmail = email.trim();
+    const url = lookupEmail ? `/api/orders?email=${encodeURIComponent(lookupEmail)}` : "/api/orders";
     setLoading(true);
     try {
-      const res = await fetch(`/api/orders?email=${encodeURIComponent(email.trim())}`);
+      const res = await fetch(url);
       const data = await res.json();
       setOrders(Array.isArray(data) ? data : []);
     } catch {
@@ -61,26 +72,46 @@ export default function TrackOrdersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email]);
 
+  useEffect(() => {
+    const sessionEmail = String((session?.user as any)?.email || "").trim();
+    if (!sessionEmail) return;
+    setEmail(sessionEmail);
+    fetch("/api/orders")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setOrders(Array.isArray(data) ? data : []))
+      .catch(() => setOrders([]));
+  }, [session?.user]);
+
   const counts = useMemo(() => {
     const base: Record<string, number> = {
       "Pendiente por confirmar": 0,
       Confirmado: 0,
-      "En proceso de envio": 0,
+      "En proceso de envío": 0,
       Enviado: 0,
     };
     orders.forEach((o) => {
-      if (base[o.status] !== undefined) base[o.status] += 1;
+      if (base[o.status] !== undefined) {
+        base[o.status] += 1;
+        return;
+      }
+      if (normalizeStatus(o.status) === normalizeStatus("En proceso de env?o")) {
+        base["En proceso de env?o"] += 1;
+      }
     });
     return base;
   }, [orders]);
 
   const filteredOrders = useMemo(() => {
     let list = [...orders];
-    if (activeTab !== "Ver todo") list = list.filter((o) => o.status === activeTab);
+    if (activeTab !== "Ver todo") {
+      list = list.filter((o) => normalizeStatus(o.status) === normalizeStatus(activeTab));
+    }
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter((o) => {
-        if (o.id.toLowerCase().includes(q)) return true;
+        const oid = String(o.orderCode || o.id || "").toLowerCase();
+        if (oid.includes(q)) return true;
+        if (String(o.id || "").toLowerCase().includes(q)) return true;
         return o.items.some((it) => it.title.toLowerCase().includes(q));
       });
     }
@@ -89,7 +120,7 @@ export default function TrackOrdersPage() {
 
   useEffect(() => {
     let mounted = true;
-    fetch("/api/products")
+    fetch(`/api/products?_=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((rows) => {
         if (!mounted) return;
@@ -123,7 +154,7 @@ export default function TrackOrdersPage() {
               <span className="px-2 py-1 rounded hover:bg-gray-50">Reembolsos y devoluciones</span>
               <span className="px-2 py-1 rounded hover:bg-gray-50">Valoraciones</span>
               <span className="px-2 py-1 rounded hover:bg-gray-50">Ajustes</span>
-              <span className="px-2 py-1 rounded hover:bg-gray-50">Direccion de envio</span>
+              <span className="px-2 py-1 rounded hover:bg-gray-50">Dirección de envío</span>
               <Link href="/messages" className="px-2 py-1 rounded hover:bg-gray-50">Centro de mensajes</Link>
             </nav>
           </aside>
@@ -150,7 +181,7 @@ export default function TrackOrdersPage() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="N de pedido o articulo"
+                  placeholder="Nº de pedido o artículo"
                   className="h-11 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
                 />
                 <div className="flex items-center gap-2">
@@ -158,6 +189,7 @@ export default function TrackOrdersPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Correo para buscar pedidos"
+                    disabled={Boolean((session?.user as any)?.email)}
                     className="h-11 flex-1 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
                   />
                   <button
@@ -179,20 +211,45 @@ export default function TrackOrdersPage() {
                   <div key={o.id} className="bg-white border border-gray-200 rounded-xl p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="text-sm font-semibold text-gray-900">{o.status}</div>
-                      <div className="text-sm text-gray-600">Pedido: {o.id}</div>
+                      <div className="text-sm text-gray-600">Pedido: {o.orderCode || o.id}</div>
                       <div className="text-sm text-gray-600">Fecha: {o.date}</div>
                     </div>
-                    {o.status === "Confirmado" && (
+                    {normalizeStatus(o.status) === normalizeStatus("Confirmado") && (
                       <div className="mt-2 text-sm text-emerald-700">
-                        Pedido confirmado. En proceso de envio. Comunicate al 961770723 para seguimiento.
+                        Pedido confirmado. En proceso de envío. Comunícate al 961770723 para seguimiento.
                       </div>
                     )}
-                    {o.status === "En proceso de envio" && (
+                    {normalizeStatus(o.status) === normalizeStatus("En proceso de env?o") && (
                       <div className="mt-2 text-sm text-emerald-700">
-                        En proceso de envio. Comunicate al 961770723 para seguimiento.
+                        En proceso de envío. Comunícate al 961770723 para seguimiento.
+                      </div>
+                    )}
+                    {o.status === "Enviado" && (
+                      <div className="mt-2 text-sm text-emerald-700 space-y-1">
+                        <p>Tu pedido fue enviado por {o.shippingCarrierLabel || "agencia"}.</p>
+                        {o.shippingCarrier === "SHALOM" && o.shalomPickupCode && (
+                          <p>Clave de recojo: <strong>{o.shalomPickupCode}</strong></p>
+                        )}
+                        {o.shippingCarrier === "SHALOM" && o.shalomVoucherImage && (
+                          <p>
+                            <a href={o.shalomVoucherImage} target="_blank" rel="noreferrer" className="text-amazon_blue hover:underline">
+                              Ver voucher de envío
+                            </a>
+                          </p>
+                        )}
+                        {o.shippingCarrier === "OLVA" && o.olvaTrackingImage && (
+                          <p>
+                            <a href={o.olvaTrackingImage} target="_blank" rel="noreferrer" className="text-amazon_blue hover:underline">
+                              Ver tracking de Olva
+                            </a>
+                          </p>
+                        )}
                       </div>
                     )}
                     <div className="mt-4 border-t border-gray-100 pt-4 grid gap-3">
+                      <div className="text-xs text-gray-600">
+                        Mtodo de pago: <span className="font-semibold text-gray-800">{o.paymentMethodLabel || "Transferencia/Yape"}</span>
+                      </div>
                       {o.items.map((it, idx) => (
                         <div key={`${o.id}-${idx}`} className="grid grid-cols-[72px_minmax(0,1fr)_140px] gap-3 items-center">
                           <div className="h-16 w-16 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center text-xs text-gray-500">
@@ -222,7 +279,7 @@ export default function TrackOrdersPage() {
               </div>
             ) : (
               <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-gray-900">Aun no has realizado pedidos</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Aún no has realizado pedidos</h2>
                 <p className="text-sm text-gray-600 mt-1">
                   Explora nuestros productos y encuentra algo especial para ti.
                 </p>
@@ -242,8 +299,8 @@ export default function TrackOrdersPage() {
                 </div>
 
                 <div className="mt-6 rounded-lg border border-orange-200 bg-orange-50 p-4">
-                  <p className="text-sm font-semibold text-orange-700">Promocion especial</p>
-                  <p className="text-sm text-orange-700">Descuento en tu primera compra. Aprovechalo hoy.</p>
+                  <p className="text-sm font-semibold text-orange-700">Promocin especial</p>
+                  <p className="text-sm text-orange-700">Descuento en tu primera compra. Aprovchalo hoy.</p>
                 </div>
 
                 <div className="mt-6">
@@ -261,3 +318,9 @@ export default function TrackOrdersPage() {
     </div>
   );
 }
+  const normalizeStatus = (value: string) =>
+    String(value || "")
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase()
+      .trim();

@@ -1,10 +1,10 @@
-﻿import type { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
 import { createUser } from "@/lib/users";
 import { ensureSubscriberProfile } from "@/lib/capacitaciones";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Metodo no permitido" });
+    return res.status(405).json({ error: "M?todo no permitido" });
   }
   const { name, email, password } = req.body || {};
   const emailClean = String(email || "").trim().toLowerCase();

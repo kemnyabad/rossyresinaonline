@@ -5,6 +5,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { verifyUser, ensureAdminFromEnv, isAdminEmail } from "@/lib/users";
 
 export const authOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: "Email",
@@ -13,23 +14,27 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        await ensureAdminFromEnv();
-        const allowed = (process.env.ADMIN_EMAILS || "")
-          .split(",")
-          .map((s) => s.trim().toLowerCase())
-          .filter(Boolean);
-        const email = String(credentials?.email || "").trim().toLowerCase();
-        const pass = String(credentials?.password || "");
-        const okPass = !!process.env.ADMIN_PASSWORD && pass === process.env.ADMIN_PASSWORD;
-        if (okPass && (allowed.length === 0 || allowed.includes(email))) {
-          return { id: email, email, role: "ADMIN" } as any;
+        try {
+          await ensureAdminFromEnv();
+          const allowed = (process.env.ADMIN_EMAILS || "")
+            .split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter(Boolean);
+          const email = String(credentials?.email || "").trim().toLowerCase();
+          const pass = String(credentials?.password || "");
+          const okPass = !!process.env.ADMIN_PASSWORD && pass === process.env.ADMIN_PASSWORD;
+          if (okPass && (allowed.length === 0 || allowed.includes(email))) {
+            return { id: email, email, role: "ADMIN" } as any;
+          }
+          const user = await verifyUser(email, pass);
+          if (user) {
+            const role = isAdminEmail(user.email) ? "ADMIN" : user.role;
+            return { id: user.id, email: user.email, name: user.name, role } as any;
+          }
+          return null;
+        } catch {
+          return null;
         }
-        const user = await verifyUser(email, pass);
-        if (user) {
-          const role = isAdminEmail(user.email) ? "ADMIN" : user.role;
-          return { id: user.id, email: user.email, name: user.name, role } as any;
-        }
-        return null;
       },
     }),
     GithubProvider({
@@ -47,23 +52,31 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user && (user as any).role) {
-        token.role = (user as any).role;
+      try {
+        if (user && (user as any).role) {
+          token.role = (user as any).role;
+        }
+        if (!token.role && isAdminEmail(String(token.email || ""))) {
+          token.role = "ADMIN";
+        }
+        return token;
+      } catch {
+        return token;
       }
-      if (!token.role && isAdminEmail(String(token.email || ""))) {
-        token.role = "ADMIN";
-      }
-      return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        const roleFromToken = (token as any).role;
-        (session.user as any).role = roleFromToken || (isAdminEmail(session.user.email || "") ? "ADMIN" : "CUSTOMER");
-        if (!session.user.name && (token as any).name) {
-          session.user.name = String((token as any).name);
+      try {
+        if (session.user) {
+          const roleFromToken = (token as any).role;
+          (session.user as any).role = roleFromToken || (isAdminEmail(session.user.email || "") ? "ADMIN" : "CUSTOMER");
+          if (!session.user.name && (token as any).name) {
+            session.user.name = String((token as any).name);
+          }
         }
+        return session;
+      } catch {
+        return session;
       }
-      return session;
     },
   },
 };

@@ -7,21 +7,24 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate:products": "node scripts/migrate-products-to-prisma.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@heroicons/react": "^2.2.0",
     "@prisma/client": "^5.11.0",
     "@reduxjs/toolkit": "^1.9.5",
     "@stripe/stripe-js": "^1.54.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "20.3.3",
     "@types/react": "18.2.14",
     "@types/react-dom": "18.2.6",
-    "@types/bcryptjs": "^2.4.6",
     "autoprefixer": "10.4.14",
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.9.0",
     "eslint": "8.44.0",
     "eslint-config-next": "13.4.8",
+    "groq-sdk": "^1.1.2",
     "next": "13.4.8",
     "next-auth": "^4.22.1",
     "postcss": "8.4.24",
@@ -35,7 +38,7 @@
     "redux-persist": "^6.0.0",
     "stripe": "^12.11.0",
     "tailwindcss": "3.3.2",
-    "typescript": "5.1.6"
-  },
-  "devDependencies": {}
+    "typescript": "5.1.6",
+    "zod": "^4.3.6"
+  }
 }

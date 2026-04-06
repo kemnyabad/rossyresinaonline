@@ -70,7 +70,7 @@ export default function AdminUsersPage() {
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-6">
       <Head>
-        <title>Admin — Usuarios</title>
+        <title>Admin  -  Usuarios</title>
       </Head>
 
       <div className="flex items-center justify-between mb-6">
@@ -83,7 +83,7 @@ export default function AdminUsersPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="border border-gray-300 rounded px-3 py-2 text-sm" />
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo" className="border border-gray-300 rounded px-3 py-2 text-sm" />
-          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" type="password" className="border border-gray-300 rounded px-3 py-2 text-sm" />
+          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contrasea" type="password" className="border border-gray-300 rounded px-3 py-2 text-sm" />
           <select value={role} onChange={(e) => setRole(e.target.value as UserRow["role"])} className="border border-gray-300 rounded px-3 py-2 text-sm bg-white">
             <option value="CUSTOMER">Cliente</option>
             <option value="EDITOR">Editor</option>

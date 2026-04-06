@@ -1,7 +1,8 @@
 import FormattedPrice from "@/components/FormattedPrice";
 import { addToCart } from "@/store/nextSlice";
 import Image from "next/image";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { FaStar } from "react-icons/fa";
 import { useDispatch } from "react-redux";
@@ -9,8 +10,9 @@ import type { ProductProps } from "../../type";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Products from "@/components/Products";
-import { readCatalog } from "@/lib/catalogStore";
+import { getAllProducts } from "@/lib/repositories/productRepository";
 import { useSession, signIn } from "next-auth/react";
+import { formatProductTitle } from "@/lib/textFormat";
 
 interface Props {
   product: ProductProps | null;
@@ -31,7 +33,11 @@ type Review = {
 
 const DynamicPage = ({ product, recs }: Props) => {
   const [qty, setQty] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [justAdded, setJustAdded] = useState(false);
+  const addNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [salesCount, setSalesCount] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
@@ -39,6 +45,10 @@ const DynamicPage = ({ product, recs }: Props) => {
   const [reviewComment, setReviewComment] = useState("");
   const [reviewError, setReviewError] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [viewerReady, setViewerReady] = useState(false);
+  const [offerCtaText, setOfferCtaText] = useState("!PRODUCTOS EN OFERTA! APROVÉCHALO AHORA!");
+  const [offerCtaVisible, setOfferCtaVisible] = useState(true);
+  const [showShippingProcess, setShowShippingProcess] = useState(false);
   const { data: session } = useSession();
   const dispatch = useDispatch();
   const router = useRouter();
@@ -47,36 +57,49 @@ const DynamicPage = ({ product, recs }: Props) => {
     const s = String(img || "");
     const u = s.replace(/\\/g, "/");
     if (/^https?:\/\//i.test(u)) return u;
-    const fixed = u
-      .replace(/Ã¡/g, "a")
-      .replace(/Ã©/g, "e")
-      .replace(/Ã­/g, "i")
-      .replace(/Ã³/g, "o")
-      .replace(/Ãº/g, "u")
-      .replace(/Ã±/g, "n")
-      .replace(/Ã/g, "A")
-      .replace(/Ã‰/g, "E")
-      .replace(/Ã/g, "I")
-      .replace(/Ã“/g, "O")
-      .replace(/Ãš/g, "U")
-      .replace(/Ã‘/g, "N");
+    const fixed = u.trim();
     return fixed ? (fixed.startsWith("/") ? fixed : "/" + fixed) : "/favicon-96x96.png";
   };
 
-  const shippingText = useMemo(() => {
-    const price = Number(product?.price) || 0;
-    return price >= 120 ? "Envio gratis" : "Envio desde S/ 10.00";
-  }, [product]);
+  const isProcessImage = (img?: string) => {
+    const src = normalizeImage(img).toLowerCase();
+    return (
+      !img ||
+      String(img).trim() === "" ||
+      src.includes("sliderimg_") ||
+      src.includes("favicon-96x96.png") ||
+      src.includes("favicon") ||
+      src.includes("/logo.png") ||
+      src.includes("/logo.jpg") ||
+      src.endsWith("/logo")
+    );
+  };
 
   const waHref = useMemo(() => {
     const title = product?.title || product?.code || "Producto";
     const price = Number(product?.price) || 0;
-    const text = `Mira este producto: ${title} — S/ ${price.toFixed(2)}\n${product?.description || ""}`;
+    const text = `Mira este producto: ${title} - S/ ${price.toFixed(2)}\n${product?.description || ""}`;
     return `https://wa.me/?text=${encodeURIComponent(text)}`;
   }, [product]);
 
+  const waBuyHref = useMemo(() => {
+    const title = product?.title || product?.code || "Producto";
+    const price = Number(product?.price) || 0;
+    const total = price * qty;
+    const text = `Hola Rossy Resina, quiero comprar:\nProducto: ${title}\nCantidad: ${qty}\nPrecio unitario: S/ ${price.toFixed(2)}\nTotal estimado: S/ ${total.toFixed(2)}\n\nPor favor, ayúdame con el pedido.`;
+    return `https://wa.me/?text=${encodeURIComponent(text)}`;
+  }, [product, qty]);
+
   const productImages = useMemo(() => {
-    const list = Array.isArray(product?.images) ? product.images : [];
+    const rawImages = (product as any)?.images;
+    const list = Array.isArray(rawImages)
+      ? rawImages
+      : typeof rawImages === "string"
+      ? rawImages
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
     const base = product?.image ? [product.image] : [];
     const combined = [...base, ...(list ?? [])]
       .map((img) => normalizeImage(img))
@@ -84,7 +107,39 @@ const DynamicPage = ({ product, recs }: Props) => {
     return combined.length > 0 ? Array.from(new Set(combined)) : ["/favicon-96x96.png"];
   }, [product]);
 
-  const mainImage = activeImage || productImages[0];
+  const preferredMainImage =
+    productImages.find((img) => !isProcessImage(img)) || productImages[0] || "/favicon-96x96.png";
+  const mainImage = activeImage || preferredMainImage;
+  const mainImageIsProcess = isProcessImage(mainImage);
+  const activeViewerImage =
+    viewerIndex !== null && viewerIndex >= 0 && viewerIndex < productImages.length
+      ? productImages[viewerIndex]
+      : null;
+  const activeViewerIsProcess = isProcessImage(activeViewerImage || undefined);
+  const hasOffer = typeof product?.oldPrice === "number" && Number(product.oldPrice) > Number(product?.price || 0);
+  const productVariants: any[] = (product as any)?.variants || [];
+  const activePrice = selectedVariant ? selectedVariant.price : Number(product?.price || 0);
+  const activeOldPrice = selectedVariant ? selectedVariant.oldPrice : (typeof product?.oldPrice === "number" ? product.oldPrice : null);
+  const displayProductTitle = formatProductTitle(product?.title || product?.code || "Producto");
+
+  const openImageViewer = (img: string) => {
+    const idx = productImages.findIndex((item) => item === img);
+    setViewerIndex(idx >= 0 ? idx : 0);
+  };
+
+  const closeImageViewer = () => {
+    setViewerIndex(null);
+  };
+
+  const goPrevImage = () => {
+    if (viewerIndex === null || productImages.length === 0) return;
+    setViewerIndex((viewerIndex - 1 + productImages.length) % productImages.length);
+  };
+
+  const goNextImage = () => {
+    if (viewerIndex === null || productImages.length === 0) return;
+    setViewerIndex((viewerIndex + 1) % productImages.length);
+  };
 
   const addProductToCart = (quantity: number) => {
     if (!product) return;
@@ -94,7 +149,7 @@ const DynamicPage = ({ product, recs }: Props) => {
         brand: product.brand,
         category: product.category,
         description: product.description,
-        image: product.image,
+        image: mainImage,
         isNew: product.isNew,
         oldPrice: product.oldPrice,
         price: product.price,
@@ -102,7 +157,62 @@ const DynamicPage = ({ product, recs }: Props) => {
         quantity,
       })
     );
+    setJustAdded(true);
+    if (addNoticeTimer.current) clearTimeout(addNoticeTimer.current);
+    addNoticeTimer.current = setTimeout(() => setJustAdded(false), 1700);
   };
+
+  useEffect(() => {
+    return () => {
+      if (addNoticeTimer.current) clearTimeout(addNoticeTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    setActiveImage(preferredMainImage);
+  }, [preferredMainImage, product?._id]);
+
+  useEffect(() => {
+    setViewerReady(true);
+    return () => setViewerReady(false);
+  }, []);
+
+  useEffect(() => {
+    if (!hasOffer) {
+      setOfferCtaVisible(false);
+      return;
+    }
+
+    let showingPrimary = true;
+    let swapTimer: ReturnType<typeof setTimeout> | null = null;
+
+    setOfferCtaText("!PRODUCTOS EN OFERTA! APROVÉCHALO AHORA!");
+    setOfferCtaVisible(true);
+
+    const rotate = () => {
+      setOfferCtaVisible(false);
+      swapTimer = setTimeout(() => {
+        showingPrimary = !showingPrimary;
+        setOfferCtaText(
+          showingPrimary
+            ? "!PRODUCTOS EN OFERTA! APROVÉCHALO AHORA!"
+            : "!APROVECHA LA OFERTA! COMPRA HOY!"
+        );
+        setOfferCtaVisible(true);
+      }, 600);
+    };
+
+    const interval = setInterval(rotate, 10000);
+
+    return () => {
+      clearInterval(interval);
+      if (swapTimer) clearTimeout(swapTimer);
+    };
+  }, [hasOffer, product?._id]);
+
+  useEffect(() => {
+    setShowShippingProcess(false);
+  }, [product?._id]);
 
   useEffect(() => {
     const id = String(product?._id || "").trim();
@@ -162,16 +272,44 @@ const DynamicPage = ({ product, recs }: Props) => {
     );
   }, [reviews, reviewCount]);
 
-  const handleBuyNow = () => {
-    addProductToCart(qty);
-    router.push("/checkout");
-  };
 
   const pageTitle = product?.title ? `${product.title} | Rossy Resina` : "Producto | Rossy Resina";
   const pageDesc = product?.description || "Descubre productos de resina, moldes y pigmentos en Rossy Resina.";
-  const pageImage = product?.image
-    ? (String(product.image).startsWith("/") ? product.image : `/${product.image}`)
-    : "/favicon-96x96.png";
+  const pageImage = (() => {
+    const raw = String(preferredMainImage || product?.image || "").trim();
+    if (!raw) return "/favicon-96x96.png";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return raw.startsWith("/") ? raw : `/${raw}`;
+  })();
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://rossyresinaonlineweb.vercel.app";
+  const productJsonLd = product
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.title || product.code || "Producto",
+        image: [pageImage.startsWith("http") ? pageImage : `${siteUrl}${pageImage}`],
+        description: product.description || "",
+        sku: String(product.code || product._id || ""),
+        category: product.category || "",
+        brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+        offers: {
+          "@type": "Offer",
+          priceCurrency: "PEN",
+          price: Number(product.price || 0).toFixed(2),
+          availability: "https://schema.org/InStock",
+          url: `${siteUrl}/${encodeURIComponent(String(product.code || product._id))}`,
+        },
+        aggregateRating:
+          reviewCount > 0
+            ? {
+                "@type": "AggregateRating",
+                ratingValue: Number(reviewAverage || 0).toFixed(1),
+                reviewCount,
+              }
+            : undefined,
+      }
+    : null;
 
   const fmtReviewDate = (iso?: string) => {
     if (!iso) return "";
@@ -230,6 +368,12 @@ const DynamicPage = ({ product, recs }: Props) => {
         <meta property="og:description" content={pageDesc} />
         <meta property="og:type" content="product" />
         <meta property="og:image" content={pageImage} />
+        {productJsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+          />
+        )}
       </Head>
 
       {!product ? (
@@ -243,39 +387,86 @@ const DynamicPage = ({ product, recs }: Props) => {
         <>
           <div className="md:hidden mb-6">
             <div className="rounded-xl border border-gray-200 bg-white p-3">
-              <div className="flex gap-3">
-                <div className="relative h-40 w-40 shrink-0 rounded-lg overflow-hidden bg-white">
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      backgroundImage: `url(${mainImage})`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundSize: "contain",
-                      backgroundPosition: "50% 50%",
-                      backgroundColor: "transparent",
-                    }}
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={() => openImageViewer(mainImage)}
+                  className="relative w-full overflow-hidden rounded-lg bg-white pb-[100%]"
+                  aria-label="Ver imgenes del producto"
+                >
+                  {mainImageIsProcess ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-2 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">
+                      Producto en Proceso
+                    </div>
+                  ) : (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: `url(${mainImage})`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundSize: "contain",
+                        backgroundPosition: "50% 50%",
+                        backgroundColor: "transparent",
+                      }}
+                    />
+                  )}
+                </button>
+                {productImages.length > 1 ? (
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    {productImages.map((img) => (
+                      <button
+                        key={`mobile-thumb-${img}`}
+                        type="button"
+                        onClick={() => setActiveImage(img)}
+                        className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-white ${
+                          mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"
+                        }`}
+                        aria-label="Cambiar imagen"
+                      >
+                        {isProcessImage(img) ? (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
+                            Proceso
+                          </div>
+                        ) : (
+                          <Image src={img} alt="Miniatura" fill className="object-cover" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
+                <div className="min-w-0">
                   <p className="text-xs text-gray-500">Patrocinado</p>
-                  <h1 className="mt-1 text-xl font-semibold leading-6 line-clamp-3">{product.title || product.code || "Producto"}</h1>
+                  <h1 className="mt-1 text-xl font-semibold leading-6 line-clamp-3">{displayProductTitle}</h1>
                   <div className="mt-2 flex items-center gap-1 text-amber-500">
                     {[0, 1, 2, 3, 4].map((i) => (
                       <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
                     ))}
                     <span className="ml-1 text-sm text-gray-700">{reviewAverage.toFixed(1)} ({reviewCount})</span>
                   </div>
-                  <div className="mt-2 text-3xl leading-none font-semibold text-gray-900">
+                  <div className="mt-2 flex items-center gap-2 text-3xl leading-none font-semibold text-gray-900">
                     <FormattedPrice amount={Number(product.price) || 0} />
+                    <span className="text-sm font-normal text-gray-500">c/unidad</span>
                   </div>
-                  <p className="mt-2 text-sm text-gray-700">Entrega entre 2 a 3 dias aproximadamente</p>
-                  <p className="text-sm text-gray-500">Se envia a Peru</p>
+                  <p className="mt-2 text-sm text-gray-700">{"Entrega entre 2 a 3 días aproximadamente"}</p>
+                  <p className="text-sm text-gray-500">{"Se envía a Perú"}</p>
                   <button
                     onClick={() => addProductToCart(qty)}
-                    className="mt-3 h-11 w-full rounded-full bg-brand_yellow text-black text-base font-semibold"
+                    className="mt-3 h-11 w-full rounded-full bg-orange-500 text-white text-base font-semibold hover:brightness-95"
                   >
                     Agregar al carrito
                   </button>
+                  {justAdded && (
+                    <p className="mt-2 text-sm font-semibold text-emerald-700">{"Producto añadido"}</p>
+                  )}
+                  <a
+                    href={waBuyHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 h-11 w-full rounded-full border border-brand_green text-brand_green text-base font-semibold flex items-center justify-center hover:bg-brand_green hover:text-white"
+                  >
+                    Comprar por WhatsApp
+                  </a>
                 </div>
               </div>
             </div>
@@ -290,25 +481,42 @@ const DynamicPage = ({ product, recs }: Props) => {
                     onClick={() => setActiveImage(img)}
                     className={`h-14 w-14 rounded ${mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"} bg-white overflow-hidden`}
                   >
-                    <Image src={img} alt="Miniatura" width={80} height={80} className="object-cover" />
+                    {isProcessImage(img) ? (
+                      <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
+                        Proceso
+                      </div>
+                    ) : (
+                      <Image src={img} alt="Miniatura" width={80} height={80} className="object-cover" />
+                    )}
                   </button>
                 ))}
               </div>
 
               <div className="bg-transparent rounded-xl p-0 w-full">
-                <div className="relative w-full h-[360px] md:h-[520px] bg-white rounded-xl overflow-hidden">
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      backgroundImage: `url(${mainImage})`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundSize: "contain",
-                      backgroundPosition: "50% 50%",
-                      backgroundColor: "transparent",
-                      transition: "none",
-                    }}
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => openImageViewer(mainImage)}
+                  className="relative w-full h-[360px] md:h-[520px] bg-white rounded-xl overflow-hidden"
+                  aria-label="Ver imagen grande"
+                >
+                  {mainImageIsProcess ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-4 text-center text-sm font-semibold uppercase tracking-wide text-gray-400">
+                      Producto en Proceso
+                    </div>
+                  ) : (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: `url(${mainImage})`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundSize: "contain",
+                        backgroundPosition: "50% 50%",
+                        backgroundColor: "transparent",
+                        transition: "none",
+                      }}
+                    />
+                  )}
+                </button>
                 <div className="mt-2 flex flex-wrap items-center gap-1 lg:hidden">
                   {productImages.map((img) => (
                     <button
@@ -317,7 +525,13 @@ const DynamicPage = ({ product, recs }: Props) => {
                       className={`h-12 w-12 rounded ${mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"} bg-white`}
                       aria-label="Cambiar imagen"
                     >
-                      <Image src={img} alt="Miniatura" width={64} height={64} className="object-cover" />
+                      {isProcessImage(img) ? (
+                        <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
+                          Proceso
+                        </div>
+                      ) : (
+                        <Image src={img} alt="Miniatura" width={64} height={64} className="object-cover" />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -325,14 +539,14 @@ const DynamicPage = ({ product, recs }: Props) => {
 
               <div className="lg:col-span-2 mt-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <h2 className="text-lg font-semibold">Resenas</h2>
+                  <h2 className="text-lg font-semibold">Reseñas</h2>
                   <div className="flex items-center gap-1 text-yellow-500">
                     {[0, 1, 2, 3, 4].map((i) => (
                       <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
                     ))}
                     <span className="text-gray-700 text-sm ml-2">{reviewAverage.toFixed(1)}</span>
                   </div>
-                  <span className="text-sm text-gray-500">{reviewCount} resenas</span>
+                  <span className="text-sm text-gray-500">{reviewCount} reseñas</span>
                 </div>
                 <div className="rounded-lg border border-gray-200 p-4 mb-4">
                   <p className="text-sm font-semibold text-gray-900 mb-2">Tu reseña</p>
@@ -372,23 +586,23 @@ const DynamicPage = ({ product, recs }: Props) => {
                     </>
                   ) : (
                     <div className="text-sm text-gray-600">
-                      Inicia sesion para comentar y calificar este producto.
+                      Inicia sesión para comentar y calificar este producto.
                       <button
                         type="button"
                         onClick={() => signIn(undefined, { callbackUrl: router.asPath })}
                         className="ml-2 text-amazon_blue font-semibold hover:underline"
                       >
-                        Iniciar sesion
+                        Iniciar sesión
                       </button>
                     </div>
                   )}
                 </div>
                 <div className="grid gap-4">
                   {loadingReviews && (
-                    <div className="text-sm text-gray-600">Cargando resenas...</div>
+                    <div className="text-sm text-gray-600">Cargando reseñas...</div>
                   )}
                   {!loadingReviews && reviews.length === 0 && (
-                    <div className="text-sm text-gray-600">Aun no hay resenas para este producto.</div>
+                    <div className="text-sm text-gray-600">Aún no hay reseñas para este producto.</div>
                   )}
                   {!loadingReviews && reviews.map((r) => (
                     <div key={r.id} className="rounded-lg p-4">
@@ -418,8 +632,20 @@ const DynamicPage = ({ product, recs }: Props) => {
 
             <div className="flex flex-col gap-4 w-full pt-6">
               <div className="rounded-xl p-5">
-                <p className="text-xs text-gray-500">Inicio / {product.category || "Categoria"}</p>
-                <h1 className="text-xl md:text-2xl font-semibold mt-2">{product.title || product.code || "Producto"}</h1>
+                {hasOffer ? (
+                  <div className="mb-2 flex h-7 items-center justify-center">
+                    <Link
+                      href="/productos?ofertas=1"
+                      className={`block w-full text-center text-sm font-extrabold uppercase tracking-wide text-orange-700 transition-all duration-700 hover:scale-[1.02] hover:text-orange-800 animate-pulse ${
+                        offerCtaVisible ? "opacity-100" : "opacity-0"
+                      }`}
+                    >
+                      {offerCtaText}
+                    </Link>
+                  </div>
+                ) : null}
+                <p className="text-xs text-gray-500">Inicio / {product.category || "Categoría"}</p>
+                <h1 className="text-xl md:text-2xl font-semibold mt-2">{displayProductTitle}</h1>
                 <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
                   <span>{salesCount} ventas</span>
                   <span className="text-gray-300">|</span>
@@ -433,21 +659,101 @@ const DynamicPage = ({ product, recs }: Props) => {
                 </div>
                 <div className="mt-4 flex items-center gap-3">
                   <span className="text-2xl font-semibold text-gray-900">
-                    <FormattedPrice amount={Number(product.price) || 0} />
+                    <FormattedPrice amount={activePrice} />
                   </span>
-                  {typeof product.oldPrice === "number" && product.oldPrice > product.price && (
+                  <span className="text-sm font-normal text-gray-500">c/unidad</span>
+                  {activeOldPrice && Number(activeOldPrice) > activePrice && (
                     <span className="text-sm line-through text-gray-400">
-                      <FormattedPrice amount={Number(product.oldPrice) || 0} />
+                      <FormattedPrice amount={Number(activeOldPrice)} />
                     </span>
                   )}
-                  {typeof product.oldPrice === "number" && product.oldPrice > product.price && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600">
-                      Descuento
-                    </span>
+                  {activeOldPrice && Number(activeOldPrice) > activePrice && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600">Descuento</span>
                   )}
                 </div>
-                <div className="mt-3 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-md px-3 py-2">
-                  {shippingText} · S/ 4.00 de credito por retraso
+
+                {productVariants.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Presentación:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {productVariants.map((v: any) => (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => setSelectedVariant(selectedVariant?.id === v.id ? null : v)}
+                          className={`px-3 py-1.5 rounded-full border text-sm font-semibold transition ${
+                            selectedVariant?.id === v.id
+                              ? "bg-slate-900 text-white border-slate-900"
+                              : "border-gray-300 text-gray-700 hover:border-slate-900"
+                          }`}
+                        >
+                          {v.label} — S/ {Number(v.price).toFixed(2)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="mt-3 text-sm text-emerald-700">
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowShippingProcess((v) => !v);
+                    }}
+                    className="font-semibold underline underline-offset-2 hover:text-emerald-900"
+                  >
+                    {"Envíos Gratuitos"}
+                  </a>
+                  <span>{" | Sin mínimo ni máximo de pedidos enviados"}</span>
+                  {showShippingProcess ? (
+                    <div className="mt-2 rounded-md border border-emerald-200 bg-white px-3 py-3 text-xs text-gray-700">
+                      <p className="font-semibold text-emerald-700">Proceso de envío gratuito</p>
+                      <p className="mt-1">1. Agrega tus productos al carrito.</p>
+                      <p className="mt-1">2. En checkout valida tus datos de envío.</p>
+                      <p className="mt-1">3. Si el pedido califica, el envío se aplica sin costo automáticamente.</p>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="mt-3 text-sm text-orange-700">
+                  {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
+                </div>
+
+                {product.description && (
+                  <div className="mt-4 text-sm text-gray-700 whitespace-pre-line">
+                    {product.description}
+                  </div>
+                )}
+
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Información del producto</h4>
+                  <div className="space-y-1.5 text-sm">
+                    {product.sku && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">SKU:</span>
+                        <span className="font-mono font-semibold text-gray-900">{product.sku}</span>
+                      </div>
+                    )}
+                    {product.barcode && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Código de barras:</span>
+                        <span className="font-mono font-semibold text-gray-900">{product.barcode}</span>
+                      </div>
+                    )}
+                    {product.code && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Código:</span>
+                        <span className="font-mono font-semibold text-gray-900">{product.code}</span>
+                      </div>
+                    )}
+                    {product.stock !== undefined && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Stock disponible:</span>
+                        <span className={`font-semibold ${product.stock > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {product.stock > 0 ? `${product.stock} unidades` : 'Agotado'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mt-4">
@@ -467,26 +773,24 @@ const DynamicPage = ({ product, recs }: Props) => {
                 <div className="mt-5 grid gap-2">
                   <button
                     onClick={() => addProductToCart(qty)}
-                    className="w-full h-12 rounded-full text-base font-semibold bg-brand_purple text-white hover:bg-amazon_light"
+                    className="w-full h-12 rounded-full text-base font-semibold bg-orange-500 text-white hover:brightness-95"
                   >
-                    ¡Agregar al carrito!
+                    Agregar al carrito
                   </button>
-                  <button
-                    onClick={handleBuyNow}
-                    className="w-full h-12 rounded-full text-base font-semibold border border-brand_purple text-brand_purple hover:bg-pink-50"
-                  >
-                    Comprar ahora
-                  </button>
+                  {justAdded && (
+                    <p className="text-sm font-semibold text-emerald-700">{"Producto añadido"}</p>
+                  )}
                 </div>
 
+
                 <div className="mt-4 text-sm text-gray-600 grid gap-1">
-                  <p>Entrega: entre 2 a 3 dias aproximadamente</p>
+                  <p>{"Entrega: entre 2 a 3 días aproximadamente"}</p>
                   <p>Transportistas: Shalom, Olva Courier</p>
                 </div>
               </div>
 
               <div className="rounded-xl p-5">
-                <h3 className="text-sm font-semibold text-gray-800 mb-2">¿Por que elegir Rossy Resina?</h3>
+                <h3 className="text-sm font-semibold text-gray-800 mb-2">¿Por qué elegir Rossy Resina?</h3>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm text-gray-600">
                   <div className="border border-gray-200 rounded-lg p-3">
                     <p className="font-semibold text-gray-800">Seguridad y privacidad</p>
@@ -498,17 +802,100 @@ const DynamicPage = ({ product, recs }: Props) => {
                   <div className="border border-gray-200 rounded-lg p-3">
                     <p className="font-semibold text-gray-800">Entrega garantizada</p>
                     <ul className="mt-2 list-disc list-inside">
-                      <li>Reembolso por 30 dias</li>
-                      <li>Credito por retraso</li>
+                      <li>Reembolso por 30 días</li>
+                      <li>Crédito por retraso</li>
                     </ul>
                   </div>
                 </div>
                 <div className="mt-3 text-sm text-emerald-700">
-                  Devoluciones gratis · Ajuste de precios
+                  Devoluciones gratis | Ajuste de precios
                 </div>
               </div>
             </div>
           </div>
+
+          {activeViewerImage && viewerReady
+            ? createPortal(
+                <div
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-5 md:p-8"
+                  onClick={closeImageViewer}
+                >
+                  <div
+                    className="relative flex max-h-[86vh] w-full max-w-4xl flex-col rounded-xl bg-white p-3"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={closeImageViewer}
+                      className="absolute right-2 top-2 z-10 h-9 w-9 rounded-full bg-black/70 text-lg font-bold text-white"
+                      aria-label="Cerrar visor"
+                    >
+                      x
+                    </button>
+                    <div className="relative h-[48vh] w-full shrink-0 overflow-hidden rounded-lg bg-white sm:h-[56vh]">
+                      {activeViewerIsProcess ? (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-4 text-center text-sm font-semibold uppercase tracking-wide text-gray-400">
+                          Producto en Proceso
+                        </div>
+                      ) : (
+                        <Image
+                          src={activeViewerImage}
+                          alt="Imagen referencial"
+                          fill
+                          sizes="100vw"
+                          className="object-contain"
+                          priority
+                        />
+                      )}
+                      {productImages.length > 1 ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={goPrevImage}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 px-3 py-2 text-white"
+                            aria-label="Imagen anterior"
+                          >
+                            {"<"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={goNextImage}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 px-3 py-2 text-white"
+                            aria-label="Imagen siguiente"
+                          >
+                            {">"}
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                    {productImages.length > 1 ? (
+                      <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                        {productImages.map((img, idx) => (
+                          <button
+                            key={`viewer-thumb-${img}`}
+                            type="button"
+                            onClick={() => setViewerIndex(idx)}
+                            className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-md ${
+                              activeViewerImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"
+                            }`}
+                            aria-label="Ver miniatura"
+                          >
+                            {isProcessImage(img) ? (
+                              <div className="absolute inset-0 flex items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
+                                Proceso
+                              </div>
+                            ) : (
+                              <Image src={img} alt="Miniatura" fill className="object-cover" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>,
+                document.body
+              )
+            : null}
 
           <div className="mt-10">
             <h2 className="text-xl font-semibold mb-3">Explora tus intereses</h2>
@@ -531,7 +918,7 @@ export default DynamicPage;
 
 export const getServerSideProps = async (ctx: any) => {
   const id = String(ctx?.params?._id || "").trim();
-  const all: ProductProps[] = readCatalog() as ProductProps[];
+  const all: ProductProps[] = await getAllProducts();
   const product =
     all.find((p) => String(p._id) === id) ||
     all.find((p) => String(p.code || "").toLowerCase() === id.toLowerCase()) ||
@@ -550,3 +937,4 @@ export const getServerSideProps = async (ctx: any) => {
     : [];
   return { props: { product, recs } };
 };
+

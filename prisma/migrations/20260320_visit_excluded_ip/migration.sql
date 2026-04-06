@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS "VisitExcludedIp" (
+  "ip" TEXT NOT NULL,
+  "note" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "VisitExcludedIp_pkey" PRIMARY KEY ("ip")
+);

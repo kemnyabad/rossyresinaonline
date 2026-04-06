@@ -1,0 +1,12 @@
+/* Espaciados semánticos usados en secciones de la tienda */
+.inner    { padding-top: 120px; padding-bottom: 120px; }
+.inner-md { padding-top: 100px; padding-bottom: 100px; }
+.inner-sm { padding-top: 80px;  padding-bottom: 80px;  }
+.inner-xs { padding-top: 40px;  padding-bottom: 40px;  }
+.inner-vs { padding-top: 30px;  padding-bottom: 30px;  }
+
+.inner-top    { padding-top: 120px; }
+.inner-top-md { padding-top: 100px; }
+.inner-top-sm { padding-top: 80px;  }
+.inner-top-xs { padding-top: 40px;  }
+.inner-top-vs { padding-top: 30px;  }

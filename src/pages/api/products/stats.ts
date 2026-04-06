@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
+const db = prisma as any;
 
 type Stat = {
   salesCount: number;
@@ -8,7 +9,7 @@ type Stat = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "GET") return res.status(405).json({ error: "Metodo no permitido" });
+  if (req.method !== "GET") return res.status(405).json({ error: "M?todo no permitido" });
 
   const idsRaw = String(req.query.ids || "").trim();
   if (!idsRaw) return res.status(200).json({});
@@ -23,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   );
 
   try {
-    const products = await prisma.product.findMany({
+    const products = await db.product.findMany({
       where: {
         OR: [
           { id: { in: identifiers } },
@@ -43,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const productIds = products.map((p) => p.id);
     const byProductId = new Map(products.map((p) => [p.id, p]));
 
-    const orders = await prisma.order.findMany({
+    const orders = await db.order.findMany({
       where: { status: { in: ["PAID", "SHIPPED"] } },
       select: { items: true },
     });
@@ -57,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    const groupedReviews = await prisma.review.groupBy({
+    const groupedReviews = await db.review.groupBy({
       by: ["productId"],
       where: { productId: { in: productIds } },
       _avg: { rating: true },
@@ -88,6 +89,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json(out);
   } catch {
-    return res.status(500).json({ error: "No se pudieron obtener estadisticas" });
+    return res.status(500).json({ error: "No se pudieron obtener estad?sticas" });
   }
 }

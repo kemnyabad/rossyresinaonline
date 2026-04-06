@@ -1,4 +1,4 @@
-﻿import Head from "next/head";
+import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -17,13 +17,13 @@ export default function SignInPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Evita redireccionar automaticamente para que el usuario pueda ver el formulario.
+    // Evita redireccionar autom?ticamente para que el usuario pueda ver el formulario.
   }, []);
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-6 py-12 bg-gradient-to-b from-gray-100 to-transparent">
       <Head>
-        <title>Iniciar sesión — Rossy Resina</title>
+        <title>Iniciar sesi?n  -  Rossy Resina</title>
         <meta name="description" content="Accede a tu cuenta para guardar favoritos y realizar compras." />
       </Head>
       <div className="w-full max-w-md bg-white rounded-lg shadow border border-gray-200 p-8">
@@ -36,7 +36,7 @@ export default function SignInPage() {
           </h1>
           <p className="mt-2 text-sm text-gray-600 text-center">
             {mode === "login"
-              ? "Inicia sesión para comentar y tener tu perfil."
+              ? "Inicia sesi?n para comentar y tener tu perfil."
               : "Registra tu cuenta para comentar y crear tu portafolio."}
           </p>
         </div>
@@ -47,7 +47,7 @@ export default function SignInPage() {
               onClick={() => setMode("login")}
               className={`px-4 py-2 rounded-full border ${mode === "login" ? "bg-amazon_blue text-white border-amazon_blue" : "border-gray-300"}`}
             >
-              Iniciar sesión
+              Iniciar sesi?n
             </button>
             <button
               onClick={() => setMode("register")}
@@ -77,7 +77,7 @@ export default function SignInPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Contraseña"
+              placeholder="Contrasea"
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
             {mode === "register" && (
@@ -85,7 +85,7 @@ export default function SignInPage() {
                 type="password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                placeholder="Confirmar contraseña"
+                placeholder="Confirmar contrasea"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             )}
@@ -105,7 +105,7 @@ export default function SignInPage() {
                     return;
                   }
                   if (password !== confirm) {
-                    setError("Las contraseñas no coinciden");
+                    setError("Las contraseas no coinciden");
                     return;
                   }
                   const res = await fetch("/api/auth/register", {
@@ -147,12 +147,12 @@ export default function SignInPage() {
 
         <div className="mt-6 text-center text-sm text-gray-600">
           <p>
-            Al continuar aceptas nuestros <Link href="/terms" className="text-amazon_blue hover:underline">términos</Link> y <Link href="/privacy" className="text-amazon_blue hover:underline">privacidad</Link>.
+            Al continuar aceptas nuestros <Link href="/terms" className="text-amazon_blue hover:underline">trminos</Link> y <Link href="/privacy" className="text-amazon_blue hover:underline">privacidad</Link>.
           </p>
         </div>
 
         <div className="mt-4 text-center text-sm text-gray-600">
-          {mode === "login" ? "¿No tienes cuenta? Usa Registrarme arriba." : "¿Ya tienes cuenta? Usa Iniciar sesión arriba."}
+          {mode === "login" ? "No tienes cuenta? Usa Registrarme arriba." : "Ya tienes cuenta? Usa Iniciar sesi?n arriba."}
         </div>
 
         <div className="mt-6 text-center">
@@ -163,7 +163,7 @@ export default function SignInPage() {
 
         {session && (
           <div className="mt-6 text-center">
-            <button onClick={() => signOut()} className="text-sm text-gray-500 hover:text-amazon_blue">Cerrar sesión</button>
+            <button onClick={() => signOut()} className="text-sm text-gray-500 hover:text-amazon_blue">Cerrar sesi?n</button>
           </div>
         )}
       </div>

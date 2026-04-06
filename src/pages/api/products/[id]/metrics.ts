@@ -1,11 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
+const db = prisma as any;
 
 const findProductByIdentifier = async (identifier: string) => {
-  return prisma.product.findFirst({
+  return db.product.findFirst({
     where: {
       OR: [{ id: identifier }, { legacyId: identifier }, { code: identifier }],
     },
+    select: { id: true },
   });
 };
 
@@ -19,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!product) {
         return res.status(200).json({ productId: productIdentifier, paidUnits: 0, salesCount: 0 });
       }
-      const orders = await prisma.order.findMany({
+      const orders = await db.order.findMany({
         where: { status: { in: ["PAID", "SHIPPED"] } },
         select: { items: true },
       });
@@ -38,9 +40,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         salesCount: paidUnits,
       });
     } catch {
-      return res.status(500).json({ error: "No se pudo obtener metricas" });
+      return res.status(500).json({ error: "No se pudo obtener m?tricas" });
     }
   }
 
-  return res.status(405).json({ error: "Metodo no permitido" });
+  return res.status(405).json({ error: "M?todo no permitido" });
 }

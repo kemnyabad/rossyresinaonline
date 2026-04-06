@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 export default function MessagesPage() {
   return (
@@ -7,7 +7,7 @@ export default function MessagesPage() {
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <h1 className="text-xl font-semibold mb-2">Centro de mensajes</h1>
         <p className="text-sm text-gray-600">
-          Pronto podras ver tus mensajes y notificaciones aqui.
+          Pronto podras ver tus mensajes y notificaciones aqu?.
         </p>
         <div className="mt-4">
           <Link href="/account" className="text-sm text-amazon_blue hover:underline">

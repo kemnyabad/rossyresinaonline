@@ -80,7 +80,7 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
 
             <div className="hidden flex-1 justify-center px-8 md:flex">
               <input
-                placeholder="Buscar artistas, moldes o tecnicas..."
+                placeholder="Buscar artistas, moldes o t?cnicas..."
                 className="w-full max-w-[520px] rounded-full border border-white/30 bg-white px-4 py-2 text-sm outline-none"
               />
             </div>
@@ -90,7 +90,7 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
                 Capacitaciones
               </Link>
               <Link href="/suscripcion" className="rounded-full bg-[#0f5fd6] px-3 py-1.5 font-semibold text-white hover:bg-[#0c53bd]">
-                Suscripcion
+                Suscripci?n
               </Link>
               {session?.user?.email && (
                 <span className="rounded-full bg-white/20 px-3 py-1.5 font-semibold text-white">
@@ -144,10 +144,10 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
             {feed.length === 0 ? (
               <section className="rounded-2xl border border-[#d9dde3] bg-white p-10 text-center shadow-sm">
                 <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Oswald", sans-serif' }}>
-                  No hay publicaciones aun
+                  No hay publicaciones a?n
                 </h2>
                 <p className="mt-2 text-sm text-[#65676b]">
-                  Cuando los artistas publiquen sus creaciones, apareceran aqui.
+                  Cuando los artistas publiquen sus creaciones, apareceran aqu?.
                 </p>
               </section>
             ) : (
@@ -161,7 +161,7 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
                       <div>
                         <p className="text-sm font-semibold text-[#1d2129]">{item.profile.displayName}</p>
                         <p className="text-xs text-[#65676b]">
-                          @{item.profile.handle} · {new Date(item.createdAt).toLocaleDateString("es-PE")}
+                          @{item.profile.handle}  {new Date(item.createdAt).toLocaleDateString("es-PE")}
                         </p>
                       </div>
                     </Link>

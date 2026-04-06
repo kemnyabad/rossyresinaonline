@@ -15,6 +15,16 @@ export default function AdminCategoriesPage() {
   const [items, setItems] = useState<Category[]>([]);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [message, setMessage] = useState<string>("");
+  const [error, setError] = useState<string>("");
+
+  // Categorías por defecto para precarga
+  const defaultCategories = [
+    { name: "Moldes de silicona", slug: "moldes-de-silicona" },
+    { name: "Pigmentos y glitters", slug: "pigmentos-y-glitters" },
+    { name: "Accesorios", slug: "accesorios" },
+    { name: "Kits resineros", slug: "kits-resineros" },
+  ];
 
   const load = async () => {
     const res = await fetch("/api/categories");
@@ -26,14 +36,45 @@ export default function AdminCategoriesPage() {
     load();
   }, []);
 
+  // Cargar categorías por defecto si no existen
+  useEffect(() => {
+    const initDefaults = async () => {
+      if (items.length === 0) {
+        // No hacer nada si ya hay categorías
+        const res = await fetch("/api/categories");
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return;
+        
+        // Si no hay categorías, crear las por defecto
+        for (const cat of defaultCategories) {
+          await fetch("/api/categories", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cat),
+          });
+        }
+        load();
+      }
+    };
+    initDefaults();
+  }, []);
+
   const create = async () => {
-    await fetch("/api/categories", {
+    setError("");
+    setMessage("");
+    const res = await fetch("/api/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, slug }),
     });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setError(String(json?.error || "No se pudo crear categoría"));
+      return;
+    }
     setName("");
     setSlug("");
+    setMessage("Categoría creada correctamente.");
     load();
   };
 
@@ -45,7 +86,7 @@ export default function AdminCategoriesPage() {
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-6">
       <Head>
-        <title>Admin — Categorías</title>
+        <title>Admin - Categorías</title>
       </Head>
 
       <div className="flex items-center justify-between mb-6">
@@ -55,6 +96,8 @@ export default function AdminCategoriesPage() {
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
         <h2 className="text-lg font-semibold mb-3">Crear categoría</h2>
+        {message && <p className="text-sm text-green-600 mb-2">{message}</p>}
+        {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="border border-gray-300 rounded px-3 py-2 text-sm" />
           <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="Slug (ej: moldes-de-silicona)" className="border border-gray-300 rounded px-3 py-2 text-sm" />

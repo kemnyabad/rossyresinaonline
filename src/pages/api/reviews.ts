@@ -2,12 +2,14 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 import prisma from "@/lib/prisma";
+const db = prisma as any;
 
 const findProductByIdentifier = async (identifier: string) => {
-  return prisma.product.findFirst({
+  return db.product.findFirst({
     where: {
       OR: [{ id: identifier }, { legacyId: identifier }, { code: identifier }],
     },
+    select: { id: true },
   });
 };
 
@@ -30,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const product = await findProductByIdentifier(productIdentifier);
       if (!product) return res.status(200).json([]);
-      const reviews = await prisma.review.findMany({
+      const reviews = await db.review.findMany({
         where: { productId: product.id },
         orderBy: { createdAt: "desc" },
         include: { user: { select: { name: true, email: true } } },
@@ -43,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === "POST") {
     const session = await getServerSession(req, res, authOptions as any);
-    if (!session?.user?.email) return res.status(401).json({ error: "Debes iniciar sesion" });
+    if (!session?.user?.email) return res.status(401).json({ error: "Debes iniciar sesión" });
 
     const body = req.body || {};
     const productIdentifier = String(body.productId || "").trim();
@@ -59,13 +61,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
       const email = String(session.user.email).toLowerCase().trim();
-      const user = await prisma.user.findUnique({ where: { email } });
+      const user = await db.user.findUnique({ where: { email } });
       if (!user) return res.status(401).json({ error: "Usuario no autenticado" });
 
       const product = await findProductByIdentifier(productIdentifier);
       if (!product) return res.status(400).json({ error: "Producto no encontrado" });
 
-      const saved = await prisma.review.upsert({
+      const saved = await db.review.upsert({
         where: {
           productId_userId: {
             productId: product.id,
@@ -88,5 +90,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  return res.status(405).json({ error: "Metodo no permitido" });
+  return res.status(405).json({ error: "Método no permitido" });
 }
