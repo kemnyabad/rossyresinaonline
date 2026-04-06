@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!ok) return res.status(401).json({ error: "No autorizado" });
 
   if (req.method === "POST") {
-    const { nombre, imagen, activo, orden } = req.body || {};
+    const { nombre, imagen, activo, orden, productoId, precio } = req.body || {};
     if (!nombre || !imagen) return res.status(400).json({ error: "Nombre e imagen requeridos" });
     const item = await db.ofertaExpress.create({
       data: {
@@ -28,13 +28,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         imagen: String(imagen).trim(),
         activo: activo !== false,
         orden: Number(orden || 0),
+        productoId: productoId ? String(productoId).trim() : null,
+        precio: precio ? Number(precio) : null,
       },
     });
     return res.status(201).json(item);
   }
 
   if (req.method === "PUT") {
-    const { id, nombre, imagen, activo, orden } = req.body || {};
+    const { id, nombre, imagen, activo, orden, productoId, precio } = req.body || {};
     if (!id) return res.status(400).json({ error: "ID requerido" });
     const item = await db.ofertaExpress.update({
       where: { id: String(id) },
@@ -43,6 +45,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         imagen: String(imagen || "").trim(),
         activo: Boolean(activo),
         orden: Number(orden || 0),
+        productoId: productoId ? String(productoId).trim() : null,
+        precio: precio ? Number(precio) : null,
       },
     });
     return res.status(200).json(item);

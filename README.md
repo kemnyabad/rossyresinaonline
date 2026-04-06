@@ -169,13 +169,6 @@ npm run start        # Inicia el servidor en modo producción
 npm run lint         # Revisa errores de código con ESLint
 ```
 
-### Scripts de mantenimiento
-
-```bash
-node scripts/migrate-products-to-prisma.js   # Migra productos desde JSON a la BD
-node scripts/reset-admin.js                  # Resetea la contraseña del administrador
-node scripts/sync-skus-to-db.js              # Sincroniza SKUs a la base de datos
-```
 
 ---
 

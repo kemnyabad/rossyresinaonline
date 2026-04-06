@@ -159,6 +159,9 @@ export default function App({
     return () => observer.disconnect();
   }, [isClient]);
 
+  const MAINTENANCE = false;
+  const isPreview = typeof window !== "undefined" && window.location.search.includes("preview=rossyresina2025");
+
   const appContent = (
     <SessionProvider session={session}>
       <div className="font-bodyFont">
@@ -166,23 +169,44 @@ export default function App({
           <title>Rossy Resina</title>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
-        {!isAdminRoute && <TopBar />}
-        {isAdminRoute ? (
-          <AdminLayout>
-            <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
-              <Component {...pageProps} />
+        {MAINTENANCE && !isAdminRoute && !isPreview ? (
+          <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #1a0533, #3b0764, #6b21a8)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", textAlign: "center" }}>
+            <style>{`
+              @keyframes spin { to { transform: rotate(360deg); } }
+              @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+              @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+            `}</style>
+            <div style={{ fontSize: 72, animation: "float 3s ease-in-out infinite" }}>🔧</div>
+            <div style={{ marginTop: 24, width: 56, height: 56, border: "5px solid rgba(255,255,255,0.2)", borderTop: "5px solid #e91e8c", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+            <h1 style={{ color: "#fff", fontSize: "clamp(24px,5vw,40px)", fontWeight: 900, margin: "24px 0 12px", letterSpacing: -1 }}>Web en Mantenimiento</h1>
+            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 18, fontWeight: 600, margin: "0 0 8px", animation: "pulse 2s ease-in-out infinite" }}>Estamos presentando problemas en el servicio</p>
+            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, margin: 0 }}>La web se mantendra indispuesta hasta el <strong style={{ color: "#e91e8c" }}>miercoles 8 de abril</strong></p>
+            <div style={{ marginTop: 32, display: "flex", gap: 8 }}>
+              {[0,1,2,3,4].map(i => <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: "#e91e8c", animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }} />)}
             </div>
-          </AdminLayout>
-        ) : isCapacitaciones ? (
-          <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
-            <Component {...pageProps} />
+            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 40 }}>Rossy Resina &copy; 2025</p>
           </div>
         ) : (
-          <RootLayout>
-            <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
-              <Component {...pageProps} />
-            </div>
-          </RootLayout>
+          <>
+            {!isAdminRoute && <TopBar />}
+            {isAdminRoute ? (
+              <AdminLayout>
+                <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
+                  <Component {...pageProps} />
+                </div>
+              </AdminLayout>
+            ) : isCapacitaciones ? (
+              <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
+                <Component {...pageProps} />
+              </div>
+            ) : (
+              <RootLayout>
+                <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
+                  <Component {...pageProps} />
+                </div>
+              </RootLayout>
+            )}
+          </>
         )}
       </div>
     </SessionProvider>

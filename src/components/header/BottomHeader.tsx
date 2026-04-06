@@ -133,16 +133,7 @@ const BottomHeader = () => {
             >
               Blog
             </Link>
-            <Link
-              href="/capacitaciones"
-              target="_blank"
-              rel="noreferrer"
-              className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-all duration-300 ${
-                isCurrentPath("/capacitaciones") ? "bg-amazon_blue text-white font-semibold shadow-md" : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
-              }`}
-            >
-              Capacitaciones
-            </Link>
+
           </nav>
         </div>
 
@@ -176,17 +167,7 @@ const BottomHeader = () => {
               {col.title}
             </Link>
           ))}
-          <Link
-            href="/capacitaciones"
-            target="_blank"
-            rel="noreferrer"
-            className="shrink-0 snap-start pb-2 text-[15px] font-medium leading-tight text-gray-600 whitespace-nowrap"
-            onClick={(e) => {
-              if (isCurrentPath("/capacitaciones")) e.preventDefault();
-            }}
-          >
-            Capacitaciones
-          </Link>
+
           <Link
             href="/blog"
             className="shrink-0 snap-start pb-2 text-[15px] font-medium leading-tight text-gray-600 whitespace-nowrap"

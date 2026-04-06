@@ -1,10 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 
-declare global {
-  // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined;
-}
-
 const globalForPrisma = globalThis as typeof globalThis & { prisma?: PrismaClient };
 
 const withSafePoolParams = (rawUrl?: string): string | undefined => {
@@ -31,7 +26,17 @@ const createClient = () =>
     ? new PrismaClient({ datasources: { db: { url: databaseUrl } } })
     : new PrismaClient();
 
-const prisma = globalForPrisma.prisma ?? createClient();
-globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV === "development") {
+  // En desarrollo siempre crear cliente fresco para evitar estado inválido tras hot reload
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createClient();
+  }
+} else {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createClient();
+  }
+}
+
+const prisma = globalForPrisma.prisma!;
 
 export default prisma;

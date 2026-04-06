@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
 import type { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -46,7 +47,12 @@ const emptyShort = (): Omit<ShortItem, "id"> => ({
 });
 
 export default function AdminCapacitacionesPage() {
-  const [tab, setTab] = useState<"videos" | "shorts" | "cursos">("videos");
+  const router = useRouter();
+  const [tab, setTab] = useState<"videos" | "shorts" | "cursos" | "inscripciones">("videos");
+
+  useEffect(() => {
+    if (router.query.tab === "inscripciones") setTab("inscripciones");
+  }, [router.query.tab]);
 
   // Cursos state
   const [cursos, setCursos] = useState<Curso[]>([]);

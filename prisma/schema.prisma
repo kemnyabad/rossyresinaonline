@@ -241,13 +241,15 @@ model TallerInscripcion {
 }
 
 model OfertaExpress {
-  id        String   @id @default(cuid())
-  nombre    String
-  imagen    String
-  activo    Boolean  @default(true)
-  orden     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  nombre     String
+  imagen     String
+  precio     Decimal? @db.Decimal(10, 2)
+  productoId String?
+  activo     Boolean  @default(true)
+  orden      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model BlogPost {

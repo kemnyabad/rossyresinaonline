@@ -7,8 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "check:text": "node scripts/check-text-encoding.js",
-    "migrate:products": "node scripts/migrate-products-to-prisma.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -25,7 +25,6 @@ const LINKS = {
     { label: "Sobre nosotros", href: "/about-us" },
   ],
   comunidad: [
-    { label: "Capacitaciones", href: "/capacitaciones" },
     { label: "Blog", href: "/blog" },
     { label: "Sorteos resineros", href: "/sorteos-resineros" },
     { label: "Comunidad", href: "/comunidad" },

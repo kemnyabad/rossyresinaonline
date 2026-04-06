@@ -11,9 +11,11 @@ interface OfertaExpress {
   imagen: string;
   activo: boolean;
   orden: number;
+  productoId?: string | null;
+  precio?: number | null;
 }
 
-const emptyForm = { nombre: "", imagen: "", activo: true, orden: 0 };
+const emptyForm = { nombre: "", imagen: "", activo: true, orden: 0, productoId: "", precio: "" };
 
 export default function AdminOfertasExpress() {
   const [items, setItems] = useState<OfertaExpress[]>([]);
@@ -24,6 +26,7 @@ export default function AdminOfertasExpress() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<OfertaExpress | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -89,7 +92,7 @@ export default function AdminOfertasExpress() {
 
   const startEdit = (item: OfertaExpress) => {
     setEditId(item.id);
-    setForm({ nombre: item.nombre, imagen: item.imagen, activo: item.activo, orden: item.orden });
+    setForm({ nombre: item.nombre, imagen: item.imagen, activo: item.activo, orden: item.orden, productoId: item.productoId || "", precio: item.precio ?? "" });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -128,6 +131,17 @@ export default function AdminOfertasExpress() {
           </label>
 
           <label className="grid gap-1">
+            <span className="text-sm text-gray-700">Precio de oferta (S/) — opcional</span>
+            <input
+              type="number" min={0} step="0.01"
+              className="rounded-md border border-gray-300 px-3 py-2"
+              value={form.precio || ""}
+              onChange={(e) => setForm({ ...form, precio: e.target.value })}
+              placeholder="Ej: 25.00"
+            />
+          </label>
+
+          <label className="grid gap-1">
             <span className="text-sm text-gray-700">Imagen</span>
             <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
             {form.imagen && (
@@ -138,15 +152,6 @@ export default function AdminOfertasExpress() {
           </label>
 
           <div className="grid gap-4">
-            <label className="grid gap-1">
-              <span className="text-sm text-gray-700">Orden (menor = primero)</span>
-              <input
-                type="number"
-                className="rounded-md border border-gray-300 px-3 py-2"
-                value={form.orden}
-                onChange={(e) => setForm({ ...form, orden: Number(e.target.value) })}
-              />
-            </label>
             <label className="inline-flex items-center gap-2">
               <input type="checkbox" checked={form.activo} onChange={(e) => setForm({ ...form, activo: e.target.checked })} />
               <span className="text-sm">Activo (visible en tienda)</span>
@@ -185,12 +190,15 @@ export default function AdminOfertasExpress() {
           <div className="divide-y divide-gray-50">
             {items.map((item) => (
               <div key={item.id} className="flex items-center gap-4 px-5 py-3">
-                <div className="relative h-14 w-14 rounded-lg overflow-hidden border border-gray-100 shrink-0 bg-gray-50">
+                <div
+                  className="relative h-14 w-14 rounded-lg overflow-hidden border border-gray-100 shrink-0 bg-gray-50 cursor-zoom-in"
+                  onClick={() => setPreview(item)}
+                >
                   <Image src={item.imagen} alt={item.nombre} fill className="object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-800 truncate">{item.nombre}</p>
-                  <p className="text-xs text-gray-400">Orden: {item.orden}</p>
+                  {item.precio && <p className="text-xs text-[#e91e8c] font-semibold">S/ {Number(item.precio).toFixed(2)}</p>}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -211,6 +219,37 @@ export default function AdminOfertasExpress() {
           </div>
         )}
       </div>
+      {/* Preview flotante */}
+      {preview && (
+        <div
+          onClick={() => setPreview(null)}
+          style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", padding: "1rem" }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ position: "relative", width: 300, borderRadius: 24, overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.5)", background: "#111" }}
+          >
+            <img src={preview.imagen} alt={preview.nombre} style={{ width: "100%", height: 320, objectFit: "cover", display: "block" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)" }} />
+            <button
+              onClick={() => setPreview(null)}
+              style={{ position: "absolute", top: 12, right: 12, background: "rgba(255,255,255,0.2)", border: "none", color: "#fff", borderRadius: "50%", width: 32, height: 32, fontSize: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              &times;
+            </button>
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "1.25rem" }}>
+              <p style={{ color: "#fff", fontWeight: 700, fontSize: 17, margin: 0 }}>{preview.nombre}</p>
+              {preview.precio
+                ? <p style={{ color: "#ff6eb4", fontWeight: 800, fontSize: 24, margin: "4px 0 0" }}>S/ {Number(preview.precio).toFixed(2)}</p>
+                : <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "4px 0 0" }}>Sin precio asignado</p>
+              }
+              <span style={{ marginTop: 10, display: "inline-block", fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: preview.activo ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.1)", color: preview.activo ? "#6ee7b7" : "rgba(255,255,255,0.4)" }}>
+                {preview.activo ? "● Activo" : "● Inactivo"}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
