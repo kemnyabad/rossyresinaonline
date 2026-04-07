@@ -1,4 +1,5 @@
 import HeroCarousel from "@/components/HeroCarousel";
+import MaintenanceView from '@/components/MaintenanceView';
 import Products from "@/components/Products";
 import { ProductProps } from "../../type";
 import { useDispatch } from "react-redux";
