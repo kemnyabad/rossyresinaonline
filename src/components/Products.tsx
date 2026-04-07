@@ -189,4 +189,6 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   );
 });
 
+Products.displayName = "Products";
+
 export default Products;
