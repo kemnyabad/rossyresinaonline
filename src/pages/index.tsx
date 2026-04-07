@@ -503,7 +503,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
         </section>
         )}
 
-        {/* Ofertas relámpago */}}
+        {/* Ofertas relámpago */}
         <section className="px-4 md:px-6">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">

@@ -7,18 +7,24 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Provider } from "react-redux";
 import { persistor, store } from "@/store/store";
 import { PersistGate } from "redux-persist/integration/react";
-import { SessionProvider } from "next-auth/react";
-
+import { SessionProvider, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-export default function App({
+function AppContent({
   Component,
-  pageProps: { session, ...pageProps },
-}: AppProps) {
+  pageProps,
+  session,
+}: {
+  Component: any;
+  pageProps: any;
+  session: any;
+}) {
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
+  const { status } = useSession();
+
   const isAdminRoute = router.pathname.startsWith("/admin");
   const isCapacitaciones =
     router.pathname.startsWith("/capacitaciones") ||
@@ -31,9 +37,7 @@ export default function App({
   const pageShellClass = "rr-page min-h-screen";
   const pageTransitionStyle = { animation: "rrPageEnter .22s ease-out both" } as const;
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => { setIsClient(true); }, []);
 
   useEffect(() => {
     if (!isClient) return;
@@ -64,32 +68,30 @@ export default function App({
         userName: String((session as any)?.user?.name || ""),
       }),
       keepalive: true,
-    }).catch(() => {
-      // Silencioso: no afecta UX.
-    });
+    }).catch(() => {});
   }, [isClient, isAdminRoute, router.asPath, session]);
 
   useEffect(() => {
     if (!isClient) return;
 
     const rules: Array<[RegExp, string]> = [
-      [/Env[?�]os/gi, "Envíos"],
-      [/Env[?�]o/gi, "Envío"],
-      [/r[?�]pido/gi, "rápido"],
-      [/sesi[?�]n/gi, "sesión"],
-      [/m[?�]s/gi, "más"],
-      [/A[?�]n/gi, "Aún"],
-      [/a[?�]n/gi, "aún"],
-      [/V[?�]lido/gi, "Válido"],
-      [/Participaci[?�]n/gi, "Participación"],
-      [/atenci[?�]n/gi, "atención"],
-      [/Per[?�]/gi, "Perú"],
-      [/rel[?�]mpago/gi, "relámpago"],
-      [/cat[?�]logo/gi, "catálogo"],
-      [/Categor[?�]a/gi, "Categoría"],
-      [/categor[?�]a/gi, "categoría"],
-      [/rese[?�]a/gi, "reseña"],
-      [/rese[?�]as/gi, "reseñas"],
+      [/Env[?]os/gi, "Envíos"],
+      [/Env[?]o/gi, "Envío"],
+      [/r[?]pido/gi, "rápido"],
+      [/sesi[?]n/gi, "sesión"],
+      [/m[?]s/gi, "más"],
+      [/A[?]n/gi, "Aún"],
+      [/a[?]n/gi, "aún"],
+      [/V[?]lido/gi, "Válido"],
+      [/Participaci[?]n/gi, "Participación"],
+      [/atenci[?]n/gi, "atención"],
+      [/Per[?]/gi, "Perú"],
+      [/rel[?]mpago/gi, "relámpago"],
+      [/cat[?]logo/gi, "catálogo"],
+      [/Categor[?]a/gi, "Categoría"],
+      [/categor[?]a/gi, "categoría"],
+      [/rese[?]a/gi, "reseña"],
+      [/rese[?]as/gi, "reseñas"],
     ];
 
     const fixText = (value: string): string => {
@@ -102,20 +104,19 @@ export default function App({
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       let node = walker.nextNode();
       while (node) {
-        const textNode = node as Text;
-        const nextValue = fixText(textNode.nodeValue || "");
-        if (nextValue !== textNode.nodeValue) textNode.nodeValue = nextValue;
+        const t = node as Text;
+        const next = fixText(t.nodeValue || "");
+        if (next !== t.nodeValue) t.nodeValue = next;
         node = walker.nextNode();
       }
     };
 
     const fixElementAttrs = (el: Element) => {
-      const attrs = ["title", "placeholder", "aria-label", "alt"];
-      for (const attr of attrs) {
+      for (const attr of ["title", "placeholder", "aria-label", "alt"]) {
         const raw = el.getAttribute(attr);
         if (!raw) continue;
-        const nextValue = fixText(raw);
-        if (nextValue !== raw) el.setAttribute(attr, nextValue);
+        const next = fixText(raw);
+        if (next !== raw) el.setAttribute(attr, next);
       }
     };
 
@@ -126,18 +127,16 @@ export default function App({
       for (const m of mutations) {
         if (m.type === "characterData" && m.target.nodeType === Node.TEXT_NODE) {
           const t = m.target as Text;
-          const nextValue = fixText(t.nodeValue || "");
-          if (nextValue !== t.nodeValue) t.nodeValue = nextValue;
+          const next = fixText(t.nodeValue || "");
+          if (next !== t.nodeValue) t.nodeValue = next;
         }
-        if (m.type === "attributes" && m.target instanceof Element) {
-          fixElementAttrs(m.target);
-        }
+        if (m.type === "attributes" && m.target instanceof Element) fixElementAttrs(m.target);
         if (m.type === "childList") {
           m.addedNodes.forEach((n) => {
             if (n.nodeType === Node.TEXT_NODE) {
               const t = n as Text;
-              const nextValue = fixText(t.nodeValue || "");
-              if (nextValue !== t.nodeValue) t.nodeValue = nextValue;
+              const next = fixText(t.nodeValue || "");
+              if (next !== t.nodeValue) t.nodeValue = next;
             } else if (n instanceof Element) {
               fixNode(n);
               fixElementAttrs(n);
@@ -159,68 +158,53 @@ export default function App({
     return () => observer.disconnect();
   }, [isClient]);
 
-  const MAINTENANCE = false;
-  const isPreview = typeof window !== "undefined" && window.location.search.includes("preview=rossyresina2025");
+  if (status === "loading") {
+    return <div className="bg-white h-screen w-screen" />;
+  }
 
-  const appContent = (
-    <SessionProvider session={session}>
-      <div className="font-bodyFont">
-        <Head>
-          <title>Rossy Resina</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-        </Head>
-        {MAINTENANCE && !isAdminRoute && !isPreview ? (
-          <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #1a0533, #3b0764, #6b21a8)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", textAlign: "center" }}>
-            <style>{`
-              @keyframes spin { to { transform: rotate(360deg); } }
-              @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-              @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
-            `}</style>
-            <div style={{ fontSize: 72, animation: "float 3s ease-in-out infinite" }}>🔧</div>
-            <div style={{ marginTop: 24, width: 56, height: 56, border: "5px solid rgba(255,255,255,0.2)", borderTop: "5px solid #e91e8c", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-            <h1 style={{ color: "#fff", fontSize: "clamp(24px,5vw,40px)", fontWeight: 900, margin: "24px 0 12px", letterSpacing: -1 }}>Web en Mantenimiento</h1>
-            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 18, fontWeight: 600, margin: "0 0 8px", animation: "pulse 2s ease-in-out infinite" }}>Estamos presentando problemas en el servicio</p>
-            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, margin: 0 }}>La web se mantendra indispuesta hasta el <strong style={{ color: "#e91e8c" }}>miercoles 8 de abril</strong></p>
-            <div style={{ marginTop: 32, display: "flex", gap: 8 }}>
-              {[0,1,2,3,4].map(i => <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: "#e91e8c", animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }} />)}
+  const content = (
+    <div className="font-bodyFont">
+      <Head>
+        <title>Rossy Resina</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+      <>
+        {!isAdminRoute && <TopBar />}
+        {isAdminRoute ? (
+          <AdminLayout>
+            <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
+              <Component {...pageProps} />
             </div>
-            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 40 }}>Rossy Resina &copy; 2025</p>
+          </AdminLayout>
+        ) : isCapacitaciones ? (
+          <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
+            <Component {...pageProps} />
           </div>
         ) : (
-          <>
-            {!isAdminRoute && <TopBar />}
-            {isAdminRoute ? (
-              <AdminLayout>
-                <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
-                  <Component {...pageProps} />
-                </div>
-              </AdminLayout>
-            ) : isCapacitaciones ? (
-              <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
-                <Component {...pageProps} />
-              </div>
-            ) : (
-              <RootLayout>
-                <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
-                  <Component {...pageProps} />
-                </div>
-              </RootLayout>
-            )}
-          </>
+          <RootLayout>
+            <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
+              <Component {...pageProps} />
+            </div>
+          </RootLayout>
         )}
-      </div>
-    </SessionProvider>
+      </>
+    </div>
   );
 
+  return isClient ? (
+    <PersistGate persistor={persistor} loading={null}>{content}</PersistGate>
+  ) : content;
+}
+
+export default function App({
+  Component,
+  pageProps: { session, ...pageProps },
+}: AppProps) {
   return (
     <Provider store={store}>
-      {isClient ? (
-        <PersistGate persistor={persistor} loading={null}>
-          {appContent}
-        </PersistGate>
-      ) : (
-        appContent
-      )}
+      <SessionProvider session={session}>
+        <AppContent Component={Component} pageProps={pageProps} session={session} />
+      </SessionProvider>
     </Provider>
   );
 }

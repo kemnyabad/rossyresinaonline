@@ -8,6 +8,13 @@ import { addToCart } from "@/store/nextSlice";
 import Link from "next/link";
 import FormattedPrice from "./FormattedPrice";
 import { formatProductTitle } from "@/lib/textFormat";
+import {
+  fetchProductStats,
+  normalizeImageUrl,
+  isPlaceholderImage,
+  pickDisplayImage,
+  type ProductStat,
+} from "@/lib/productMetricsClient";
 
 interface ProductsProps {
   productData: ProductProps[];
@@ -22,45 +29,10 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   ref
 ) => {
   const dispatch = useDispatch();
-  const [stats, setStats] = useState<
-    Record<string, { salesCount: number; avgRating: number; reviewCount: number }>
-  >({});
+  const [stats, setStats] = useState<Record<string, ProductStat>>({});
   const [addedMap, setAddedMap] = useState<Record<string, boolean>>({});
 
-  const normImg = (s?: string) => {
-    const t = String(s || "");
-    if (!t) return "/favicon-96x96.png";
-    let u = t.replace(/\\/g, "/");
-    if (/^https?:\/\//i.test(u)) return u;
-    if (!u.startsWith("/")) u = "/" + u;
-    return u;
-  };
-
-  const isProcessImage = (src?: string) => {
-    const imgSrc = normImg(src).toLowerCase();
-    return (
-      !src ||
-      String(src).trim() === "" ||
-      imgSrc.includes("sliderimg_") ||
-      imgSrc.includes("favicon-96x96.png") ||
-      imgSrc.includes("favicon") ||
-      imgSrc.includes("/logo.png") ||
-      imgSrc.includes("/logo.jpg") ||
-      imgSrc.endsWith("/logo")
-    );
-  };
-
-  const pickDisplayImage = (image?: string, images?: any): string => {
-    const gallery = Array.isArray(images)
-      ? images.map((x) => String(x || "").trim()).filter(Boolean)
-      : [];
-    const preferred = [String(image || "").trim(), ...gallery].find((img) => !isProcessImage(img));
-    return preferred || String(image || "").trim() || gallery[0] || "/favicon-96x96.png";
-  };
-
-  const productSlug = (code?: string, id?: number) => {
-    return code ? `/${code}` : `/${id}`;
-  };
+  const productSlug = (code?: string, id?: number) => code ? `/${code}` : `/${id}`;
 
   const idsParam = useMemo(() => {
     const ids = (Array.isArray(productData) ? productData : [])
@@ -70,24 +42,11 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   }, [productData]);
 
   useEffect(() => {
-    if (!idsParam) {
-      setStats({});
-      return;
-    }
     let active = true;
-    fetch(`/api/products/stats?ids=${encodeURIComponent(idsParam)}`)
-      .then((r) => (r.ok ? r.json() : {}))
-      .then((data) => {
-        if (!active) return;
-        setStats(data && typeof data === "object" ? data : {});
-      })
-      .catch(() => {
-        if (!active) return;
-        setStats({});
-      });
-    return () => {
-      active = false;
-    };
+    fetchProductStats(idsParam).then((data) => {
+      if (active) setStats(data);
+    });
+    return () => { active = false; };
   }, [idsParam]);
 
   const toProductHref = (
@@ -103,17 +62,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
     title: string
   ) => ({
     pathname: productSlug(code, _id),
-    query: {
-      _id,
-      brand,
-      category,
-      description,
-      image,
-      isNew,
-      oldPrice,
-      price,
-      title,
-    },
+    query: { _id, brand, category, description, image, isNew, oldPrice, price, title },
   });
 
   const showAddedFeedback = (id: number) => {
@@ -138,18 +87,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
           const hasDiscount = typeof oldPrice === "number" && oldPrice > price;
           const displayTitle = formatProductTitle(title || "Producto");
           const displayImage = pickDisplayImage(image, images);
-          const href = toProductHref(
-            code,
-            _id,
-            brand,
-            category,
-            description,
-            displayImage,
-            isNew,
-            oldPrice,
-            price,
-            title
-          );
+          const href = toProductHref(code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title);
 
           return (
             <div
@@ -158,38 +96,31 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
             >
               <Link href={href} className="block">
                 <div className="relative w-full overflow-hidden rounded-lg bg-white pb-[100%] group-hover:bg-gray-50 transition-colors duration-300">
-                  {(() => {
-                    const imgSrc = normImg(displayImage);
-                    const isPlaceholder = isProcessImage(displayImage);
-                    if (isPlaceholder) {
-                      return (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-2 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                          Producto en Proceso
-                        </div>
-                      );
-                    }
-                    return (
-                      <Image
-                        src={imgSrc}
-                        alt={displayTitle}
-                        fill
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    );
-                  })()}
+                  {isPlaceholderImage(displayImage) ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-2 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                      Producto en Proceso
+                    </div>
+                  ) : (
+                    <Image
+                      src={normalizeImageUrl(displayImage)}
+                      alt={displayTitle}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
 
                   <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1 z-10">
-                    {isNew ? (
+                    {isNew && (
                       <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-md">
                         Nuevo
                       </span>
-                    ) : null}
-                    {hasDiscount ? (
+                    )}
+                    {hasDiscount && (
                       <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-md">
                         Oferta
                       </span>
-                    ) : null}
+                    )}
                   </div>
                 </div>
               </Link>
@@ -207,11 +138,11 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                       <FormattedPrice amount={price} />
                     </span>
                     <span className="text-xs text-gray-500 md:text-sm">c/unidad</span>
-                    {hasDiscount ? (
+                    {hasDiscount && (
                       <span className="text-xs text-gray-400 line-through md:text-sm">
                         <FormattedPrice amount={oldPrice as number} />
                       </span>
-                    ) : null}
+                    )}
                   </div>
 
                   <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-gray-500">
@@ -228,29 +159,14 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                   {[0, 1, 2, 3, 4].map((i) => (
                     <StarIcon
                       key={i}
-                      className={`h-3.5 w-3.5 ${
-                        i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-200"
-                      }`}
+                      className={`h-3.5 w-3.5 ${i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-200"}`}
                     />
                   ))}
                 </div>
 
                 <button
                   onClick={() => {
-                    dispatch(
-                      addToCart({
-                        _id,
-                        brand,
-                        category,
-                        description,
-                        image: displayImage,
-                        isNew,
-                        oldPrice,
-                        price,
-                        title,
-                        quantity: 1,
-                      })
-                    );
+                    dispatch(addToCart({ _id, brand, category, description, image: displayImage, isNew, oldPrice, price, title, quantity: 1 }));
                     showAddedFeedback(_id);
                   }}
                   className={
@@ -272,5 +188,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
     </div>
   );
 });
+
+Products.displayName = "Products";
 
 export default Products;

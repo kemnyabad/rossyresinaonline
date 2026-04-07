@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 import prisma from "@/lib/prisma";
+import { ProductSchema } from "@/lib/validations";
 
 const db = prisma as any;
 const productBaseSelect = {
@@ -223,6 +224,14 @@ const toFriendlyDbError = (error: any, fallback: string): string => {
   return String(error?.message || fallback);
 };
 
+const validateProductPayload = (body: any) => {
+  const parsed = ProductSchema.safeParse(body);
+  if (!parsed.success) {
+    return { ok: false as const, error: parsed.error.flatten() };
+  }
+  return { ok: true as const };
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.setHeader("Pragma", "no-cache");
@@ -255,6 +264,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "POST") {
     const ok = await isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
+
+    const validation = validateProductPayload(req.body);
+    if (!validation.ok) {
+      return res.status(400).json({ error: "Datos inválidos", details: validation.error });
+    }
 
     try {
       const data = toDbData(req.body || {});
@@ -295,6 +309,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "PUT") {
     const ok = await isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
+
+    const validation = validateProductPayload(req.body);
+    if (!validation.ok) {
+      return res.status(400).json({ error: "Datos inválidos", details: validation.error });
+    }
 
     try {
       const data = toDbData(req.body || {});
@@ -414,7 +433,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return res.status(405).json({ error: "Metodo no permitido" });
 }
-
 
 
 

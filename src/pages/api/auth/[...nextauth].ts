@@ -5,6 +5,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { verifyUser, ensureAdminFromEnv, isAdminEmail } from "@/lib/users";
 
 export const authOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: "Email",

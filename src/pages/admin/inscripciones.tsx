@@ -167,7 +167,7 @@ export default function AdminInscripcionesPage() {
                   </div>
 
                   {i.mensaje && (
-                    <p className="mt-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">"{i.mensaje}"</p>
+                    <p className="mt-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">&quot;{i.mensaje}&quot;</p>
                   )}
 
                   {i.fechaProgramada && (
