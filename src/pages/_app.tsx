@@ -26,6 +26,7 @@ function AppContent({
   const { status } = useSession();
 
   const isAdminRoute = router.pathname.startsWith("/admin");
+  const isMaintenanceRoute = router.pathname === "/mantenimiento";
   const isCapacitaciones =
     router.pathname.startsWith("/capacitaciones") ||
     router.pathname.startsWith("/comunidad") ||
@@ -169,13 +170,15 @@ function AppContent({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <>
-        {!isAdminRoute && <TopBar />}
+        {!isAdminRoute && !isMaintenanceRoute && <TopBar />}
         {isAdminRoute ? (
           <AdminLayout>
             <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
               <Component {...pageProps} />
             </div>
           </AdminLayout>
+        ) : isMaintenanceRoute ? (
+          <Component {...pageProps} />
         ) : isCapacitaciones ? (
           <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
             <Component {...pageProps} />
