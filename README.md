@@ -184,6 +184,32 @@ El proyecto está configurado para desplegarse en Vercel.
 
 ---
 
+## Modo mantenimiento remoto (sin tocar código)
+
+Controla el mantenimiento desde el panel de Vercel en `Settings > Environment Variables`.
+
+- `MAINTENANCE_MODE=true`: activa mantenimiento para visitantes públicos en producción.
+- `MAINTENANCE_MODE=false`: vuelve a mostrar la tienda.
+- `NEXT_PUBLIC_MAINTENANCE_PROGRESS=60`: cambia el porcentaje visible en la pantalla de mantenimiento.
+
+Notas:
+- En `localhost` el mantenimiento se omite automáticamente para que puedas trabajar tranquilo.
+- La página pública se bloquea desde `middleware`, evitando parpadeos de la tienda durante mantenimiento.
+
+---
+
+## Flujo recomendado de publicación (GitHub + Vercel)
+
+1. Trabaja en una rama de feature (ejemplo: `feature/nuevo-catalogo`).
+2. Sube tus cambios a GitHub y abre un Pull Request a `main`.
+3. Espera que CI pase (`npm run lint` + `npm run build`).
+4. Haz `merge` solo cuando esté validado.
+5. Vercel despliega automáticamente `main`.
+
+Con esto dejas de publicar con comandos manuales a ciegas y pasas a un flujo controlado por revisión y merge.
+
+---
+
 ## Acceso al panel de administración
 
 La ruta del panel admin es `/admin`. Para ingresar necesitas:

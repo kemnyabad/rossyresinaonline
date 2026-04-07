@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 const BYPASS_PATHS = [
   "/mantenimiento",
   "/sign-in",
+  "/register",
+  "/admin",
   "/api/auth",
   "/api/",
   "/_next",
@@ -30,15 +32,6 @@ const getCountry = (req: NextRequest): string => {
   return "";
 };
 
-const hasAdminSession = (req: NextRequest): boolean => {
-  // NextAuth guarda el token en estas cookies según el entorno
-  const token =
-    req.cookies.get("next-auth.session-token")?.value ||
-    req.cookies.get("__Secure-next-auth.session-token")?.value ||
-    req.cookies.get("__Host-next-auth.session-token")?.value;
-  return !!token;
-};
-
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
@@ -48,13 +41,12 @@ export function middleware(req: NextRequest) {
   if (maintenanceOn) {
     const isBypass =
       isLocalHost(req) ||
-      hasAdminSession(req) ||
       BYPASS_PATHS.some((p) => pathname.startsWith(p));
 
     if (!isBypass) {
       const url = req.nextUrl.clone();
       url.pathname = "/mantenimiento";
-      return NextResponse.redirect(url);
+      return NextResponse.rewrite(url);
     }
   }
 
