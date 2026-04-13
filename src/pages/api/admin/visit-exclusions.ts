@@ -16,7 +16,7 @@ const getClientIp = (req: NextApiRequest): string => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getServerSession(req, res, authOptions as any);
+  const session: any = await getServerSession(req, res, authOptions as any);
   const ok = session && (session.user as any)?.role === "ADMIN";
   if (!ok) return res.status(401).json({ error: "No autorizado" });
 

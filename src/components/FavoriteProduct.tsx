@@ -4,7 +4,7 @@ import FormattedPrice from "./FormattedPrice";
 import { useDispatch } from "react-redux";
 import { addToCart, deleteFavorite } from "@/store/nextSlice";
 interface Item {
-  _id: number;
+  _id: number | string;
   brand: string;
   category: string;
   description: string;

@@ -1,6 +1,7 @@
 import RootLayout from "@/components/RootLayout";
 import AdminLayout from "@/components/admin/AdminLayout";
 import TopBar from "@/components/header/TopBar";
+import MaintenancePage from "@/components/MaintenancePage";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
@@ -22,11 +23,11 @@ function AppContent({
   session: any;
 }) {
   const [isClient, setIsClient] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
-  const { status } = useSession();
+  const { data: clientSession, status } = useSession();
 
   const isAdminRoute = router.pathname.startsWith("/admin");
-  const isMaintenanceRoute = router.pathname === "/mantenimiento";
   const isCapacitaciones =
     router.pathname.startsWith("/capacitaciones") ||
     router.pathname.startsWith("/comunidad") ||
@@ -39,6 +40,11 @@ function AppContent({
   const pageTransitionStyle = { animation: "rrPageEnter .22s ease-out both" } as const;
 
   useEffect(() => { setIsClient(true); }, []);
+
+  useEffect(() => {
+    const role = (clientSession?.user as any)?.role;
+    setIsAdmin(role === "ADMIN");
+  }, [clientSession]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -159,8 +165,16 @@ function AppContent({
     return () => observer.disconnect();
   }, [isClient]);
 
+  const MAINTENANCE = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
+  const isPreview = typeof window !== "undefined" && window.location.search.includes("preview=rossyresina2025");
+  const showMaintenance = MAINTENANCE && !isAdminRoute && !isPreview && !isAdmin;
+
   if (status === "loading") {
     return <div className="bg-white h-screen w-screen" />;
+  }
+
+  if (showMaintenance) {
+    return <MaintenancePage />;
   }
 
   const content = (
@@ -169,28 +183,28 @@ function AppContent({
         <title>Rossy Resina</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <>
-        {!isAdminRoute && !isMaintenanceRoute && <TopBar />}
-        {isAdminRoute ? (
-          <AdminLayout>
+      {showMaintenance ? (
+        <MaintenancePage />
+      
+          {isAdminRoute ? (
+            <AdminLayout>
+              <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
+                <Component {...pageProps} />
+              </div>
+            </AdminLayout>
+          ) : isCapacitaciones ? (
             <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
               <Component {...pageProps} />
             </div>
-          </AdminLayout>
-        ) : isMaintenanceRoute ? (
-          <Component {...pageProps} />
-        ) : isCapacitaciones ? (
-          <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
-            <Component {...pageProps} />
-          </div>
-        ) : (
-          <RootLayout>
-            <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
-              <Component {...pageProps} />
-            </div>
-          </RootLayout>
-        )}
-      </>
+          ) : (
+            <RootLayout>
+              <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
+                <Component {...pageProps} />
+              </div>
+            </RootLayout>
+          )}
+        </>
+      )}
     </div>
   );
 

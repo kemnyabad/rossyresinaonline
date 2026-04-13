@@ -3,6 +3,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "../auth/[...nextauth]";
 import prisma from "@/lib/prisma";
 import { upsertCustomer } from "@/lib/customerStore";
+import { logger } from "@/lib/logger";
+import { CreateOrderSchema } from "@/lib/validations";
 import {
   encodeOrderMeta,
   normalizePaymentMethod,
@@ -104,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
         return res.status(200).json(orders.map(serializeOrder));
       }
-      const session = await getServerSession(req, res, authOptions as any);
+      const session: any = await getServerSession(req, res, authOptions as any);
       const role = (session?.user as any)?.role;
       if (!session) return res.status(401).json({ error: "No autorizado" });
 
@@ -135,13 +137,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         orderBy: { createdAt: "desc" },
       });
       return res.status(200).json(orders.map(serializeOrder));
-    } catch {
+    } catch (error: any) {
+      logger.error("orders.get_failed", {
+        error: String(error?.message || error),
+        email,
+      });
       return res.status(500).json({ error: "No se pudieron obtener pedidos" });
     }
   }
 
   if (req.method === "POST") {
-    const body = req.body || {};
+    const parsed = CreateOrderSchema.safeParse(req.body || {});
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    }
+
+    const body = parsed.data;
     const customer = body.customer || {};
     const items = Array.isArray(body.items) ? (body.items as IncomingItem[]) : [];
 
@@ -164,8 +175,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!dni || dni.length < 6) return res.status(400).json({ error: "DNI requerido" });
     if (!phone) return res.status(400).json({ error: "Telefono requerido" });
     if (!locationLine) return res.status(400).json({ error: "Departamento, provincia y distrito requeridos" });
-    if (items.length === 0) return res.status(400).json({ error: "Carrito vacio" });
-
     if (shippingCarrier === "SHALOM" && !shalomAgency) {
       return res.status(400).json({ error: "Debes indicar la agencia Shalom" });
     }
@@ -196,7 +205,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
       if (keys.length === 0) return res.status(400).json({ error: "Items invalidos" });
 
-      const products = await db.product.findMany({
+      const products: any[] = await db.product.findMany({
         where: {
           OR: [
             { id: { in: keys } },
@@ -213,9 +222,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      const byId = new Map(products.map((p) => [String(p.id), p]));
-      const byLegacyId = new Map(products.filter((p) => p.legacyId).map((p) => [String(p.legacyId), p]));
-      const byCode = new Map(products.filter((p) => p.code).map((p) => [String(p.code), p]));
+      const byId = new Map(products.map((p: any) => [String(p.id), p]));
+      const byLegacyId = new Map(products.filter((p: any) => p.legacyId).map((p: any) => [String(p.legacyId), p]));
+      const byCode = new Map(products.filter((p: any) => p.code).map((p: any) => [String(p.code), p]));
       const normalizedItems: Array<{
         productId: string;
         legacyId: string | null;
@@ -233,7 +242,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           String(item.code ?? "").trim(),
         ].filter(Boolean);
         const qty = Math.max(1, Number(item.quantity || 1));
-        const product = candidateKeys
+        const product: any = candidateKeys
           .map((k) => byId.get(k) || byLegacyId.get(k) || byCode.get(k))
           .find(Boolean);
         if (!product) {
@@ -253,7 +262,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
-      const session = await getServerSession(req, res, authOptions as any);
+      const session: any = await getServerSession(req, res, authOptions as any);
       const sessionEmail = String((session?.user as any)?.email || "").trim().toLowerCase();
       const user = sessionEmail
         ? await db.user.findUnique({ where: { email: sessionEmail } })
@@ -318,7 +327,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       return res.status(201).json(serializeOrder(updated));
-    } catch {
+    } catch (error: any) {
+      logger.error("orders.create_failed", {
+        error: String(error?.message || error),
+        email,
+        items: items.length,
+      });
       return res.status(500).json({ error: "No se pudo crear el pedido" });
     }
   }

@@ -4,7 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import prisma from "@/lib/prisma";
 
 const isAdmin = async (req: NextApiRequest, res: NextApiResponse) => {
-  const session = await getServerSession(req, res, authOptions as any);
+  const session: any = await getServerSession(req, res, authOptions as any);
   return !!session && (session.user as any)?.role === "ADMIN";
 };
 

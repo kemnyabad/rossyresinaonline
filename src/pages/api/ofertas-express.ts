@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(items);
   }
 
-  const session = await getServerSession(req, res, authOptions as any);
+  const session: any = await getServerSession(req, res, authOptions as any);
   const ok = session && (session.user as any)?.role === "ADMIN";
   if (!ok) return res.status(401).json({ error: "No autorizado" });
 

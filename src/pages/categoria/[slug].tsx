@@ -102,7 +102,7 @@ export const getServerSideProps = async (ctx: any) => {
       if (ac && bc) return ac.localeCompare(bc, undefined, { numeric: true, sensitivity: "base" });
       if (ac) return -1;
       if (bc) return 1;
-      return (a._id || 0) - (b._id || 0);
+      return Number(a._id || 0) - Number(b._id || 0);
     });
 
     return { props: { slug, label, items } };

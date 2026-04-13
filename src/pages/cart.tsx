@@ -8,7 +8,7 @@ import FormattedPrice from "@/components/FormattedPrice";
 import Products from "@/components/Products";
 
 const CartPage = () => {
-  const { productData: cartItems } = useSelector((state: StateProps) => state.next);
+  const cartItems = useSelector((state: StateProps) => (state.next?.productData || []) as StoreProduct[]);
   const [recs, setRecs] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -46,7 +46,7 @@ const CartPage = () => {
 
   const recommendedProducts = useMemo(() => {
     if (Array.isArray(recs) && recs.length > 0) return recs;
-    const fallback = cartItems.map((item) => ({
+    const fallback = cartItems.map((item: StoreProduct) => ({
       _id: item._id,
       code: item.code,
       title: item.title,
