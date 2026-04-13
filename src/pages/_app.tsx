@@ -183,27 +183,22 @@ function AppContent({
         <title>Rossy Resina</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      {showMaintenance ? (
-        <MaintenancePage />
-      
-          {isAdminRoute ? (
-            <AdminLayout>
-              <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
-                <Component {...pageProps} />
-              </div>
-            </AdminLayout>
-          ) : isCapacitaciones ? (
-            <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
-              <Component {...pageProps} />
-            </div>
-          ) : (
-            <RootLayout>
-              <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
-                <Component {...pageProps} />
-              </div>
-            </RootLayout>
-          )}
-        </>
+      {isAdminRoute ? (
+        <AdminLayout>
+          <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
+            <Component {...pageProps} />
+          </div>
+        </AdminLayout>
+      ) : isCapacitaciones ? (
+        <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
+          <Component {...pageProps} />
+        </div>
+      ) : (
+        <RootLayout>
+          <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
+            <Component {...pageProps} />
+          </div>
+        </RootLayout>
       )}
     </div>
   );
