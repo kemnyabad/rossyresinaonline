@@ -161,7 +161,7 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
                 <div className="col-span-12 md:col-span-7 flex justify-center items-center">
                   <div className="flex gap-3 md:gap-4 justify-center flex-wrap">
                     {activeSlide!.items.length === 0 ? (
-                      <p className="text-white/70 text-sm">Agrega productos desde el panel admin para verlos aquí.</p>
+                      null
                     ) : (
                       activeSlide!.items.map((item, idx) => renderProductCard(item, idx))
                     )}
