@@ -33,7 +33,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
   
   // Carousel refs
   const visitedCarouselRef = useRef<HTMLDivElement>(null);
-  const offersCarouselRef = useRef<HTMLDivElement>(null);
+
   const desktopOffersRef = useRef<HTMLDivElement>(null);
   const topProductsRef = useRef<HTMLDivElement>(null);
   
@@ -166,14 +166,13 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
       return cat.includes("molde") || title.includes("molde") || code.includes("mol_");
     });
   }, [allProducts]);
-  const mobileOfferProducts = useMemo(() => offerProducts.slice(0, 8), [offerProducts]);
+
   const interestProducts = diversifiedProducts.slice(0, visibleCount);
   const interestsRef = useRef<HTMLDivElement | null>(null);
   const offersRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const [canOfferScrollLeft, setCanOfferScrollLeft] = useState(false);
-  const [canOfferScrollRight, setCanOfferScrollRight] = useState(false);
+
   const normalizeImage = (img?: string) => {
     const s = String(img || "");
     if (!s) return `${SITE_URL}/favicon-96x96.png`;
@@ -375,39 +374,36 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
             </div>
           </div>
 
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-gray-900">Ofertas relámpago</h2>
-              <Link href="/productos?ofertas=1" className="text-xs font-semibold text-[#cb299e]">Ver ofertas</Link>
+          {ofertasExpress.length > 0 && (
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <span className="text-lg">⚡</span>
+                  <h2 className="text-base font-extrabold text-orange-500">Ofertas Express</h2>
+                </div>
+                <Link href="/productos" className="text-xs font-semibold text-orange-500">Ver más</Link>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {ofertasExpress.slice(0, 4).map((item) => (
+                  <Link key={item.id} href="/productos" className="rounded-xl border border-orange-100 bg-white p-3 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="relative h-32 w-full overflow-hidden rounded-lg bg-gray-50">
+                      <Image 
+                        src={normalizeMobileImage(item.imagen)} 
+                        alt={item.nombre} 
+                        fill 
+                        className="object-cover transition-transform duration-300 group-hover:scale-105" 
+                      />
+                      <div className="absolute top-2 left-2">
+                        <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">EXPRESS</span>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs font-semibold text-gray-800 text-center line-clamp-2 group-hover:text-orange-500">{item.nombre}</p>
+                  </Link>
+                ))}
+              </div>
             </div>
-          <div className="relative">
-            {/* Navigation buttons */}
-            <button
-              onClick={() => scrollMobile('left', 'offers')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Anterior"
-            >
-              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => scrollMobile('right', 'offers')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Siguiente"
-            >
-              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            
-            <Products
-              productData={mobileOfferProducts}
-              gridClass="grid-flow-col auto-cols-[72%] gap-3 snap-x snap-mandatory overflow-x-auto no-scrollbar pb-1 scroll-smooth"
-              ref={offersCarouselRef}
-            />
-          </div>
-          </div>
+          )}
+
 
           <div>
             <div className="mb-2 flex items-center justify-between">
@@ -503,53 +499,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
         </section>
         )}
 
-        {/* Ofertas relámpago */}
-        <section className="px-4 md:px-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg"></span>
-              <h2 className="text-xl font-semibold uppercase tracking-wide text-[#cb299e]">
-                Ofertas relámpago
-              </h2>
-            </div>
-            <Link href="/productos?ofertas=1" className="text-sm font-semibold text-[#cb299e] hover:underline">
-              Ver todas
-            </Link>
-          </div>
-          <div className="relative">
-            {/* Desktop navigation buttons */}
-            <button
-              onClick={() => scrollDesktop('left', 'offers')}
-              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Anterior"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => scrollDesktop('right', 'offers')}
-              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Siguiente"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            
-            <div 
-              ref={desktopOffersRef}
-              className="flex gap-4 overflow-x-auto no-scrollbar pb-2 scroll-smooth"
-              style={{ scrollBehavior: 'smooth' }}
-            >
-              {offerProducts.map((product) => (
-                <div key={product._id} className="w-[200px] md:w-[250px] shrink-0">
-                  <Products productData={[product]} gridClass="grid-cols-1" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+
 
         {/* Explora tus intereses */}
         <section className="px-4 md:px-6">
