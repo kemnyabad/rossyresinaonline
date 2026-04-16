@@ -4,7 +4,14 @@ import Header from "./header/Header";
 import BottomHeader from "./header/BottomHeader";
 import Footer from "./Footer";
 import Link from "next/link";
-import { HomeIcon, MagnifyingGlassIcon, HeartIcon, ShoppingCartIcon, UserIcon } from "@heroicons/react/24/outline";
+import { 
+  HomeIcon, 
+  MagnifyingGlassIcon, 
+  HeartIcon, 
+  ShoppingCartIcon, 
+  UserIcon,
+  ArrowRightIcon 
+} from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
 import AssistantRossy from "./AssistantRossy";
 
@@ -15,6 +22,7 @@ interface Props {
 const RootLayout = ({ children }: Props) => {
   const router = useRouter();
   const hideBottomHeader = router.pathname === "/cart";
+  const isRifasPage = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/admin/rifa");
   const footerRef = useRef<HTMLDivElement | null>(null);
   const [hideAssistant, setHideAssistant] = useState(false);
   const cartCount = useSelector((state: any) =>
@@ -58,6 +66,34 @@ const RootLayout = ({ children }: Props) => {
           <BottomHeader />
         </div>
       )}
+
+      {/* Banner Móvil Temático: Día de la Madre (Solo visible en móviles y fuera de rifas) */}
+      {!isRifasPage && (
+        <div className="md:hidden">
+          <Link href="/rifas">
+            <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-600 px-4 py-3 flex items-center justify-between shadow-md border-b border-white/10 overflow-hidden relative">
+              {/* Elemento decorativo de fondo */}
+              <div className="absolute -right-2 -top-1 opacity-20 pointer-events-none">
+                <span className="text-5xl">🌸</span>
+              </div>
+              
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-xl animate-pulse">
+                  💝
+                </div>
+                <div className="text-white">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-rose-100 leading-none mb-1">Especial Mamá</p>
+                  <p className="text-sm font-black leading-tight">¡SORTEO DÍA DE LA MADRE!</p>
+                </div>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/40 text-[11px] font-bold text-white flex items-center gap-1.5 shadow-sm relative z-10">
+                PARTICIPAR <ArrowRightIcon className="h-3 w-3 stroke-[3]" />
+              </div>
+            </div>
+          </Link>
+        </div>
+      )}
+
       <div className="pb-20 md:pb-0">{children}</div>
       <div ref={footerRef}>
         <Footer />
