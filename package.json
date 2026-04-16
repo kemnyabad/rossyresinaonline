@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && prisma db push && next build",
     "start": "next start",
     "lint": "next lint",
+    "backup:weekly": "powershell -ExecutionPolicy Bypass -File scripts/backup-weekly.ps1",
     "postinstall": "prisma generate"
   },
   "dependencies": {

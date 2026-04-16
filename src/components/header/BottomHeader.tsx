@@ -126,6 +126,14 @@ const BottomHeader = () => {
               Productos
             </Link>
             <Link
+              href="/rifas"
+              className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-all duration-300 ${
+                isCurrentPath("/rifas") ? "bg-amazon_blue text-white font-semibold shadow-md" : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
+              }`}
+            >
+              Rifas
+            </Link>
+            <Link
               href="/blog"
               className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-all duration-300 ${
                 isCurrentPath("/blog") ? "bg-amazon_blue text-white font-semibold shadow-md" : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
@@ -167,6 +175,16 @@ const BottomHeader = () => {
               {col.title}
             </Link>
           ))}
+
+          <Link
+            href="/rifas"
+            className="shrink-0 snap-start pb-2 text-[15px] font-medium leading-tight text-gray-600 whitespace-nowrap"
+            onClick={(e) => {
+              if (isCurrentPath("/rifas")) e.preventDefault();
+            }}
+          >
+            Rifas
+          </Link>
 
           <Link
             href="/blog"

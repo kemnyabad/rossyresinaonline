@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 interface Category {
-  _id: number;
+  id: string;
   name: string;
   slug: string;
 }
@@ -78,7 +78,7 @@ export default function AdminCategoriesPage() {
     load();
   };
 
-  const remove = async (id: number) => {
+  const remove = async (id: string) => {
     await fetch(`/api/categories?_id=${id}`, { method: "DELETE" });
     load();
   };
@@ -109,12 +109,12 @@ export default function AdminCategoriesPage() {
         <h2 className="text-lg font-semibold mb-3">Listado</h2>
         <div className="grid gap-3">
           {items.map((c) => (
-            <div key={c._id} className="flex items-center justify-between border border-gray-200 rounded-lg p-3">
+            <div key={c.id} className="flex items-center justify-between border border-gray-200 rounded-lg p-3">
               <div>
                 <div className="font-semibold">{c.name}</div>
                 <div className="text-sm text-gray-600">{c.slug}</div>
               </div>
-              <button onClick={() => remove(c._id)} className="px-3 py-1 text-sm rounded bg-red-600 text-white hover:opacity-90">Eliminar</button>
+              <button onClick={() => remove(c.id)} className="px-3 py-1 text-sm rounded bg-red-600 text-white hover:opacity-90">Eliminar</button>
             </div>
           ))}
         </div>

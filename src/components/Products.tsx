@@ -32,7 +32,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   const [stats, setStats] = useState<Record<string, ProductStat>>({});
   const [addedMap, setAddedMap] = useState<Record<string, boolean>>({});
 
-  const productSlug = (code?: string, id?: number) => code ? `/${code}` : `/${id}`;
+  const productSlug = (code?: string, id?: string | number) => code ? `/${code}` : `/${id}`;
 
   const idsParam = useMemo(() => {
     const ids = (Array.isArray(productData) ? productData : [])
@@ -51,7 +51,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
 
   const toProductHref = (
     code: string | undefined,
-    _id: number,
+    _id: string | number,
     brand: string,
     category: string,
     description: string,
@@ -65,7 +65,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
     query: { _id, brand, category, description, image, isNew, oldPrice, price, title },
   });
 
-  const showAddedFeedback = (id: number) => {
+  const showAddedFeedback = (id: string | number) => {
     const key = String(id);
     setAddedMap((prev) => ({ ...prev, [key]: true }));
     setTimeout(() => {

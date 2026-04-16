@@ -62,10 +62,22 @@ export default function AdminProducts() {
 
   const load = async () => {
     setLoading(true);
-    const res  = await fetch("/api/products");
-    const data = await res.json();
-    setItems(Array.isArray(data) ? data : []);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/products");
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        const msg = String((data as any)?.error || "No se pudo cargar productos.");
+        setNotice({ type: "error", text: msg });
+        setItems([]);
+        return;
+      }
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      setNotice({ type: "error", text: "Error de conexion al cargar productos." });
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); setMounted(true); }, []);
