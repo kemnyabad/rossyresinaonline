@@ -32,6 +32,8 @@ function AppContent({
     router.pathname.startsWith("/capacitaciones") ||
     router.pathname.startsWith("/comunidad") ||
     router.pathname.startsWith("/suscriptores") ||
+    router.pathname.startsWith("/rifas") ||
+    router.pathname.startsWith("/rifa/") ||
     router.pathname === "/suscripcion" ||
     router.pathname === "/sign-in" ||
     router.pathname === "/register";

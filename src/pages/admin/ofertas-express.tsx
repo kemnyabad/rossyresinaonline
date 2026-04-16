@@ -51,8 +51,16 @@ export default function AdminOfertasExpress() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ filename: f.name, data: dataUrl }),
     });
+
+    if (!res.ok) {
+      const text = await res.text();
+      if (text.includes("Body exceeded")) {
+        throw new Error("La imagen es muy pesada. El límite por defecto es 1MB. Comprímela o aumenta el límite en el servidor.");
+      }
+      throw new Error(text || "Error al subir imagen");
+    }
+
     const json = await res.json();
-    if (!res.ok) throw new Error(json.error || "Error al subir imagen");
     return json.url;
   };
 
@@ -61,6 +69,11 @@ export default function AdminOfertasExpress() {
     setSaving(true);
     try {
       let imagen = form.imagen;
+      if (file && file.size > 10 * 1024 * 1024) { // Límite aumentado a 10MB
+        setNotice("Error: La imagen es demasiado grande (máximo 10MB). Redúcela antes de subirla.");
+        setSaving(false);
+        return;
+      }
       if (file) {
         setUploading(true);
         imagen = await uploadImage(file);

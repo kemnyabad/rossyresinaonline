@@ -304,3 +304,42 @@ model CapacitacionInscripcion {
   @@index([email])
   @@index([estado])
 }
+
+// Modelo para rifas
+model Rifa {
+  id             String        @id @default(cuid())
+  title          String
+  description    String        @db.Text
+  image          String
+  totalNumbers   Int           // Cantidad total de números disponibles
+  pricePerNumber Decimal       @db.Decimal(10, 2)
+  startDate      DateTime
+  endDate        DateTime
+  status         String        @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED, CANCELLED
+  rules          String        @db.Text
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  tickets        RifaTicket[]
+
+  @@index([status])
+  @@index([startDate])
+}
+
+// Modelo para números/tickets de rifa
+model RifaTicket {
+  id            String    @id @default(cuid())
+  rifaId        String
+  rifa          Rifa      @relation(fields: [rifaId], references: [id], onDelete: Cascade)
+  number        Int       // Número del 1 al totalNumbers
+  status        String    @default("AVAILABLE") // AVAILABLE, PENDING, SOLD, PAID
+  buyerName     String?
+  buyerEmail    String?
+  buyerPhone    String?
+  paymentImage  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([rifaId, number])
+  @@index([rifaId])
+  @@index([status])
+}

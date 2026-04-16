@@ -20,6 +20,7 @@ import {
   Cog6ToothIcon,
   HomeIcon,
   BoltIcon,
+  TicketIcon,
 } from "@heroicons/react/24/outline";
 
 interface Props {
@@ -53,6 +54,7 @@ const navGroups = [
     label: "Comercio",
     items: [
       { href: "/admin/orders", label: "Pedidos", icon: ShoppingBagIcon },
+      { href: "/admin/rifas", label: "Rifas", icon: TicketIcon },
       { href: "/admin/customers", label: "Clientes", icon: UsersIcon },
     ],
   },
@@ -75,6 +77,7 @@ const sectionTitleByPath = (pathname: string): { title: string; breadcrumb: stri
   if (pathname.startsWith("/admin/blog")) return { title: "Blog", breadcrumb: ["Contenido", "Blog"] };
   if (pathname.startsWith("/admin/orders")) return { title: "Pedidos", breadcrumb: ["Comercio", "Pedidos"] };
   if (pathname.startsWith("/admin/customers")) return { title: "Clientes", breadcrumb: ["Comercio", "Clientes"] };
+  if (pathname.startsWith("/admin/rifas")) return { title: "Rifas", breadcrumb: ["Comercio", "Rifas"] };
   if (pathname.startsWith("/admin/stats")) return { title: "Estadísticas", breadcrumb: ["Analítica", "Estadísticas"] };
   if (pathname.startsWith("/admin/visits")) return { title: "Visitas", breadcrumb: ["Analítica", "Visitas"] };
   if (pathname.startsWith("/admin/users")) return { title: "Usuarios", breadcrumb: ["Analítica", "Usuarios"] };
