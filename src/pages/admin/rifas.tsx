@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../api/auth/[...nextauth]';
 import type { GetServerSideProps } from 'next';
+import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface RifaStatus {
   id: string;
@@ -37,6 +39,7 @@ export default function AdminRifas() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -214,6 +217,24 @@ export default function AdminRifas() {
       alert('Error al anular reserva');
     } finally {
       setConfirmingId(null);
+    }
+  };
+
+  const deleteRifa = async (id: string) => {
+    if (!confirm('¿Eliminar esta rifa y todos sus números?')) return;
+    setDeleting(id);
+    try {
+      const res = await fetch(`/api/admin/rifas/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setRifas(prev => prev.filter(r => r.id !== id));
+        alert('✅ Rifa eliminada correctamente');
+      } else {
+        alert('Error eliminando');
+      }
+    } catch {
+      alert('Error de conexión');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -414,6 +435,25 @@ export default function AdminRifas() {
                         </p>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Botones de Acciones */}
+                  <div className="flex items-center gap-2 pt-4 mt-6 border-t border-gray-100">
+                    <Link 
+                      href={`/admin/rifa/${rifa.id}`}
+                      className="flex-1 text-center py-2 px-4 border border-gray-300 text-sm font-semibold text-gray-700 rounded-lg hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700 transition-all flex items-center justify-center gap-2"
+                    >
+                      <PencilSquareIcon className="w-4 h-4" />
+                      Editar
+                    </Link>
+                    <button
+                      onClick={() => deleteRifa(rifa.id)}
+                      disabled={deleting === rifa.id}
+                      className="flex-1 text-center py-2 px-4 bg-red-50 border border-red-200 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-100 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                      {deleting === rifa.id ? 'Eliminando...' : 'Eliminar'}
+                    </button>
                   </div>
                 </div>
               ))}

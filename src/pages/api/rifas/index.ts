@@ -1,25 +1,41 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 
+const isPrizeImagesColumnMissing = (error: any): boolean => {
+  const msg = String(error?.message || '').toLowerCase();
+  return msg.includes('prizeimages') && (msg.includes('does not exist') || msg.includes('unknown column'));
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     // Lista pública de rifas ACTIVAS con información de cuántos números están vendidos
     try {
-      const rifas = await prisma.rifa.findMany({
-        where: { status: 'ACTIVE' },
-        orderBy: { startDate: 'asc' },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          image: true,
-          totalNumbers: true,
-          pricePerNumber: true,
-          startDate: true,
-          endDate: true,
-          rules: true,
-        },
-      });
+      let rifas: any[];
+      try {
+        rifas = await prisma.rifa.findMany({
+          where: { status: 'ACTIVE' },
+          orderBy: { startDate: 'asc' },
+        }) as any[];
+      } catch (error) {
+        if (!isPrizeImagesColumnMissing(error)) throw error;
+        rifas = await prisma.rifa.findMany({
+          where: { status: 'ACTIVE' },
+          orderBy: { startDate: 'asc' },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            image: true,
+            videoUrl: true,
+            prizes: true,
+            totalNumbers: true,
+            pricePerNumber: true,
+            startDate: true,
+            endDate: true,
+            rules: true,
+          } as any,
+        }) as any[];
+      }
 
       // Contar números vendidos para cada rifa
       const rifasConConteos = await Promise.all(
@@ -28,7 +44,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             where: { rifaId: rifa.id, status: { not: 'AVAILABLE' } },
           });
           return {
-            ...rifa,
+            id: rifa.id,
+            title: rifa.title,
+            description: rifa.description,
+            image: rifa.image,
+            prizeImages: Array.isArray(rifa.prizeImages) ? rifa.prizeImages : [],
+            videoUrl: rifa.videoUrl,
+            prizes: rifa.prizes,
+            totalNumbers: rifa.totalNumbers,
+            pricePerNumber: rifa.pricePerNumber,
+            startDate: rifa.startDate,
+            endDate: rifa.endDate,
+            rules: rifa.rules,
             soldCount,
             availableNumbers: rifa.totalNumbers - soldCount,
           };

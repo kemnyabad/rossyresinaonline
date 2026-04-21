@@ -7,13 +7,38 @@ interface RifaFormData {
   totalNumbers: string;
   pricePerNumber: string;
   image: string;
+  prizeImages: { url: string; alt: string }[];
+  videoUrl: string;
+  prizes: string;
   startDate: string;
   endDate: string;
   status: 'DRAFT' | 'ACTIVE' | 'CLOSED' | 'DRAWN';
   rules: string;
 }
 
-export default function RifaAdminForm({ rifaId }: { rifaId?: string }) {
+const normalizePrizeImages = (raw: any): Array<{ url: string; alt: string }> => {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((item: any) => {
+      if (typeof item === 'string') {
+        const url = item.trim();
+        return url ? { url, alt: 'Premio de la rifa' } : null;
+      }
+      const url = String(item?.url || '').trim();
+      if (!url) return null;
+      const alt = String(item?.alt || 'Premio de la rifa').trim();
+      return { url, alt };
+    })
+    .filter(Boolean) as Array<{ url: string; alt: string }>;
+};
+
+interface RifaFormProps {
+  rifaId?: string;
+  initialData?: any;
+}
+
+export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
   const router = useRouter();
   const [data, setData] = useState<RifaFormData>({
     title: '',
@@ -21,6 +46,9 @@ export default function RifaAdminForm({ rifaId }: { rifaId?: string }) {
     totalNumbers: '1000',
     pricePerNumber: '5.00',
     image: '',
+    prizeImages: [],
+    videoUrl: '',
+    prizes: '',
     startDate: '',
     endDate: '',
     status: 'DRAFT',
@@ -28,12 +56,36 @@ export default function RifaAdminForm({ rifaId }: { rifaId?: string }) {
   });
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
+  const [videoPreview, setVideoPreview] = useState('');
+  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [selectedPrizeFiles, setSelectedPrizeFiles] = useState<File[]>([]);
+  const [newPrizePreviews, setNewPrizePreviews] = useState<Array<{ url: string; alt: string }>>([]);
 
   useEffect(() => {
-    if (rifaId) {
+    if (initialData) {
+      setData({
+        title: initialData.title,
+        description: initialData.description || '',
+        totalNumbers: initialData.totalNumbers.toString(),
+        pricePerNumber: initialData.pricePerNumber.toString(),
+        image: initialData.image || '',
+        prizeImages: normalizePrizeImages(initialData.prizeImages),
+        videoUrl: initialData.videoUrl || '',
+        prizes: initialData.prizes || '',
+        startDate: initialData.startDate ? initialData.startDate.split('T')[0] : '',
+        endDate: initialData.endDate ? initialData.endDate.split('T')[0] : '',
+        status: initialData.status,
+        rules: initialData.rules || '',
+      });
+      setImagePreview(initialData.image || '');
+      setVideoPreview(initialData.videoUrl || '');
+      setSelectedPrizeFiles([]);
+      setNewPrizePreviews([]);
+    } else if (rifaId) {
       loadRifa();
     }
-  }, [rifaId]);
+  }, [rifaId, initialData]);
 
   const loadRifa = async () => {
     try {
@@ -46,34 +98,181 @@ export default function RifaAdminForm({ rifaId }: { rifaId?: string }) {
           totalNumbers: rifa.totalNumbers.toString(),
           pricePerNumber: rifa.pricePerNumber.toString(),
           image: rifa.image || '',
+          prizeImages: normalizePrizeImages(rifa.prizeImages),
+          videoUrl: rifa.videoUrl || '',
+          prizes: rifa.prizes || '',
           startDate: rifa.startDate ? rifa.startDate.split('T')[0] : '',
           endDate: rifa.endDate ? rifa.endDate.split('T')[0] : '',
           status: rifa.status,
           rules: rifa.rules || '',
         });
         setImagePreview(rifa.image || '');
+        setVideoPreview(rifa.videoUrl || '');
+        setSelectedPrizeFiles([]);
+        setNewPrizePreviews([]);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || 'No se pudo cargar la rifa');
       }
-    } catch {}
+    } catch (error: any) {
+      console.error('Error loading rifa:', error);
+      alert(`Error cargando la rifa: ${error?.message || 'Intenta recargar la página'}`);
+    }
+  };
+
+  const uploadFile = async (f: File): Promise<string> => {
+    const toDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+    const dataUrl = await toDataUrl(f);
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: f.name, data: dataUrl }),
+    });
+    if (!res.ok) throw new Error("Error al subir archivo");
+    const json = await res.json();
+    return json.url;
+  };
+
+  const uploadVideoFile = async (f: File): Promise<string> => {
+    try {
+      console.log(`Uploading video: ${f.name}, size: ${(f.size / 1024 / 1024).toFixed(2)}MB`);
+      
+      if (f.size > 500 * 1024 * 1024) {
+        throw new Error('Video muy grande. Máximo 500MB. Tu video pesa ' + (f.size / 1024 / 1024).toFixed(1) + 'MB');
+      }
+
+      const res = await fetch("/api/upload-video", {
+        method: "POST",
+        headers: { 'Content-Type': f.type || 'application/octet-stream' },
+        body: f,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error: ${res.status} ${res.statusText}`);
+      }
+
+      const json = await res.json();
+      if (!json.url) {
+        throw new Error('No se recibió URL del video desde Cloudinary');
+      }
+      console.log('Video uploaded successfully:', json.url);
+      return json.url;
+    } catch (error: any) {
+      console.error('Video upload error:', error);
+      throw new Error(error?.message || 'Error desconocido al subir video');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
     try {
+      // Validar que imagen, video y premios son obligatorios
+      if (!data.image && !selectedImageFile) {
+        alert('La imagen es obligatoria');
+        setLoading(false);
+        return;
+      }
+
+      if (!data.videoUrl && !selectedVideoFile) {
+        alert('El video es obligatorio');
+        setLoading(false);
+        return;
+      }
+
+      if (!data.prizes || data.prizes.trim() === '') {
+        alert('Los premios son obligatorios');
+        setLoading(false);
+        return;
+      }
+
+      let finalData = { ...data };
+
+      // Upload image if selected
+      if (selectedImageFile) {
+        try {
+          console.log('Uploading image...');
+          const imageUrl = await uploadFile(selectedImageFile);
+          finalData.image = imageUrl;
+          console.log('Image uploaded successfully');
+        } catch (err: any) {
+          alert(`Error al subir imagen: ${err.message}`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Upload video if selected
+      if (selectedVideoFile) {
+        try {
+          console.log('Uploading video...');
+          const videoUrl = await uploadVideoFile(selectedVideoFile);
+          finalData.videoUrl = videoUrl;
+          console.log('Video uploaded successfully');
+        } catch (err: any) {
+          console.error('Video upload error:', err);
+          alert(`Error al subir video: ${err.message}\n\nVerifica:\n- El tamaño (máximo 500MB)\n- La conexión a internet\n- El formato (MP4 recomendado)`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      if (selectedPrizeFiles.length > 0) {
+        try {
+          const uploadedPrizeImages = await Promise.all(
+            selectedPrizeFiles.map(async (file, idx) => {
+              const url = await uploadFile(file);
+              return {
+                url,
+                alt: newPrizePreviews[idx]?.alt || `Premio ${idx + 1}`,
+              };
+            })
+          );
+          finalData.prizeImages = [...finalData.prizeImages, ...uploadedPrizeImages];
+        } catch (err: any) {
+          alert(`Error al subir imágenes del slider: ${err.message}`);
+          setLoading(false);
+          return;
+        }
+      }
+
       const url = rifaId ? `/api/admin/rifas/${rifaId}` : '/api/admin/rifas';
       const method = rifaId ? 'PUT' : 'POST';
+
+      // Convertimos los campos a sus tipos correctos para la base de datos
+      const payload = {
+        ...finalData,
+        totalNumbers: parseInt(finalData.totalNumbers, 10),
+        pricePerNumber: parseFloat(finalData.pricePerNumber),
+      };
+
+      console.log('Saving rifa...', payload);
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
+
       if (res.ok) {
+        console.log('Rifa saved successfully');
         router.push('/admin/rifas');
       } else {
-        alert('Error guardando');
+        const errData = await res.json().catch(() => ({}));
+        alert(
+          `Error al guardar: ${errData.error || 'Verifica los campos obligatorios'}${
+            errData.detail ? `\n\nDetalle: ${errData.detail}` : ''
+          }`
+        );
       }
-    } catch {
-      alert('Error de conexión');
+    } catch (err: any) {
+      alert(`Error: ${err.message || 'Error de conexión con el servidor'}`);
     } finally {
       setLoading(false);
     }
@@ -82,11 +281,61 @@ export default function RifaAdminForm({ rifaId }: { rifaId?: string }) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        alert('Imagen muy grande. Máximo 10MB');
+        return;
+      }
+      setSelectedImageFile(file);
       const url = URL.createObjectURL(file);
       setImagePreview(url);
-      // Upload to public folder or S3 later
-      setData({ ...data, image: file.name }); // Placeholder
     }
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const maxSize = 500 * 1024 * 1024; // 500MB
+      if (file.size > maxSize) {
+        alert('Video muy grande. Máximo 500MB');
+        return;
+      }
+      setSelectedVideoFile(file);
+      const url = URL.createObjectURL(file);
+      setVideoPreview(url);
+    }
+  };
+
+  const handlePrizeImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const validFiles = files.filter((file) => file.size <= maxSize);
+    if (validFiles.length !== files.length) {
+      alert('Una o más imágenes superan 10MB y no fueron agregadas.');
+    }
+
+    const previews = validFiles.map((file, idx) => ({
+      url: URL.createObjectURL(file),
+      alt: `Premio ${newPrizePreviews.length + idx + 1}`,
+    }));
+
+    setSelectedPrizeFiles((prev) => [...prev, ...validFiles]);
+    setNewPrizePreviews((prev) => [...prev, ...previews]);
+    e.target.value = '';
+  };
+
+  const removeExistingPrizeImage = (index: number) => {
+    setData((prev) => ({
+      ...prev,
+      prizeImages: prev.prizeImages.filter((_, i) => i !== index),
+    }));
+  };
+
+  const removeNewPrizeImage = (index: number) => {
+    setSelectedPrizeFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewPrizePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -166,7 +415,7 @@ export default function RifaAdminForm({ rifaId }: { rifaId?: string }) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Imagen (opcional)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Imagen (requerida)</label>
             <input
               type="file"
               accept="image/*"
@@ -178,6 +427,81 @@ export default function RifaAdminForm({ rifaId }: { rifaId?: string }) {
                 <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-xl border-2 border-gray-200" />
               </div>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Imágenes del Slider (opcional)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handlePrizeImagesChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              Puedes subir varias imágenes para el banner slider. Se mostrarán en orden.
+            </p>
+
+            {(data.prizeImages.length > 0 || newPrizePreviews.length > 0) && (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {data.prizeImages.map((img, index) => (
+                  <div key={`saved-${index}`} className="relative rounded-xl overflow-hidden border border-gray-200">
+                    <img src={img.url} alt={img.alt} className="w-full h-24 object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeExistingPrizeImage(index)}
+                      className="absolute top-1 right-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ))}
+                {newPrizePreviews.map((img, index) => (
+                  <div key={`new-${index}`} className="relative rounded-xl overflow-hidden border border-purple-200">
+                    <img src={img.url} alt={img.alt} className="w-full h-24 object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeNewPrizeImage(index)}
+                      className="absolute top-1 right-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded"
+                    >
+                      Quitar
+                    </button>
+                    <span className="absolute bottom-1 left-1 bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded">
+                      Nueva
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Video (requerido)</label>
+            <input
+              type="file"
+              accept="video/*"
+              onChange={handleVideoChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+            />
+            {videoPreview && (
+              <div className="mt-3">
+                <video src={videoPreview} controls className="w-full h-auto max-h-48 rounded-xl border-2 border-gray-200" />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Premios (requerido)</label>
+            <textarea
+              rows={3}
+              value={data.prizes}
+              onChange={(e) => setData({ ...data, prizes: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical"
+              placeholder="Describe los premios del sorteo. Ej: 1er lugar: Laptop + Resina + Moldes..."
+              required
+            />
           </div>
 
           <div>
@@ -211,7 +535,12 @@ export default function RifaAdminForm({ rifaId }: { rifaId?: string }) {
               disabled={loading}
               className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {loading ? 'Guardando...' : rifaId ? 'Actualizar Rifa' : 'Crear Rifa'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="animate-spin">⏳</span>
+                  {selectedImageFile || selectedVideoFile ? 'Subiendo archivos...' : 'Guardando...'}
+                </span>
+              ) : rifaId ? 'Actualizar Rifa' : 'Crear Rifa'}
             </button>
             <button
               type="button"
@@ -226,4 +555,3 @@ export default function RifaAdminForm({ rifaId }: { rifaId?: string }) {
     </div>
   );
 }
-

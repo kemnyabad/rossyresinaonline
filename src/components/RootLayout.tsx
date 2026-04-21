@@ -60,8 +60,8 @@ const RootLayout = ({ children }: Props) => {
 
   return (
     <>
-      <Header />
-      {!hideBottomHeader && (
+      {!isRifasPage && <Header />}
+      {!hideBottomHeader && !isRifasPage && (
         <div className="hidden md:block">
           <BottomHeader />
         </div>
@@ -96,7 +96,7 @@ const RootLayout = ({ children }: Props) => {
 
       <div className="pb-20 md:pb-0">{children}</div>
       <div ref={footerRef}>
-        <Footer />
+        {!isRifasPage && <Footer />} {/* Renderiza Footer solo si NO es la página de rifas */}
       </div>
       <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white/95 backdrop-blur md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-5 px-2 py-2">

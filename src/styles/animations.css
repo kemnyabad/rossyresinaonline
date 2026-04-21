@@ -1,7 +1,16 @@
 .rr-page { animation: rrFade .25s ease both; }
 @keyframes rrFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-@keyframes rrPageEnter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rrPageEnter { 
+  from { 
+    opacity: 0; 
+    transform: translateY(15px); 
+  } 
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  } 
+}
 @media (prefers-reduced-motion: reduce) { .rr-page { animation: none !important; } }
 
 .animated { animation-duration: var(--animate-duration, 1s); animation-fill-mode: both; }

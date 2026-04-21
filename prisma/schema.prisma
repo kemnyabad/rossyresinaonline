@@ -311,6 +311,9 @@ model Rifa {
   title          String
   description    String        @db.Text
   image          String
+  prizeImages    Json?
+  videoUrl       String?
+  prizes         String?       @db.Text
   totalNumbers   Int           // Cantidad total de números disponibles
   pricePerNumber Decimal       @db.Decimal(10, 2)
   startDate      DateTime

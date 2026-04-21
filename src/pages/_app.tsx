@@ -39,7 +39,7 @@ function AppContent({
     router.pathname === "/register";
 
   const pageShellClass = "rr-page min-h-screen";
-  const pageTransitionStyle = { animation: "rrPageEnter .22s ease-out both" } as const;
+  const pageTransitionStyle = { animation: "rrPageEnter 0.4s ease-out both" } as const;
 
   useEffect(() => { setIsClient(true); }, []);
 
