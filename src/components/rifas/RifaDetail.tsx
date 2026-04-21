@@ -81,23 +81,24 @@ const RifaDetail = ({
   // If ad is active, render the ad overlay
   if (adActive && selectedRifa.videoUrl) {
     return (
-      <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden">
+      <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center overflow-hidden h-[100dvh] w-full">
         <video
           ref={videoRef}
           src={selectedRifa.videoUrl}
           autoPlay
           loop
-          className="absolute inset-0 w-full h-full object-contain"
+          playsInline
+          className="max-h-[90%] max-w-[95%] object-contain shadow-2xl"
           onEnded={handleSkipAd} // Automatically skip if video ends
         />
-        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
-          <p className="text-white text-xl md:text-3xl font-black mb-8 animate-pulse">
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <p className="absolute top-10 text-white text-lg md:text-3xl font-black animate-pulse drop-shadow-lg text-center px-4">
             El sorteo comenzará en {timer}s...
           </p>
           {showSkipButton && (
             <button
               onClick={handleSkipAd}
-              className="px-8 py-4 bg-white text-[#6E2CA1] rounded-full font-black text-[12px] uppercase tracking-[0.2em] shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+              className="absolute bottom-10 px-8 py-4 bg-white text-[#6E2CA1] rounded-full font-black text-[12px] md:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all duration-300 pointer-events-auto"
             >
               Omitir anuncio y comprar tickets
             </button>
