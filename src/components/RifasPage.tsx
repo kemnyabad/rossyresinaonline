@@ -57,7 +57,7 @@ const RifasNavbar = ({ onBack, isSelected, router }: {
           alt="Logo Rossy Resina"
           width={logo.width}
           height={logo.height}
-          className="h-10 w-auto rounded-xl shadow-sm object-contain transition-all duration-300 group-hover:scale-110"
+          className="h-10 w-auto rounded-full shadow-sm object-contain transition-all duration-300 group-hover:scale-110"
         />
         <div className="flex flex-col -space-y-1">
           <span className="font-black text-slate-950 tracking-tighter text-2xl uppercase">Rossy Resina</span>
@@ -72,7 +72,7 @@ const RifasNavbar = ({ onBack, isSelected, router }: {
         <button className="hover:text-purple-600 transition-colors">Ganadores</button>
         <button onClick={() => router.push('/contact')} className="hover:text-purple-600 transition-colors">Ayuda</button>
       </div>
-      <button className="bg-slate-900 text-white px-7 py-2.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-purple-600 transition-all shadow-lg shadow-slate-200">Mi Cuenta</button>
+      <button className="bg-slate-900 text-white px-7 py-2.5 rounded-full font-bold text-[11px] uppercase tracking-widest hover:bg-[#6E2CA1] transition-all shadow-lg shadow-slate-200">Mi Cuenta</button>
     </div>
   </nav>
 );
@@ -86,7 +86,7 @@ const LocalFooter = () => {
         {/* Columna 1: Marca */}
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#6E2CA1] via-[#cb299e] to-[#6E2CA1] flex items-center justify-center text-white font-black text-lg shadow-md">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-[#6E2CA1] via-[#cb299e] to-[#6E2CA1] flex items-center justify-center text-white font-black text-lg shadow-md">
               RR
             </div>
             <span className="font-black text-slate-900 text-xl uppercase">Rossy Resina</span>
@@ -379,7 +379,7 @@ export default function RifasPage() {
                 { icon: TrophyIcon, title: "3. ¡Gana premios!", desc: "Sigue nuestras transmisiones en vivo. ¡Podrías ser el próximo afortunado ganador!" }
               ].map((step, i) => (
                 <div key={i} className="flex flex-col items-center text-center">
-                  <div className="w-20 h-20 rounded-[2.5rem] bg-purple-50 flex items-center justify-center text-purple-600 mb-8 border border-purple-100/50">
+                  <div className="w-20 h-20 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mb-8 border border-purple-100/50">
                     <step.icon className="w-10 h-10 text-[#6E2CA1]" />
                   </div>
                   <h3 className="text-xl font-black text-slate-900 mb-3 uppercase tracking-tight">{step.title}</h3>
@@ -393,7 +393,7 @@ export default function RifasPage() {
         <div className="max-w-7xl mx-auto px-4 py-24 bg-slate-50/30" id="sorteos">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
             <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#6E2CA1] text-white text-[9px] font-black uppercase tracking-[0.25em] mb-6 shadow-lg shadow-purple-200">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#6E2CA1] text-white text-[9px] font-black uppercase tracking-[0.25em] mb-6 shadow-lg shadow-purple-200">
                 <ClockIcon className="w-4 h-4" /> Sorteos en vivo
               </div>
               <h2 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tighter uppercase">Próximos <span className="text-[#6E2CA1]">Sorteos</span></h2>
@@ -414,7 +414,7 @@ export default function RifasPage() {
                 return (
                   <div
                     key={rifa.id}
-                    className="group bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-500 flex flex-col h-full"
+                    className="group bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-500 flex flex-col h-full"
                   >
                     <div className="relative h-72 bg-slate-50 overflow-hidden">
                       {rifa.image && (
@@ -424,7 +424,7 @@ export default function RifasPage() {
                           className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                         />
                       )}
-                      <div className="absolute top-5 right-5 bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-white/50">
+                      <div className="absolute top-5 right-5 bg-white/95 backdrop-blur-md px-4 py-2 rounded-full shadow-xl border border-white/50">
                         <p className="text-[9px] font-black text-[#6E2CA1] uppercase tracking-[0.2em] leading-none mb-1">Ticket</p>
                         <p className="text-lg font-black text-slate-900 leading-none">S/ {parseFloat(rifa.pricePerNumber.toString()).toFixed(2)}</p>
                       </div>
@@ -445,7 +445,7 @@ export default function RifasPage() {
                       <button
                         onClick={() => handleSelectRifa(rifa)}
                         disabled={rifa.availableNumbers === 0}
-                        className="w-full py-4 px-6 bg-[#6E2CA1] text-white rounded-full font-black text-[10px] uppercase tracking-[0.25em] hover:bg-slate-900 transition-all duration-300 disabled:bg-slate-50 disabled:text-slate-300 shadow-md hover:shadow-xl hover:shadow-purple-500/20"
+                        className="w-full py-4 px-6 bg-[#6E2CA1] text-white rounded-full font-black text-[10px] uppercase tracking-[0.25em] hover:bg-slate-950 transition-all duration-300 disabled:bg-slate-50 disabled:text-slate-300 shadow-md hover:shadow-xl hover:shadow-purple-500/20"
                       >
                         {rifa.availableNumbers > 0 ? 'Comprar Tickets' : 'Agotado'}
                       </button>
@@ -555,11 +555,11 @@ export default function RifasPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-slate-100 p-6 bg-white shadow-sm">
+                <div className="rounded-[2rem] border border-slate-100 p-6 bg-white shadow-sm">
                   <p className="text-[9px] uppercase text-slate-400 font-black mb-2 tracking-widest">Precio Ticket</p>
                   <p className="text-2xl font-black text-slate-900">S/ {parseFloat(selectedRifa.pricePerNumber.toString()).toFixed(2)}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-100 p-6 bg-white shadow-sm">
+                <div className="rounded-[2rem] border border-slate-100 p-6 bg-white shadow-sm">
                   <p className="text-[9px] uppercase text-slate-400 font-black mb-2 tracking-widest">Libres</p>
                   <p className="text-2xl font-black text-[#6E2CA1]">{selectedRifa.availableNumbers}</p>
                 </div>
@@ -568,7 +568,7 @@ export default function RifasPage() {
               <div className="rounded-[2rem] bg-purple-50 border border-purple-100 p-8">
                 <div className="flex items-center justify-between text-[10px] font-black text-[#6E2CA1] mb-5 uppercase tracking-[0.25em]">
                   <span>Estado de Venta</span>
-                  <span className="bg-white px-3 py-1 rounded-lg shadow-sm">{progress}%</span>
+                  <span className="bg-white px-3 py-1 rounded-full shadow-sm">{progress}%</span>
                 </div>
                 <div className="w-full h-3 bg-white rounded-full overflow-hidden p-0.5">
                   <div className="h-full bg-gradient-to-r from-[#6E2CA1] to-[#cb299e] rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(110,44,161,0.3)]" style={{ width: `${progress}%` }} />
@@ -592,10 +592,10 @@ export default function RifasPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8">
-            <div className="bg-white rounded-2xl border border-slate-100 p-10 md:p-14 shadow-sm">
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 p-10 md:p-14 shadow-sm">
               <div className="flex items-center justify-between mb-12">
                 <h3 className="text-3xl font-black text-slate-950 tracking-tighter uppercase">Cartilla <span className="text-[#6E2CA1]">Virtual</span></h3>
-                <div className="bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
+                <div className="bg-slate-50 px-6 py-3 rounded-full border border-slate-100">
                   <span className="text-[11px] font-black text-purple-600 uppercase tracking-[0.2em]">{selectedNumbers.length} seleccionados</span>
                 </div>
               </div>
@@ -614,7 +614,7 @@ export default function RifasPage() {
                             if (isAvailable) toggleNumber(num);
                           }}
                           disabled={!isAvailable}
-                          className={`aspect-square rounded-xl font-bold text-[11px] sm:text-sm transition-all duration-300 transform active:scale-90 border-2 ${
+                          className={`aspect-square rounded-full font-bold text-[11px] sm:text-sm transition-all duration-300 transform active:scale-90 border-2 ${
                             isSelected
                               ? 'bg-[#6E2CA1] text-white border-[#6E2CA1] shadow-xl shadow-purple-200 scale-110 z-10'
                               : isAvailable
@@ -643,7 +643,7 @@ export default function RifasPage() {
           </div>
 
           <div className="lg:col-span-4">
-            <div className="bg-white rounded-2xl border border-slate-100 p-8 md:p-10 lg:sticky lg:top-24 shadow-md overflow-hidden">
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-10 lg:sticky lg:top-24 shadow-md overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 blur-3xl rounded-full -mr-16 -mt-16 opacity-50"></div>
               <p className="text-[10px] uppercase tracking-[0.4em] text-[#6E2CA1] font-black mb-10 flex items-center gap-2 relative z-10"><ShoppingCartIcon className="w-4 h-4"/> Mi Compra</p>
               
