@@ -310,6 +310,7 @@ export default function RifasPage() {
             />
             <RifasGrid rifas={rifas} onSelect={handleSelectRifa} />
             <RifasStepGuide />
+            <RifasFooter />
           </div>
         ) : (
           <div className="animate-in fade-in duration-500">
@@ -336,7 +337,6 @@ export default function RifasPage() {
           </div>
         )}
       </main>
-      <RifasFooter />
     </div>
   );
 }

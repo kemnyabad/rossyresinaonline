@@ -81,13 +81,17 @@ const RifaDetail = ({
   // If ad is active, render the ad overlay
   if (adActive && selectedRifa.videoUrl) {
     return (
-      <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center overflow-hidden h-[100dvh] w-full">
+      <div 
+        className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden h-[100dvh] w-full"
+        style={{ willChange: 'transform' }}
+      >
         <video
           ref={videoRef}
           src={selectedRifa.videoUrl}
           autoPlay
           loop
           playsInline
+          preload="auto"
           className="max-h-[90%] max-w-[95%] object-contain shadow-2xl"
           onEnded={handleSkipAd} // Automatically skip if video ends
         />
@@ -98,7 +102,7 @@ const RifaDetail = ({
           {showSkipButton && (
             <button
               onClick={handleSkipAd}
-              className="absolute bottom-10 px-8 py-4 bg-white text-[#6E2CA1] rounded-full font-black text-[12px] md:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all duration-300 pointer-events-auto"
+              className="absolute bottom-10 px-8 min-h-[44px] flex items-center justify-center bg-white text-[#6E2CA1] rounded-full font-black text-[12px] md:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all duration-300 pointer-events-auto"
             >
               Omitir anuncio y comprar tickets
             </button>
