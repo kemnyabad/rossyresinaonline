@@ -68,7 +68,6 @@ const RifasNavbar = ({ onBack, isSelected, router }: {
         </div>
       </div>
       <div className="hidden md:flex items-center gap-10 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-        <button onClick={() => router.push('/')} className="hover:text-purple-600 transition-colors">Tienda</button>
         <button onClick={onBack} className={`${!isSelected ? 'text-purple-600 underline decoration-2 underline-offset-[12px]' : ''} hover:text-purple-600 transition-colors`}>Sorteos</button>
         <button className="hover:text-purple-600 transition-colors">Ganadores</button>
         <button onClick={() => router.push('/contact')} className="hover:text-purple-600 transition-colors">Ayuda</button>
