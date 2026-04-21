@@ -291,17 +291,15 @@ export default function RifasPage() {
 
   return (
     <div className="bg-white font-sans selection:bg-purple-100 transition-opacity duration-300">
-      {/* 4. Persistencia del Header: Fuera de condicionales */}
-      <RifasNavbar 
-        onBack={() => {
-          setSelectedRifa(null);
-          router.push('/rifas', undefined, { shallow: true });
-        }} isSelected={isDetailView} router={router} />
       
-      {/* 1. Renderizado Condicional Estricto: Si es vista detalle, NO procesar Banner ni Grid */}
       <main className="min-h-screen">
-        {!isDetailView ? (
+        {!isDetailView && (
           <div className="animate-in fade-in duration-300">
+            <RifasNavbar 
+              onBack={() => {
+                setSelectedRifa(null);
+                router.push('/rifas', undefined, { shallow: true });
+              }} isSelected={isDetailView} router={router} />
             <RifasHero 
               featuredRifas={featuredRifas} 
               mainHeroIndex={mainHeroIndex} 
@@ -312,12 +310,11 @@ export default function RifasPage() {
             <RifasStepGuide />
             <RifasFooter />
           </div>
-        ) : (
-          <div className="animate-in fade-in duration-500">
-            {/* 3. Optimización de Carga: Mostrar Skeleton mientras no hay selectedRifa */}
-            {!selectedRifa ? (
-              <RaffleLoadingState />
-            ) : (
+        )}
+
+        {isDetailView && (
+          <>
+            {!selectedRifa ? <RaffleLoadingState /> : (
               <RifaDetail 
                 selectedRifa={selectedRifa}
                 numbers={numbers}
@@ -334,7 +331,7 @@ export default function RifasPage() {
                 router={router}
               />
             )}
-          </div>
+          </>
         )}
       </main>
     </div>

@@ -43,6 +43,27 @@ const RifaDetail = ({
     ? selectedRifa.prizes.split('\n').map((line: string) => line.replace(/[✨🏆⭐•-]/g, '').trim()).filter(Boolean)
     : [];
 
+  // Bloqueo radical del scroll vinculado al estado del anuncio
+  useEffect(() => {
+    if (adActive) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+    return () => { 
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [adActive]);
+
   // Ad timer effect
   useEffect(() => {
     // Skip ad if no video URL
@@ -82,7 +103,7 @@ const RifaDetail = ({
   if (adActive && selectedRifa.videoUrl) {
     return (
       <div 
-        className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden h-[100dvh] w-full"
+        className="fixed inset-0 h-[100dvh] w-screen z-[9999] bg-black m-0 p-0 border-none flex items-center justify-center overflow-hidden"
         style={{ willChange: 'transform' }}
       >
         <video
@@ -92,29 +113,30 @@ const RifaDetail = ({
           loop
           playsInline
           preload="auto"
-          className="max-h-[90%] max-w-[95%] object-contain shadow-2xl"
+          className="w-full h-full object-contain"
           onEnded={handleSkipAd} // Automatically skip if video ends
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <p className="absolute top-10 text-white text-lg md:text-3xl font-black animate-pulse drop-shadow-lg text-center px-4">
             El sorteo comenzará en {timer}s...
           </p>
-          {showSkipButton && (
-            <button
-              onClick={handleSkipAd}
-              className="absolute bottom-10 px-8 min-h-[44px] flex items-center justify-center bg-white text-[#6E2CA1] rounded-full font-black text-[12px] md:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all duration-300 pointer-events-auto"
-            >
-              Omitir anuncio y comprar tickets
-            </button>
-          )}
         </div>
+        {showSkipButton && (
+          <button
+            onClick={handleSkipAd}
+            className="fixed bottom-6 right-6 z-[10000] px-8 min-h-[44px] flex items-center justify-center bg-white text-[#6E2CA1] rounded-full font-black text-[12px] md:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all duration-300 pointer-events-auto"
+          >
+            Omitir anuncio y comprar tickets
+          </button>
+        )}
       </div>
     );
   }
 
   // Main Rifa Detail content after ad is skipped
   return (
-    <div className="animate-in fade-in duration-500 py-8 px-4 md:px-6 max-w-7xl mx-auto mb-12">
+    <div className="fixed inset-0 z-[80] bg-slate-50 overflow-y-auto h-[100dvh] w-full">
+      <div className="animate-in fade-in duration-500 py-8 px-4 md:px-6 max-w-7xl mx-auto mb-12">
       <button
         onClick={onBack}
         className="mt-4 mb-8 inline-flex items-center gap-3 text-slate-400 hover:text-slate-950 font-black text-[10px] uppercase tracking-[0.2em] transition-all group"
@@ -348,6 +370,7 @@ const RifaDetail = ({
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
