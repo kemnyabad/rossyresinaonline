@@ -365,31 +365,6 @@ export default function RifasPage() {
           </section>
         )}
 
-        {/* Steps Section - Estilo Yoki */}
-        <section className="bg-white py-24 border-b border-slate-100">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-20">
-              <p className="text-[10px] font-black text-[#6E2CA1] uppercase tracking-[0.4em] mb-4">Guía de participación</p>
-              <h2 className="text-3xl md:text-5xl font-black text-slate-950 tracking-tighter uppercase">¿Cómo <span className="text-[#6E2CA1]">Comprar?</span></h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
-              {[
-                { icon: TicketIcon, title: "1. Elige tus números", desc: "Entra al sorteo que más te guste y selecciona tus números de la suerte en la cartilla digital." },
-                { icon: ShieldCheckIcon, title: "2. Paga con confianza", desc: "Realiza el pago vía Yape o transferencia y sube tu comprobante. Procesamos todo en segundos." },
-                { icon: TrophyIcon, title: "3. ¡Gana premios!", desc: "Sigue nuestras transmisiones en vivo. ¡Podrías ser el próximo afortunado ganador!" }
-              ].map((step, i) => (
-                <div key={i} className="flex flex-col items-center text-center">
-                  <div className="w-20 h-20 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mb-8 border border-purple-100/50">
-                    <step.icon className="w-10 h-10 text-[#6E2CA1]" />
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900 mb-3 uppercase tracking-tight">{step.title}</h3>
-                  <p className="text-slate-500 text-sm font-medium leading-relaxed px-6">{step.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <div className="max-w-7xl mx-auto px-4 py-24 bg-slate-50/30" id="sorteos">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
             <div className="max-w-xl">
@@ -456,6 +431,32 @@ export default function RifasPage() {
             </div>
           )}
         </div>
+
+        {/* Steps Section - Estilo Rossy Resina - Movido debajo de sorteos */}
+        <section className="bg-white py-24 border-t border-slate-100">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="text-center mb-20">
+              <p className="text-[10px] font-black text-[#6E2CA1] uppercase tracking-[0.4em] mb-4">Guía de participación</p>
+              <h2 className="text-3xl md:text-5xl font-black text-slate-950 tracking-tighter uppercase">¿Cómo <span className="text-[#6E2CA1]">Comprar?</span></h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+              {[
+                { icon: TicketIcon, title: "1. Elige tus números", desc: "Entra al sorteo que más te guste y selecciona tus números de la suerte en la cartilla digital." },
+                { icon: ShieldCheckIcon, title: "2. Paga con confianza", desc: "Realiza el pago vía Yape o transferencia y sube tu comprobante. Procesamos todo en segundos." },
+                { icon: TrophyIcon, title: "3. ¡Gana premios!", desc: "Sigue nuestras transmisiones en vivo. ¡Podrías ser el próximo afortunado ganador!" }
+              ].map((step, i) => (
+                <div key={i} className="flex flex-col items-center text-center group">
+                  <div className="w-20 h-20 rounded-full bg-purple-50 flex items-center justify-center text-[#6E2CA1] mb-8 border border-purple-100/50 group-hover:scale-110 transition-transform duration-300">
+                    <step.icon className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 mb-3 uppercase tracking-tight">{step.title}</h3>
+                  <p className="text-slate-500 text-sm font-medium leading-relaxed px-6">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <LocalFooter />
       </div>
     );
