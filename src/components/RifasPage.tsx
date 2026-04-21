@@ -414,7 +414,7 @@ export default function RifasPage() {
                 return (
                   <div
                     key={rifa.id}
-                    className="group bg-white rounded-3xl border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/40 transition-all duration-500 flex flex-col h-full"
+                    className="group bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-500 flex flex-col h-full"
                   >
                     <div className="relative h-72 bg-slate-50 overflow-hidden">
                       {rifa.image && (
@@ -445,7 +445,7 @@ export default function RifasPage() {
                       <button
                         onClick={() => handleSelectRifa(rifa)}
                         disabled={rifa.availableNumbers === 0}
-                        className="w-full py-4 px-6 bg-slate-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] hover:bg-[#6E2CA1] transition-all duration-300 disabled:bg-slate-50 disabled:text-slate-300 shadow-lg hover:shadow-purple-500/20"
+                        className="w-full py-4 px-6 bg-[#6E2CA1] text-white rounded-full font-black text-[10px] uppercase tracking-[0.25em] hover:bg-slate-900 transition-all duration-300 disabled:bg-slate-50 disabled:text-slate-300 shadow-md hover:shadow-xl hover:shadow-purple-500/20"
                       >
                         {rifa.availableNumbers > 0 ? 'Comprar Tickets' : 'Agotado'}
                       </button>
@@ -545,7 +545,7 @@ export default function RifasPage() {
 
             <div className="lg:col-span-5 flex flex-col gap-8">
               <div className="inline-flex self-start px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Sorteo en Curso
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Activo Ahora
               </div>
               <div>
                 <h1 className="text-3xl md:text-5xl font-black text-slate-950 leading-[1.1] tracking-tighter mb-4 uppercase">
@@ -555,11 +555,11 @@ export default function RifasPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-3xl border border-slate-100 p-6 bg-white">
+                <div className="rounded-2xl border border-slate-100 p-6 bg-white shadow-sm">
                   <p className="text-[9px] uppercase text-slate-400 font-black mb-2 tracking-widest">Precio Ticket</p>
                   <p className="text-2xl font-black text-slate-900">S/ {parseFloat(selectedRifa.pricePerNumber.toString()).toFixed(2)}</p>
                 </div>
-                <div className="rounded-3xl border border-slate-100 p-6 bg-white">
+                <div className="rounded-2xl border border-slate-100 p-6 bg-white shadow-sm">
                   <p className="text-[9px] uppercase text-slate-400 font-black mb-2 tracking-widest">Libres</p>
                   <p className="text-2xl font-black text-[#6E2CA1]">{selectedRifa.availableNumbers}</p>
                 </div>
@@ -592,7 +592,7 @@ export default function RifasPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8">
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 p-10 md:p-14 shadow-xl shadow-slate-200/30">
+            <div className="bg-white rounded-2xl border border-slate-100 p-10 md:p-14 shadow-sm">
               <div className="flex items-center justify-between mb-12">
                 <h3 className="text-3xl font-black text-slate-950 tracking-tighter uppercase">Cartilla <span className="text-[#6E2CA1]">Virtual</span></h3>
                 <div className="bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
@@ -643,7 +643,7 @@ export default function RifasPage() {
           </div>
 
           <div className="lg:col-span-4">
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-10 lg:sticky lg:top-24 shadow-xl shadow-slate-200/30 overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-100 p-8 md:p-10 lg:sticky lg:top-24 shadow-md overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 blur-3xl rounded-full -mr-16 -mt-16 opacity-50"></div>
               <p className="text-[10px] uppercase tracking-[0.4em] text-[#6E2CA1] font-black mb-10 flex items-center gap-2 relative z-10"><ShoppingCartIcon className="w-4 h-4"/> Mi Compra</p>
               
@@ -674,7 +674,7 @@ export default function RifasPage() {
                     router.push(`/rifas/checkout?rifaId=${selectedRifa.id}&numbers=${selectedNumbers.join(',')}`);
                   }}
                   disabled={selectedNumbers.length === 0 || loading}
-                  className="w-full py-5 px-6 bg-slate-950 text-white rounded-full font-black text-[11px] uppercase tracking-[0.25em] hover:bg-[#6E2CA1] shadow-2xl shadow-purple-500/20 transition-all flex items-center justify-center gap-3 disabled:bg-slate-50 disabled:text-slate-300"
+                  className="w-full py-5 px-6 bg-[#6E2CA1] text-white rounded-full font-black text-[11px] uppercase tracking-[0.25em] hover:bg-slate-950 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-3 disabled:bg-slate-50 disabled:text-slate-300"
                 >
                   Reservar tickets <ShoppingCartIcon className="w-5 h-5"/>
                 </button>
