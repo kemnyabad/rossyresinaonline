@@ -52,7 +52,7 @@ const RaffleLoadingState = () => (
       <img src={logo.src} alt="Loading" className="h-20 w-auto opacity-20 grayscale" />
       <div className="absolute inset-0 border-t-2 border-[#6E2CA1] rounded-full animate-spin"></div>
     </div>
-    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] animate-pulse">Cargando Sorteo</p>
+    <p className="text-xs md:text-sm font-bold uppercase tracking-widest text-slate-400 animate-pulse">Cargando Sorteo</p>
   </div>
 );
 
@@ -80,7 +80,7 @@ export default function RifasPage() {
     if (featuredRifas.length <= 1 || isDetailView) return;
     const itv = setInterval(() => {
       setMainHeroIndex((prev) => (prev + 1) % featuredRifas.length);
-    }, 6000);
+    }, 3000);
     return () => clearInterval(itv);
   }, [featuredRifas.length, isDetailView]);
 
@@ -293,7 +293,7 @@ export default function RifasPage() {
     <div className="bg-white font-sans selection:bg-purple-100 transition-opacity duration-300">
       
       <main className="min-h-screen">
-        {!isDetailView && (
+        {!isDetailView ? (
           <div className="animate-in fade-in duration-300">
             <RifasNavbar 
               onBack={() => {
@@ -310,9 +310,7 @@ export default function RifasPage() {
             <RifasStepGuide />
             <RifasFooter />
           </div>
-        )}
-
-        {isDetailView && (
+        ) : (
           <>
             {!selectedRifa ? <RaffleLoadingState /> : (
               <RifaDetail 

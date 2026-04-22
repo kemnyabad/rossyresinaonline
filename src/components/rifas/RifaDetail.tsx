@@ -124,7 +124,7 @@ const RifaDetail = ({
         {showSkipButton && (
           <button
             onClick={handleSkipAd}
-            className="fixed bottom-6 right-6 z-[10000] px-8 min-h-[44px] flex items-center justify-center bg-white text-[#6E2CA1] rounded-full font-black text-[12px] md:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all duration-300 pointer-events-auto"
+            className="fixed bottom-10 right-6 z-[10000] px-8 py-4 bg-white text-[#6E2CA1] rounded-full font-black text-sm md:text-base tracking-wider shadow-2xl hover:scale-105 transition-all duration-300 pointer-events-auto"
           >
             Omitir anuncio y comprar tickets
           </button>
@@ -135,11 +135,11 @@ const RifaDetail = ({
 
   // Main Rifa Detail content after ad is skipped
   return (
-    <div className="fixed inset-0 z-[80] bg-slate-50 overflow-y-auto h-[100dvh] w-full">
+    <div className="fixed inset-0 z-[80] bg-slate-50 overflow-y-auto h-[100dvh] w-full antialiased">
       <div className="animate-in fade-in duration-500 py-8 px-4 md:px-6 max-w-7xl mx-auto mb-12">
       <button
         onClick={onBack}
-        className="mt-4 mb-8 inline-flex items-center gap-3 text-slate-400 hover:text-slate-950 font-black text-[10px] uppercase tracking-[0.2em] transition-all group"
+        className="mt-4 mb-8 inline-flex items-center gap-3 text-slate-400 hover:text-slate-950 font-bold text-xs md:text-sm uppercase tracking-widest transition-all group"
       >
         <ArrowLeftIcon className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
         Volver al listado
@@ -148,10 +148,10 @@ const RifaDetail = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
         <div className="lg:col-span-7">
           {/* Left Column (Info) */}
-          <h1 className="text-3xl md:text-5xl font-black text-slate-950 leading-[1.1] tracking-tighter uppercase mb-4">
+          <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tight text-slate-900 leading-[1.1] mb-4">
             {selectedRifa.title}
           </h1>
-          <p className="text-slate-500 text-sm leading-relaxed font-medium mb-6">{selectedRifa.description}</p>
+          <p className="text-base md:text-lg leading-relaxed text-slate-600 mb-6">{selectedRifa.description}</p>
 
           {/* Main Image / Slider */}
           <div className="relative rounded-[2.5rem] overflow-hidden bg-slate-50 border border-slate-100 aspect-[16/10] shadow-2xl mb-8">
@@ -210,7 +210,7 @@ const RifaDetail = ({
             </div>
           {/* How to Participate Section */}
           <div className="rounded-[2rem] border border-slate-100 p-8 bg-white shadow-sm mb-8">
-            <h3 className="text-xl font-black text-slate-950 tracking-tighter uppercase mb-6">Cómo <span className="text-[#6E2CA1]">Participar</span></h3>
+            <h3 className="text-xl font-black text-[#6E2CA1] uppercase tracking-tight mb-6">Cómo Participar</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 { icon: TicketIcon, title: "Elige tus números", desc: "Selecciona tus números de la suerte en la cartilla virtual." },
@@ -232,7 +232,7 @@ const RifaDetail = ({
             <div className="rounded-[2rem] border border-slate-100 p-8 bg-white shadow-sm mb-8">
               <div className="flex items-center gap-2 mb-4">
                 <InformationCircleIcon className="w-5 h-5 text-slate-300" />
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reglas del Sorteo</span>
+                <span className="text-xs md:text-sm font-bold uppercase tracking-widest text-slate-400">Reglas del Sorteo</span>
               </div>
               <p className="text-sm text-slate-500 leading-relaxed max-h-40 overflow-y-auto pr-2 custom-scrollbar font-medium">{selectedRifa.rules}</p>
             </div>
@@ -257,7 +257,7 @@ const RifaDetail = ({
           <div className="inline-flex self-start px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Activo Ahora
           </div>
-          <h2 className="text-3xl font-black text-slate-950 tracking-tighter uppercase">¡ESCOGE TUS <span className="text-[#6E2CA1]">NÚMEROS!</span></h2>
+          <h2 className="text-lg md:text-2xl font-extrabold text-[#6E2CA1] uppercase text-center md:text-left">¡ESCOGE TUS NÚMEROS!</h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-[2rem] border border-slate-100 p-6 bg-white shadow-sm">
@@ -352,7 +352,7 @@ const RifaDetail = ({
                   router.push(`/rifas/checkout?rifaId=${selectedRifa.id}&numbers=${selectedNumbers.join(',')}`);
                 }}
                 disabled={selectedNumbers.length === 0 || loading}
-                className="w-full py-5 px-6 bg-[#6E2CA1] text-white rounded-full font-black text-[11px] uppercase tracking-[0.25em] hover:bg-slate-950 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-3 disabled:bg-slate-50 disabled:text-slate-300"
+                className="w-full py-4 md:py-5 px-6 bg-[#6E2CA1] text-white rounded-full font-black text-sm md:text-base tracking-wider hover:bg-slate-950 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-3 disabled:bg-slate-50 disabled:text-slate-300"
               >
                 Reservar tickets <ShoppingCartIcon className="w-5 h-5"/>
               </button>

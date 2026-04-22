@@ -1,5 +1,5 @@
 import React from 'react';
-import { FireIcon } from "@heroicons/react/24/outline";
+import { FireIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 
 interface RifasHeroProps {
   featuredRifas: any[];

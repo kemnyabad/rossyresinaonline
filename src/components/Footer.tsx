@@ -127,10 +127,16 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-[#6E2CA1] to-[#cb299e] flex items-center justify-center text-white font-black text-sm shrink-0 shadow-lg shadow-purple-900/20">RR</div>
+              <img 
+                src="/logo.jpg" 
+                alt="Rossy Resina" 
+                className="h-12 w-auto object-contain" 
+              />
               <div>
                 <p className="font-black text-white text-xl leading-none tracking-tighter uppercase">Rossy Resina</p>
-                <p className="text-[10px] text-purple-500 font-bold tracking-[0.2em] uppercase mt-0.5">Sorteos Legales</p>
+                <p className="text-[10px] text-[#6E2CA1] font-black tracking-[0.15em] uppercase mt-1">
+                  MOLDES • RESINA • PIGMENTOS
+                </p>
               </div>
             </div>
             <p className="mt-5 text-sm text-white/40 leading-relaxed max-w-xs font-medium">
@@ -138,15 +144,15 @@ const Footer = () => {
             </p>
             <div className="mt-5 space-y-2 text-sm text-white/40">
               <div className="flex items-center gap-3">
-                <MapPinIcon className="w-4 h-4 shrink-0 text-purple-500" />
+                <MapPinIcon className="w-4 h-4 shrink-0 text-[#6E2CA1]" />
                 <span>Lima, Perú</span>
               </div>
               <div className="flex items-center gap-3">
-                <PhoneIcon className="w-4 h-4 shrink-0 text-purple-500" />
+                <PhoneIcon className="w-4 h-4 shrink-0 text-[#6E2CA1]" />
                 <span>+51 966 357 648</span>
               </div>
               <div className="flex items-center gap-3">
-                <EnvelopeIcon className="w-4 h-4 shrink-0 text-purple-500" />
+                <EnvelopeIcon className="w-4 h-4 shrink-0 text-[#6E2CA1]" />
                 <span>contacto@rossyresina.com</span>
               </div>
             </div>
@@ -168,7 +174,7 @@ const Footer = () => {
 
           {/* Tienda */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-6">Navegación</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6E2CA1] mb-6">Navegación</p>
             <ul className="space-y-2.5">
               {LINKS.tienda.map(({ label, href }) => (
                 <li key={href}>
@@ -183,7 +189,7 @@ const Footer = () => {
 
           {/* Soporte */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-6">Ayuda</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6E2CA1] mb-6">Ayuda</p>
             <ul className="space-y-2.5">
               {LINKS.soporte.map(({ label, href }) => (
                 <li key={href}>
@@ -198,7 +204,7 @@ const Footer = () => {
 
           {/* Comunidad */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-6">Comunidad</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6E2CA1] mb-6">Comunidad</p>
             <ul className="space-y-2.5">
               {LINKS.comunidad.map(({ label, href }) => (
                 <li key={href}>
