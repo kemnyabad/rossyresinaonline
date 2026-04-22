@@ -202,8 +202,8 @@ const RifaDetail = ({
                 </div>
               </div>
 
-              {/* 3. Panel de Compra (Movido de la derecha) */}
-              <div className="bg-white rounded-[2rem] border-2 border-purple-100 p-8 shadow-xl">
+              {/* 3. Panel de Compra (Solo Desktop) */}
+              <div className="hidden lg:block bg-white rounded-[2rem] border-2 border-purple-100 p-8 shadow-xl">
                 <div className="flex items-center gap-3 mb-6 border-b border-slate-50 pb-4">
                   <ShoppingCartIcon className="w-6 h-6 text-[#6E2CA1]" />
                   <h3 className="text-sm font-black text-slate-950 uppercase tracking-[0.2em]">Resumen de Compra</h3>
@@ -242,7 +242,7 @@ const RifaDetail = ({
           {/* COLUMNA DERECHA: Cartilla Virtual (Foco Principal) */}
           <div className="lg:col-span-7 space-y-6">
             {/* Cartilla Virtual */}
-            <section className="bg-white rounded-[2.5rem] border border-slate-100 p-5 md:p-8 shadow-sm h-full flex flex-col min-h-[500px]">
+            <section className="bg-white rounded-[2.5rem] border border-slate-100 p-5 md:p-8 shadow-sm h-full flex flex-col min-h-[500px] mt-8 lg:mt-0">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-black text-slate-950 uppercase tracking-tighter">Cartilla <span className="text-[#6E2CA1]">Virtual</span></h3>
                 <div className="bg-purple-50 px-4 py-2 rounded-2xl border border-purple-100 flex items-center gap-2">
@@ -253,7 +253,7 @@ const RifaDetail = ({
               </div>
               <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                 {!loading ? (
-                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-6 xl:grid-cols-7 gap-3 md:gap-2">
+                  <div className="grid grid-cols-5 md:grid-cols-10 gap-3 md:gap-2">
                     {Array.from({ length: selectedRifa.totalNumbers }, (_, i) => i + 1).map((num) => {
                       const ticket = numbers?.tickets.find((t: any) => t.number === num);
                       const isSelected = selectedNumbers.includes(num);
@@ -285,6 +285,45 @@ const RifaDetail = ({
             </section>
           </div>
         </div>
+        
+        {/* Panel de Compra (Solo Móvil - Después de la cartilla) */}
+        <div className="lg:hidden space-y-6 mt-8">
+          <div className="bg-white rounded-[2rem] border-2 border-purple-100 p-8 shadow-xl">
+            <div className="flex items-center gap-3 mb-6 border-b border-slate-50 pb-4">
+              <ShoppingCartIcon className="w-6 h-6 text-[#6E2CA1]" />
+              <h3 className="text-sm font-black text-slate-950 uppercase tracking-[0.2em]">Resumen de Compra</h3>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div className="flex justify-between items-end">
+                <div className="space-y-1">
+                  <span className="text-xs font-black text-[#6E2CA1] uppercase tracking-widest">Total a Pagar</span>
+                  <p className="text-5xl font-black text-slate-950 leading-none">S/ {totalAmount.toFixed(2)}</p>
+                </div>
+                <span className="text-sm font-bold text-slate-500 uppercase">{selectedNumbers.length} Números</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                if (selectedNumbers.length === 0) return alert('¡Selecciona al menos un número antes de continuar!');
+                router.push(`/rifas/checkout?rifaId=${selectedRifa.id}&numbers=${selectedNumbers.join(',')}`);
+              }}
+              disabled={selectedNumbers.length === 0 || loading}
+              className="w-full py-6 bg-[#6E2CA1] text-white rounded-2xl font-black text-base uppercase tracking-[0.2em] hover:bg-slate-900 shadow-2xl shadow-purple-200 transition-all flex items-center justify-center gap-3 disabled:bg-slate-100 disabled:text-slate-400 active:scale-95"
+            >
+              PARTICIPAR AHORA
+              <ShoppingCartIcon className="w-6 h-6" />
+            </button>
+
+            <div className="mt-6 flex items-center gap-3 pt-6 border-t border-slate-50">
+              <div className="p-2 bg-purple-50 rounded-lg"><ShieldCheckIcon className="w-5 h-5 text-[#6E2CA1]" /></div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Garantía de Transparencia Rossy Resina</p>
+            </div>
+          </div>
+        </div>
+
+
 
         {/* SECCIÓN INFERIOR: Cómo Participar */}
         <section className="mt-16 bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm">
