@@ -1,4 +1,5 @@
 import Link from "next/link";
+import logoImg from '../images/logo.jpg';
 import { FormEvent, useState, useEffect } from "react";
 import {
   EnvelopeIcon,
@@ -128,13 +129,13 @@ const Footer = () => {
           <div>
             <div className="flex items-center gap-3">
               <img 
-                src="/logo.jpg" 
+                src={logoImg.src} 
                 alt="Rossy Resina" 
                 className="h-12 w-auto object-contain" 
               />
               <div>
                 <p className="font-black text-white text-xl leading-none tracking-tighter uppercase">Rossy Resina</p>
-                <p className="text-[10px] text-[#6E2CA1] font-black tracking-[0.15em] uppercase mt-1">
+                <p className="text-[#6E2CA1] font-black uppercase tracking-widest text-[10px] md:text-xs mt-1">
                   MOLDES • RESINA • PIGMENTOS
                 </p>
               </div>
