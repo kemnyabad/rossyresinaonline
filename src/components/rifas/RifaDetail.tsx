@@ -242,18 +242,18 @@ const RifaDetail = ({
           {/* COLUMNA DERECHA: Cartilla Virtual (Foco Principal) */}
           <div className="lg:col-span-7 space-y-6">
             {/* Cartilla Virtual */}
-            <section className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm h-full flex flex-col min-h-[500px]">
+            <section className="bg-white rounded-[2.5rem] border border-slate-100 p-5 md:p-8 shadow-sm h-full flex flex-col min-h-[500px]">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-black text-slate-950 uppercase tracking-tighter">Cartilla <span className="text-[#6E2CA1]">Virtual</span></h3>
                 <div className="bg-purple-50 px-4 py-2 rounded-2xl border border-purple-100 flex items-center gap-2">
-                  <span className="text-xs font-black text-[#6E2CA1] uppercase tracking-widest">
+                  <span className="text-xs md:text-sm font-black text-[#6E2CA1] uppercase tracking-widest">
                     {selectedNumbers.length} Seleccionados
                   </span>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                 {!loading ? (
-                  <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-6 xl:grid-cols-7 gap-2">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-6 xl:grid-cols-7 gap-3 md:gap-2">
                     {Array.from({ length: selectedRifa.totalNumbers }, (_, i) => i + 1).map((num) => {
                       const ticket = numbers?.tickets.find((t: any) => t.number === num);
                       const isSelected = selectedNumbers.includes(num);
@@ -264,7 +264,8 @@ const RifaDetail = ({
                           key={num}
                           onClick={() => isAvailable && toggleNumber(num)}
                           disabled={!isAvailable}
-                          className={`aspect-square rounded-lg font-black text-[10px] transition-all duration-300 transform active:scale-95 border-2 ${
+                          style={{ fontFamily: 'Arial, sans-serif' }}
+                          className={`aspect-square rounded-xl md:rounded-lg font-bold text-xl md:text-sm transition-all duration-300 transform active:scale-95 border-2 flex items-center justify-center p-2 ${
                             isSelected
                               ? 'bg-[#6E2CA1] text-white border-[#6E2CA1] shadow-lg shadow-purple-100'
                               : isAvailable
