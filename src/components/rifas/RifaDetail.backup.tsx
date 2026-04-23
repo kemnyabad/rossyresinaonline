@@ -15,7 +15,7 @@ interface RifaDetailProps {
   router: any;
 }
 
-interface BannerSlide {
+interface BannerSlide { // Re-defining here for RifaDetail's internal use, assuming it's not globally imported
   type: 'image' | 'text'; url?: string; alt?: string; title?: string; subtitle?: string; gradient?: string;
 }
 
@@ -32,11 +32,12 @@ const RifaDetail = ({
   router 
 }: RifaDetailProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  // Ad state
   const [adActive, setAdActive] = useState(true);
   const [timer, setTimer] = useState(10);
   const [showSkipButton, setShowSkipButton] = useState(false);
 
-  // Lógica de Cuenta Regresiva Profesionalizada (Neuromarketing)
+  // Lógica de Cuenta Regresiva
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -66,7 +67,7 @@ const RifaDetail = ({
     ? selectedRifa.prizes.split('\n').map((line: string) => line.replace(/[✨🏆⭐•-]/g, '').trim()).filter(Boolean)
     : [];
 
-  // Bloqueo de scroll para ad
+  // Bloqueo radical del scroll vinculado al estado del anuncio
   useEffect(() => {
     if (adActive) {
       document.documentElement.style.overflow = 'hidden';
@@ -87,7 +88,14 @@ const RifaDetail = ({
     };
   }, [adActive]);
 
+  // Ad timer effect
   useEffect(() => {
+    // Skip ad if no video URL
+    if (!selectedRifa.videoUrl) {
+      setAdActive(false);
+      return;
+    }
+
     if (adActive && timer > 0) {
       const countdown = setInterval(() => {
         setTimer((prev) => prev - 1);
@@ -98,26 +106,39 @@ const RifaDetail = ({
     }
   }, [adActive, timer, selectedRifa.videoUrl]);
 
+  // Play video with audio effect
   useEffect(() => {
     if (adActive && selectedRifa.videoUrl && videoRef.current) {
-      videoRef.current.play().catch(console.error);
+      videoRef.current.play().catch(error => {
+        // En caso de que el navegador aún bloquee el audio por falta de interacción previa directa
+        console.error("Error al intentar reproducir video con audio:", error);
+      });
     }
   }, [adActive, selectedRifa.videoUrl]);
 
   const handleSkipAd = () => {
-    if (videoRef.current) videoRef.current.pause();
+    if (videoRef.current) {
+      videoRef.current.pause(); // Limpieza de audio inmediata
+    }
     setAdActive(false);
   };
 
+  // If ad is active, render the ad overlay
   if (adActive && selectedRifa.videoUrl) {
     return (
-      <div className="fixed inset-0 h-[100dvh] w-screen z-[9999] bg-black flex items-center justify-center overflow-hidden">
+      <div 
+        className="fixed inset-0 h-[100dvh] w-screen z-[9999] bg-black m-0 p-0 border-none flex items-center justify-center overflow-hidden"
+        style={{ willChange: 'transform' }}
+      >
         <video
           ref={videoRef}
           src={selectedRifa.videoUrl}
-          autoPlay loop playsInline preload="auto"
+          autoPlay
+          loop
+          playsInline
+          preload="auto"
           className="w-full h-full object-contain"
-          onEnded={handleSkipAd}
+          onEnded={handleSkipAd} // Automatically skip if video ends
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <p className="absolute top-10 text-white text-lg md:text-3xl font-black animate-pulse drop-shadow-lg text-center px-4">
@@ -139,6 +160,7 @@ const RifaDetail = ({
   return (
     <div className="fixed inset-0 z-[80] bg-slate-50 overflow-y-auto h-[100dvh] w-full antialiased selection:bg-purple-100 tracking-tight" style={{ fontFamily: 'Arial, sans-serif' }}>
       <div className="animate-in fade-in duration-500 py-6 px-4 md:px-8 max-w-7xl mx-auto pb-20">
+        {/* Botón Volver */}
         <button
           onClick={onBack}
           className="mb-6 inline-flex items-center gap-3 text-slate-400 hover:text-slate-950 font-black text-xs uppercase tracking-widest transition-all group"
@@ -148,9 +170,9 @@ const RifaDetail = ({
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* COLUMNA IZQUIERDA: Info + Timer Prof (Desktop/Mobile shared, responsive) */}
+          {/* COLUMNA IZQUIERDA: Información y Acción de Compra */}
           <div className="lg:col-span-5 space-y-8">
-            {/* Carousel */}
+            {/* 1. Carrusel de Imágenes */}
             <div className="relative rounded-[2.5rem] overflow-hidden bg-white border border-slate-100 aspect-[16/10] shadow-sm">
               {bannerSlides.length > 0 ? (
                 <div className="w-full h-full">
@@ -184,79 +206,73 @@ const RifaDetail = ({
               )}
             </div>
 
-            {/* CRONÓMETRO PROFESIONALIZADO - Impacto Neuromarketing */}
+            {/* 2. Bloque de Información Reorganizado */}
             <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-widest border border-emerald-100">
-                <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" /> Activo Ahora
-              </div>
-              <h1 className="text-3xl md:text-5xl font-black text-slate-950 uppercase leading-tight tracking-tighter">
-                {selectedRifa.title}
-              </h1>
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-widest border border-emerald-100">
+                  <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" /> Activo Ahora
+                </div>
+                <h1 className="text-3xl md:text-5xl font-black text-slate-950 uppercase leading-tight tracking-tighter">
+                  {selectedRifa.title}
+                </h1>
 
-              {/* Timer Cards - Diseño de Impacto */}
-              <div className="bg-gradient-to-b from-slate-50 to-white/50 rounded-[2.5rem] p-6 md:p-8 border border-slate-200/60 shadow-2xl backdrop-blur-sm text-center">
-                <p className="text-[11px] md:text-sm font-black text-slate-950 uppercase tracking-[0.25em] mb-6 bg-gradient-to-r from-[#6E2CA1] to-purple-800 bg-clip-text text-transparent animate-pulse">
-                  ¡APROVECHA AHORA! EL SORTEO INICIA EN:
-                </p>
-                
-                <div className="flex justify-center gap-3 md:gap-5">
-                  {[
-                    { label: 'DÍAS', value: timeLeft.days },
-                    { label: 'HORAS', value: timeLeft.hours },
-                    { label: 'MIN', value: timeLeft.minutes },
-                    { label: 'SEG', value: timeLeft.seconds, animate: true }
-                  ].map((unit, idx) => (
-                    <div key={idx} className="flex flex-col items-center group">
-                      {/* Tarjeta de Tiempo Mejorada */}
-                      <div className="bg-white w-20 h-24 md:w-24 md:h-28 rounded-3xl flex items-center justify-center shadow-lg hover:shadow-2xl border border-slate-100/50 relative overflow-hidden transition-all duration-500 group-hover:-translate-y-1 hover:border-[#6E2CA1]/30">
-                        {/* Glow interno */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#6E2CA1]/5 to-purple-100/30" />
-                        {/* Número Principal */}
-                        <span 
-                          className={`relative z-10 text-3xl md:text-4xl lg:text-5xl font-black text-[#6E2CA1] leading-none transition-all duration-700 ${unit.animate ? '[animation: tickPulse 1s cubic-bezier(0.68,-0.55,0.265,1.55) infinite] shadow-purple-200/50' : 'group-hover:scale-110'}`} 
-                          style={{ fontFamily: '"Arial Black", Arial, sans-serif, -apple-system' }}
-                        >
-                          {unit.value.toString().padStart(2, '0')}
+                {/* 2.1 Contador Regresivo de Alto Impacto (Neuromarketing Ready) */}
+                <div className="bg-slate-100/50 rounded-[2.5rem] p-6 md:p-8 border border-slate-200/60 shadow-inner text-center">
+                  <p className="text-[11px] md:text-sm font-black text-slate-950 uppercase tracking-[0.2em] mb-6">
+                    ¡APROVECHA AHORA! EL SORTEO INICIA EN:
+                  </p>
+                  
+                  <div className="flex justify-center gap-2 md:gap-4">
+                    {[
+                      { label: 'Días', value: timeLeft.days },
+                      { label: 'Horas', value: timeLeft.hours },
+                      { label: 'Min', value: timeLeft.minutes },
+                      { label: 'Seg', value: timeLeft.seconds, animate: true }
+                    ].map((unit, idx) => (
+                      <div key={idx} className="flex flex-col items-center">
+                        {/* Tarjeta de Tiempo */}
+                        <div className="bg-white w-16 h-20 md:w-20 md:h-24 rounded-2xl flex items-center justify-center shadow-[0_4px_20px_-5px_rgba(0,0,0,0.1)] border border-slate-100 relative overflow-hidden group">
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-purple-50/40 opacity-50" />
+                          <span 
+                            className={`text-3xl md:text-5xl font-black text-[#6E2CA1] leading-none z-10 transition-transform ${unit.animate ? 'animate-pulse scale-105' : ''}`} 
+                            style={{ fontFamily: '"Arial Black", Arial, sans-serif' }}
+                          >
+                            {unit.value.toString().padStart(2, '0')}
+                          </span>
+                          {/* Línea divisoria estética tipo reloj flip */}
+                          <div className="absolute w-full h-[1px] bg-slate-100 top-1/2 left-0 z-0" />
+                        </div>
+                        <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3">
+                          {unit.label}
                         </span>
-                        {/* Flip line mejorada */}
-                        <div className="absolute w-full h-px bg-gradient-to-r from-slate-200/50 to-slate-300 top-1/2 left-0 transform -translate-y-1/2 z-0" />
                       </div>
-                      <span className="text-[10px] md:text-sm font-black text-slate-400 uppercase tracking-widest mt-4 px-1">
-                        {unit.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                <p className="mt-8 text-xs md:text-sm italic text-slate-500 font-semibold bg-gradient-to-r from-slate-600 to-slate-800 bg-clip-text">
-                  Asegura tus números de la suerte antes de que se agoten
-                </p>
-
-                {/* Escasez Badge */}
-                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 text-[#6E2CA1] text-xs font-black uppercase tracking-widest border-2 border-purple-100 animate-pulse">
-                  <span className="w-2 h-2 bg-[#6E2CA1] rounded-full animate-ping" />
-                  Solo {selectedRifa.availableNumbers} libres
+                  <p className="mt-6 text-xs md:text-sm italic text-slate-500 font-medium">
+                    Asegura tus números de la suerte antes de que se agoten
+                  </p>
                 </div>
               </div>
 
-              {/* Precio/Disponibles */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-3xl border border-slate-100 p-6 bg-white shadow-sm hover:shadow-md transition-all hover:border-[#6E2CA1]/20">
+                <div className="rounded-3xl border border-slate-100 p-6 bg-white shadow-sm hover:border-[#6E2CA1]/20 transition-all">
                   <p className="text-xs uppercase text-slate-400 font-black mb-2 tracking-[0.2em]">Precio Ticket</p>
                   <p className="text-3xl md:text-4xl font-black text-slate-950 leading-none">S/ {parseFloat(selectedRifa.pricePerNumber.toString()).toFixed(2)}</p>
                 </div>
-                <div className="rounded-3xl border border-slate-100 p-6 bg-white shadow-sm hover:shadow-md transition-all hover:border-[#6E2CA1]/20">
+                <div className="rounded-3xl border border-slate-100 p-6 bg-white shadow-sm hover:border-[#6E2CA1]/20 transition-all">
                   <p className="text-xs uppercase text-slate-400 font-black mb-2 tracking-[0.2em]">Libres</p>
                   <p className="text-3xl md:text-4xl font-black text-[#6E2CA1] leading-none">{selectedRifa.availableNumbers}</p>
                 </div>
               </div>
 
-              {/* Resumen Compra Desktop */}
-              <div className="hidden lg:block bg-white rounded-[2rem] border-2 border-purple-100 p-8 shadow-2xl">
+              {/* 3. Panel de Compra (Solo Desktop) */}
+              <div className="hidden lg:block bg-white rounded-[2rem] border-2 border-purple-100 p-8 shadow-xl">
                 <div className="flex items-center gap-3 mb-6 border-b border-slate-50 pb-4">
                   <ShoppingCartIcon className="w-6 h-6 text-[#6E2CA1]" />
                   <h3 className="text-sm font-black text-slate-950 uppercase tracking-[0.2em]">Resumen de Compra</h3>
                 </div>
+
                 <div className="space-y-4 mb-8">
                   <div className="flex justify-between items-end">
                     <div className="space-y-1">
@@ -266,17 +282,19 @@ const RifaDetail = ({
                     <span className="text-sm font-bold text-slate-500 uppercase">{selectedNumbers.length} Números</span>
                   </div>
                 </div>
+
                 <button
                   onClick={() => {
                     if (selectedNumbers.length === 0) return alert('¡Selecciona al menos un número antes de continuar!');
                     router.push(`/rifas/checkout?rifaId=${selectedRifa.id}&numbers=${selectedNumbers.join(',')}`);
                   }}
                   disabled={selectedNumbers.length === 0 || loading}
-                  className="w-full py-6 bg-gradient-to-r from-[#6E2CA1] to-purple-900 text-white rounded-2xl font-black text-lg uppercase tracking-[0.15em] hover:from-slate-900 hover:to-slate-800 shadow-2xl shadow-purple-200/50 transition-all duration-300 flex items-center justify-center gap-3 disabled:bg-slate-100 disabled:text-slate-400 active:scale-[0.98]"
+                  className="w-full py-6 bg-[#6E2CA1] text-white rounded-2xl font-black text-base uppercase tracking-[0.2em] hover:bg-slate-900 shadow-2xl shadow-purple-200 transition-all flex items-center justify-center gap-3 disabled:bg-slate-100 disabled:text-slate-400 active:scale-95"
                 >
                   PARTICIPAR AHORA
                   <ShoppingCartIcon className="w-6 h-6" />
                 </button>
+
                 <div className="mt-6 flex items-center gap-3 pt-6 border-t border-slate-50">
                   <div className="p-2 bg-purple-50 rounded-lg"><ShieldCheckIcon className="w-5 h-5 text-[#6E2CA1]" /></div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Garantía de Transparencia Rossy Resina</p>
@@ -285,20 +303,21 @@ const RifaDetail = ({
             </div>
           </div>
 
-          {/* Cartilla - 10col Desktop, 5col Mobile con botones GRANDES */}
+          {/* COLUMNA DERECHA: Cartilla Virtual (Foco Principal) */}
           <div className="lg:col-span-7 space-y-6">
-            <section className="bg-white rounded-[2.5rem] border border-slate-100 p-5 md:p-8 shadow-lg h-full flex flex-col min-h-[500px] mt-8 lg:mt-0">
+            {/* Cartilla Virtual */}
+            <section className="bg-white rounded-[2.5rem] border border-slate-100 p-5 md:p-8 shadow-sm h-full flex flex-col min-h-[500px] mt-8 lg:mt-0">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-black text-slate-950 uppercase tracking-tighter">Cartilla <span className="text-[#6E2CA1]">Virtual</span></h3>
-                <div className="bg-gradient-to-r from-purple-500 to-[#6E2CA1] px-4 py-2 rounded-2xl border border-purple-200 flex items-center gap-2 shadow-md">
-                  <span className="text-sm font-black text-white uppercase tracking-widest">
+                <div className="bg-purple-50 px-4 py-2 rounded-2xl border border-purple-100 flex items-center gap-2">
+                  <span className="text-xs md:text-sm font-black text-[#6E2CA1] uppercase tracking-widest">
                     {selectedNumbers.length} Seleccionados
                   </span>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto pr-2">
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                 {!loading ? (
-                  <div className="grid grid-cols-5 lg:grid-cols-10 gap-2 md:gap-3">
+                  <div className="grid grid-cols-5 md:grid-cols-10 gap-3 md:gap-2">
                     {Array.from({ length: selectedRifa.totalNumbers }, (_, i) => i + 1).map((num) => {
                       const ticket = numbers?.tickets.find((t: any) => t.number === num);
                       const isSelected = selectedNumbers.includes(num);
@@ -310,12 +329,13 @@ const RifaDetail = ({
                           onClick={() => isAvailable && toggleNumber(num)}
                           disabled={!isAvailable}
                           style={{ fontFamily: 'Arial, sans-serif' }}
-                          className={`aspect-square rounded-2xl lg:rounded-xl font-bold transition-all duration-300 transform active:scale-95 border-3 flex items-center justify-center hover:shadow-md ${isSelected
-                            ? 'bg-gradient-to-br from-[#6E2CA1] to-purple-900 text-white border-[#6E2CA1] shadow-lg shadow-purple-200/50 scale-105'
-                            : isAvailable
-                            ? 'bg-white/80 text-slate-950 border-slate-200 hover:border-[#6E2CA1] hover:bg-gradient-to-br hover:from-purple-50 hover:to-white shadow-sm hover:shadow-purple-100'
-                            : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50'
-                          } ${!isAvailable ? 'text-sm' : 'text-lg md:text-base lg:text-sm p-3 md:p-2'}`}
+                          className={`aspect-square rounded-xl md:rounded-lg font-bold text-xl md:text-sm transition-all duration-300 transform active:scale-95 border-2 flex items-center justify-center p-2 ${
+                            isSelected
+                              ? 'bg-[#6E2CA1] text-white border-[#6E2CA1] shadow-lg shadow-purple-100'
+                              : isAvailable
+                              ? 'bg-white text-slate-950 border-slate-100 hover:border-purple-200 hover:bg-slate-50'
+                              : 'bg-slate-100 text-slate-300 border-transparent cursor-not-allowed opacity-40'
+                          }`}
                         >
                           {num.toString().padStart(2, '0')}
                         </button>
@@ -323,84 +343,77 @@ const RifaDetail = ({
                     })}
                   </div>
                 ) : (
-                  <div className="flex justify-center items-center h-full py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6E2CA1]"></div>
-                  </div>
+                  <div className="flex justify-center items-center h-full py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6E2CA1]"></div></div>
                 )}
               </div>
             </section>
           </div>
         </div>
         
-        {/* Resumen Mobile - AL FINAL, debajo cartilla */}
-        <div className="lg:hidden space-y-6 mt-12">
-          <div className="bg-white rounded-[2rem] border-2 border-purple-100 p-8 shadow-2xl mx-4">
+        {/* Panel de Compra (Solo Móvil - Después de la cartilla) */}
+        <div className="lg:hidden space-y-6 mt-8">
+          <div className="bg-white rounded-[2rem] border-2 border-purple-100 p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-6 border-b border-slate-50 pb-4">
               <ShoppingCartIcon className="w-6 h-6 text-[#6E2CA1]" />
-              <h3 className="text-lg font-black text-slate-950 uppercase tracking-[0.2em]">Resumen de Compra</h3>
+              <h3 className="text-sm font-black text-slate-950 uppercase tracking-[0.2em]">Resumen de Compra</h3>
             </div>
+
             <div className="space-y-4 mb-8">
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
-                  <span className="text-sm font-black text-[#6E2CA1] uppercase tracking-widest">Total a Pagar</span>
+                  <span className="text-xs font-black text-[#6E2CA1] uppercase tracking-widest">Total a Pagar</span>
                   <p className="text-5xl font-black text-slate-950 leading-none">S/ {totalAmount.toFixed(2)}</p>
                 </div>
-                <span className="text-base font-bold text-slate-500 uppercase">{selectedNumbers.length} Números</span>
+                <span className="text-sm font-bold text-slate-500 uppercase">{selectedNumbers.length} Números</span>
               </div>
             </div>
+
             <button
               onClick={() => {
                 if (selectedNumbers.length === 0) return alert('¡Selecciona al menos un número antes de continuar!');
                 router.push(`/rifas/checkout?rifaId=${selectedRifa.id}&numbers=${selectedNumbers.join(',')}`);
               }}
               disabled={selectedNumbers.length === 0 || loading}
-              className="w-full py-6 bg-gradient-to-r from-[#6E2CA1] to-purple-900 text-white rounded-2xl font-black text-xl uppercase tracking-[0.1em] hover:from-slate-900 hover:to-slate-800 shadow-2xl shadow-purple-200/50 transition-all duration-300 flex items-center justify-center gap-3 disabled:bg-slate-100 disabled:text-slate-400 active:scale-[0.98]"
+              className="w-full py-6 bg-[#6E2CA1] text-white rounded-2xl font-black text-base uppercase tracking-[0.2em] hover:bg-slate-900 shadow-2xl shadow-purple-200 transition-all flex items-center justify-center gap-3 disabled:bg-slate-100 disabled:text-slate-400 active:scale-95"
             >
               PARTICIPAR AHORA
               <ShoppingCartIcon className="w-6 h-6" />
             </button>
+
             <div className="mt-6 flex items-center gap-3 pt-6 border-t border-slate-50">
               <div className="p-2 bg-purple-50 rounded-lg"><ShieldCheckIcon className="w-5 h-5 text-[#6E2CA1]" /></div>
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Garantía de Transparencia Rossy Resina</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Garantía de Transparencia Rossy Resina</p>
             </div>
           </div>
         </div>
 
-        {/* Instrucciones */}
-        <section className="mt-20 bg-white rounded-[3rem] p-10 border border-slate-100 shadow-xl mx-4 lg:mx-0">
-          <div className="text-center mb-12">
-            <p className="text-[11px] font-black text-[#6E2CA1] uppercase tracking-[0.4em] mb-4 bg-gradient-to-r from-[#6E2CA1] bg-clip-text">Instrucciones</p>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-950 uppercase tracking-tighter">¿Cómo funciona <span className="text-[#6E2CA1]">el sorteo?</span></h2>
+
+
+        {/* SECCIÓN INFERIOR: Cómo Participar */}
+        <section className="mt-16 bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm">
+          <div className="text-center mb-10">
+            <p className="text-[9px] font-black text-[#6E2CA1] uppercase tracking-[0.4em] mb-2">Instrucciones</p>
+            <h2 className="text-2xl md:text-3xl font-black text-slate-950 uppercase tracking-tighter">¿Cómo funciona <span className="text-[#6E2CA1]">el sorteo?</span></h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
               { icon: TicketIcon, title: "1. Elige tus números", desc: "Selecciona tus números de la suerte en nuestra cartilla virtual interactiva." },
               { icon: ShieldCheckIcon, title: "2. Envía tu pago", desc: "Paga vía Yape o transferencia y sube tu comprobante. Lo validamos en segundos." },
               { icon: TrophyIcon, title: "3. ¡Gana premios!", desc: "Sigue la transmisión en vivo y descubre si eres el próximo afortunado ganador." }
             ].map((step, i) => (
-              <div key={i} className="group p-10 rounded-[2.5rem] border border-slate-100 hover:shadow-2xl hover:shadow-purple-100/50 transition-all duration-500 hover:-translate-y-2 bg-gradient-to-b from-white to-slate-50/50">
-                <div className="w-24 h-24 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center text-[#6E2CA1] mx-auto mb-8 group-hover:scale-110 transition-all duration-500 shadow-lg">
-                  <step.icon className="w-10 h-10 md:w-8 md:h-8" />
+              <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-slate-100 text-center hover:shadow-lg transition-all duration-300 group">
+                <div className="w-20 h-20 rounded-full bg-purple-50 flex items-center justify-center text-[#6E2CA1] mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <step.icon className="w-10 h-10" />
                 </div>
-                <h4 className="text-lg md:text-sm font-black text-slate-950 uppercase tracking-tight mb-4 text-center">{step.title}</h4>
-                <p className="text-slate-500 text-sm font-bold leading-relaxed px-4 uppercase tracking-tight text-center">{step.desc}</p>
+                <h4 className="text-sm font-black text-slate-950 uppercase tracking-tight mb-2">{step.title}</h4>
+                <p className="text-slate-400 text-[11px] font-bold leading-relaxed px-4 uppercase tracking-tight">{step.desc}</p>
               </div>
             ))}
           </div>
         </section>
       </div>
-
-      <style jsx>{`
-        @keyframes tickPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-          60% { transform: scale(1.05) rotate(2deg); }
-          80% { transform: scale(1.02) rotate(-1deg); }
-        }
-      `}</style>
     </div>
   );
 };
 
 export default RifaDetail;
-
