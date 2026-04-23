@@ -40,7 +40,7 @@ const RifaDetail = ({
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    const targetDate = new Date('2026-05-08T00:00:00');
+    const targetDate = new Date('2026-05-08T19:00:00');
 
     const interval = setInterval(() => {
       const now = new Date();
@@ -147,6 +147,41 @@ const RifaDetail = ({
           Volver al listado
         </button>
 
+        {/* 1. CRONÓMETRO GLOBAL - Elemento Principal de la Página */}
+        <div className="p-4 md:p-8 text-center mb-6 relative">
+          <p className="text-lg md:text-3xl font-black text-slate-950 uppercase tracking-[0.3em] mb-6" style={{ fontFamily: '"Arial Black", Arial, sans-serif' }}>
+            ¡EL SORTEO COMIENZA EN:
+          </p>
+          
+          <div className="flex justify-center gap-2 md:gap-4 mb-6">
+            {[
+              { label: 'DÍAS', value: timeLeft.days },
+              { label: 'HORAS', value: timeLeft.hours },
+              { label: 'MIN', value: timeLeft.minutes },
+              { label: 'SEG', value: timeLeft.seconds, animate: true }
+            ].map((unit, idx) => (
+              <div key={idx} className="flex flex-col items-center">
+                <div className="bg-purple-50 w-14 h-18 md:w-20 md:h-24 rounded-2xl flex items-center justify-center border border-purple-100/50 shadow-sm relative overflow-hidden">
+                  <span 
+                    className={`text-xl md:text-4xl lg:text-5xl font-black text-[#6E2CA1] z-10 transition-transform ${unit.animate ? 'animate-pulse' : ''}`} 
+                    style={{ fontFamily: '"Arial Black", Arial, sans-serif' }}
+                  >
+                    {unit.value.toString().padStart(2, '0')}
+                  </span>
+                  <div className="absolute w-full h-[1px] bg-purple-200/30 top-1/2 left-0 z-0" />
+                </div>
+                <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">
+                  {unit.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-sm md:text-xl font-bold text-slate-600 uppercase tracking-tight" style={{ fontFamily: 'Arial, sans-serif' }}>
+            📅 Fecha: <span className="text-slate-900 font-black">08 de Mayo 2026</span> | 🕖 Hora: 19:00 PM | 🔵 Vía Facebook Live
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* COLUMNA IZQUIERDA: Info + Timer Prof (Desktop/Mobile shared, responsive) */}
           <div className="lg:col-span-5 space-y-8">
@@ -192,53 +227,6 @@ const RifaDetail = ({
               <h1 className="text-3xl md:text-5xl font-black text-slate-950 uppercase leading-tight tracking-tighter">
                 {selectedRifa.title}
               </h1>
-
-              {/* Timer Cards - Diseño de Impacto */}
-              <div className="bg-gradient-to-b from-slate-50 to-white/50 rounded-[2.5rem] p-6 md:p-8 border border-slate-200/60 shadow-2xl backdrop-blur-sm text-center">
-                <p className="text-[11px] md:text-sm font-black text-slate-950 uppercase tracking-[0.25em] mb-6 bg-gradient-to-r from-[#6E2CA1] to-purple-800 bg-clip-text text-transparent animate-pulse">
-                  ¡APROVECHA AHORA! EL SORTEO INICIA EN:
-                </p>
-                
-                <div className="flex justify-center gap-3 md:gap-5">
-                  {[
-                    { label: 'DÍAS', value: timeLeft.days },
-                    { label: 'HORAS', value: timeLeft.hours },
-                    { label: 'MIN', value: timeLeft.minutes },
-                    { label: 'SEG', value: timeLeft.seconds, animate: true }
-                  ].map((unit, idx) => (
-                    <div key={idx} className="flex flex-col items-center group">
-                      {/* Tarjeta de Tiempo Mejorada */}
-                      <div className="bg-white w-20 h-24 md:w-24 md:h-28 rounded-3xl flex items-center justify-center shadow-lg hover:shadow-2xl border border-slate-100/50 relative overflow-hidden transition-all duration-500 group-hover:-translate-y-1 hover:border-[#6E2CA1]/30">
-                        {/* Glow interno */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#6E2CA1]/5 to-purple-100/30" />
-                        {/* Número Principal */}
-                        <span 
-                          className={`relative z-10 text-3xl md:text-4xl lg:text-5xl font-black text-[#6E2CA1] leading-none transition-all duration-700 ${unit.animate ? '[animation: tickPulse 1s cubic-bezier(0.68,-0.55,0.265,1.55) infinite] shadow-purple-200/50' : 'group-hover:scale-110'}`} 
-                          style={{ fontFamily: '"Arial Black", Arial, sans-serif, -apple-system' }}
-                        >
-                          {unit.value.toString().padStart(2, '0')}
-                        </span>
-                        {/* Flip line mejorada */}
-                        <div className="absolute w-full h-px bg-gradient-to-r from-slate-200/50 to-slate-300 top-1/2 left-0 transform -translate-y-1/2 z-0" />
-                      </div>
-                      <span className="text-[10px] md:text-sm font-black text-slate-400 uppercase tracking-widest mt-4 px-1">
-                        {unit.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <p className="mt-8 text-xs md:text-sm italic text-slate-500 font-semibold bg-gradient-to-r from-slate-600 to-slate-800 bg-clip-text">
-                  Asegura tus números de la suerte antes de que se agoten
-                </p>
-
-                {/* Escasez Badge */}
-                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 text-[#6E2CA1] text-xs font-black uppercase tracking-widest border-2 border-purple-100 animate-pulse">
-                  <span className="w-2 h-2 bg-[#6E2CA1] rounded-full animate-ping" />
-                  Solo {selectedRifa.availableNumbers} libres
-                </div>
-              </div>
-
               {/* Precio/Disponibles */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-3xl border border-slate-100 p-6 bg-white shadow-sm hover:shadow-md transition-all hover:border-[#6E2CA1]/20">
@@ -403,4 +391,3 @@ const RifaDetail = ({
 };
 
 export default RifaDetail;
-
