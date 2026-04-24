@@ -22,6 +22,14 @@ interface RifaDetailProps {
   router: any;
 }
 
+const getOptimizedVideoUrl = (url?: string) => {
+  if (!url) return '';
+  if (!url.includes('/video/upload/')) return url;
+  if (url.includes('/video/upload/f_auto,q_auto')) return url;
+
+  return url.replace('/video/upload/', '/video/upload/f_auto,q_auto:eco,c_limit,w_720/');
+};
+
 const RifaDetail = ({
   selectedRifa,
   numbers,
@@ -37,6 +45,7 @@ const RifaDetail = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [adActive, setAdActive] = useState(Boolean(selectedRifa?.videoUrl));
   const [timer, setTimer] = useState(8);
+  const optimizedVideoUrl = useMemo(() => getOptimizedVideoUrl(selectedRifa?.videoUrl), [selectedRifa?.videoUrl]);
 
   const targetDate = useMemo(() => {
     if (selectedRifa?.endDate) {
@@ -83,10 +92,10 @@ const RifaDetail = ({
   }, [adActive]);
 
   useEffect(() => {
-    if (adActive && selectedRifa?.videoUrl && videoRef.current) {
+    if (adActive && optimizedVideoUrl && videoRef.current) {
       videoRef.current.play().catch(() => null);
     }
-  }, [adActive, selectedRifa?.videoUrl]);
+  }, [adActive, optimizedVideoUrl]);
 
   const handleSkipAd = () => {
     if (videoRef.current) videoRef.current.pause();
@@ -101,17 +110,19 @@ const RifaDetail = ({
     year: 'numeric',
   });
 
-  if (adActive && selectedRifa?.videoUrl) {
+  if (adActive && optimizedVideoUrl) {
     return (
       <div className="fixed inset-0 z-[9999] flex h-[100dvh] w-screen items-center justify-center bg-black">
         <video
           ref={videoRef}
-          src={selectedRifa.videoUrl}
+          src={optimizedVideoUrl}
           autoPlay
-          loop
           playsInline
-          preload="auto"
+          preload="metadata"
+          controls={false}
+          disablePictureInPicture
           className="h-full w-full object-contain"
+          onEnded={handleSkipAd}
         />
         <div className="absolute left-1/2 top-8 -translate-x-1/2 rounded-full bg-black/50 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white">
           Presentación de la rifa
