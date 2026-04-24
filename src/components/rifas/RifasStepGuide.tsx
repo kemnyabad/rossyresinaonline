@@ -1,26 +1,44 @@
 import React from 'react';
-import { TicketIcon, ShieldCheckIcon, TrophyIcon } from "@heroicons/react/24/outline";
+import { TicketIcon, ShieldCheckIcon, TrophyIcon } from '@heroicons/react/24/outline';
 
 const RifasStepGuide = () => (
-  <section className="bg-slate-50 py-16">
-    <div className="max-w-7xl mx-auto px-4">
-      <div className="text-center mb-12">
-        <p className="text-[10px] font-black text-[#6E2CA1] uppercase tracking-[0.4em] mb-4">Guía de participación</p>
-        <h2 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tighter uppercase leading-tight">Tu premio está a <br/><span className="text-[#6E2CA1]">3 simples pasos</span></h2>
+  <section id="pasos" className="bg-white px-4 py-16 md:px-6 md:py-20">
+    <div className="mx-auto w-full max-w-7xl">
+      <div className="mb-12 text-center">
+        <p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#7a1f61]">Proceso simple y seguro</p>
+        <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900 md:text-5xl">
+          Participa en 3 pasos
+        </h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {[
-          { icon: TicketIcon, title: "1. Elige tus números", desc: "Entra al sorteo que más te guste y selecciona tus números de la suerte en la cartilla digital." },
-          { icon: ShieldCheckIcon, title: "2. Paga con confianza", desc: "Realiza el pago vía Yape o transferencia y sube tu comprobante. Procesamos todo en segundos." },
-          { icon: TrophyIcon, title: "3. ¡Gana premios!", desc: "Sigue nuestras transmisiones en vivo. ¡Podrías ser el próximo afortunado ganador!" }
+          {
+            icon: TicketIcon,
+            title: 'Elige números',
+            desc: 'Ingresa al sorteo, revisa la cartilla y selecciona los números disponibles que prefieras.',
+          },
+          {
+            icon: ShieldCheckIcon,
+            title: 'Envía tu pago',
+            desc: 'Paga por Yape o transferencia y sube tu comprobante en el checkout de forma rápida.',
+          },
+          {
+            icon: TrophyIcon,
+            title: 'Sigue el resultado',
+            desc: 'Verificamos tu compra y participas en la transmisión en vivo del sorteo oficial.',
+          },
         ].map((step, i) => (
-          <div key={i} className="flex flex-col items-center text-center group">
-            <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center text-[#6E2CA1] mb-6 shadow-[0_10px_40px_rgba(0,0,0,0.06)] group-hover:scale-110 group-hover:shadow-purple-200 transition-all duration-500">
-              <step.icon className="w-10 h-10" />
+          <article
+            key={i}
+            className="rounded-[1.6rem] border border-[#f0d7e8] bg-[#fff9fd] p-7 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+          >
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-[#7a1f61] shadow-sm">
+              <step.icon className="h-8 w-8" />
             </div>
-            <h3 className="text-xl font-black text-slate-900 mb-3 uppercase tracking-tight">{step.title}</h3>
-            <p className="text-slate-500 text-sm font-medium leading-relaxed px-6">{step.desc}</p>
-          </div>
+            <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">{i + 1}. {step.title}</h3>
+            <p className="mt-3 text-sm font-medium leading-relaxed text-slate-600">{step.desc}</p>
+          </article>
         ))}
       </div>
     </div>

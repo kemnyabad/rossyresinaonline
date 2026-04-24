@@ -2,11 +2,12 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import logo from "../images/logo.jpg";
 import RifasNavbar from './rifas/RifasNavbar';
-import RifasHero from './rifas/RifasHero';
+
 import RifasGrid from './rifas/RifasGrid';
 import RifaDetail from './rifas/RifaDetail';
 import RifasStepGuide from './rifas/RifasStepGuide';
 import RifasFooter from './rifas/RifasFooter';
+import RifaSlider from './rifas/RifaSlider';
 
 export interface Rifa {
   id: string;
@@ -72,17 +73,8 @@ export default function RifasPage() {
   const router = useRouter();
 
   const isDetailView = !!selectedRifa || !!router.query.id;
-  // Carrusel para la página principal (antes de seleccionar una rifa)
-  const [mainHeroIndex, setMainHeroIndex] = useState(0);
-  const featuredRifas = rifas.slice(0, 3);
 
-  useEffect(() => {
-    if (featuredRifas.length <= 1 || isDetailView) return;
-    const itv = setInterval(() => {
-      setMainHeroIndex((prev) => (prev + 1) % featuredRifas.length);
-    }, 3000);
-    return () => clearInterval(itv);
-  }, [featuredRifas.length, isDetailView]);
+
 
   const bannerSlides = useMemo<BannerSlide[]>(() => {
     if (!selectedRifa) return [];
@@ -300,13 +292,9 @@ export default function RifasPage() {
                 setSelectedRifa(null);
                 router.push('/rifas', undefined, { shallow: true });
               }} isSelected={isDetailView} router={router} />
-            <RifasHero 
-              featuredRifas={featuredRifas} 
-              mainHeroIndex={mainHeroIndex} 
-              setMainHeroIndex={setMainHeroIndex} 
-              onSelect={handleSelectRifa} 
-            />
+            <RifaSlider />
             <RifasGrid rifas={rifas} onSelect={handleSelectRifa} />
+
             <RifasStepGuide />
             <RifasFooter />
           </div>

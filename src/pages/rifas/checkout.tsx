@@ -1,9 +1,8 @@
-import Head from "next/head";
-import { useRouter } from "next/router";
-import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { useEffect, useState, useMemo } from 'react';
+import Link from 'next/link';
+import { ArrowLeftIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 export default function RifaCheckoutPage() {
   const router = useRouter();
@@ -12,42 +11,46 @@ export default function RifaCheckoutPage() {
   const [rifa, setRifa] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Campos del formulario
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [paymentPreview, setPaymentPreview] = useState("");
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [paymentPreview, setPaymentPreview] = useState('');
 
   const selectedNumbers = useMemo(() => {
     if (!numbersQuery) return [];
-    return String(numbersQuery).split(",").map(Number).sort((a, b) => a - b);
+    return String(numbersQuery)
+      .split(',')
+      .map(Number)
+      .filter((n) => !Number.isNaN(n))
+      .sort((a, b) => a - b);
   }, [numbersQuery]);
 
+  const totalPrice = (selectedNumbers.length * (rifa?.pricePerNumber || 0)).toFixed(2);
+
   useEffect(() => {
-    if (rifaId) {
-      setLoading(true);
-      fetch(`/api/rifas`) 
-        .then(res => res.ok ? res.json() : [])
-        .then(data => {
-          const found = Array.isArray(data) ? data.find((r: any) => r.id === rifaId) : null;
-          if (found) setRifa(found);
-          else setError("No se encontró la información de la rifa.");
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    }
+    if (!rifaId) return;
+    setLoading(true);
+
+    fetch('/api/rifas')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        const found = Array.isArray(data) ? data.find((r: any) => r.id === rifaId) : null;
+        if (found) setRifa(found);
+        else setError('No se encontró la información de la rifa.');
+      })
+      .catch(() => setError('No se pudo cargar la rifa.'))
+      .finally(() => setLoading(false));
   }, [rifaId]);
 
   const handleFile = (file?: File | null) => {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert("La imagen es muy pesada (máximo 5MB)");
+      alert('La imagen supera 5MB.');
       return;
     }
-    
-    // Redimensionar imagen antes de guardar
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new window.Image();
@@ -55,22 +58,20 @@ export default function RifaCheckoutPage() {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        
-        // Limitar a 1200px de ancho máximo
+
         if (width > 1200) {
           height = Math.round(height * (1200 / width));
           width = 1200;
         }
-        
+
         canvas.width = width;
         canvas.height = height;
+
         const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          // Comprimir a JPEG con 80% de calidad
-          const compressed = canvas.toDataURL('image/jpeg', 0.8);
-          setPaymentPreview(compressed);
-        }
+        if (!ctx) return;
+
+        ctx.drawImage(img, 0, 0, width, height);
+        setPaymentPreview(canvas.toDataURL('image/jpeg', 0.8));
       };
       img.src = String(e.target?.result);
     };
@@ -79,140 +80,188 @@ export default function RifaCheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!paymentPreview) {
-      setError("Debes subir la captura de tu Yape o transferencia");
+      setError('Debes subir el comprobante de pago.');
       return;
     }
 
     setSubmitting(true);
-    setError("");
+    setError('');
 
     try {
       const res = await fetch(`/api/rifas/${rifaId}/buy`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           numbers: selectedNumbers,
           buyerName: name,
           buyerPhone: phone,
-          buyerEmail: "cliente@web.com",
-          paymentImage: paymentPreview, // Enviamos la imagen comprimida real
+          buyerEmail: 'cliente@web.com',
+          paymentImage: paymentPreview,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         if (data.takenNumbers) {
-          throw new Error(`¡Uy! Los números ${data.takenNumbers.join(", ")} acaban de ser reservados por otra persona. Por favor, regresa y elige otros.`);
+          throw new Error(`Los números ${data.takenNumbers.join(', ')} ya fueron reservados. Elige otros e intenta de nuevo.`);
         }
-        throw new Error(data.error || "Error al procesar la reserva.");
+        throw new Error(data.error || 'No se pudo procesar la reserva.');
       }
 
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Error inesperado al procesar la reserva.');
     } finally {
       setSubmitting(false);
     }
   };
 
   if (!numbersQuery || selectedNumbers.length === 0) {
-    return <div className="min-h-screen flex flex-col items-center justify-center p-20 text-center">No has seleccionado números. <Link href="/rifas" className="mt-4 text-amazon_blue font-bold underline">Volver a intentarlo</Link></div>;
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#fff8fc] p-10 text-center">
+        <p className="text-lg font-bold text-slate-700">No seleccionaste números.</p>
+        <Link href="/rifas" className="mt-4 rounded-full bg-[#7a1f61] px-6 py-3 text-sm font-extrabold uppercase tracking-[0.12em] text-white">
+          Volver a rifas
+        </Link>
+      </div>
+    );
   }
-  
+
   if (success) {
     return (
-      <div className="max-w-xl mx-auto py-20 px-6 text-center">
-        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">✓</div>
-        <h1 className="text-2xl font-bold">¡Números Separados con éxito!</h1>
-        <p className="text-gray-600 mt-2">Estamos verificando tu pago. Nos contactaremos al {phone} para confirmar tus tickets.</p>
-        <Link href="/rifas" className="mt-8 inline-block bg-amazon_blue text-white px-8 py-3 rounded-xl font-bold shadow-lg">Volver a Rifas</Link>
+      <div className="flex min-h-screen items-center justify-center bg-[#fff8fc] px-4">
+        <div className="w-full max-w-lg rounded-[1.8rem] border border-[#eed2e4] bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl font-black text-emerald-700">✓</div>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-slate-900">Reserva enviada</h1>
+          <p className="mt-3 text-sm font-medium leading-relaxed text-slate-600">
+            Estamos verificando tu comprobante. Te contactaremos al {phone} cuando tus tickets queden confirmados.
+          </p>
+          <Link href="/rifas" className="mt-6 inline-block rounded-full bg-[#7a1f61] px-6 py-3 text-sm font-extrabold uppercase tracking-[0.12em] text-white">
+            Volver a rifas
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <Head><title>Confirmar Reserva | Rossy Resina</title></Head>
-      
-      <button 
-        onClick={() => router.back()}
-        className="mb-6 flex items-center gap-2 text-gray-500 hover:text-amazon_blue transition-colors font-medium"
-      >
-        <ArrowLeftIcon className="w-4 h-4" />
-        Volver a elegir números
-      </button>
+    <div className="min-h-screen bg-[#fff8fc] px-4 py-8 md:px-6 md:py-10">
+      <Head>
+        <title>Checkout de Rifa | Rossy Resina</title>
+      </Head>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Lado Izquierdo - Información de la Rifa */}
-        <div className="space-y-6">
-          <h1 className="text-2xl font-bold">Finalizar Reserva</h1>
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 className="font-bold text-lg text-purple-600">SORTEO "{rifa?.title || 'Cargando...'}"</h2>
-            <div className="mt-4">
-              <p className="text-sm text-gray-500 mb-2">Números seleccionados:</p>
-              <div className="flex flex-wrap gap-2">
-                {selectedNumbers.map(n => (
-                  <span key={n} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg font-bold">#{n}</span>
+      <div className="mx-auto w-full max-w-7xl">
+        <button
+          onClick={() => router.back()}
+          className="mb-6 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-[0.12em] text-slate-600 shadow-sm hover:text-[#7a1f61]"
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          Volver
+        </button>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <section className="space-y-5 rounded-[1.8rem] border border-[#eed2e4] bg-white p-6 shadow-sm">
+            <h1 className="text-3xl font-black uppercase tracking-tight text-slate-900">Finalizar participación</h1>
+
+            <div className="rounded-2xl bg-[#fbf4f8] p-5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#7a1f61]">Sorteo seleccionado</p>
+              <h2 className="mt-1 text-xl font-black text-slate-900">{loading ? 'Cargando...' : rifa?.title || 'Rifa no disponible'}</h2>
+
+              <p className="mt-4 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Números</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedNumbers.map((n) => (
+                  <span key={n} className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#7a1f61] shadow-sm">
+                    #{n.toString().padStart(2, '0')}
+                  </span>
                 ))}
               </div>
-            </div>
-            <div className="mt-6 border-t pt-4 flex justify-between items-center font-bold text-xl">
-              <span>Total a pagar:</span>
-              <span className="text-amazon_blue">S/ {(selectedNumbers.length * (rifa?.pricePerNumber || 0)).toFixed(2)}</span>
-            </div>
-          </div>
-          <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
-            <p className="font-bold text-blue-800 flex items-center gap-2"><span>📱</span> Instrucciones de Pago:</p>
-            <p className="mt-2 text-sm text-blue-900">1. Yapea al <strong>961770723</strong> (Rossy Resina).</p>
-            <p className="text-sm text-blue-900">2. Toma una captura de pantalla del comprobante.</p>
-            <p className="text-sm text-blue-900">3. Súbela en el formulario de la derecha.</p>
-          </div>
-        </div>
 
-        {/* Lado Derecho - Formulario */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100 space-y-5">
-          <h2 className="text-lg font-bold text-gray-900">Datos de Contacto</h2>
-          <label className="block">
-            <span className="text-sm font-semibold text-gray-700">Tu Nombre Completo *</span>
-            <input required value={name} onChange={e => setName(e.target.value)} className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amazon_blue outline-none" placeholder="Ej: Juan Pérez" />
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-gray-700">Celular / WhatsApp *</span>
-            <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amazon_blue outline-none" placeholder="999888777" />
-          </label>
-          <div>
-            <span className="text-sm font-semibold text-gray-700 block mb-2">Subir Comprobante (Yape/Transferencia) *</span>
-            <p className="text-xs text-gray-500 mb-3">Sube una foto clara de tu comprobante de pago</p>
-            <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-amazon_blue transition-colors bg-gray-50">
-              <input type="file" accept="image/*" onChange={e => handleFile(e.target.files?.[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
-              {paymentPreview ? (
-                <div className="relative inline-block">
-                  <img src={paymentPreview} alt="Captura" className="max-h-48 rounded-lg shadow-md mx-auto" />
-                  <p className="text-xs text-amazon_blue mt-2 font-semibold">Toca para cambiar la imagen</p>
-                </div>
-              ) : (
-                <div className="py-4">
-                  <div className="text-3xl mb-2">📸</div>
-                  <p className="text-gray-600 font-medium text-sm">Toca aquí para subir o tomar foto</p>
-                  <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold">Máximo 5MB</p>
-                </div>
-              )}
+              <div className="mt-5 flex items-center justify-between border-t border-[#eed2e4] pt-4">
+                <span className="text-sm font-bold uppercase tracking-[0.1em] text-slate-600">Total</span>
+                <span className="text-3xl font-black text-[#7a1f61]">S/ {totalPrice}</span>
+              </div>
             </div>
-          </div>
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-600 text-sm font-bold">❌ {error}</p>
+
+            <div className="rounded-2xl border border-[#d8efd8] bg-[#f2fbf2] p-5">
+              <p className="mb-2 inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.14em] text-emerald-700">
+                <ShieldCheckIcon className="h-4 w-4" />
+                Pago seguro
+              </p>
+              <p className="text-sm font-medium text-slate-700">1. Yapea al <strong>961770723</strong>.</p>
+              <p className="text-sm font-medium text-slate-700">2. Toma captura del comprobante.</p>
+              <p className="text-sm font-medium text-slate-700">3. Súbelo en el formulario para validar tu reserva.</p>
             </div>
-          )}
-          <button 
-            disabled={submitting || !paymentPreview} 
-            type="submit"
-            className="w-full bg-amazon_blue text-white py-4 rounded-xl font-bold text-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg active:scale-95"
-          >
-            {submitting ? "Procesando..." : "Confirmar mi participación"}
-          </button>
-        </form>
+          </section>
+
+          <form onSubmit={handleSubmit} className="rounded-[1.8rem] border border-[#eed2e4] bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">Datos de contacto</h2>
+
+            <div className="mt-5 space-y-4">
+              <label className="block">
+                <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-600">Nombre completo</span>
+                <input
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ej: Juan Perez"
+                  className="mt-2 w-full rounded-xl border border-[#e5d0df] px-4 py-3 text-sm font-medium outline-none transition focus:border-[#7a1f61]"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-600">Celular / WhatsApp</span>
+                <input
+                  required
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="999888777"
+                  className="mt-2 w-full rounded-xl border border-[#e5d0df] px-4 py-3 text-sm font-medium outline-none transition focus:border-[#7a1f61]"
+                />
+              </label>
+
+              <div>
+                <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-600">Comprobante</span>
+                <div className="relative mt-2 rounded-xl border-2 border-dashed border-[#e5d0df] bg-[#fffafd] p-5 text-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFile(e.target.files?.[0])}
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                  />
+                  {paymentPreview ? (
+                    <div>
+                      <img src={paymentPreview} alt="Comprobante" className="mx-auto max-h-56 rounded-lg shadow-sm" />
+                      <p className="mt-2 text-xs font-semibold text-slate-500">Toca para reemplazar la imagen</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-3xl">📸</p>
+                      <p className="mt-2 text-sm font-bold text-slate-700">Sube tu captura de pago</p>
+                      <p className="text-xs font-semibold text-slate-500">Maximo 5MB</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting || !paymentPreview}
+              className="mt-6 w-full rounded-full bg-[#7a1f61] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:bg-[#62184e] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+            >
+              {submitting ? 'Procesando...' : 'Confirmar participación'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
