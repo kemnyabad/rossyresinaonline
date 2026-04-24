@@ -98,7 +98,7 @@ const RifaSlider = () => {
 
   return (
     <section className="bg-[#fff8fc] pb-3 pt-0" style={{ fontFamily: 'Arial, sans-serif' }}>
-      <div className="relative h-[980px] w-screen overflow-hidden border-y border-[#f2d5e8] bg-white sm:h-[920px] md:h-[610px]">
+      <div className="relative h-[285px] w-screen overflow-hidden border-y border-[#f2d5e8] bg-white xs:h-[305px] sm:h-[340px] md:h-[610px]">
         {banners.map((banner, idx) => {
           const isActive = idx === activeIndex;
           const isWorkerRaffle = banner.id === 'dia-del-trabajador';
@@ -116,7 +116,49 @@ const RifaSlider = () => {
               <div className={`relative h-full w-full bg-gradient-to-r ${banner.gradient}`}>
                 <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(135deg,rgba(255,255,255,.22)_0,rgba(255,255,255,0)_38%),radial-gradient(circle_at_20%_18%,rgba(255,255,255,.18),transparent_30%),linear-gradient(25deg,rgba(255,255,255,.1)_0,rgba(255,255,255,0)_50%)]" />
 
-                <div className="mx-auto grid h-full max-w-[1400px] grid-cols-1 gap-3 px-5 py-5 sm:gap-4 md:grid-cols-12 md:items-center md:gap-10 md:px-12 md:py-10">
+                <div className="relative z-10 flex h-full flex-col px-3 py-3 text-white xs:px-4 md:hidden">
+                  <div className="grid min-h-0 flex-1 grid-cols-[46%_minmax(0,1fr)] items-stretch rounded-[22px] border border-white/10 bg-white/[0.04]">
+                    <div className="relative overflow-visible">
+                      <div className="absolute inset-y-5 right-0 w-px bg-white/18" />
+                      <div className="absolute inset-x-0 -bottom-14 mx-auto h-[260px] xs:-bottom-16 xs:h-[292px] sm:-bottom-20 sm:h-[350px]">
+                        <div className="absolute bottom-8 left-1/2 h-36 w-36 -translate-x-1/2 rounded-full bg-white/12 blur-3xl" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={bannerCharacterUrl}
+                          alt="Representante Rossy Resina"
+                          className="absolute bottom-0 left-1/2 h-full max-w-none -translate-x-1/2 object-contain"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex min-w-0 flex-col items-center justify-center px-3 py-3 text-center xs:px-4 sm:px-5">
+                      <p className="text-[7px] font-black uppercase tracking-[0.16em] text-white/82 xs:text-[8px] sm:text-[9px]">
+                        {banner.eyebrow}
+                      </p>
+                      <h1 className="rifa-highlight-title mt-1 max-w-[190px] text-[1.35rem] font-black leading-[0.9] xs:max-w-[220px] xs:text-[1.62rem] sm:max-w-[300px] sm:text-[2.05rem]">
+                        {isWorkerRaffle ? headlineSubtitle : banner.title}
+                      </h1>
+                      <p className="mt-1.5 text-[0.82rem] font-black uppercase leading-none tracking-[0.04em] xs:text-sm sm:text-base">
+                        {isWorkerRaffle ? banner.title : banner.subtitle || 'Separa tu ticket'}
+                      </p>
+                      <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[#6d1b57] shadow-[0_12px_26px_rgba(0,0,0,.2)] xs:px-4 xs:py-2">
+                        <span className="text-[7px] font-black uppercase tracking-[0.12em] text-[#6d1b57]/70 xs:text-[8px]">
+                          Ticket
+                        </span>
+                        <span className="text-sm font-black leading-none xs:text-base sm:text-lg">S/ {banner.ticketPrice}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => document.getElementById('sorteos')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="relative z-10 mt-3 rounded-full bg-white px-6 py-3 text-[10px] font-black uppercase tracking-[0.13em] text-[#6d1b57] shadow-[0_14px_30px_rgba(0,0,0,.22)] ring-1 ring-white/70 transition active:scale-95 xs:text-[11px] sm:py-3.5 sm:text-xs"
+                  >
+                    Ver sorteos activos
+                  </button>
+                </div>
+
+                <div className="mx-auto hidden h-full max-w-[1400px] grid-cols-1 gap-3 px-5 py-5 sm:gap-4 md:grid md:grid-cols-12 md:items-center md:gap-10 md:px-12 md:py-10">
                   <div className="relative min-h-[330px] sm:min-h-[370px] md:col-span-5 md:h-[500px]">
                     <div className="pointer-events-none absolute inset-x-0 -top-10 mx-auto h-[410px] max-w-[520px] sm:h-[455px] md:-top-14 md:left-0 md:mx-0 md:h-[590px] md:max-w-none">
                       <div className="absolute left-1/2 top-8 h-64 w-64 -translate-x-1/2 rounded-full bg-white/14 blur-3xl md:top-14 md:h-96 md:w-96" />
@@ -271,7 +313,7 @@ const RifaSlider = () => {
 
         <button
           onClick={() => handleManualNav((activeIndex - 1 + total) % total)}
-          className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/25 p-2 text-white backdrop-blur transition hover:bg-black/40 md:left-6"
+          className="absolute left-6 top-1/2 z-20 hidden -translate-y-1/2 rounded-full bg-black/25 p-2 text-white backdrop-blur transition hover:bg-black/40 md:block"
           aria-label="Anterior"
         >
           <ChevronLeftIcon className="h-5 w-5" />
@@ -279,13 +321,13 @@ const RifaSlider = () => {
 
         <button
           onClick={() => handleManualNav((activeIndex + 1) % total)}
-          className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/25 p-2 text-white backdrop-blur transition hover:bg-black/40 md:right-6"
+          className="absolute right-6 top-1/2 z-20 hidden -translate-y-1/2 rounded-full bg-black/25 p-2 text-white backdrop-blur transition hover:bg-black/40 md:block"
           aria-label="Siguiente"
         >
           <ChevronRightIcon className="h-5 w-5" />
         </button>
 
-        <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+        <div className="absolute bottom-3 left-1/2 z-20 hidden -translate-x-1/2 gap-2 md:flex">
           {banners.map((_, idx) => (
             <button
               key={idx}
