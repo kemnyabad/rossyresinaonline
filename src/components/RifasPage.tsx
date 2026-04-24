@@ -203,6 +203,19 @@ export default function RifasPage() {
     setCurrentSlide((prev) => (prev >= bannerSlides.length ? 0 : prev));
   }, [bannerSlides.length]);
 
+  const fetchNumbersForRifa = useCallback(async (rifa: Rifa) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/rifas/${rifa.id}/numbers?status=AVAILABLE&limit=1000`);
+      const data = await res.json();
+      setNumbers(data);
+    } catch (error) {
+      console.error('Error fetching numbers:', error);
+    } finally {
+      setTimeout(() => setLoading(false), 100);
+    }
+  }, []);
+
   const handleSelectRifa = async (rifa: Rifa, updateUrl = true) => {
     // Actualizamos la URL si es necesario (navegación interna)
     if (updateUrl && router.query.id !== rifa.id) {
@@ -217,17 +230,13 @@ export default function RifasPage() {
     
     setSelectedRifa(rifa);
     setNumbers(null); // Limpiar números anteriores para forzar el estado de carga en el detalle
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/rifas/${rifa.id}/numbers?status=AVAILABLE&limit=1000`);
-      const data = await res.json();
-      setNumbers(data);
-    } catch (error) {
-      console.error('Error fetching numbers:', error);
-    } finally {
-      // Pequeño delay para asegurar que el renderizado de la cartilla sea suave
-      setTimeout(() => setLoading(false), 100);
+
+    if (rifa.videoUrl) {
+      setLoading(false);
+      return;
     }
+
+    await fetchNumbersForRifa(rifa);
   };
 
   const toggleNumber = (number: number) => {
@@ -310,6 +319,11 @@ export default function RifasPage() {
                 bannerSlides={bannerSlides}
                 currentSlide={currentSlide}
                 setCurrentSlide={setCurrentSlide}
+                onAdComplete={() => {
+                  if (!numbers && selectedRifa) {
+                    fetchNumbersForRifa(selectedRifa);
+                  }
+                }}
                 onBack={() => {
                   setSelectedRifa(null);
                   router.push('/rifas', undefined, { shallow: true });

@@ -19,15 +19,17 @@ interface RifaDetailProps {
   currentSlide: number;
   setCurrentSlide: (slide: number | ((prev: number) => number)) => void;
   onBack: () => void;
+  onAdComplete?: () => void;
   router: any;
 }
 
-const getOptimizedVideoUrl = (url?: string) => {
+const getOptimizedVideoUrl = (url?: string, isMobile = false) => {
   if (!url) return '';
   if (!url.includes('/video/upload/')) return url;
   if (url.includes('/video/upload/f_auto,q_auto')) return url;
 
-  return url.replace('/video/upload/', '/video/upload/f_auto,q_auto:eco,c_limit,w_720/');
+  const transform = isMobile ? 'f_auto,q_auto:low,c_limit,w_420' : 'f_auto,q_auto:eco,c_limit,w_720';
+  return url.replace('/video/upload/', `/video/upload/${transform}/`);
 };
 
 const RifaDetail = ({
@@ -40,12 +42,18 @@ const RifaDetail = ({
   currentSlide,
   setCurrentSlide,
   onBack,
+  onAdComplete,
   router,
 }: RifaDetailProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const adCompleteRef = useRef(false);
   const [adActive, setAdActive] = useState(Boolean(selectedRifa?.videoUrl));
   const [timer, setTimer] = useState(8);
-  const optimizedVideoUrl = useMemo(() => getOptimizedVideoUrl(selectedRifa?.videoUrl), [selectedRifa?.videoUrl]);
+  const [isMobileVideo, setIsMobileVideo] = useState(false);
+  const optimizedVideoUrl = useMemo(
+    () => getOptimizedVideoUrl(selectedRifa?.videoUrl, isMobileVideo),
+    [selectedRifa?.videoUrl, isMobileVideo]
+  );
 
   const targetDate = useMemo(() => {
     if (selectedRifa?.endDate) {
@@ -62,7 +70,16 @@ const RifaDetail = ({
   useEffect(() => {
     setAdActive(Boolean(selectedRifa?.videoUrl));
     setTimer(8);
+    adCompleteRef.current = false;
   }, [selectedRifa?.id, selectedRifa?.videoUrl]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobileVideo(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener('change', update);
+    return () => mediaQuery.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -100,6 +117,10 @@ const RifaDetail = ({
   const handleSkipAd = () => {
     if (videoRef.current) videoRef.current.pause();
     setAdActive(false);
+    if (!adCompleteRef.current) {
+      adCompleteRef.current = true;
+      onAdComplete?.();
+    }
   };
 
   const totalAmount = selectedNumbers.length * parseFloat(selectedRifa.pricePerNumber.toString());
