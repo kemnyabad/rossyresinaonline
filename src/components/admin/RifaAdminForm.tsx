@@ -178,25 +178,6 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
     setLoading(true);
     
     try {
-      // Validar que imagen, video y premios son obligatorios
-      if (!data.image && !selectedImageFile) {
-        alert('La imagen es obligatoria');
-        setLoading(false);
-        return;
-      }
-
-      if (!data.videoUrl && !selectedVideoFile) {
-        alert('El video es obligatorio');
-        setLoading(false);
-        return;
-      }
-
-      if (!data.prizes || data.prizes.trim() === '') {
-        alert('Los premios son obligatorios');
-        setLoading(false);
-        return;
-      }
-
       let finalData = { ...data };
 
       // Upload image if selected
@@ -454,7 +435,7 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Imagen (requerida)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Imagen (opcional)</label>
             <input
               type="file"
               accept="image/*"
@@ -517,7 +498,7 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Video (requerido)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Video (opcional)</label>
             <input
               type="file"
               accept="video/*"
@@ -532,14 +513,13 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Premios (requerido)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Premios (opcional)</label>
             <textarea
               rows={3}
               value={data.prizes}
               onChange={(e) => setData({ ...data, prizes: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical"
               placeholder="Describe los premios del sorteo. Ej: 1er lugar: Laptop + Resina + Moldes..."
-              required
             />
           </div>
 

@@ -28,17 +28,18 @@ function AppContent({
   const { data: clientSession, status } = useSession();
 
   const isAdminRoute = router.pathname.startsWith("/admin");
+  const isRifasRoute = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/rifa/");
   const isCapacitaciones =
     router.pathname.startsWith("/capacitaciones") ||
     router.pathname.startsWith("/comunidad") ||
     router.pathname.startsWith("/suscriptores") ||
-    router.pathname.startsWith("/rifas") ||
-    router.pathname.startsWith("/rifa/") ||
+    isRifasRoute ||
     router.pathname === "/suscripcion" ||
     router.pathname === "/sign-in" ||
     router.pathname === "/register";
 
   const pageShellClass = "rr-page min-h-screen";
+  const fixedHeaderPageShellClass = "min-h-screen";
   const pageTransitionStyle = { animation: "rrPageEnter 0.4s ease-out both" } as const;
 
   useEffect(() => { setIsClient(true); }, []);
@@ -192,7 +193,11 @@ function AppContent({
           </div>
         </AdminLayout>
       ) : isCapacitaciones ? (
-        <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
+        <div
+          key={router.asPath}
+          className={isRifasRoute ? fixedHeaderPageShellClass : pageShellClass}
+          style={isRifasRoute ? undefined : pageTransitionStyle}
+        >
           <Component {...pageProps} />
         </div>
       ) : (

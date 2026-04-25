@@ -294,14 +294,17 @@ export default function RifasPage() {
   return (
     <div className="bg-white font-sans selection:bg-purple-100 transition-opacity duration-300">
       
-      <main className="min-h-screen">
+      <main className="min-h-screen pt-[66px] md:pt-[74px]">
+        <RifasNavbar 
+          onBack={() => {
+            setSelectedRifa(null);
+            router.push('/rifas', undefined, { shallow: true });
+          }}
+          isSelected={isDetailView}
+          router={router}
+        />
         {!isDetailView ? (
           <div className="animate-in fade-in duration-300">
-            <RifasNavbar 
-              onBack={() => {
-                setSelectedRifa(null);
-                router.push('/rifas', undefined, { shallow: true });
-              }} isSelected={isDetailView} router={router} />
             <RifaSlider />
             <RifasGrid rifas={rifas} onSelect={handleSelectRifa} />
 

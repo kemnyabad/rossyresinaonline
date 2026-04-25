@@ -98,7 +98,7 @@ const RifaSlider = () => {
 
   return (
     <section className="bg-[#fff8fc] pb-3 pt-0" style={{ fontFamily: 'Arial, sans-serif' }}>
-      <div className="relative h-[285px] w-screen overflow-hidden border-y border-[#f2d5e8] bg-white xs:h-[305px] sm:h-[340px] md:h-[610px]">
+      <div className="relative h-[275px] w-screen overflow-hidden border-y border-[#f2d5e8] bg-white xs:h-[295px] sm:h-[330px] md:h-[560px]">
         {banners.map((banner, idx) => {
           const isActive = idx === activeIndex;
           const isWorkerRaffle = banner.id === 'dia-del-trabajador';
@@ -160,13 +160,13 @@ const RifaSlider = () => {
 
                 <div className="mx-auto hidden h-full max-w-[1400px] grid-cols-1 gap-3 px-5 py-5 sm:gap-4 md:grid md:grid-cols-12 md:items-center md:gap-10 md:px-12 md:py-10">
                   <div className="relative min-h-[330px] sm:min-h-[370px] md:col-span-5 md:h-[500px]">
-                    <div className="pointer-events-none absolute inset-x-0 -top-10 mx-auto h-[410px] max-w-[520px] sm:h-[455px] md:-top-14 md:left-0 md:mx-0 md:h-[590px] md:max-w-none">
+                    <div className="pointer-events-none absolute inset-x-0 bottom-[-18px] mx-auto h-[410px] max-w-[520px] sm:h-[455px] md:bottom-[-34px] md:left-0 md:mx-0 md:h-[590px] md:max-w-none">
                       <div className="absolute left-1/2 top-8 h-64 w-64 -translate-x-1/2 rounded-full bg-white/14 blur-3xl md:top-14 md:h-96 md:w-96" />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={bannerCharacterUrl}
                         alt="Representante Rossy Resina"
-                        className="absolute left-1/2 top-0 h-full max-w-none -translate-x-1/2 object-contain drop-shadow-[0_28px_42px_rgba(18,4,22,.42)] md:left-[44%]"
+                        className="absolute bottom-0 left-1/2 h-full max-w-none -translate-x-1/2 object-contain drop-shadow-[0_28px_42px_rgba(18,4,22,.42)] md:left-[44%]"
                       />
                     </div>
 

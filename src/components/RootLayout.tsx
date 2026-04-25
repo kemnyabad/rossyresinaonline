@@ -25,6 +25,7 @@ const RootLayout = ({ children }: Props) => {
   const isRifasPage = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/admin/rifa");
   const footerRef = useRef<HTMLDivElement | null>(null);
   const [hideAssistant, setHideAssistant] = useState(false);
+  const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   const cartCount = useSelector((state: any) =>
     Array.isArray(state?.next?.productData) ? state.next.productData.length : 0
   );
@@ -44,6 +45,32 @@ const RootLayout = ({ children }: Props) => {
     observer.observe(footerEl);
     return () => observer.disconnect();
   }, []);
+
+  const mobilePromoSlides = [
+    {
+      eyebrow: "Especial Mamá",
+      title: "¡Sorteo Día de la Madre!",
+      icon: "💝",
+      decor: "🌸",
+      gradient: "from-rose-500 via-pink-500 to-fuchsia-600",
+      eyebrowClass: "text-rose-100",
+    },
+    {
+      eyebrow: "Especial Día del Trabajador",
+      title: "¡Participa y gana!",
+      icon: "🎟️",
+      decor: "✨",
+      gradient: "from-[#7a1f61] via-[#cb299e] to-cyan-500",
+      eyebrowClass: "text-cyan-100",
+    },
+  ];
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setMobilePromoIndex((prev) => (prev + 1) % mobilePromoSlides.length);
+    }, 4200);
+    return () => window.clearInterval(interval);
+  }, [mobilePromoSlides.length]);
 
   const mobileTabs = [
     { href: "/", label: "Inicio", icon: HomeIcon, active: router.pathname === "/" },
@@ -67,27 +94,46 @@ const RootLayout = ({ children }: Props) => {
         </div>
       )}
 
-      {/* Banner Móvil Temático: Día de la Madre (Solo visible en móviles y fuera de rifas) */}
+      {/* Banner Móvil Temático: sorteos activos (Solo visible en móviles y fuera de rifas) */}
       {!isRifasPage && (
         <div className="md:hidden">
           <Link href="/rifas">
-            <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-600 px-4 py-3 flex items-center justify-between shadow-md border-b border-white/10 overflow-hidden relative">
+            <div className={`relative overflow-hidden border-b border-white/10 bg-gradient-to-r ${mobilePromoSlides[mobilePromoIndex].gradient} px-4 py-3 shadow-md`}>
               {/* Elemento decorativo de fondo */}
-              <div className="absolute -right-2 -top-1 opacity-20 pointer-events-none">
-                <span className="text-5xl">🌸</span>
+              <div className="pointer-events-none absolute -right-2 -top-1 opacity-20">
+                <span className="text-5xl">{mobilePromoSlides[mobilePromoIndex].decor}</span>
               </div>
-              
-              <div className="flex items-center gap-3 relative z-10">
-                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-xl animate-pulse">
-                  💝
+
+              <div className="relative z-10 flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-xl shadow-inner">
+                    {mobilePromoSlides[mobilePromoIndex].icon}
+                  </div>
+                  <div className="min-w-0 text-white">
+                    <p className={`mb-1 truncate text-[9px] font-black uppercase leading-none tracking-widest ${mobilePromoSlides[mobilePromoIndex].eyebrowClass}`}>
+                      {mobilePromoSlides[mobilePromoIndex].eyebrow}
+                    </p>
+                    <p className="truncate text-sm font-black uppercase leading-tight">
+                      {mobilePromoSlides[mobilePromoIndex].title}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-white">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-rose-100 leading-none mb-1">Especial Mamá</p>
-                  <p className="text-sm font-black leading-tight">¡SORTEO DÍA DE LA MADRE!</p>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex gap-1">
+                    {mobilePromoSlides.map((slide, index) => (
+                      <span
+                        key={slide.eyebrow}
+                        className={`h-1.5 rounded-full transition-all ${
+                          index === mobilePromoIndex ? "w-4 bg-white" : "w-1.5 bg-white/40"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-[10px] font-black uppercase text-white shadow-sm backdrop-blur-sm">
+                    Participar <ArrowRightIcon className="h-3 w-3 stroke-[3]" />
+                  </div>
                 </div>
-              </div>
-              <div className="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/40 text-[11px] font-bold text-white flex items-center gap-1.5 shadow-sm relative z-10">
-                PARTICIPAR <ArrowRightIcon className="h-3 w-3 stroke-[3]" />
               </div>
             </div>
           </Link>
