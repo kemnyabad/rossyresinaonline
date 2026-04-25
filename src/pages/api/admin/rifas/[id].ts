@@ -28,6 +28,16 @@ const isPrizeImagesColumnMissing = (error: any): boolean => {
   );
 };
 
+const isRaffleModeColumnMissing = (error: any): boolean => {
+  const msg = String(error?.message || '').toLowerCase();
+  return msg.includes('rafflemode') && (
+    msg.includes('does not exist') ||
+    msg.includes('unknown column') ||
+    msg.includes('unknown arg') ||
+    msg.includes('unknown argument')
+  );
+};
+
 const normalizePrizeImages = (raw: any): Array<{ url: string; alt: string }> => {
   if (!Array.isArray(raw)) return [];
 
@@ -62,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           include: { _count: { select: { tickets: true } } }
         });
       } catch (error) {
-        if (!isPrizeImagesColumnMissing(error)) throw error;
+        if (!isPrizeImagesColumnMissing(error) && !isRaffleModeColumnMissing(error)) throw error;
         rifa = await prisma.rifa.findUnique({
           where: { id },
           select: {
@@ -87,6 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (!rifa) return res.status(404).json({ error: 'Rifa no encontrada' });
       if (!Array.isArray(rifa.prizeImages)) rifa.prizeImages = [];
+      rifa.raffleMode = rifa.raffleMode || 'NUMBERS';
       return res.status(200).json(rifa);
     } catch (error) {
       console.error('Error al obtener rifa:', error);
@@ -96,7 +107,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'PUT') {
     const { 
-      title, description, pricePerNumber, startDate, 
+      title, description, pricePerNumber, raffleMode, startDate, 
       endDate, rules, image, videoUrl, prizes, status, prizeImages
     } = req.body;
 
@@ -132,11 +143,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             prizeImages: normalizePrizeImages(prizeImages),
             videoUrl: finalVideo,
             prizes,
+            raffleMode: raffleMode === 'AMPHORA' ? 'AMPHORA' : 'NUMBERS',
             status: status || undefined,
           } as any,
         });
       } catch (error: any) {
-        if (!isPrizeImagesColumnMissing(error)) throw error;
+        if (!isPrizeImagesColumnMissing(error) && !isRaffleModeColumnMissing(error)) throw error;
         updated = await prisma.rifa.update({
           where: { id },
           data: {

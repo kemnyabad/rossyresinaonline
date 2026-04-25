@@ -15,6 +15,7 @@ export interface Rifa {
   description: string;
   image: string;
   videoUrl?: string;
+  raffleMode?: 'NUMBERS' | 'AMPHORA';
   prizes?: string;
   totalNumbers: number;
   pricePerNumber: number;
@@ -231,7 +232,7 @@ export default function RifasPage() {
     setSelectedRifa(rifa);
     setNumbers(null); // Limpiar números anteriores para forzar el estado de carga en el detalle
 
-    if (rifa.videoUrl) {
+    if (rifa.videoUrl || rifa.raffleMode === 'AMPHORA') {
       setLoading(false);
       return;
     }
@@ -320,7 +321,7 @@ export default function RifasPage() {
                 currentSlide={currentSlide}
                 setCurrentSlide={setCurrentSlide}
                 onAdComplete={() => {
-                  if (!numbers && selectedRifa) {
+                  if (!numbers && selectedRifa && selectedRifa.raffleMode !== 'AMPHORA') {
                     fetchNumbersForRifa(selectedRifa);
                   }
                 }}

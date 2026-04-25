@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import {
@@ -88,12 +89,39 @@ const sectionTitleByPath = (pathname: string): { title: string; breadcrumb: stri
 
 export default function AdminLayout({ children }: Props) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const [pendingRifaPayments, setPendingRifaPayments] = useState(0);
   const isAuthRoute = router.pathname === "/admin/sign-in";
   const { title, breadcrumb } = sectionTitleByPath(router.pathname);
 
   const isLinkActive = (href: string, exact = false) =>
     exact ? router.pathname === href : router.pathname.startsWith(href);
+
+  useEffect(() => {
+    if (isAuthRoute || status !== "authenticated" || (session?.user as any)?.role !== "ADMIN") return;
+
+    let cancelled = false;
+    const fetchPendingRifaPayments = async () => {
+      try {
+        const res = await fetch("/api/admin/utils?action=pending-count", { cache: "no-store" });
+        const data = await res.json();
+        if (!cancelled && data.success) {
+          setPendingRifaPayments(Number(data.pendingPayments || 0));
+        }
+      } catch {
+        if (!cancelled) setPendingRifaPayments(0);
+      }
+    };
+
+    fetchPendingRifaPayments();
+    const interval = window.setInterval(fetchPendingRifaPayments, 5000);
+    window.addEventListener("focus", fetchPendingRifaPayments);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", fetchPendingRifaPayments);
+    };
+  }, [isAuthRoute, session, status]);
 
   if (isAuthRoute) {
     return <div className="min-h-screen bg-[#0f1117] text-white">{children}</div>;
@@ -150,6 +178,11 @@ export default function AdminLayout({ children }: Props) {
                         <Icon className="w-3.5 h-3.5" />
                       </span>
                       <span className="flex-1">{label}</span>
+                      {href === "/admin/rifas" && pendingRifaPayments > 0 && (
+                        <span className="min-w-[1.25rem] rounded-full bg-amber-400 px-1.5 py-0.5 text-center text-[10px] font-black leading-none text-[#311500] shadow-sm">
+                          {pendingRifaPayments > 99 ? "99+" : pendingRifaPayments}
+                        </span>
+                      )}
                       {active && (
                         <span className="h-1.5 w-1.5 rounded-full bg-pink-400 shrink-0" />
                       )}
@@ -222,9 +255,22 @@ export default function AdminLayout({ children }: Props) {
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="h-9 w-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition">
+            <Link
+              href="/admin/rifas?tab=tickets"
+              className="relative h-9 w-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
+              title={
+                pendingRifaPayments > 0
+                  ? `${pendingRifaPayments} comprobante${pendingRifaPayments === 1 ? "" : "s"} pendiente${pendingRifaPayments === 1 ? "" : "s"}`
+                  : "Sin comprobantes pendientes"
+              }
+            >
               <BellIcon className="w-4 h-4" />
-            </button>
+              {pendingRifaPayments > 0 && (
+                <span className="absolute -right-1 -top-1 min-w-[1.1rem] rounded-full bg-amber-400 px-1 text-center text-[10px] font-black leading-4 text-[#311500] ring-2 ring-white">
+                  {pendingRifaPayments > 99 ? "99+" : pendingRifaPayments}
+                </span>
+              )}
+            </Link>
             <button className="h-9 w-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition">
               <Cog6ToothIcon className="w-4 h-4" />
             </button>

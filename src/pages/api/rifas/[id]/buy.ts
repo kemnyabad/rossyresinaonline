@@ -21,11 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { id } = req.query as { id: string };
 
   if (req.method === 'POST') {
-    const { numbers, buyerName, buyerEmail, buyerPhone, paymentImage } = req.body;
-
-    if (!numbers || !Array.isArray(numbers) || numbers.length === 0) {
-      return res.status(400).json({ error: 'Debes seleccionar al menos un número' });
-    }
+    const { numbers, quantity, buyerName, buyerEmail, buyerPhone, paymentImage } = req.body;
 
     if (!buyerName || !buyerPhone) {
       return res.status(400).json({ error: 'Falta información del comprador' });
@@ -35,9 +31,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Debes subir la captura de tu Yape o transferencia' });
     }
 
-    // Limpiar duplicados y asegurar que sean números
-    const uniqueNumbers = Array.from(new Set(numbers.map(n => Number(n))));
-
     try {
       const rifa = await prisma.rifa.findUnique({ where: { id } });
 
@@ -45,21 +38,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ error: 'Rifa no encontrada o no activa' });
       }
 
-      // Verificar que los números solicitados están disponibles
-      const existingTickets = await prisma.rifaTicket.findMany({
-        where: {
-          rifaId: id,
-          number: { in: uniqueNumbers },
-          status: { not: 'AVAILABLE' },
-        },
-      });
+      const isAmphora = (rifa as any).raffleMode === 'AMPHORA';
+      const requestedQuantity = isAmphora
+        ? Math.max(0, Math.floor(Number(quantity)))
+        : 0;
 
-      if (existingTickets.length > 0) {
-        const takenNumbers = existingTickets.map(t => t.number);
-        return res.status(400).json({ 
-          error: 'Los números ' + takenNumbers.join(', ') + ' ya no están disponibles. Selecciona otros números.',
-          takenNumbers,
+      if (isAmphora && requestedQuantity < 1) {
+        return res.status(400).json({ error: 'Debes indicar cuántos tickets quieres comprar' });
+      }
+
+      const uniqueNumbers = isAmphora
+        ? []
+        : Array.from(new Set((Array.isArray(numbers) ? numbers : []).map(n => Number(n))));
+
+      if (!isAmphora && uniqueNumbers.length === 0) {
+        return res.status(400).json({ error: 'Debes seleccionar al menos un número' });
+      }
+
+      let numbersToReserve = uniqueNumbers;
+
+      if (isAmphora) {
+        const lastTicket = await prisma.rifaTicket.findFirst({
+          where: { rifaId: id },
+          orderBy: { number: 'desc' },
+          select: { number: true },
         });
+        const startNumber = (lastTicket?.number || 0) + 1;
+        numbersToReserve = Array.from({ length: requestedQuantity }, (_, index) => startNumber + index);
+      } else {
+        // Verificar que los números solicitados están disponibles
+        const existingTickets = await prisma.rifaTicket.findMany({
+          where: {
+            rifaId: id,
+            number: { in: uniqueNumbers },
+            status: { not: 'AVAILABLE' },
+          },
+        });
+
+        if (existingTickets.length > 0) {
+          const takenNumbers = existingTickets.map(t => t.number);
+          return res.status(400).json({ 
+            error: 'Los números ' + takenNumbers.join(', ') + ' ya no están disponibles. Selecciona otros números.',
+            takenNumbers,
+          });
+        }
       }
 
       // Subir la imagen a Cloudinary para evitar el error de columna demasiado larga
@@ -77,38 +99,54 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // Usar transacción para asegurar consistencia
       const tickets = await prisma.$transaction(
-        uniqueNumbers.map((number) =>
-          prisma.rifaTicket.upsert({
-            where: {
-              rifaId_number: { rifaId: id, number },
-            },
-            update: {
-              status: 'PENDING',
-              buyerName,
-              buyerEmail: buyerEmail || "cliente@web.com",
-              buyerPhone,
-              paymentImage: finalImageUrl, // Guardamos la URL de Cloudinary (corta)
-              createdAt: new Date(),
-            },
-            create: {
-              rifaId: id,
-              number,
-              status: 'PENDING',
-              buyerName,
-              buyerEmail: buyerEmail || "cliente@web.com",
-              buyerPhone,
-              paymentImage: finalImageUrl,
-            },
-          })
-        )
+        isAmphora
+          ? numbersToReserve.map((number) =>
+              prisma.rifaTicket.create({
+                data: {
+                  rifaId: id,
+                  number,
+                  status: 'PENDING',
+                  buyerName,
+                  buyerEmail: buyerEmail || "cliente@web.com",
+                  buyerPhone,
+                  paymentImage: finalImageUrl,
+                },
+              })
+            )
+          : numbersToReserve.map((number) =>
+              prisma.rifaTicket.upsert({
+                where: {
+                  rifaId_number: { rifaId: id, number },
+                },
+                update: {
+                  status: 'PENDING',
+                  buyerName,
+                  buyerEmail: buyerEmail || "cliente@web.com",
+                  buyerPhone,
+                  paymentImage: finalImageUrl, // Guardamos la URL de Cloudinary (corta)
+                  createdAt: new Date(),
+                },
+                create: {
+                  rifaId: id,
+                  number,
+                  status: 'PENDING',
+                  buyerName,
+                  buyerEmail: buyerEmail || "cliente@web.com",
+                  buyerPhone,
+                  paymentImage: finalImageUrl,
+                },
+              })
+            )
       );
 
       res.status(201).json({
         success: true,
-        message: 'Números reservados. Completa el pago para finalizar tu compra.',
+        message: isAmphora
+          ? 'Tickets reservados para el ánfora. Completa el pago para finalizar tu compra.'
+          : 'Números reservados. Completa el pago para finalizar tu compra.',
         transactionId,
         tickets: tickets.map(t => ({ id: t.id, number: t.number })),
-        totalPrice: uniqueNumbers.length * parseFloat(rifa.pricePerNumber.toString()),
+        totalPrice: numbersToReserve.length * parseFloat(rifa.pricePerNumber.toString()),
       });
     } catch (error) {
       console.error('Error buying tickets:', error);

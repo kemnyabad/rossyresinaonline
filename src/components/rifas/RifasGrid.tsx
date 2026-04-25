@@ -34,7 +34,8 @@ const RifasGrid = ({ rifas, onSelect }: RifasGridProps) => (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {rifas.map((rifa) => {
             const sold = rifa.totalNumbers - rifa.availableNumbers;
-            const progress = Math.round((sold / rifa.totalNumbers) * 100);
+            const isAmphora = rifa.raffleMode === 'AMPHORA';
+            const progress = isAmphora ? 0 : Math.round((sold / rifa.totalNumbers) * 100);
 
             return (
               <article
@@ -60,25 +61,34 @@ const RifasGrid = ({ rifas, onSelect }: RifasGridProps) => (
                   <h3 className="line-clamp-2 text-2xl font-black uppercase tracking-tight text-slate-900">{rifa.title}</h3>
                   <p className="mt-1 text-sm font-medium text-slate-500">Rossy Resina</p>
 
-                  <div className="mt-5 rounded-2xl bg-[#fbf4f8] p-4">
-                    <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.1em]">
-                      <span className="text-slate-500">Avance</span>
-                      <span className="text-[#7a1f61]">{progress}%</span>
+                  {isAmphora ? (
+                    <div className="mt-5 rounded-2xl bg-[#fbf4f8] p-4">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#7a1f61]">Participación por ánfora</p>
+                      <p className="mt-2 text-xs font-semibold text-slate-500">
+                        Compra la cantidad que quieras. Tu nombre entra una vez por cada ticket.
+                      </p>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-[#e8d4e2]">
-                      <div className="h-full rounded-full bg-[#7a1f61] transition-all duration-500" style={{ width: `${progress}%` }} />
+                  ) : (
+                    <div className="mt-5 rounded-2xl bg-[#fbf4f8] p-4">
+                      <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.1em]">
+                        <span className="text-slate-500">Avance</span>
+                        <span className="text-[#7a1f61]">{progress}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-[#e8d4e2]">
+                        <div className="h-full rounded-full bg-[#7a1f61] transition-all duration-500" style={{ width: `${progress}%` }} />
+                      </div>
+                      <p className="mt-2 text-xs font-semibold text-slate-500">
+                        {sold}/{rifa.totalNumbers} números reservados
+                      </p>
                     </div>
-                    <p className="mt-2 text-xs font-semibold text-slate-500">
-                      {sold}/{rifa.totalNumbers} números reservados
-                    </p>
-                  </div>
+                  )}
 
                   <button
                     onClick={() => onSelect(rifa)}
-                    disabled={rifa.availableNumbers === 0}
+                    disabled={!isAmphora && rifa.availableNumbers === 0}
                     className="mt-6 w-full rounded-full bg-[#7a1f61] px-5 py-3 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[#62184e] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
                   >
-                    {rifa.availableNumbers > 0 ? 'Seleccionar números' : 'Agotado'}
+                    {isAmphora ? 'Comprar tickets' : rifa.availableNumbers > 0 ? 'Seleccionar números' : 'Agotado'}
                   </button>
                 </div>
               </article>

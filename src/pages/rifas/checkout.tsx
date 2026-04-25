@@ -6,7 +6,7 @@ import { ArrowLeftIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 export default function RifaCheckoutPage() {
   const router = useRouter();
-  const { rifaId, numbers: numbersQuery } = router.query;
+  const { rifaId, numbers: numbersQuery, quantity: quantityQuery } = router.query;
 
   const [rifa, setRifa] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,13 @@ export default function RifaCheckoutPage() {
       .sort((a, b) => a - b);
   }, [numbersQuery]);
 
-  const totalPrice = (selectedNumbers.length * (rifa?.pricePerNumber || 0)).toFixed(2);
+  const isAmphora = rifa?.raffleMode === 'AMPHORA';
+  const selectedQuantity = useMemo(() => {
+    const parsed = Number(quantityQuery);
+    return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
+  }, [quantityQuery]);
+  const entryCount = isAmphora ? selectedQuantity : selectedNumbers.length;
+  const totalPrice = (entryCount * (rifa?.pricePerNumber || 0)).toFixed(2);
 
   useEffect(() => {
     if (!rifaId) return;
@@ -95,6 +101,7 @@ export default function RifaCheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           numbers: selectedNumbers,
+          quantity: selectedQuantity,
           buyerName: name,
           buyerPhone: phone,
           buyerEmail: 'cliente@web.com',
@@ -118,10 +125,10 @@ export default function RifaCheckoutPage() {
     }
   };
 
-  if (!numbersQuery || selectedNumbers.length === 0) {
+  if ((!numbersQuery || selectedNumbers.length === 0) && (!quantityQuery || selectedQuantity === 0)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#fff8fc] p-10 text-center">
-        <p className="text-lg font-bold text-slate-700">No seleccionaste números.</p>
+        <p className="text-lg font-bold text-slate-700">No seleccionaste participación.</p>
         <Link href="/rifas" className="mt-4 rounded-full bg-[#7a1f61] px-6 py-3 text-sm font-extrabold uppercase tracking-[0.12em] text-white">
           Volver a rifas
         </Link>
@@ -169,14 +176,24 @@ export default function RifaCheckoutPage() {
               <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#7a1f61]">Sorteo seleccionado</p>
               <h2 className="mt-1 text-xl font-black text-slate-900">{loading ? 'Cargando...' : rifa?.title || 'Rifa no disponible'}</h2>
 
-              <p className="mt-4 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Números</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {selectedNumbers.map((n) => (
-                  <span key={n} className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#7a1f61] shadow-sm">
-                    #{n.toString().padStart(2, '0')}
-                  </span>
-                ))}
-              </div>
+              <p className="mt-4 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                {isAmphora ? 'Tickets al ánfora' : 'Números'}
+              </p>
+              {isAmphora ? (
+                <div className="mt-2 rounded-2xl bg-white px-4 py-3 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-600">
+                    Tu nombre ingresará <strong>{selectedQuantity}</strong> vez{selectedQuantity === 1 ? '' : 'es'} al ánfora.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {selectedNumbers.map((n) => (
+                    <span key={n} className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#7a1f61] shadow-sm">
+                      #{n.toString().padStart(2, '0')}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               <div className="mt-5 flex items-center justify-between border-t border-[#eed2e4] pt-4">
                 <span className="text-sm font-bold uppercase tracking-[0.1em] text-slate-600">Total</span>

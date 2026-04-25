@@ -28,6 +28,16 @@ const isPrizeImagesColumnMissing = (error: any): boolean => {
   );
 };
 
+const isRaffleModeColumnMissing = (error: any): boolean => {
+  const msg = String(error?.message || '').toLowerCase();
+  return msg.includes('rafflemode') && (
+    msg.includes('does not exist') ||
+    msg.includes('unknown column') ||
+    msg.includes('unknown arg') ||
+    msg.includes('unknown argument')
+  );
+};
+
 const normalizePrizeImages = (raw: any): Array<{ url: string; alt: string }> => {
   if (!Array.isArray(raw)) return [];
 
@@ -69,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         });
       } catch (error) {
-        if (!isPrizeImagesColumnMissing(error)) throw error;
+        if (!isPrizeImagesColumnMissing(error) && !isRaffleModeColumnMissing(error)) throw error;
         rifas = await prisma.rifa.findMany({
           orderBy: { createdAt: 'desc' },
           select: {
@@ -101,6 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const rifasConConteos = rifas.map((rifa) => ({
         ...rifa,
         prizeImages: Array.isArray(rifa.prizeImages) ? rifa.prizeImages : [],
+        raffleMode: rifa.raffleMode || 'NUMBERS',
         soldCount: rifa.tickets.filter((t: any) => t.status === 'SOLD').length,
         paidCount: rifa.tickets.filter((t: any) => t.status === 'PAID').length,
         availableCount: rifa.tickets.filter((t: any) => t.status === 'AVAILABLE').length,
@@ -119,6 +130,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       videoUrl, 
       prizeImages,
       prizes, 
+      raffleMode,
       totalNumbers, 
       pricePerNumber, 
       startDate, 
@@ -127,7 +139,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       status 
     } = req.body;
 
-    if (!title || !totalNumbers || !pricePerNumber) {
+    const normalizedRaffleMode = raffleMode === 'AMPHORA' ? 'AMPHORA' : 'NUMBERS';
+    const normalizedTotalNumbers = normalizedRaffleMode === 'AMPHORA' ? 0 : parseInt(totalNumbers);
+
+    if (!title || (normalizedRaffleMode === 'NUMBERS' && !totalNumbers) || !pricePerNumber) {
       return res.status(400).json({ error: 'Falta información requerida' });
     }
 
@@ -153,7 +168,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             prizeImages: normalizePrizeImages(prizeImages),
             videoUrl: uploadVideo?.secure_url || '',
             prizes: prizes || '',
-            totalNumbers: parseInt(totalNumbers),
+            raffleMode: normalizedRaffleMode,
+            totalNumbers: normalizedTotalNumbers,
             pricePerNumber: parseFloat(pricePerNumber),
             startDate: new Date(startDate),
             endDate: new Date(endDate),
@@ -162,7 +178,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           } as any,
         });
       } catch (error: any) {
-        if (!isPrizeImagesColumnMissing(error)) throw error;
+        if (!isPrizeImagesColumnMissing(error) && !isRaffleModeColumnMissing(error)) throw error;
         rifa = await prisma.rifa.create({
           data: {
             title,
@@ -170,7 +186,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             image: uploadImage?.secure_url || '',
             videoUrl: uploadVideo?.secure_url || '',
             prizes: prizes || '',
-            totalNumbers: parseInt(totalNumbers),
+            totalNumbers: normalizedTotalNumbers,
             pricePerNumber: parseFloat(pricePerNumber),
             startDate: new Date(startDate),
             endDate: new Date(endDate),
@@ -196,18 +212,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
-      // Crear los tickets disponibles
-      const tickets = await prisma.rifaTicket.createMany({
-        data: Array.from({ length: parseInt(totalNumbers) }, (_, i) => ({
-          rifaId: rifa.id,
-          number: i + 1,
-          status: 'AVAILABLE',
-        })),
-      });
+      // Crear tickets disponibles solo para rifas con cartilla. En ánfora no hay tope.
+      const tickets = normalizedRaffleMode === 'AMPHORA'
+        ? { count: 0 }
+        : await prisma.rifaTicket.createMany({
+            data: Array.from({ length: normalizedTotalNumbers }, (_, i) => ({
+              rifaId: rifa.id,
+              number: i + 1,
+              status: 'AVAILABLE',
+            })),
+          });
 
       res.status(201).json({
         success: true,
-        message: `Rifa creada con ${totalNumbers} números disponibles`,
+        message: normalizedRaffleMode === 'AMPHORA'
+          ? 'Rifa por ánfora creada sin límite de tickets'
+          : `Rifa creada con ${totalNumbers} números disponibles`,
         rifa,
         ticketsCreated: tickets.count,
       });

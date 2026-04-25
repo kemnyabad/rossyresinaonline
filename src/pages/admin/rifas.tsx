@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../api/auth/[...nextauth]';
 import type { GetServerSideProps } from 'next';
@@ -16,6 +17,7 @@ interface RifaStatus {
   sold: number;
   paid: number;
   missing: number;
+  raffleMode?: 'NUMBERS' | 'AMPHORA';
 }
 
 interface Ticket {
@@ -28,9 +30,12 @@ interface Ticket {
   status: string;
   createdAt: string;
   numbers: number[];
+  raffleMode?: 'NUMBERS' | 'AMPHORA';
+  ticketCount?: number;
 }
 
 export default function AdminRifas() {
+  const router = useRouter();
   const [rifas, setRifas] = useState<RifaStatus[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,11 +45,14 @@ export default function AdminRifas() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [selectedRifaFilter, setSelectedRifaFilter] = useState<RifaStatus | null>(null);
+  const [activeAdminTab, setActiveAdminTab] = useState<'rifas' | 'tickets'>('rifas');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     image: '',
     videoUrl: '',
+    raffleMode: 'NUMBERS',
     totalNumbers: '',
     pricePerNumber: '',
     startDate: '',
@@ -62,6 +70,22 @@ export default function AdminRifas() {
     }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!router.isReady || rifas.length === 0) return;
+
+    const tab = router.query.tab;
+    const queryRifaId = typeof router.query.rifaId === 'string' ? router.query.rifaId : '';
+
+    if (tab === 'tickets') {
+      setActiveAdminTab('tickets');
+      setShowForm(false);
+      setSelectedRifaFilter(queryRifaId ? rifas.find((rifa) => rifa.id === queryRifaId) || null : null);
+    } else {
+      setActiveAdminTab('rifas');
+      setSelectedRifaFilter(null);
+    }
+  }, [router.isReady, router.query.tab, router.query.rifaId, rifas]);
 
   const fetchStatus = async () => {
     try {
@@ -115,7 +139,7 @@ export default function AdminRifas() {
     const key = `${ticket.rifaId}-${ticket.buyerName}`;
     setConfirmingId(key);
     try {
-      // Cambiar todos los números a PAID
+      // Cambiar todos los tickets/números a PAID
       for (const number of ticket.numbers) {
         const res = await fetch('/api/admin/utils?action=set-status', {
           method: 'POST',
@@ -130,7 +154,11 @@ export default function AdminRifas() {
           throw new Error(`Error al cambiar número ${number}`);
         }
       }
-      alert(`✅ Pago confirmado para ${ticket.buyerName}\nNúmeros: ${ticket.numbers.join(', ')}`);
+      alert(
+        ticket.raffleMode === 'AMPHORA'
+          ? `✅ Pago confirmado para ${ticket.buyerName}\nTickets en ánfora: ${ticket.ticketCount || ticket.numbers.length}`
+          : `✅ Pago confirmado para ${ticket.buyerName}\nNúmeros: ${ticket.numbers.join(', ')}`
+      );
       await fetchStatus();
       await fetchTickets();
     } catch (error) {
@@ -162,10 +190,14 @@ export default function AdminRifas() {
     e.preventDefault();
     setLoading(true);
     try {
+      const payload = {
+        ...formData,
+        totalNumbers: formData.raffleMode === 'AMPHORA' ? '0' : formData.totalNumbers,
+      };
       const res = await fetch('/api/admin/rifas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) throw new Error('Error al crear la rifa');
@@ -177,6 +209,7 @@ export default function AdminRifas() {
         description: '',
         image: '',
         videoUrl: '',
+        raffleMode: 'NUMBERS',
         totalNumbers: '',
         pricePerNumber: '',
         startDate: '',
@@ -193,7 +226,10 @@ export default function AdminRifas() {
   };
 
   const handleAnnulTicket = async (ticket: Ticket) => {
-    if (!confirm(`¿Estás seguro de anular la reserva de ${ticket.buyerName}?\nLos números ${ticket.numbers.join(', ')} volverán a estar disponibles.`)) return;
+    const confirmText = ticket.raffleMode === 'AMPHORA'
+      ? `¿Estás seguro de anular la reserva de ${ticket.buyerName}?\nSe retirarán ${ticket.ticketCount || ticket.numbers.length} tickets del ánfora.`
+      : `¿Estás seguro de anular la reserva de ${ticket.buyerName}?\nLos números ${ticket.numbers.join(', ')} volverán a estar disponibles.`;
+    if (!confirm(confirmText)) return;
     
     const key = `${ticket.rifaId}-${ticket.buyerName}`;
     setConfirmingId(key);
@@ -238,27 +274,82 @@ export default function AdminRifas() {
     }
   };
 
-  const filteredTickets = tickets.filter(t => 
-    t.buyerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.numbers.some(n => n.toString().includes(searchTerm)) ||
-    t.buyerPhone.includes(searchTerm)
-  );
+  const filteredTickets = tickets.filter((t) => {
+    const matchesRifa = !selectedRifaFilter || t.rifaId === selectedRifaFilter.id;
+    const matchesSearch =
+      t.buyerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.numbers.some((n) => n.toString().includes(searchTerm)) ||
+      t.buyerPhone.includes(searchTerm);
+
+    return matchesRifa && matchesSearch;
+  });
 
   const pendingTickets = filteredTickets.filter(t => t.status === 'PENDING');
   const paidTickets = filteredTickets.filter(t => t.status === 'PAID');
+
+  const goToRifasTab = () => {
+    setActiveAdminTab('rifas');
+    setSelectedRifaFilter(null);
+    router.push('/admin/rifas', undefined, { shallow: true });
+  };
+
+  const goToTicketsTab = (rifa?: RifaStatus | null) => {
+    setActiveAdminTab('tickets');
+    setShowForm(false);
+    setSelectedRifaFilter(rifa || null);
+    setSearchTerm('');
+    router.push(
+      {
+        pathname: '/admin/rifas',
+        query: rifa ? { tab: 'tickets', rifaId: rifa.id } : { tab: 'tickets' },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
+  const handleManageTickets = (rifa: RifaStatus) => {
+    goToTicketsTab(rifa);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">📊 Gestión de Rifas</h1>
+          {activeAdminTab === 'rifas' && (
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className={`px-6 py-2 rounded-lg font-bold transition-all ${
+                showForm ? 'bg-gray-200 text-gray-700' : 'bg-purple-600 text-white shadow-lg hover:bg-purple-700'
+              }`}
+            >
+              {showForm ? 'Cancelar' : '＋ Nueva Rifa'}
+            </button>
+          )}
+        </div>
+
+        <div className="mb-8 flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
           <button
-            onClick={() => setShowForm(!showForm)}
-            className={`px-6 py-2 rounded-lg font-bold transition-all ${
-              showForm ? 'bg-gray-200 text-gray-700' : 'bg-purple-600 text-white shadow-lg hover:bg-purple-700'
+            onClick={goToRifasTab}
+            className={`rounded-lg px-5 py-2 text-sm font-bold transition ${
+              activeAdminTab === 'rifas'
+                ? 'bg-purple-600 text-white shadow'
+                : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
-            {showForm ? 'Cancelar' : '＋ Nueva Rifa'}
+            Rifas y sorteos
+          </button>
+          <button
+            onClick={() => goToTicketsTab(selectedRifaFilter)}
+            className={`rounded-lg px-5 py-2 text-sm font-bold transition ${
+              activeAdminTab === 'tickets'
+                ? 'bg-purple-600 text-white shadow'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            Tickets y comprobantes
+            {selectedRifaFilter ? ` · ${selectedRifaFilter.title}` : ''}
           </button>
         </div>
 
@@ -269,12 +360,41 @@ export default function AdminRifas() {
           </div>
         ) : (
           <div className="space-y-8">
+            {activeAdminTab === 'rifas' ? (
+            <>
             {/* Formulario de Nueva Rifa */}
             {showForm && (
               <div className="bg-white rounded-xl shadow-xl p-8 border-2 border-purple-100 animate-in fade-in slide-in-from-top-4 duration-300">
                 <h2 className="text-2xl font-bold mb-6 text-gray-800">Crear Nuevo Sorteo</h2>
                 <form onSubmit={handleSubmitRifa} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1">
+                      <label className="text-sm font-semibold text-gray-700">Modalidad</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, raffleMode: 'NUMBERS' })}
+                          className={`rounded-lg border px-3 py-2 text-xs font-bold ${
+                            formData.raffleMode === 'NUMBERS'
+                              ? 'border-purple-500 bg-purple-50 text-purple-700'
+                              : 'border-gray-200 bg-white text-gray-600'
+                          }`}
+                        >
+                          Escoge números
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, raffleMode: 'AMPHORA' })}
+                          className={`rounded-lg border px-3 py-2 text-xs font-bold ${
+                            formData.raffleMode === 'AMPHORA'
+                              ? 'border-purple-500 bg-purple-50 text-purple-700'
+                              : 'border-gray-200 bg-white text-gray-600'
+                          }`}
+                        >
+                          Ánfora
+                        </button>
+                      </div>
+                    </div>
                     <div className="space-y-1">
                       <label className="text-sm font-semibold text-gray-700">Título del Sorteo</label>
                       <input
@@ -286,10 +406,13 @@ export default function AdminRifas() {
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                       />
                     </div>
+                    {formData.raffleMode === 'NUMBERS' && (
                     <div className="space-y-1">
-                      <label className="text-sm font-semibold text-gray-700">Cantidad de Números</label>
+                      <label className="text-sm font-semibold text-gray-700">
+                        Cantidad de Números
+                      </label>
                       <input
-                        required
+                        required={formData.raffleMode === 'NUMBERS'}
                         type="number"
                         placeholder="Ej: 100 o 300"
                         value={formData.totalNumbers}
@@ -297,8 +420,11 @@ export default function AdminRifas() {
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                       />
                     </div>
+                    )}
                     <div className="space-y-1">
-                      <label className="text-sm font-semibold text-gray-700">Precio por Número (S/)</label>
+                      <label className="text-sm font-semibold text-gray-700">
+                        {formData.raffleMode === 'AMPHORA' ? 'Precio por ticket (S/)' : 'Precio por Número (S/)'}
+                      </label>
                       <input
                         required
                         type="number"
@@ -369,6 +495,13 @@ export default function AdminRifas() {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <h2 className="text-xl font-bold text-purple-700 mb-4">{rifa.title}</h2>
+                      <span className={`inline-block mb-3 rounded-full px-3 py-1 text-xs font-bold ${
+                        rifa.raffleMode === 'AMPHORA'
+                          ? 'bg-pink-100 text-pink-700'
+                          : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {rifa.raffleMode === 'AMPHORA' ? 'Sorteo por ánfora' : 'Rifa con números'}
+                      </span>
                       <div className="space-y-2">
                         <p className="flex justify-between">
                           <span className="text-gray-600">Estado:</span>
@@ -378,12 +511,16 @@ export default function AdminRifas() {
                         </p>
                         <p className="flex justify-between">
                           <span className="text-gray-600">Total Esperado:</span>
-                          <span className="font-semibold">{rifa.expectedTotal} números</span>
+                          <span className="font-semibold">
+                            {rifa.raffleMode === 'AMPHORA' ? 'Sin tope' : `${rifa.expectedTotal} números`}
+                          </span>
                         </p>
                         <p className="flex justify-between">
-                          <span className="text-gray-600">Total Actual:</span>
+                          <span className="text-gray-600">
+                            {rifa.raffleMode === 'AMPHORA' ? 'Tickets registrados:' : 'Total Actual:'}
+                          </span>
                           <span className={`font-semibold ${rifa.missing > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            {rifa.actualTotal} números
+                            {rifa.actualTotal} {rifa.raffleMode === 'AMPHORA' ? 'tickets en ánfora' : 'números'}
                           </span>
                         </p>
                         {rifa.missing > 0 && (
@@ -406,7 +543,7 @@ export default function AdminRifas() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                           <p className="text-3xl font-bold text-blue-600">{rifa.available}</p>
-                          <p className="text-sm text-gray-600">Disponibles</p>
+                          <p className="text-sm text-gray-600">{rifa.raffleMode === 'AMPHORA' ? 'Sin tope' : 'Disponibles'}</p>
                         </div>
                         <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                           <p className="text-3xl font-bold text-yellow-600">{rifa.pending}</p>
@@ -423,25 +560,37 @@ export default function AdminRifas() {
                       </div>
 
                       <div className="mt-4">
-                        <p className="text-xs font-semibold text-gray-600 mb-2">Progreso de Venta</p>
-                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-yellow-500 via-orange-500 to-green-500 h-full transition-all"
-                            style={{ width: `${((rifa.pending + rifa.sold + rifa.paid) / rifa.actualTotal) * 100}%` }}
-                          ></div>
-                        </div>
+                        {rifa.raffleMode !== 'AMPHORA' && (
+                          <>
+                            <p className="text-xs font-semibold text-gray-600 mb-2">Progreso de Venta</p>
+                            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                              <div
+                                className="bg-gradient-to-r from-yellow-500 via-orange-500 to-green-500 h-full transition-all"
+                                style={{ width: `${rifa.actualTotal > 0 ? ((rifa.pending + rifa.sold + rifa.paid) / rifa.actualTotal) * 100 : 0}%` }}
+                              ></div>
+                            </div>
+                          </>
+                        )}
                         <p className="text-xs text-gray-500 mt-1">
-                          {(((rifa.pending + rifa.sold + rifa.paid) / rifa.actualTotal) * 100).toFixed(1)}% vendido
+                          {rifa.raffleMode === 'AMPHORA'
+                            ? `${rifa.pending + rifa.sold + rifa.paid} tickets registrados`
+                            : `${(rifa.actualTotal > 0 ? (((rifa.pending + rifa.sold + rifa.paid) / rifa.actualTotal) * 100) : 0).toFixed(1)}% vendido`}
                         </p>
                       </div>
                     </div>
                   </div>
 
                   {/* Botones de Acciones */}
-                  <div className="flex items-center gap-2 pt-4 mt-6 border-t border-gray-100">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-4 mt-6 border-t border-gray-100">
+                    <button
+                      onClick={() => handleManageTickets(rifa)}
+                      className="text-center py-2 px-4 bg-purple-50 border border-purple-200 text-purple-700 text-sm font-semibold rounded-lg hover:bg-purple-100 transition-all"
+                    >
+                      {rifa.raffleMode === 'AMPHORA' ? 'Ver tickets' : 'Gestionar tickets'}
+                    </button>
                     <Link 
                       href={`/admin/rifa/${rifa.id}`}
-                      className="flex-1 text-center py-2 px-4 border border-gray-300 text-sm font-semibold text-gray-700 rounded-lg hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700 transition-all flex items-center justify-center gap-2"
+                      className="text-center py-2 px-4 border border-gray-300 text-sm font-semibold text-gray-700 rounded-lg hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700 transition-all flex items-center justify-center gap-2"
                     >
                       <PencilSquareIcon className="w-4 h-4" />
                       Editar
@@ -449,7 +598,7 @@ export default function AdminRifas() {
                     <button
                       onClick={() => deleteRifa(rifa.id)}
                       disabled={deleting === rifa.id}
-                      className="flex-1 text-center py-2 px-4 bg-red-50 border border-red-200 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-100 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="text-center py-2 px-4 bg-red-50 border border-red-200 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-100 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       <TrashIcon className="w-4 h-4" />
                       {deleting === rifa.id ? 'Eliminando...' : 'Eliminar'}
@@ -458,18 +607,36 @@ export default function AdminRifas() {
                 </div>
               ))}
             </div>
+            </>
+            ) : (
+            <>
 
-            {/* Buscador de Compradores/Números */}
-            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+            {/* Buscador de Compradores/Tickets */}
+            <div id="admin-rifa-tickets" className="bg-white rounded-lg shadow-md p-6 border border-gray-200 scroll-mt-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h2 className="text-xl font-bold text-gray-800">🔍 Buscar Comprador o Número</h2>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">🔍 Buscar Comprador, Número o Ticket</h2>
+                  {selectedRifaFilter && (
+                    <p className="mt-1 text-sm font-semibold text-purple-700">
+                      Mostrando {selectedRifaFilter.raffleMode === 'AMPHORA' ? 'tickets de ánfora' : 'tickets de rifa'} para: {selectedRifaFilter.title}
+                    </p>
+                  )}
+                </div>
                 <input
                   type="text"
-                  placeholder="Ej: Juan Perez o el número 15..."
+                  placeholder="Ej: Juan Perez, número 15 o WhatsApp..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                 />
+                {selectedRifaFilter && (
+                  <button
+                    onClick={() => goToTicketsTab(null)}
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                  >
+                    Ver todos
+                  </button>
+                )}
               </div>
             </div>
 
@@ -486,7 +653,7 @@ export default function AdminRifas() {
                       <tr className="bg-yellow-50 border-b-2 border-yellow-200">
                         <th className="px-4 py-3 text-left">Cliente</th>
                         <th className="px-4 py-3 text-left">WhatsApp</th>
-                        <th className="px-4 py-3 text-left">Números</th>
+                        <th className="px-4 py-3 text-left">Participación</th>
                         <th className="px-4 py-3 text-left">Comprobante</th>
                         <th className="px-4 py-3 text-left">Acción</th>
                       </tr>
@@ -506,9 +673,15 @@ export default function AdminRifas() {
                             </a>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded font-semibold">
-                              {ticket.numbers.join(', ')}
-                            </span>
+                            {ticket.raffleMode === 'AMPHORA' ? (
+                              <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded font-semibold">
+                                {ticket.ticketCount || ticket.numbers.length} tickets en ánfora
+                              </span>
+                            ) : (
+                              <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded font-semibold">
+                                {ticket.numbers.join(', ')}
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-3">
                             {ticket.paymentImage ? (
@@ -567,7 +740,7 @@ export default function AdminRifas() {
                       <tr className="bg-green-50 border-b-2 border-green-200">
                         <th className="px-4 py-3 text-left">Cliente</th>
                         <th className="px-4 py-3 text-left">WhatsApp</th>
-                        <th className="px-4 py-3 text-left">Números</th>
+                        <th className="px-4 py-3 text-left">Participación</th>
                         <th className="px-4 py-3 text-left">Fecha</th>
                       </tr>
                     </thead>
@@ -577,9 +750,15 @@ export default function AdminRifas() {
                           <td className="px-4 py-3 font-semibold">{ticket.buyerName}</td>
                           <td className="px-4 py-3">{ticket.buyerPhone}</td>
                           <td className="px-4 py-3">
-                            <span className="bg-green-100 text-green-700 px-3 py-1 rounded font-semibold">
-                              {ticket.numbers.join(', ')}
-                            </span>
+                            {ticket.raffleMode === 'AMPHORA' ? (
+                              <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded font-semibold">
+                                {ticket.ticketCount || ticket.numbers.length} tickets en ánfora
+                              </span>
+                            ) : (
+                              <span className="bg-green-100 text-green-700 px-3 py-1 rounded font-semibold">
+                                {ticket.numbers.join(', ')}
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-gray-600">
                             {new Date(ticket.createdAt).toLocaleDateString()}
@@ -590,6 +769,8 @@ export default function AdminRifas() {
                   </table>
                 </div>
               </div>
+            )}
+            </>
             )}
           </div>
         )}
@@ -625,7 +806,7 @@ export default function AdminRifas() {
           <p className="text-blue-900 text-sm">
             ℹ️ <strong>Los datos se actualizan automáticamente cada 10 segundos.</strong>
             <br />
-            Verifica el comprobante, hace clic en "✅ Confirmar" para aprobar el pago.
+            Verifica el comprobante, hace clic en &quot;✅ Confirmar&quot; para aprobar el pago.
           </p>
         </div>
       </div>

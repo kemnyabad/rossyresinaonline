@@ -314,6 +314,7 @@ model Rifa {
   prizeImages    Json?
   videoUrl       String?
   prizes         String?       @db.Text
+  raffleMode     String        @default("NUMBERS") // NUMBERS: escoge numero, AMPHORA: entradas por nombre
   totalNumbers   Int           // Cantidad total de números disponibles
   pricePerNumber Decimal       @db.Decimal(10, 2)
   startDate      DateTime

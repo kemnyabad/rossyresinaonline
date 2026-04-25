@@ -6,6 +6,11 @@ const isPrizeImagesColumnMissing = (error: any): boolean => {
   return msg.includes('prizeimages') && (msg.includes('does not exist') || msg.includes('unknown column'));
 };
 
+const isRaffleModeColumnMissing = (error: any): boolean => {
+  const msg = String(error?.message || '').toLowerCase();
+  return msg.includes('rafflemode') && (msg.includes('does not exist') || msg.includes('unknown column'));
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     // Lista pública de rifas ACTIVAS con información de cuántos números están vendidos
@@ -17,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           orderBy: { startDate: 'asc' },
         }) as any[];
       } catch (error) {
-        if (!isPrizeImagesColumnMissing(error)) throw error;
+        if (!isPrizeImagesColumnMissing(error) && !isRaffleModeColumnMissing(error)) throw error;
         rifas = await prisma.rifa.findMany({
           where: { status: 'ACTIVE' },
           orderBy: { startDate: 'asc' },
@@ -51,13 +56,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             prizeImages: Array.isArray(rifa.prizeImages) ? rifa.prizeImages : [],
             videoUrl: rifa.videoUrl,
             prizes: rifa.prizes,
+            raffleMode: rifa.raffleMode || 'NUMBERS',
             totalNumbers: rifa.totalNumbers,
             pricePerNumber: rifa.pricePerNumber,
             startDate: rifa.startDate,
             endDate: rifa.endDate,
             rules: rifa.rules,
             soldCount,
-            availableNumbers: rifa.totalNumbers - soldCount,
+            availableNumbers: rifa.raffleMode === 'AMPHORA' ? 999999999 : rifa.totalNumbers - soldCount,
           };
         })
       );

@@ -23,11 +23,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET' && action === 'status') {
     try {
       const rifas = await prisma.rifa.findMany({
-        select: { id: true, title: true, totalNumbers: true, status: true },
+        select: { id: true, title: true, totalNumbers: true, status: true, raffleMode: true },
       });
 
       const status = await Promise.all(
         rifas.map(async (rifa) => {
+          const isAmphora = (rifa as any).raffleMode === 'AMPHORA';
           const available = await prisma.rifaTicket.count({
             where: { rifaId: rifa.id, status: 'AVAILABLE' },
           });
@@ -40,21 +41,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const paid = await prisma.rifaTicket.count({
             where: { rifaId: rifa.id, status: 'PAID' },
           });
-          const total = await prisma.rifaTicket.count({
+          const totalCreated = await prisma.rifaTicket.count({
             where: { rifaId: rifa.id },
           });
+          const participationTotal = pending + sold + paid;
 
           return {
             id: rifa.id,
             title: rifa.title,
+            raffleMode: (rifa as any).raffleMode || 'NUMBERS',
             status: rifa.status,
-            expectedTotal: rifa.totalNumbers,
-            actualTotal: total,
-            available,
+            expectedTotal: isAmphora ? participationTotal : rifa.totalNumbers,
+            actualTotal: isAmphora ? participationTotal : totalCreated,
+            available: isAmphora ? 0 : available,
             pending,
             sold,
             paid,
-            missing: rifa.totalNumbers - total,
+            missing: isAmphora ? 0 : rifa.totalNumbers - totalCreated,
           };
         })
       );
@@ -70,6 +73,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
+  // GET - Conteo liviano para notificaciones del panel admin
+  if (req.method === 'GET' && action === 'pending-count') {
+    try {
+      const pendingTickets = await prisma.rifaTicket.findMany({
+        where: { status: 'PENDING' },
+        select: {
+          rifaId: true,
+          buyerName: true,
+          buyerPhone: true,
+          paymentImage: true,
+          rifa: { select: { title: true, raffleMode: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const grouped = pendingTickets.reduce((acc: Record<string, any>, ticket: any) => {
+        const key = `${ticket.rifaId}-${ticket.buyerName || 'Unknown'}-${ticket.buyerPhone || ''}`;
+        if (!acc[key]) {
+          acc[key] = {
+            rifaId: ticket.rifaId,
+            rifaTitle: ticket.rifa?.title || '',
+            raffleMode: ticket.rifa?.raffleMode || 'NUMBERS',
+            buyerName: ticket.buyerName,
+            buyerPhone: ticket.buyerPhone,
+            paymentImage: ticket.paymentImage,
+            ticketCount: 0,
+          };
+        }
+        acc[key].ticketCount += 1;
+        return acc;
+      }, {});
+
+      return res.json({
+        success: true,
+        pendingPayments: Object.values(grouped).length,
+        pendingTickets: pendingTickets.length,
+        items: Object.values(grouped).slice(0, 5),
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error fetching pending count:', error);
+      return res.status(500).json({ error: 'Error al obtener pendientes' });
+    }
+  }
+
   // POST - Reparar números faltantes
   if (req.method === 'POST' && action === 'fix-missing') {
     const { rifaId } = req.body;
@@ -82,6 +130,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const rifa = await prisma.rifa.findUnique({ where: { id: rifaId } });
       if (!rifa) {
         return res.status(404).json({ error: 'Rifa no encontrada' });
+      }
+
+      if ((rifa as any).raffleMode === 'AMPHORA') {
+        return res.json({
+          success: true,
+          message: 'Esta modalidad es ánfora y no usa cartilla de números.',
+          createdCount: 0,
+        });
       }
 
       const existentes = await prisma.rifaTicket.findMany({
@@ -162,7 +218,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const tickets = await prisma.rifaTicket.findMany({
         where,
         include: {
-          rifa: { select: { title: true } }
+          rifa: { select: { title: true, raffleMode: true } }
         },
         orderBy: [{ createdAt: 'desc' }, { number: 'asc' }],
       });
@@ -174,6 +230,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           acc[key] = {
             rifaId: ticket.rifaId,
             rifaTitle: ticket.rifa?.title,
+            raffleMode: ticket.rifa?.raffleMode || 'NUMBERS',
             buyerName: ticket.buyerName,
             buyerPhone: ticket.buyerPhone,
             buyerEmail: ticket.buyerEmail,
@@ -181,9 +238,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             status: ticket.status,
             createdAt: ticket.createdAt,
             numbers: [],
+            ticketCount: 0,
           };
         }
         acc[key].numbers.push(ticket.number);
+        acc[key].ticketCount += 1;
         return acc;
       }, {});
 

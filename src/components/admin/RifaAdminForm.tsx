@@ -10,6 +10,7 @@ interface RifaFormData {
   prizeImages: { url: string; alt: string }[];
   videoUrl: string;
   prizes: string;
+  raffleMode: 'NUMBERS' | 'AMPHORA';
   startDate: string;
   endDate: string;
   status: 'DRAFT' | 'ACTIVE' | 'CLOSED' | 'DRAWN';
@@ -49,6 +50,7 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
     prizeImages: [],
     videoUrl: '',
     prizes: '',
+    raffleMode: 'NUMBERS',
     startDate: '',
     endDate: '',
     status: 'DRAFT',
@@ -73,6 +75,7 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
         prizeImages: normalizePrizeImages(initialData.prizeImages),
         videoUrl: initialData.videoUrl || '',
         prizes: initialData.prizes || '',
+        raffleMode: initialData.raffleMode === 'AMPHORA' ? 'AMPHORA' : 'NUMBERS',
         startDate: initialData.startDate ? initialData.startDate.split('T')[0] : '',
         endDate: initialData.endDate ? initialData.endDate.split('T')[0] : '',
         status: initialData.status,
@@ -101,6 +104,7 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
           prizeImages: normalizePrizeImages(rifa.prizeImages),
           videoUrl: rifa.videoUrl || '',
           prizes: rifa.prizes || '',
+          raffleMode: rifa.raffleMode === 'AMPHORA' ? 'AMPHORA' : 'NUMBERS',
           startDate: rifa.startDate ? rifa.startDate.split('T')[0] : '',
           endDate: rifa.endDate ? rifa.endDate.split('T')[0] : '',
           status: rifa.status,
@@ -249,7 +253,7 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
       // Convertimos los campos a sus tipos correctos para la base de datos
       const payload = {
         ...finalData,
-        totalNumbers: parseInt(finalData.totalNumbers, 10),
+        totalNumbers: finalData.raffleMode === 'AMPHORA' ? 0 : parseInt(finalData.totalNumbers, 10),
         pricePerNumber: parseFloat(finalData.pricePerNumber),
       };
 
@@ -367,8 +371,40 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-6">
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Modalidad del sorteo</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setData({ ...data, raffleMode: 'NUMBERS' })}
+                  className={`rounded-xl border px-4 py-3 text-left transition ${
+                    data.raffleMode === 'NUMBERS'
+                      ? 'border-purple-500 bg-purple-50 text-purple-800'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-purple-200'
+                  }`}
+                >
+                  <p className="text-sm font-bold">Escoger números</p>
+                  <p className="mt-1 text-xs text-gray-500">El cliente selecciona sus números favoritos.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setData({ ...data, raffleMode: 'AMPHORA' })}
+                  className={`rounded-xl border px-4 py-3 text-left transition ${
+                    data.raffleMode === 'AMPHORA'
+                      ? 'border-purple-500 bg-purple-50 text-purple-800'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-purple-200'
+                  }`}
+                >
+                  <p className="text-sm font-bold">Ánfora por tickets</p>
+                  <p className="mt-1 text-xs text-gray-500">El cliente compra cantidad; su nombre entra esa cantidad de veces.</p>
+                </button>
+              </div>
+            </div>
+            {data.raffleMode === 'NUMBERS' && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Total Números</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Total Números
+              </label>
               <input
                 type="number"
                 value={data.totalNumbers}
@@ -379,8 +415,11 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
                 required
               />
             </div>
+            )}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Precio por Número (S/)</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {data.raffleMode === 'AMPHORA' ? 'Precio por ticket (S/)' : 'Precio por Número (S/)'}
+              </label>
               <input
                 type="number"
                 step="0.01"
