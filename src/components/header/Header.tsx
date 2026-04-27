@@ -1,6 +1,6 @@
 import Image from "next/image";
 import logo from "../../images/logo.jpg";
-import { MagnifyingGlassIcon, UserIcon, HeartIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, UserIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useSelector, useDispatch } from "react-redux";
@@ -17,7 +17,7 @@ const Header = () => {
   const [allData, setAllData] = useState<StoreProduct[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  const { productData, favoriteData, userInfo, allProducts } = useSelector(
+  const { productData, userInfo, allProducts } = useSelector(
     (state: StateProps) => state.next
   );
   const dispatch = useDispatch();
@@ -134,7 +134,6 @@ const Header = () => {
   const cartSubtotal = isHydrated
     ? productData.reduce((s: number, p: any) => s + p.price * p.quantity, 0)
     : 0;
-  const favoriteCount = isHydrated && favoriteData ? favoriteData.length : 0;
   const cartCount = isHydrated && productData ? productData.length : 0;
 
   return (
@@ -151,16 +150,7 @@ const Header = () => {
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <Link href="/favorite" className="relative p-2 rounded-full border border-gray-200 text-gray-700 hover:border-amazon_blue hover:text-amazon_blue hover:shadow-md transition-all duration-300">
-              <HeartIcon className="w-5 h-5" />
-              {favoriteCount > 0 ? (
-                <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center shadow-sm">
-                  {favoriteCount}
-                </span>
-              ) : null}
-            </Link>
-          </div>
+          <div className="flex items-center gap-2" />
         </div>
 
         <div className="mt-3">
@@ -336,9 +326,6 @@ const Header = () => {
                   <Link href="/track-orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                     Mis pedidos
                   </Link>
-                  <Link href="/favorite" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Lista de deseos
-                  </Link>
                   <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                     Centro de mensajes
                   </Link>
@@ -346,22 +333,6 @@ const Header = () => {
               </div>
             )}
           </div>
-          <Link
-            href="/favorite"
-            className="hidden md:flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue relative"
-          >
-            <HeartIcon className="w-5 h-5" />
-            {favoriteCount > 0 && (
-              <span className="absolute -top-2 left-3 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
-                {favoriteCount}
-              </span>
-            )}
-            <div className="leading-tight">
-              <div className="text-xs text-gray-500">Favoritos</div>
-              <div className="font-semibold">Guardados</div>
-            </div>
-          </Link>
-
           {/* cart */}
           <Link
             href="/cart"

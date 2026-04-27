@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { upsertCustomer } from "@/lib/customerStore";
 import { logger } from "@/lib/logger";
 import { CreateOrderSchema } from "@/lib/validations";
+import { v2 as cloudinary } from "cloudinary";
 import {
   encodeOrderMeta,
   normalizePaymentMethod,
@@ -16,6 +17,20 @@ import {
 
 type DbOrderStatus = "PENDING" | "PAID" | "SHIPPED";
 const db = prisma as any;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
+  },
+};
 
 type IncomingItem = {
   _id?: string | number;
@@ -185,13 +200,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!paymentImage) {
       return res.status(400).json({ error: "Debes adjuntar comprobante de pago" });
     }
-    if (paymentImage.length > 4_000_000) {
+    if (paymentImage.length > 10_000_000) {
       return res.status(400).json({ error: "El comprobante es demasiado pesado" });
     }
 
     const location = splitLocation(locationLine);
 
     try {
+      let finalPaymentImage = paymentImage;
+      if (paymentImage.startsWith("data:image")) {
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+          return res.status(500).json({ error: "Cloudinary no esta configurado para guardar comprobantes" });
+        }
+        const upload = await cloudinary.uploader.upload(paymentImage, {
+          folder: "order_payments",
+          resource_type: "image",
+        });
+        finalPaymentImage = String(upload.secure_url || "").trim();
+        if (!finalPaymentImage) {
+          return res.status(500).json({ error: "No se pudo guardar el comprobante" });
+        }
+      }
+
       const keys = Array.from(
         new Set(
           items
@@ -300,7 +330,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             olvaTrackingImage: "",
             notes,
           }),
-          paymentImage,
+          paymentImage: finalPaymentImage,
         },
       });
       const orderCode = buildOrderCode(new Date(created.createdAt), String(created.id || ""));

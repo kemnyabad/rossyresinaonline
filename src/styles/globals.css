@@ -37,6 +37,22 @@ img, video, canvas, svg {
   height: auto;
 }
 
+@keyframes promoFade {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  16%,
+  78% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
 /* Scrollbar estético para el sidebar del admin */
 .sidebar-scroll::-webkit-scrollbar { width: 4px; }
 .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }

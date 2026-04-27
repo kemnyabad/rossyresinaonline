@@ -145,19 +145,18 @@ const BottomHeader = () => {
           </nav>
         </div>
 
-        <div className="shrink-0 flex items-center">
-          <Link
-            href="/productos?ofertas=1"
-            className="inline-flex items-center gap-1.5 h-11 px-2 text-[#c21885] transition-all duration-300 hover:opacity-90 hover:scale-105"
-          >
-            <span className="inline-flex items-center justify-center text-[24px] leading-none font-extrabold text-[#c21885] tracking-tight">
+        <div className="shrink-0 flex items-center" aria-label="Anuncio de descuento">
+          <div className="inline-flex h-11 cursor-default select-none items-center gap-1.5 overflow-hidden px-2 text-[#c21885]">
+            <span className="inline-flex animate-pulse items-center justify-center text-[24px] leading-none font-extrabold tracking-tight">
               10%
             </span>
             <span className="leading-tight">
               <span className="block font-semibold text-[15px]">Descuento en tu primera compra</span>
-              <span className="block text-[11px] text-[#a31370]">{promoMessages[promoIndex]}</span>
+              <span key={promoIndex} className="block animate-[promoFade_3.2s_ease-in-out] text-[11px] text-[#a31370]">
+                {promoMessages[promoIndex]}
+              </span>
             </span>
-          </Link>
+          </div>
         </div>
       </div>
 

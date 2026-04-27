@@ -7,7 +7,6 @@ import Link from "next/link";
 import { 
   HomeIcon, 
   MagnifyingGlassIcon, 
-  HeartIcon, 
   ShoppingCartIcon, 
   UserIcon,
   ArrowRightIcon 
@@ -75,7 +74,6 @@ const RootLayout = ({ children }: Props) => {
   const mobileTabs = [
     { href: "/", label: "Inicio", icon: HomeIcon, active: router.pathname === "/" },
     { href: "/search", label: "Buscar", icon: MagnifyingGlassIcon, active: router.pathname.startsWith("/search") },
-    { href: "/favorite", label: "Favoritos", icon: HeartIcon, active: router.pathname.startsWith("/favorite") },
     { href: "/cart", label: "Carrito", icon: ShoppingCartIcon, active: router.pathname.startsWith("/cart") },
     {
       href: "/account",
@@ -145,7 +143,7 @@ const RootLayout = ({ children }: Props) => {
         {!isRifasPage && <Footer />} {/* Renderiza Footer solo si NO es la página de rifas */}
       </div>
       <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white/95 backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5 px-2 py-2">
+        <div className="mx-auto grid max-w-md grid-cols-4 px-2 py-2">
           {mobileTabs.map((tab) => {
             const Icon = tab.icon;
             return (
