@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import logoImg from '../images/logo.jpg';
+import { FormEvent, useState, useEffect } from "react";
 import {
   EnvelopeIcon,
   PhoneIcon,
@@ -11,6 +12,7 @@ import { FaFacebook, FaInstagram, FaWhatsapp, FaTiktok } from "react-icons/fa";
 
 const LINKS = {
   tienda: [
+    { label: "Inicio", href: "/" },
     { label: "Todos los productos", href: "/productos" },
     { label: "Resina epóxica", href: "/categoria/resina" },
     { label: "Moldes de silicona", href: "/categoria/moldes-de-silicona" },
@@ -22,12 +24,14 @@ const LINKS = {
     { label: "Contacto", href: "/contact" },
     { label: "Rastrear pedido", href: "/track-orders" },
     { label: "Términos y condiciones", href: "/terms" },
+    { label: "Política de privacidad", href: "/privacy" },
     { label: "Sobre nosotros", href: "/about-us" },
   ],
   comunidad: [
     { label: "Blog", href: "/blog" },
     { label: "Sorteos resineros", href: "/sorteos-resineros" },
     { label: "Comunidad", href: "/comunidad" },
+    { label: "Capacitaciones", href: "/capacitaciones" },
   ],
 };
 
@@ -38,8 +42,15 @@ const SOCIALS = [
   { label: "TikTok", href: "https://tiktok.com", icon: FaTiktok },
 ];
 
+// Para evitar errores de hidratación con el año
+const useCurrentYear = () => {
+  const [year, setYear] = useState(new Date().getFullYear());
+  useEffect(() => setYear(new Date().getFullYear()), []);
+  return year;
+};
+
 const Footer = () => {
-  const year = new Date().getFullYear();
+  const year = useCurrentYear();
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
@@ -68,16 +79,16 @@ const Footer = () => {
   };
 
   return (
-    <footer className="w-full bg-[#0f1117] text-white">
+    <footer className="w-full bg-[#0B0D12] text-white border-t border-white/5">
 
       {/* Newsletter banner */}
-      <div className="border-b border-white/5 bg-amazon_blue/10">
+      <div className="border-b border-white/5 bg-gradient-to-r from-purple-900/20 to-pink-900/20">
         <div className="mx-auto max-w-screen-2xl px-4 py-8 md:px-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amazon_blue">Newsletter</p>
-              <h3 className="mt-1 text-xl font-bold text-white">Recibe novedades y ofertas exclusivas</h3>
-              <p className="mt-1 text-sm text-white/50">Sin spam. Solo lo que te interesa.</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-400">Club Rossy Resina</p>
+              <h3 className="mt-1 text-2xl font-black text-white tracking-tighter">Únete para ofertas y nuevos sorteos</h3>
+              <p className="mt-1 text-sm text-white/40 font-medium">Sé el primero en enterarte de los próximos premios.</p>
             </div>
             {done ? (
               <div className="flex items-center gap-2 text-emerald-400 font-semibold">
@@ -85,23 +96,23 @@ const Footer = () => {
                 ¡Suscripción completada!
               </div>
             ) : (
-              <form onSubmit={onSubmit} className="flex w-full max-w-md gap-2">
-                <div className="relative flex-1">
+              <form onSubmit={onSubmit} className="flex w-full max-w-md gap-3">
+                <div className="relative flex-1 group">
                   <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="tu@correo.com"
-                    className="w-full h-11 rounded-xl bg-white/5 border border-white/10 pl-10 pr-4 text-sm text-white placeholder:text-white/25 outline-none focus:border-amazon_blue transition"
+                    className="w-full h-12 rounded-2xl bg-white/5 border border-white/10 pl-11 pr-4 text-sm text-white placeholder:text-white/20 outline-none focus:border-purple-500/50 transition-all"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={sending}
-                  className="h-11 px-5 rounded-xl bg-amazon_blue text-white text-sm font-bold hover:brightness-110 transition disabled:opacity-60 flex items-center gap-2 shrink-0"
+                  className="h-12 px-8 rounded-2xl bg-gradient-to-r from-[#6E2CA1] to-[#cb299e] text-white text-xs font-black uppercase tracking-widest hover:shadow-lg hover:shadow-purple-500/20 transition-all disabled:opacity-60 flex items-center gap-2 shrink-0"
                 >
-                  {sending ? "..." : <><span>Suscribirse</span><ArrowRightIcon className="w-4 h-4" /></>}
+                  {sending ? "..." : <><span>Unirme</span><ArrowRightIcon className="w-4 h-4 stroke-[3]" /></>}
                 </button>
               </form>
             )}
@@ -117,26 +128,32 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-amazon_blue flex items-center justify-center text-white font-black text-sm shrink-0">RR</div>
+              <img 
+                src={logoImg.src} 
+                alt="Rossy Resina" 
+                className="h-12 w-auto object-contain" 
+              />
               <div>
-                <p className="font-bold text-white text-lg leading-none">Rossy Resina</p>
-                <p className="text-[11px] text-white/30 tracking-widest uppercase">Perú</p>
+                <p className="font-black text-white text-xl leading-none tracking-tighter uppercase">Rossy Resina</p>
+                <p className="text-[#6E2CA1] font-black uppercase tracking-widest text-[10px] md:text-xs mt-1">
+                  MOLDES • RESINA • PIGMENTOS
+                </p>
               </div>
             </div>
-            <p className="mt-4 text-sm text-white/50 leading-relaxed max-w-xs">
-              Insumos y kits para resina epóxica, pigmentos, moldes y talleres para emprendedores en Perú.
+            <p className="mt-5 text-sm text-white/40 leading-relaxed max-w-xs font-medium">
+              La plataforma número #1 en Perú para amantes de la resina. Sorteos transparentes, insumos de alta calidad y comunidad creativa.
             </p>
             <div className="mt-5 space-y-2 text-sm text-white/40">
-              <div className="flex items-center gap-2">
-                <MapPinIcon className="w-4 h-4 shrink-0" />
+              <div className="flex items-center gap-3">
+                <MapPinIcon className="w-4 h-4 shrink-0 text-[#6E2CA1]" />
                 <span>Lima, Perú</span>
               </div>
-              <div className="flex items-center gap-2">
-                <PhoneIcon className="w-4 h-4 shrink-0" />
+              <div className="flex items-center gap-3">
+                <PhoneIcon className="w-4 h-4 shrink-0 text-[#6E2CA1]" />
                 <span>+51 966 357 648</span>
               </div>
-              <div className="flex items-center gap-2">
-                <EnvelopeIcon className="w-4 h-4 shrink-0" />
+              <div className="flex items-center gap-3">
+                <EnvelopeIcon className="w-4 h-4 shrink-0 text-[#6E2CA1]" />
                 <span>contacto@rossyresina.com</span>
               </div>
             </div>
@@ -150,7 +167,7 @@ const Footer = () => {
                   aria-label={label}
                   className="h-9 w-9 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20 transition"
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5" />
                 </a>
               ))}
             </div>
@@ -158,12 +175,12 @@ const Footer = () => {
 
           {/* Tienda */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/30 mb-4">Tienda</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6E2CA1] mb-6">Navegación</p>
             <ul className="space-y-2.5">
               {LINKS.tienda.map(({ label, href }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-white/50 hover:text-white transition flex items-center gap-1.5 group">
-                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition -ml-4 group-hover:ml-0" />
+                  <Link href={href} className="text-sm text-white/40 hover:text-purple-400 transition flex items-center gap-1.5 group font-medium">
+                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0 text-purple-500" />
                     {label}
                   </Link>
                 </li>
@@ -173,12 +190,12 @@ const Footer = () => {
 
           {/* Soporte */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/30 mb-4">Soporte</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6E2CA1] mb-6">Ayuda</p>
             <ul className="space-y-2.5">
               {LINKS.soporte.map(({ label, href }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-white/50 hover:text-white transition flex items-center gap-1.5 group">
-                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition -ml-4 group-hover:ml-0" />
+                  <Link href={href} className="text-sm text-white/40 hover:text-purple-400 transition flex items-center gap-1.5 group font-medium">
+                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0 text-purple-500" />
                     {label}
                   </Link>
                 </li>
@@ -188,12 +205,12 @@ const Footer = () => {
 
           {/* Comunidad */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/30 mb-4">Comunidad</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6E2CA1] mb-6">Comunidad</p>
             <ul className="space-y-2.5">
               {LINKS.comunidad.map(({ label, href }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-white/50 hover:text-white transition flex items-center gap-1.5 group">
-                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition -ml-4 group-hover:ml-0" />
+                  <Link href={href} className="text-sm text-white/40 hover:text-purple-400 transition flex items-center gap-1.5 group font-medium">
+                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0 text-purple-500" />
                     {label}
                   </Link>
                 </li>
@@ -206,11 +223,11 @@ const Footer = () => {
       {/* Bottom bar */}
       <div className="border-t border-white/5">
         <div className="mx-auto max-w-screen-2xl px-4 py-4 md:px-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-white/25">
-          <p>© {year} Rossy Resina · Todos los derechos reservados</p>
-          <div className="flex items-center gap-4">
-            <Link href="/terms" className="hover:text-white/60 transition">Términos</Link>
-            <Link href="/faq" className="hover:text-white/60 transition">Ayuda</Link>
-            <Link href="/about-us" className="hover:text-white/60 transition">Nosotros</Link>
+          <p className="font-medium">© {year} Rossy Resina. Todos los derechos reservados.</p>
+          <div className="flex items-center gap-6 font-medium">
+            <Link href="/terms" className="hover:text-white/60 transition">Términos Legales</Link>
+            <Link href="/faq" className="hover:text-purple-400 transition">Centro de Ayuda</Link>
+            <Link href="/about-us" className="hover:text-purple-400 transition">Sobre Nosotros</Link>
           </div>
         </div>
       </div>

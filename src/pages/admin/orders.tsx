@@ -107,7 +107,10 @@ export default function AdminOrdersPage() {
   useEffect(() => { loadOrders(); }, [loadOrders]);
 
   const setShipField = (id: string, key: "shalomVoucherImage" | "shalomPickupCode" | "olvaTrackingImage", val: string) =>
-    setShipData((prev) => ({ ...prev, [id]: { shalomVoucherImage: "", shalomPickupCode: "", olvaTrackingImage: "", ...prev[id], [key]: val } }));
+    setShipData((prev) => {
+      const current = prev[id] || { shalomVoucherImage: "", shalomPickupCode: "", olvaTrackingImage: "" };
+      return { ...prev, [id]: { ...current, [key]: val } };
+    });
 
   const uploadImage = async (file: File) => {
     const reader  = new FileReader();

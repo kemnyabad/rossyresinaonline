@@ -288,7 +288,7 @@ function KpiCard({ label, value, sub, icon, color }: {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions as any);
+  const session: any = await getServerSession(ctx.req, ctx.res, authOptions as any);
   const ok = session && (session.user as any)?.role === "ADMIN";
   if (!ok) return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/dashboard", permanent: false } };
   return { props: {} };

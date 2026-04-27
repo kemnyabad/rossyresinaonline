@@ -11,6 +11,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
+  },
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
@@ -28,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const ext = match[2].toLowerCase() === "jpeg" ? "jpg" : match[2].toLowerCase();
     const base64 = match[3];
     const buf = Buffer.from(base64, "base64");
-    if (buf.length > 5 * 1024 * 1024) return res.status(413).json({ error: "Imagen muy grande" });
+    if (buf.length > 10 * 1024 * 1024) return res.status(413).json({ error: "Imagen muy grande (máximo 10MB)" });
 
     const safeName = String(filename || `img_${Date.now()}.${ext}`).replace(/[^a-zA-Z0-9_\-.]/g, "_");
     const nameWithoutExt = safeName.replace(/\.[a-z0-9]+$/i, "");
@@ -40,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const upload = await cloudinary.uploader.upload(data, {
       folder: "products",
-      resource_type: "image",
+      resource_type: "auto",
       public_id: finalPublicId,
       overwrite: false,
     });

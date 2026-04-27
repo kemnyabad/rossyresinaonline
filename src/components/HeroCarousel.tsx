@@ -78,15 +78,17 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
   const isExpressSlide = ofertasExpress.length > 0 && slideIndex === 3;
   const activeSlide = isExpressSlide ? null : regularSlides[slideIndex];
 
+  const cardVisibility = (idx: number) => (idx >= 3 ? "hidden 2xl:block" : "");
+
   const renderProductCard = (item: any, idx: number) => (
-    <div key={idx} className="group relative w-[120px] md:w-[160px]">
-      <div className="relative rounded-2xl border border-white/30 bg-white/95 backdrop-blur-md p-2 shadow-2xl transition-all duration-500 hover:scale-105 hover:-translate-y-2">
-        <div className="relative h-28 md:h-40 overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100">
-          <img src={item.image} alt={item.title || item.label} className="h-full w-full object-contain transition-transform duration-700 group-hover:scale-110" />
+    <div key={idx} className={`group relative w-[108px] shrink-0 lg:w-[122px] xl:w-[138px] 2xl:w-[150px] ${cardVisibility(idx)}`}>
+      <div className="relative rounded-2xl border border-white/30 bg-white/95 p-2 shadow-2xl backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:scale-[1.03]">
+        <div className="relative h-[86px] overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 lg:h-[100px] xl:h-[112px] 2xl:h-[126px]">
+          <img src={item.image} alt={item.title || item.label} className="h-full w-full object-contain p-1 transition-transform duration-700 group-hover:scale-105" />
         </div>
-        <div className="mt-3 text-center">
-          <p className="text-sm md:text-base font-black text-gray-900">{item.label}</p>
-          {item.title && <p className="text-xs md:text-sm text-gray-600 truncate mt-1">{item.title}</p>}
+        <div className="mt-2 min-h-[42px] text-center">
+          <p className="text-sm font-black text-gray-900 xl:text-base">{item.label}</p>
+          {item.title && <p className="mt-0.5 truncate text-xs text-gray-600">{item.title}</p>}
         </div>
       </div>
     </div>
@@ -122,16 +124,16 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
                     </Link>
                   </div>
                 </div>
-                <div className="col-span-12 md:col-span-7 flex justify-center items-center">
-                  <div className="flex gap-3 md:gap-4 justify-center flex-wrap">
+                <div className="col-span-12 flex items-center justify-center overflow-hidden md:col-span-7">
+                  <div className="flex max-w-full flex-nowrap justify-center gap-3 lg:gap-4">
                     {ofertasExpress.slice(0, 4).map((item, idx) => (
-                      <div key={idx} className="group relative w-[120px] md:w-[160px]">
-                        <div className="relative rounded-2xl border border-white/30 bg-white/95 backdrop-blur-md p-2 shadow-2xl transition-all duration-500 hover:scale-105 hover:-translate-y-2">
-                          <div className="relative h-28 md:h-40 overflow-hidden rounded-xl bg-gray-50">
-                            <img src={item.imagen} alt={item.nombre} className="h-full w-full object-contain transition-transform duration-700 group-hover:scale-110" />
+                      <div key={idx} className={`group relative w-[108px] shrink-0 lg:w-[122px] xl:w-[138px] 2xl:w-[150px] ${cardVisibility(idx)}`}>
+                        <div className="relative rounded-2xl border border-white/30 bg-white/95 p-2 shadow-2xl backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:scale-[1.03]">
+                          <div className="relative h-[86px] overflow-hidden rounded-xl bg-gray-50 lg:h-[100px] xl:h-[112px] 2xl:h-[126px]">
+                            <img src={item.imagen} alt={item.nombre} className="h-full w-full object-contain p-1 transition-transform duration-700 group-hover:scale-105" />
                             <span className="absolute top-1.5 left-1.5 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">EXPRESS</span>
                           </div>
-                          <p className="mt-2 text-xs font-semibold text-gray-800 text-center line-clamp-2">{item.nombre}</p>
+                          <p className="mt-2 min-h-[32px] text-center text-xs font-semibold leading-4 text-gray-800 line-clamp-2">{item.nombre}</p>
                         </div>
                       </div>
                     ))}
@@ -158,10 +160,10 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
                     </div>
                   </div>
                 </div>
-                <div className="col-span-12 md:col-span-7 flex justify-center items-center">
-                  <div className="flex gap-3 md:gap-4 justify-center flex-wrap">
+                <div className="col-span-12 flex items-center justify-center overflow-hidden md:col-span-7">
+                  <div className="flex max-w-full flex-nowrap justify-center gap-3 lg:gap-4">
                     {activeSlide!.items.length === 0 ? (
-                      <p className="text-white/70 text-sm">Agrega productos desde el panel admin para verlos aquí.</p>
+                      null
                     ) : (
                       activeSlide!.items.map((item, idx) => renderProductCard(item, idx))
                     )}

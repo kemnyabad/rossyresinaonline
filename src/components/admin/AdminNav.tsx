@@ -18,7 +18,9 @@ export default function AdminNav() {
     <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
       <Link href="/admin" className={navClass("/admin")}>Productos</Link>
       <Link href="/admin/categories" className={navClass("/admin/categories")}>Categorías</Link>
+      <Link href="/admin/ofertas-express" className={navClass("/admin/ofertas-express")}>Ofertas Express</Link>
       <Link href="/admin/blog" className={navClass("/admin/blog")}>Blog</Link>
+      <Link href="/admin/rifas" className={navClass("/admin/rifas")}>Rifas</Link>
       <Link href="/admin/orders" className={navClass("/admin/orders")}>Pedidos</Link>
       <Link href="/admin/visits" className={navClass("/admin/visits")}>Visitas</Link>
       <Link href="/admin/stats" className={navClass("/admin/stats")}>Estadísticas</Link>

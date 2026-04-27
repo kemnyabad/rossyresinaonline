@@ -77,8 +77,8 @@ export default function CheckoutPage() {
       setPaymentPreview("");
       return;
     }
-    if (file.size > 3 * 1024 * 1024) {
-      setErrorMsg("El comprobante no debe superar 3MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMsg("El comprobante no debe superar 10MB.");
       return;
     }
     setErrorMsg("");

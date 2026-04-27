@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "./auth/[...nextauth]";
 import prisma from "@/lib/prisma";
 
@@ -11,24 +12,51 @@ const defaultCategories = [
   { name: "Kits resineros", slug: "kits-resineros" },
 ];
 
+const toSlug = (value: string) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
+function handlePrismaError(res: NextApiResponse, error: unknown, fallbackMessage: string) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2002") {
+      return res.status(409).json({ error: "Ya existe una categoría con ese nombre o slug" });
+    }
+    if (error.code === "P2021") {
+      return res.status(500).json({ error: "La tabla de categorías no existe en la base de datos (falta migración)." });
+    }
+  }
+  return res.status(500).json({ error: fallbackMessage });
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
-    const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
-    if (categories.length === 0) {
-      // Si no existen, crear valores por defecto
-      await Promise.all(
-        defaultCategories.map((cat) =>
-          prisma.category.upsert({
-            where: { slug: cat.slug },
-            update: {},
-            create: cat,
-          })
-        )
-      );
-      const filled = await prisma.category.findMany({ orderBy: { name: "asc" } });
-      return res.status(200).json(filled);
+    try {
+      const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
+      if (categories.length === 0) {
+        // Si no existen, crear valores por defecto
+        await Promise.all(
+          defaultCategories.map((cat) =>
+            prisma.category.upsert({
+              where: { slug: cat.slug },
+              update: {},
+              create: cat,
+            })
+          )
+        );
+        const filled = await prisma.category.findMany({ orderBy: { name: "asc" } });
+        return res.status(200).json(filled);
+      }
+      return res.status(200).json(categories);
+    } catch (error: any) {
+      console.error("GET /api/categories error", error);
+      return handlePrismaError(res, error, "No se pudieron cargar las categorías");
     }
-    return res.status(200).json(categories);
   }
 
   const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
@@ -37,16 +65,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "POST") {
     try {
       const body = req.body || {};
+      const name = String(body.name || "").trim();
+      const slug = String(body.slug || "").trim() || toSlug(name);
+      if (!name) return res.status(400).json({ error: "El nombre de la categoría es obligatorio" });
+      if (!slug) return res.status(400).json({ error: "El slug de la categoría es obligatorio" });
+
       const created = await prisma.category.create({
         data: {
-          name: String(body.name || "").trim(),
-          slug: String(body.slug || "").trim() || String(body.name || "").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9\-]/g, ""),
+          name,
+          slug,
         },
       });
       return res.status(201).json(created);
     } catch (error: any) {
       console.error("POST /api/categories error", error);
-      return res.status(500).json({ error: "No se pudo guardar la categoría" });
+      return handlePrismaError(res, error, "No se pudo guardar la categoría");
     }
   }
 
@@ -55,18 +88,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const body = req.body || {};
       const id = String(body.id || body._id || "").trim();
       if (!id) return res.status(400).json({ error: "ID requerido" });
+      const name = String(body.name || "").trim();
+      const slug = String(body.slug || "").trim() || toSlug(name);
+      if (!name) return res.status(400).json({ error: "El nombre de la categoría es obligatorio" });
+      if (!slug) return res.status(400).json({ error: "El slug de la categoría es obligatorio" });
 
       const updated = await prisma.category.update({
         where: { id },
         data: {
-          name: String(body.name || "").trim(),
-          slug: String(body.slug || "").trim(),
+          name,
+          slug,
         },
       });
       return res.status(200).json(updated);
     } catch (error: any) {
       console.error("PUT /api/categories error", error);
-      return res.status(500).json({ error: "No se pudo actualizar la categoría" });
+      return handlePrismaError(res, error, "No se pudo actualizar la categoría");
     }
   }
 
@@ -78,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(204).end();
     } catch (error: any) {
       console.error("DELETE /api/categories error", error);
-      return res.status(500).json({ error: "No se pudo eliminar la categoría" });
+      return handlePrismaError(res, error, "No se pudo eliminar la categoría");
     }
   }
 

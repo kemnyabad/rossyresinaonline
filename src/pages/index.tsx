@@ -1,5 +1,6 @@
 import HeroCarousel from "@/components/HeroCarousel";
 import Products from "@/components/Products";
+import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import { ProductProps } from "../../type";
 import { useDispatch } from "react-redux";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -33,13 +34,11 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
   
   // Carousel refs
   const visitedCarouselRef = useRef<HTMLDivElement>(null);
-  const offersCarouselRef = useRef<HTMLDivElement>(null);
-  const desktopOffersRef = useRef<HTMLDivElement>(null);
   const topProductsRef = useRef<HTMLDivElement>(null);
   
   // Carousel scroll function
-  const scrollMobile = (direction: 'left' | 'right', carousel: 'visited' | 'offers') => {
-    const ref = carousel === 'visited' ? visitedCarouselRef : offersCarouselRef;
+  const scrollMobile = (direction: 'left' | 'right', carousel: 'visited') => {
+    const ref = visitedCarouselRef;
     if (!ref.current) return;
     
     const scrollAmount = 160; // Width of one card + gap
@@ -55,19 +54,8 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
   };
   
   // Desktop carousel scroll function
-  const scrollDesktop = (direction: 'left' | 'right', carousel: 'offers' | 'topProducts') => {
-    if (carousel === 'offers' && desktopOffersRef.current) {
-      const scrollAmount = 270; // Width of one desktop card + gap
-      const currentScroll = desktopOffersRef.current.scrollLeft;
-      const newScroll = direction === 'left' 
-        ? Math.max(0, currentScroll - scrollAmount)
-        : currentScroll + scrollAmount;
-      
-      desktopOffersRef.current.scrollTo({
-        left: newScroll,
-        behavior: 'smooth'
-      });
-    } else if (carousel === 'topProducts' && topProductsRef.current) {
+  const scrollDesktop = (direction: 'left' | 'right', carousel: 'topProducts') => {
+    if (carousel === 'topProducts' && topProductsRef.current) {
       const scrollAmount = 270; // Width of one desktop card + gap
       const currentScroll = topProductsRef.current.scrollLeft;
       const newScroll = direction === 'left' 
@@ -166,14 +154,11 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
       return cat.includes("molde") || title.includes("molde") || code.includes("mol_");
     });
   }, [allProducts]);
-  const mobileOfferProducts = useMemo(() => offerProducts.slice(0, 8), [offerProducts]);
   const interestProducts = diversifiedProducts.slice(0, visibleCount);
   const interestsRef = useRef<HTMLDivElement | null>(null);
   const offersRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const [canOfferScrollLeft, setCanOfferScrollLeft] = useState(false);
-  const [canOfferScrollRight, setCanOfferScrollRight] = useState(false);
   const normalizeImage = (img?: string) => {
     const s = String(img || "");
     if (!s) return `${SITE_URL}/favicon-96x96.png`;
@@ -204,75 +189,6 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
     });
   });
   const keywords = Array.from(keywordSet).slice(0, 60).join(", ");
-  const productListSchema = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: "Catalogo de productos Rossy Resina",
-    numberOfItems: allProducts.length,
-    itemListElement: allProducts.slice(0, 200).map((p, idx) => ({
-      "@type": "ListItem",
-      position: idx + 1,
-      url: `${SITE_URL}/${encodeURIComponent(String(p.code || p._id))}`,
-      item: {
-        "@type": "Product",
-        name: p.title || p.code || "Producto",
-        image: normalizeImage(p.image),
-        category: p.category,
-        brand: p.brand ? { "@type": "Brand", name: p.brand } : undefined,
-      },
-    })),
-  };
-  const storeSchema = {
-    "@context": "https://schema.org",
-    "@type": "Store",
-    name: "Rossy Resina",
-    url: SITE_URL,
-    description: pageDesc,
-    image: `${SITE_URL}/favicon-96x96.png`,
-    keywords,
-  };
-
-  useEffect(() => {
-    dispatch(setAllProducts(productData));
-  }, [productData, dispatch]);
-
-  useEffect(() => {
-    const el = interestsRef.current;
-    if (!el) return;
-
-    const updateScrollState = () => {
-      const { scrollLeft, scrollWidth, clientWidth } = el;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
-    };
-
-    updateScrollState();
-    el.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
-    return () => {
-      el.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateScrollState);
-    };
-  }, []);
-
-  useEffect(() => {
-    const el = offersRef.current;
-    if (!el) return;
-
-    const updateScrollState = () => {
-      const { scrollLeft, scrollWidth, clientWidth } = el;
-      setCanOfferScrollLeft(scrollLeft > 0);
-      setCanOfferScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
-    };
-
-    updateScrollState();
-    el.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
-    return () => {
-      el.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateScrollState);
-    };
-  }, [offerProducts.length]);
 
   return (
     <>
@@ -289,21 +205,8 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(storeSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(productListSchema) }}
-        />
       </Head>
       <main>
-        {/* Hero desktop */}
-        <section className="hidden md:block w-full">
-          <HeroCarousel remateProducts={remateProducts} topVisitedProducts={topVisitedForHero} moldProducts={moldProductsForHero} />
-        </section>
-
         {/* Home mobile app-like */}
         <section className="md:hidden px-4 pt-2 pb-2 space-y-4">
           <div className="rounded-2xl bg-gradient-to-r from-[#1a5f3f] to-[#40a373] p-5 text-white shadow-lg">
@@ -375,39 +278,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
             </div>
           </div>
 
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-gray-900">Ofertas relámpago</h2>
-              <Link href="/productos?ofertas=1" className="text-xs font-semibold text-[#cb299e]">Ver ofertas</Link>
-            </div>
-          <div className="relative">
-            {/* Navigation buttons */}
-            <button
-              onClick={() => scrollMobile('left', 'offers')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Anterior"
-            >
-              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => scrollMobile('right', 'offers')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Siguiente"
-            >
-              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            
-            <Products
-              productData={mobileOfferProducts}
-              gridClass="grid-flow-col auto-cols-[72%] gap-3 snap-x snap-mandatory overflow-x-auto no-scrollbar pb-1 scroll-smooth"
-              ref={offersCarouselRef}
-            />
-          </div>
-          </div>
+
 
           <div>
             <div className="mb-2 flex items-center justify-between">
@@ -429,7 +300,12 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
           </div>
         </section>
 
-        <div className="hidden md:block max-w-screen-2xl mx-auto space-y-6 md:space-y-8 pb-10 pt-6">
+        <section className="hidden md:block">
+          <StoreWithAdsLayout className="pb-10 pt-6">
+            <div className="space-y-6 md:space-y-8">
+              <section className="w-full">
+                <HeroCarousel remateProducts={remateProducts} topVisitedProducts={topVisitedForHero} moldProducts={moldProductsForHero} />
+              </section>
         <section className="px-4 md:px-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-semibold uppercase tracking-wide text-gray-900">
@@ -503,135 +379,91 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
         </section>
         )}
 
-        {/* Ofertas relámpago */}
-        <section className="px-4 md:px-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg"></span>
-              <h2 className="text-xl font-semibold uppercase tracking-wide text-[#cb299e]">
-                Ofertas relámpago
-              </h2>
             </div>
-            <Link href="/productos?ofertas=1" className="text-sm font-semibold text-[#cb299e] hover:underline">
-              Ver todas
-            </Link>
-          </div>
-          <div className="relative">
-            {/* Desktop navigation buttons */}
-            <button
-              onClick={() => scrollDesktop('left', 'offers')}
-              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Anterior"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => scrollDesktop('right', 'offers')}
-              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Siguiente"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            
-            <div 
-              ref={desktopOffersRef}
-              className="flex gap-4 overflow-x-auto no-scrollbar pb-2 scroll-smooth"
-              style={{ scrollBehavior: 'smooth' }}
-            >
-              {offerProducts.map((product) => (
-                <div key={product._id} className="w-[200px] md:w-[250px] shrink-0">
-                  <Products productData={[product]} gridClass="grid-cols-1" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+          </StoreWithAdsLayout>
 
-        {/* Explora tus intereses */}
-        <section className="px-4 md:px-6">
-          <div className="text-center mb-4">
-            <h2 className="text-xl font-semibold uppercase tracking-wide">
-              Explora tus intereses
-            </h2>
-          </div>
-          <div className="relative">
-            <div
-              ref={interestsRef}
-              className="no-scrollbar flex items-center gap-3 overflow-x-auto whitespace-nowrap pb-2 scroll-smooth"
-            >
-              {[
-                "Moldes de silicona",
-                "Moldes ecoresina",
-                "Moldes jabones",
-                "Moldes velas",
-                "Resina epóxica",
-                "Ecoresina",
-                "Accesorios bisutería",
-                "Accesorios eco resina",
-                "Accesorios resina epóxica",
-                "Accesorios manualidades",
-              ].map((label) => (
-                <span
-                  key={label}
-                  className="px-5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-800"
+          <div className="mx-auto max-w-screen-2xl space-y-6 px-4 pb-10 md:px-6">
+            {/* Explora tus intereses */}
+            <section>
+              <div className="text-center mb-4">
+                <h2 className="text-xl font-semibold uppercase tracking-wide">
+                  Explora tus intereses
+                </h2>
+              </div>
+              <div className="relative">
+                <div
+                  ref={interestsRef}
+                  className="no-scrollbar flex items-center gap-3 overflow-x-auto whitespace-nowrap pb-2 scroll-smooth"
                 >
-                  {label}
-                </span>
-              ))}
-            </div>
-            {canScrollLeft && (
-              <button
-                type="button"
-                aria-label="Ver categoras anteriores"
-                onClick={() => interestsRef.current?.scrollBy({ left: -260, behavior: "smooth" })}
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-              >
-                <span className="sr-only">Anterior</span>
-                <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
-                  <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            )}
-            {canScrollRight && (
-              <button
-                type="button"
-                aria-label="Ver más categorías"
-                onClick={() => interestsRef.current?.scrollBy({ left: 260, behavior: "smooth" })}
-                className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-              >
-                <span className="sr-only">Siguiente</span>
-                <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
-                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            )}
+                  {[
+                    "Moldes de silicona",
+                    "Moldes ecoresina",
+                    "Moldes jabones",
+                    "Moldes velas",
+                    "Resina epóxica",
+                    "Ecoresina",
+                    "Accesorios bisutería",
+                    "Accesorios eco resina",
+                    "Accesorios resina epóxica",
+                    "Accesorios manualidades",
+                  ].map((label) => (
+                    <span
+                      key={label}
+                      className="px-5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-800"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+                {canScrollLeft && (
+                  <button
+                    type="button"
+                    aria-label="Ver categoras anteriores"
+                    onClick={() => interestsRef.current?.scrollBy({ left: -260, behavior: "smooth" })}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+                  >
+                    <span className="sr-only">Anterior</span>
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
+                      <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                )}
+                {canScrollRight && (
+                  <button
+                    type="button"
+                    aria-label="Ver más categorías"
+                    onClick={() => interestsRef.current?.scrollBy({ left: 260, behavior: "smooth" })}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+                  >
+                    <span className="sr-only">Siguiente</span>
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
+                      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </section>
+
+            {/* Productos por intereses */}
+            <section>
+              <Products
+                productData={interestProducts}
+                gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
+              />
+              {visibleCount < diversifiedProducts.length && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((prev) => Math.min(prev + 30, diversifiedProducts.length))}
+                    className="px-6 py-3 rounded-full bg-amazon_blue text-white font-semibold hover:brightness-95"
+                  >
+                    Ver más
+                  </button>
+                </div>
+              )}
+            </section>
           </div>
         </section>
-
-        {/* Productos por intereses */}
-        <section className="px-4 md:px-6">
-          <Products
-            productData={interestProducts}
-            gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
-          />
-          {visibleCount < diversifiedProducts.length && (
-            <div className="mt-6 flex justify-center">
-              <button
-                type="button"
-                onClick={() => setVisibleCount((prev) => Math.min(prev + 30, diversifiedProducts.length))}
-                className="px-6 py-3 rounded-full bg-amazon_blue text-white font-semibold hover:brightness-95"
-              >
-                Ver más
-              </button>
-            </div>
-          )}
-        </section>
-
-        </div>
       </main>
     </>
   );
