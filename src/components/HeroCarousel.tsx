@@ -3,13 +3,87 @@ import { useEffect, useState } from "react";
 import type { ProductProps } from "../../type";
 
 interface Props {
+  productData?: ProductProps[];
   remateProducts?: ProductProps[];
   topVisitedProducts?: ProductProps[];
   moldProducts?: ProductProps[];
   ofertasExpress?: { id: string; nombre: string; imagen: string }[];
 }
 
-export default function HeroCarousel({ remateProducts = [], topVisitedProducts = [], moldProducts = [], ofertasExpress = [] }: Props) {
+const normalizeProductKey = (value: unknown) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const getProductIdentityKeys = (product: ProductProps) => {
+  const id = normalizeProductKey(product._id);
+  const code = normalizeProductKey(product.code);
+  const title = normalizeProductKey(product.title);
+  const image = normalizeProductKey(product.image);
+  const price = normalizeProductKey(product.price);
+
+  return [
+    id ? `id:${id}` : "",
+    code ? `code:${code}` : "",
+    image ? `image:${image}` : "",
+    title && image ? `title-image:${title}|${image}` : "",
+    title && price ? `title-price:${title}|${price}` : "",
+  ].filter(Boolean);
+};
+
+const uniqueProducts = (products: ProductProps[]) => {
+  const seen = new Set<string>();
+  const output: ProductProps[] = [];
+
+  products.forEach((product) => {
+    const keys = getProductIdentityKeys(product);
+    if (keys.length > 0 && keys.some((key) => seen.has(key))) return;
+
+    keys.forEach((key) => seen.add(key));
+    output.push(product);
+  });
+
+  return output;
+};
+
+const getProductText = (product: ProductProps) =>
+  `${product.category || ""} ${product.title || ""} ${product.code || ""} ${product.description || ""}`.toLowerCase();
+
+const getCategoryText = (product: ProductProps) => String(product.category || "").toLowerCase();
+
+const isPigmentProduct = (product: ProductProps) => {
+  const category = getCategoryText(product);
+  const text = getProductText(product);
+  return (
+    /pigment|glitter|mica|colorante|tinta|color/.test(category) ||
+    /pigment|glitter|mica|colorante|tinta|perlad|nacar|ne[oó]n|fluorescente|met[aá]lic/.test(text)
+  );
+};
+
+const isMoldProduct = (product: ProductProps) => {
+  if (isPigmentProduct(product)) return false;
+  return /molde|moldes|silicona|silicon/.test(getProductText(product));
+};
+
+const isResinProduct = (product: ProductProps) => {
+  if (isMoldProduct(product) || isPigmentProduct(product)) return false;
+  return /resina|resinas|epoxi|ep[oó]xica|uv|ecoresina/.test(getProductText(product));
+};
+
+const getRandomProducts = (products: ProductProps[], count: number) => {
+  const unique = uniqueProducts(products);
+  const shuffled = [...unique].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, unique.length));
+};
+
+const toHeroItems = (products: ProductProps[]) =>
+  getRandomProducts(products, 4).map((p) => ({
+    label: `S/${Number(p.price || 0).toFixed(2)}`,
+    image: p.image,
+    title: p.title,
+  }));
+
+export default function HeroCarousel({ productData = [], remateProducts = [], topVisitedProducts = [], moldProducts = [], ofertasExpress = [] }: Props) {
   const [slideIndex, setSlideIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [countdown, setCountdown] = useState("");
@@ -44,35 +118,32 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
     return () => clearInterval(timer);
   }, [isAutoPlay, totalSlides]);
 
-  const getRandomProducts = (products: ProductProps[], count: number) => {
-    const shuffled = [...products].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, Math.min(count, products.length));
-  };
-
   useEffect(() => {
-    const all = [...remateProducts, ...topVisitedProducts, ...moldProducts];
-    const resinaProducts = all.filter(p => `${p.title || ""} ${p.category || ""}`.toLowerCase().match(/resina|epoxi|epóxica/));
-    const moldeProducts = all.filter(p => `${p.title || ""} ${p.category || ""}`.toLowerCase().match(/molde|silicona/));
-    const pigmentProducts = all.filter(p => `${p.title || ""} ${p.category || ""}`.toLowerCase().match(/pigmento|color|mica|tinta/));
+    const fallbackProducts = [...remateProducts, ...topVisitedProducts, ...moldProducts];
+    const all = uniqueProducts(productData.length > 0 ? productData : fallbackProducts);
+    const resinaProducts = all.filter(isResinProduct);
+    const moldeProducts = all.filter(isMoldProduct);
+    const pigmentProducts = all.filter(isPigmentProduct);
+
     setCurrentProducts({
-      remate: getRandomProducts(resinaProducts, 4).map(p => ({ label: `S/${Number(p.price || 0).toFixed(2)}`, image: p.image, title: p.title })),
-      topVisited: getRandomProducts(moldeProducts, 4).map(p => ({ label: `S/${Number(p.price || 0).toFixed(2)}`, image: p.image, title: p.title })),
-      mold: getRandomProducts(pigmentProducts, 4).map(p => ({ label: `S/${Number(p.price || 0).toFixed(2)}`, image: p.image, title: p.title })),
+      remate: toHeroItems(resinaProducts),
+      topVisited: toHeroItems(moldeProducts),
+      mold: toHeroItems(pigmentProducts),
     });
     const interval = setInterval(() => {
       setCurrentProducts({
-        remate: getRandomProducts(resinaProducts, 4).map(p => ({ label: `S/${Number(p.price || 0).toFixed(2)}`, image: p.image, title: p.title })),
-        topVisited: getRandomProducts(moldeProducts, 4).map(p => ({ label: `S/${Number(p.price || 0).toFixed(2)}`, image: p.image, title: p.title })),
-        mold: getRandomProducts(pigmentProducts, 4).map(p => ({ label: `S/${Number(p.price || 0).toFixed(2)}`, image: p.image, title: p.title })),
+        remate: toHeroItems(resinaProducts),
+        topVisited: toHeroItems(moldeProducts),
+        mold: toHeroItems(pigmentProducts),
       });
     }, 15000);
     return () => clearInterval(interval);
-  }, [remateProducts, topVisitedProducts, moldProducts]);
+  }, [productData, remateProducts, topVisitedProducts, moldProducts]);
 
   const regularSlides = [
-    { id: 0, bg: "from-[#1a5f3f] via-[#2d7a5a] to-[#40a373]", heading: "Resina Epóxica Profesional", subheading: "Calidad superior para tus proyectos creativos", button: "Explorar productos", href: "/productos", items: currentProducts.remate },
-    { id: 1, bg: "from-[#8b5cf6] via-[#a78bfa] to-[#c4b5fd]", heading: "Moldes de Silicona Premium", subheading: "Diseños exclusivos para bisutería y decoración", button: "Ver colección", href: "/productos", items: currentProducts.topVisited },
-    { id: 2, bg: "from-[#0f766e] via-[#14b8a6] to-[#5eead4]", heading: "Pigmentos y Efectos Especiales", subheading: "Dale vida y color a tus creaciones", button: "Descubrir colores", href: "/productos", items: currentProducts.mold },
+    { id: 0, bg: "from-[#1a5f3f] via-[#2d7a5a] to-[#40a373]", heading: "Resina Epóxica Profesional", subheading: "Calidad superior para tus proyectos creativos", button: "Explorar productos", href: "/categoria/resina", items: currentProducts.remate },
+    { id: 1, bg: "from-[#8b5cf6] via-[#a78bfa] to-[#c4b5fd]", heading: "Moldes de Silicona Premium", subheading: "Diseños exclusivos para bisutería y decoración", button: "Ver colección", href: "/categoria/moldes-de-silicona", items: currentProducts.topVisited },
+    { id: 2, bg: "from-[#0f766e] via-[#14b8a6] to-[#5eead4]", heading: "Pigmentos y Efectos Especiales", subheading: "Dale vida y color a tus creaciones", button: "Descubrir colores", href: "/categoria/pigmentos", items: currentProducts.mold },
   ];
 
   const isExpressSlide = ofertasExpress.length > 0 && slideIndex === 3;

@@ -304,7 +304,12 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
           <StoreWithAdsLayout className="pb-10 pt-6">
             <div className="space-y-6 md:space-y-8">
               <section className="w-full">
-                <HeroCarousel remateProducts={remateProducts} topVisitedProducts={topVisitedForHero} moldProducts={moldProductsForHero} />
+                <HeroCarousel
+                  productData={allProducts}
+                  remateProducts={remateProducts}
+                  topVisitedProducts={topVisitedForHero}
+                  moldProducts={moldProductsForHero}
+                />
               </section>
         <section className="px-4 md:px-6">
           <div className="flex items-center justify-between mb-3">
