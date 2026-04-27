@@ -53,6 +53,13 @@ const DynamicPage = ({ product, recs }: Props) => {
   const dispatch = useDispatch();
   const router = useRouter();
 
+  const getOptionalPrice = (value: unknown) => {
+    const raw = String(value ?? "").trim();
+    if (!raw) return null;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  };
+
   const normalizeImage = (img?: string) => {
     const s = String(img || "");
     const u = s.replace(/\\/g, "/");
@@ -118,8 +125,9 @@ const DynamicPage = ({ product, recs }: Props) => {
   const activeViewerIsProcess = isProcessImage(activeViewerImage || undefined);
   const hasOffer = typeof product?.oldPrice === "number" && Number(product.oldPrice) > Number(product?.price || 0);
   const productVariants: any[] = (product as any)?.variants || [];
-  const activePrice = selectedVariant ? selectedVariant.price : Number(product?.price || 0);
-  const activeOldPrice = selectedVariant ? selectedVariant.oldPrice : (typeof product?.oldPrice === "number" ? product.oldPrice : null);
+  const activePrice = Number(selectedVariant ? selectedVariant.price : product?.price || 0);
+  const activeOldPriceValue = getOptionalPrice(selectedVariant ? selectedVariant.oldPrice : product?.oldPrice);
+  const hasActiveDiscount = activeOldPriceValue !== null && activeOldPriceValue > activePrice;
   const displayProductTitle = formatProductTitle(product?.title || product?.code || "Producto");
 
   const openImageViewer = (img: string) => {
@@ -474,12 +482,12 @@ const DynamicPage = ({ product, recs }: Props) => {
 
           <div className="hidden md:grid grid-cols-1 lg:grid-cols-[72px_minmax(0,720px)_minmax(0,1fr)] gap-4 items-start">
             <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[72px_minmax(0,1fr)] gap-4 items-start">
-              <div className="hidden lg:flex flex-col gap-3 pt-6">
+              <div className="hidden lg:flex h-[520px] flex-col gap-3 overflow-y-auto pr-1 pt-0 pb-1 no-scrollbar">
                 {productImages.map((img) => (
                   <button
                     key={img}
                     onClick={() => setActiveImage(img)}
-                    className={`h-14 w-14 rounded ${mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"} bg-white overflow-hidden`}
+                    className={`h-14 w-14 shrink-0 rounded ${mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"} bg-white overflow-hidden`}
                   >
                     {isProcessImage(img) ? (
                       <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
@@ -662,12 +670,12 @@ const DynamicPage = ({ product, recs }: Props) => {
                     <FormattedPrice amount={activePrice} />
                   </span>
                   <span className="text-sm font-normal text-gray-500">c/unidad</span>
-                  {activeOldPrice && Number(activeOldPrice) > activePrice && (
+                  {hasActiveDiscount && (
                     <span className="text-sm line-through text-gray-400">
-                      <FormattedPrice amount={Number(activeOldPrice)} />
+                      <FormattedPrice amount={activeOldPriceValue} />
                     </span>
                   )}
-                  {activeOldPrice && Number(activeOldPrice) > activePrice && (
+                  {hasActiveDiscount && (
                     <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600">Descuento</span>
                   )}
                 </div>
@@ -724,29 +732,29 @@ const DynamicPage = ({ product, recs }: Props) => {
                   </div>
                 )}
 
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                   <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Información del producto</h4>
                   <div className="space-y-1.5 text-sm">
                     {product.sku && (
-                      <div className="flex justify-between items-center">
+                      <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
                         <span className="text-gray-600">SKU:</span>
                         <span className="font-mono font-semibold text-gray-900">{product.sku}</span>
                       </div>
                     )}
                     {product.barcode && (
-                      <div className="flex justify-between items-center">
+                      <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
                         <span className="text-gray-600">Código de barras:</span>
                         <span className="font-mono font-semibold text-gray-900">{product.barcode}</span>
                       </div>
                     )}
                     {product.code && (
-                      <div className="flex justify-between items-center">
+                      <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
                         <span className="text-gray-600">Código:</span>
                         <span className="font-mono font-semibold text-gray-900">{product.code}</span>
                       </div>
                     )}
                     {product.stock !== undefined && (
-                      <div className="flex justify-between items-center">
+                      <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
                         <span className="text-gray-600">Stock disponible:</span>
                         <span className={`font-semibold ${product.stock > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                           {product.stock > 0 ? `${product.stock} unidades` : 'Agotado'}

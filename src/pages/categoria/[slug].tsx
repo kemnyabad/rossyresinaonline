@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import Products from "@/components/Products";
+import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import type { ProductProps } from "../../../type";
 import { getAllProducts } from "@/lib/repositories/productRepository";
 
@@ -30,7 +31,7 @@ interface Props {
 
 export default function CategoryPage({ slug, label, items }: Props) {
   return (
-    <div className="max-w-screen-2xl mx-auto px-6 py-8">
+    <StoreWithAdsLayout className="py-8">
       <Head>
         <title>Rossy Resina - {label || "Categoría"}</title>
         <meta
@@ -49,28 +50,30 @@ export default function CategoryPage({ slug, label, items }: Props) {
         <meta property="og:type" content="website" />
       </Head>
 
-      {label ? (
-        <>
-          <h1 className="text-2xl font-semibold mb-4">{label}</h1>
-          {items.length > 0 ? (
-            <Products productData={items} />
-          ) : (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <p className="text-gray-700">No hay productos en esta categoría por ahora.</p>
+      <div className="min-w-0">
+        {label ? (
+          <>
+            <h1 className="text-2xl font-semibold mb-4">{label}</h1>
+            {items.length > 0 ? (
+              <Products productData={items} />
+            ) : (
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <p className="text-gray-700">No hay productos en esta categoría por ahora.</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <p className="text-gray-700">Categoría no válida.</p>
+            <div className="mt-4">
+              <Link href="/" className="px-4 py-2 rounded-md bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">
+                Ir al inicio
+              </Link>
             </div>
-          )}
-        </>
-      ) : (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <p className="text-gray-700">Categoría no válida.</p>
-          <div className="mt-4">
-            <Link href="/" className="px-4 py-2 rounded-md bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">
-              Ir al inicio
-            </Link>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </StoreWithAdsLayout>
   );
 }
 

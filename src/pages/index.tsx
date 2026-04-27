@@ -1,5 +1,6 @@
 import HeroCarousel from "@/components/HeroCarousel";
 import Products from "@/components/Products";
+import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import { ProductProps } from "../../type";
 import { useDispatch } from "react-redux";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -206,11 +207,6 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
         <meta name="twitter:description" content={pageDesc} />
       </Head>
       <main>
-        {/* Hero desktop */}
-        <section className="hidden md:block w-full">
-          <HeroCarousel remateProducts={remateProducts} topVisitedProducts={topVisitedForHero} moldProducts={moldProductsForHero} />
-        </section>
-
         {/* Home mobile app-like */}
         <section className="md:hidden px-4 pt-2 pb-2 space-y-4">
           <div className="rounded-2xl bg-gradient-to-r from-[#1a5f3f] to-[#40a373] p-5 text-white shadow-lg">
@@ -304,7 +300,12 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
           </div>
         </section>
 
-        <div className="hidden md:block max-w-screen-2xl mx-auto space-y-6 md:space-y-8 pb-10 pt-6">
+        <section className="hidden md:block">
+          <StoreWithAdsLayout className="pb-10 pt-6">
+            <div className="space-y-6 md:space-y-8">
+              <section className="w-full">
+                <HeroCarousel remateProducts={remateProducts} topVisitedProducts={topVisitedForHero} moldProducts={moldProductsForHero} />
+              </section>
         <section className="px-4 md:px-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-semibold uppercase tracking-wide text-gray-900">
@@ -378,87 +379,91 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
         </section>
         )}
 
-        {/* Explora tus intereses */}
-        <section className="px-4 md:px-6">
-          <div className="text-center mb-4">
-            <h2 className="text-xl font-semibold uppercase tracking-wide">
-              Explora tus intereses
-            </h2>
-          </div>
-          <div className="relative">
-            <div
-              ref={interestsRef}
-              className="no-scrollbar flex items-center gap-3 overflow-x-auto whitespace-nowrap pb-2 scroll-smooth"
-            >
-              {[
-                "Moldes de silicona",
-                "Moldes ecoresina",
-                "Moldes jabones",
-                "Moldes velas",
-                "Resina epóxica",
-                "Ecoresina",
-                "Accesorios bisutería",
-                "Accesorios eco resina",
-                "Accesorios resina epóxica",
-                "Accesorios manualidades",
-              ].map((label) => (
-                <span
-                  key={label}
-                  className="px-5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-800"
+            </div>
+          </StoreWithAdsLayout>
+
+          <div className="mx-auto max-w-screen-2xl space-y-6 px-4 pb-10 md:px-6">
+            {/* Explora tus intereses */}
+            <section>
+              <div className="text-center mb-4">
+                <h2 className="text-xl font-semibold uppercase tracking-wide">
+                  Explora tus intereses
+                </h2>
+              </div>
+              <div className="relative">
+                <div
+                  ref={interestsRef}
+                  className="no-scrollbar flex items-center gap-3 overflow-x-auto whitespace-nowrap pb-2 scroll-smooth"
                 >
-                  {label}
-                </span>
-              ))}
-            </div>
-            {canScrollLeft && (
-              <button
-                type="button"
-                aria-label="Ver categoras anteriores"
-                onClick={() => interestsRef.current?.scrollBy({ left: -260, behavior: "smooth" })}
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-              >
-                <span className="sr-only">Anterior</span>
-                <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
-                  <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            )}
-            {canScrollRight && (
-              <button
-                type="button"
-                aria-label="Ver más categorías"
-                onClick={() => interestsRef.current?.scrollBy({ left: 260, behavior: "smooth" })}
-                className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-              >
-                <span className="sr-only">Siguiente</span>
-                <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
-                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            )}
+                  {[
+                    "Moldes de silicona",
+                    "Moldes ecoresina",
+                    "Moldes jabones",
+                    "Moldes velas",
+                    "Resina epóxica",
+                    "Ecoresina",
+                    "Accesorios bisutería",
+                    "Accesorios eco resina",
+                    "Accesorios resina epóxica",
+                    "Accesorios manualidades",
+                  ].map((label) => (
+                    <span
+                      key={label}
+                      className="px-5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-800"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+                {canScrollLeft && (
+                  <button
+                    type="button"
+                    aria-label="Ver categoras anteriores"
+                    onClick={() => interestsRef.current?.scrollBy({ left: -260, behavior: "smooth" })}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+                  >
+                    <span className="sr-only">Anterior</span>
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
+                      <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                )}
+                {canScrollRight && (
+                  <button
+                    type="button"
+                    aria-label="Ver más categorías"
+                    onClick={() => interestsRef.current?.scrollBy({ left: 260, behavior: "smooth" })}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+                  >
+                    <span className="sr-only">Siguiente</span>
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
+                      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </section>
+
+            {/* Productos por intereses */}
+            <section>
+              <Products
+                productData={interestProducts}
+                gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
+              />
+              {visibleCount < diversifiedProducts.length && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((prev) => Math.min(prev + 30, diversifiedProducts.length))}
+                    className="px-6 py-3 rounded-full bg-amazon_blue text-white font-semibold hover:brightness-95"
+                  >
+                    Ver más
+                  </button>
+                </div>
+              )}
+            </section>
           </div>
         </section>
-
-        {/* Productos por intereses */}
-        <section className="px-4 md:px-6">
-          <Products
-            productData={interestProducts}
-            gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
-          />
-          {visibleCount < diversifiedProducts.length && (
-            <div className="mt-6 flex justify-center">
-              <button
-                type="button"
-                onClick={() => setVisibleCount((prev) => Math.min(prev + 30, diversifiedProducts.length))}
-                className="px-6 py-3 rounded-full bg-amazon_blue text-white font-semibold hover:brightness-95"
-              >
-                Ver más
-              </button>
-            </div>
-          )}
-        </section>
-
-        </div>
       </main>
     </>
   );
