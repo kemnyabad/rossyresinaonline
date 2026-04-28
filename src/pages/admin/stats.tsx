@@ -1,8 +1,7 @@
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import type { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { requireAdminPage } from "@/lib/adminAuth";
 import { ShoppingBagIcon, CurrencyDollarIcon, CheckCircleIcon, CalendarIcon } from "@heroicons/react/24/outline";
 
 const fmt = (n: number) => new Intl.NumberFormat("es-PE", { minimumFractionDigits: 2 }).format(n);
@@ -133,8 +132,7 @@ export default function AdminStatsPage() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/stats", permanent: false } };
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };

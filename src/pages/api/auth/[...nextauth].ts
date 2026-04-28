@@ -5,7 +5,7 @@ import FacebookProvider from "next-auth/providers/facebook";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { verifyUser, ensureAdminFromEnv, isAdminEmail, ensureOAuthUser } from "@/lib/users";
+import { verifyUser, ensureOAuthUser, isAdminEmail } from "@/lib/users";
 
 const oauthProviders = [
   process.env.GITHUB_ID && process.env.GITHUB_SECRET
@@ -57,21 +57,12 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
-          await ensureAdminFromEnv();
-          const allowed = (process.env.ADMIN_EMAILS || "")
-            .split(",")
-            .map((s) => s.trim().toLowerCase())
-            .filter(Boolean);
           const email = String(credentials?.email || "").trim().toLowerCase();
           const pass = String(credentials?.password || "");
-          const okPass = !!process.env.ADMIN_PASSWORD && pass === process.env.ADMIN_PASSWORD;
-          if (okPass && (allowed.length === 0 || allowed.includes(email))) {
-            return { id: email, email, role: "ADMIN" } as any;
-          }
           const user = await verifyUser(email, pass);
           if (user) {
-            const role = isAdminEmail(user.email) ? "ADMIN" : user.role;
-            return { id: user.id, email: user.email, name: user.name, role } as any;
+            if (user.role === "ADMIN") return null;
+            return { id: user.id, email: user.email, name: user.name, role: user.role } as any;
           }
           return null;
         } catch {
@@ -107,9 +98,6 @@ export const authOptions: NextAuthOptions = {
         if (user && (user as any).role) {
           token.role = (user as any).role;
         }
-        if (!token.role && isAdminEmail(String(token.email || ""))) {
-          token.role = "ADMIN";
-        }
         return token;
       } catch {
         return token;
@@ -119,7 +107,7 @@ export const authOptions: NextAuthOptions = {
       try {
         if (session.user) {
           const roleFromToken = (token as any).role;
-          (session.user as any).role = roleFromToken || (isAdminEmail(session.user.email || "") ? "ADMIN" : "CUSTOMER");
+          (session.user as any).role = roleFromToken === "ADMIN" || isAdminEmail(session.user.email) ? "ADMIN" : roleFromToken || "CUSTOMER";
           if (!session.user.name && (token as any).name) {
             session.user.name = String((token as any).name);
           }

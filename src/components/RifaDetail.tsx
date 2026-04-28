@@ -245,7 +245,7 @@ const RifaDetail = ({
               <div className="rounded-[2rem] border border-amber-100 bg-amber-50/40 p-8">
                 <p className="text-[10px] uppercase text-amber-600 font-black tracking-[0.2em] mb-5 flex items-center gap-2"> <TrophyIcon className="w-4 h-4"/> Premios del Sorteo</p>
                 <div className="space-y-3">
-                  {prizeLines.slice(0, 5).map((line, idx) => (
+                  {prizeLines.slice(0, 5).map((line: string, idx: number) => (
                     <p key={idx} className="text-xs font-bold text-amber-900 flex items-center gap-3">
                       <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" /> {line}
                     </p>

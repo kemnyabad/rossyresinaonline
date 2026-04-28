@@ -1,7 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import type { Session } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import { v2 as cloudinary } from "cloudinary";
 import crypto from "crypto";
 
@@ -22,8 +20,7 @@ export const config = {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
-    const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    if (!isAdminApiRequest(req)) {
       return res.status(401).json({ error: "No autorizado" });
     }
 

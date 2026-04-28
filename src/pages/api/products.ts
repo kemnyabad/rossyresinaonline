@@ -1,7 +1,5 @@
 ﻿import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import type { Session } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { ProductSchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
@@ -243,10 +241,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return String(value || "").trim();
   };
 
-  const isAdmin = async () => {
-    const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
-    return !!session && (session.user as any)?.role === "ADMIN";
-  };
+  const isAdmin = () => isAdminApiRequest(req);
 
   if (req.method === "GET") {
     try {
@@ -266,7 +261,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "POST") {
-    const ok = await isAdmin();
+    const ok = isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
 
     const validation = validateProductPayload(req.body);
@@ -314,7 +309,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "PUT") {
-    const ok = await isAdmin();
+    const ok = isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
 
     const validation = validateProductPayload(req.body);
@@ -409,7 +404,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "DELETE") {
-    const ok = await isAdmin();
+    const ok = isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
 
     try {

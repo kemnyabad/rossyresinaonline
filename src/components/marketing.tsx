@@ -167,7 +167,7 @@ export default function MarketingAdminPage() {
               <div className="mt-8 p-4 rounded-2xl border border-dashed border-white/10">
                 <p className="text-[10px] font-black text-[#6E2CA1] uppercase tracking-widest mb-2">Recordatorio</p>
                 <p className="text-xs text-gray-500 leading-relaxed font-medium italic">
-                  "La coherencia de precios entre el catálogo y los flyers es vital para la confianza del cliente."
+                  &quot;La coherencia de precios entre el catálogo y los flyers es vital para la confianza del cliente.&quot;
                 </p>
               </div>
             </div>

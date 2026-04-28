@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 
 const db = prisma as any;
@@ -15,9 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(items);
   }
 
-  const session: any = await getServerSession(req, res, authOptions as any);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return res.status(401).json({ error: "No autorizado" });
+  if (!isAdminApiRequest(req)) return res.status(401).json({ error: "No autorizado" });
 
   if (req.method === "POST") {
     const { nombre, imagen, activo, orden, productoId, precio } = req.body || {};

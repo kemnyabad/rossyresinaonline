@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]';
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -10,8 +9,7 @@ cloudinary.config({
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getServerSession(req, res, authOptions);
-  if (!session || (session.user as any)?.role !== 'ADMIN') {
+  if (!isAdminApiRequest(req)) {
     return res.status(401).json({ error: 'No autorizado' });
   }
 

@@ -1,9 +1,8 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import RifaAdminForm from '@/components/admin/RifaAdminForm';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import type { GetServerSideProps } from 'next';
+import { requireAdminPage } from "@/lib/adminAuth";
 
 export default function EditRifaPage() {
   const router = useRouter();
@@ -25,16 +24,7 @@ export default function EditRifaPage() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  
-  if (!session || (session.user as any)?.role !== 'ADMIN') {
-    return {
-      redirect: {
-        destination: `/admin/sign-in?callbackUrl=${encodeURIComponent(ctx.resolvedUrl)}`,
-        permanent: false,
-      },
-    };
-  }
-
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };

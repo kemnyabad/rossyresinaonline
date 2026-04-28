@@ -1,7 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useCart } from '@/lib/cartStore'; // Assume cart hook exists
-import Image from 'next/image';
 
 interface NumberGridProps {
   rifaId: string;

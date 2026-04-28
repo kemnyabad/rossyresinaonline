@@ -1,14 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../../../auth/[...nextauth]';
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from '@/lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id, ticketId } = req.query as { id: string; ticketId: string };
 
   // Verificar que el usuario es admin
-  const session = await getServerSession(req, res, authOptions);
-  if (!session || (session.user as any)?.role !== 'ADMIN') {
+  if (!isAdminApiRequest(req)) {
     return res.status(401).json({ error: 'No autorizado' });
   }
 

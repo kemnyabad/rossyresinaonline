@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../api/auth/[...nextauth]';
 import type { GetServerSideProps } from 'next';
+import { requireAdminPage } from "@/lib/adminAuth";
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface RifaStatus {
@@ -815,16 +814,7 @@ export default function AdminRifas() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-
-  if (!session || (session.user as any)?.role !== 'ADMIN') {
-    return {
-      redirect: {
-        destination: '/admin/sign-in?callbackUrl=/admin/rifas',
-        permanent: false,
-      },
-    };
-  }
-
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };

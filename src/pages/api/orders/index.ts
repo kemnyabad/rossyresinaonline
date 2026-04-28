@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "../auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { upsertCustomer } from "@/lib/customerStore";
 import { logger } from "@/lib/logger";
@@ -121,11 +122,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
         return res.status(200).json(orders.map(serializeOrder));
       }
-      const session: any = await getServerSession(req, res, authOptions as any);
-      const role = (session?.user as any)?.role;
-      if (!session) return res.status(401).json({ error: "No autorizado" });
-
-      if (role === "ADMIN") {
+      if (isAdminApiRequest(req)) {
         const orders = await db.order.findMany({ orderBy: { createdAt: "desc" } });
         const serialized = orders.map(serializeOrder);
         if (includeHistory) return res.status(200).json(serialized);
@@ -138,6 +135,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
         return res.status(200).json(active);
       }
+
+      const session: any = await getServerSession(req, res, authOptions as any);
+      if (!session) return res.status(401).json({ error: "No autorizado" });
 
       const sessionEmail = String((session.user as any)?.email || "").trim().toLowerCase();
       if (!sessionEmail) return res.status(200).json([]);

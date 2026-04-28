@@ -241,7 +241,7 @@ export default function MarketingPage() {
                 <div className="mt-10 p-5 rounded-3xl bg-[#6E2CA1]/5 border border-[#6E2CA1]/10">
                   <p className="text-[10px] font-black uppercase text-[#6E2CA1] tracking-widest mb-3">UI Logic</p>
                   <p className="text-xs text-gray-500 leading-relaxed italic">
-                    "Design is intelligence made visible."
+                    &quot;Design is intelligence made visible.&quot;
                   </p>
                 </div>
               </section>

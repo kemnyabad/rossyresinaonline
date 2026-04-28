@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { signOut } from "next-auth/react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { useSession } from "next-auth/react";
 import {
   CubeIcon,
   TagIcon,
@@ -27,6 +25,11 @@ import {
 interface Props {
   children: ReactNode;
 }
+
+type AdminUser = {
+  email: string;
+  role: "ADMIN";
+};
 
 const navGroups = [
   {
@@ -89,7 +92,8 @@ const sectionTitleByPath = (pathname: string): { title: string; breadcrumb: stri
 
 export default function AdminLayout({ children }: Props) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [pendingRifaPayments, setPendingRifaPayments] = useState(0);
   const isAuthRoute = router.pathname === "/admin/sign-in";
   const { title, breadcrumb } = sectionTitleByPath(router.pathname);
@@ -98,7 +102,40 @@ export default function AdminLayout({ children }: Props) {
     exact ? router.pathname === href : router.pathname.startsWith(href);
 
   useEffect(() => {
-    if (isAuthRoute || status !== "authenticated" || (session?.user as any)?.role !== "ADMIN") return;
+    if (isAuthRoute) {
+      setAuthChecked(true);
+      return;
+    }
+
+    let cancelled = false;
+    const checkAdminSession = async () => {
+      try {
+        const res = await fetch("/api/admin/auth/session", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (res.ok && data?.user?.role === "ADMIN") {
+          setAdminUser(data.user);
+          setAuthChecked(true);
+          return;
+        }
+        setAuthChecked(true);
+        router.replace(`/admin/sign-in?callbackUrl=${encodeURIComponent(router.asPath || "/admin")}`);
+      } catch {
+        if (!cancelled) {
+          setAuthChecked(true);
+          router.replace(`/admin/sign-in?callbackUrl=${encodeURIComponent(router.asPath || "/admin")}`);
+        }
+      }
+    };
+
+    checkAdminSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthRoute, router]);
+
+  useEffect(() => {
+    if (isAuthRoute || !adminUser) return;
 
     let cancelled = false;
     const fetchPendingRifaPayments = async () => {
@@ -121,14 +158,36 @@ export default function AdminLayout({ children }: Props) {
       window.clearInterval(interval);
       window.removeEventListener("focus", fetchPendingRifaPayments);
     };
-  }, [isAuthRoute, session, status]);
+  }, [adminUser, isAuthRoute]);
 
   if (isAuthRoute) {
     return <div className="min-h-screen bg-[#0f1117] text-white">{children}</div>;
   }
 
-  const userName = (session?.user as any)?.name || (session?.user as any)?.email || "Admin";
+  if (!authChecked || !adminUser) {
+    return (
+      <div className="min-h-screen bg-[#f4f5f7] flex items-center justify-center px-6 text-center">
+        <div>
+          <p className="text-sm font-semibold text-gray-700">
+            {!authChecked ? "Verificando acceso al panel..." : "Redirigiendo al inicio de sesión..."}
+          </p>
+          <Link href="/admin/sign-in" className="mt-3 inline-flex text-sm font-semibold text-amazon_blue hover:underline">
+            Ir al login admin
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const userName = adminUser.email || "Admin";
   const userInitial = String(userName).slice(0, 1).toUpperCase();
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/auth/logout", { method: "POST" });
+    } finally {
+      router.replace("/admin/sign-in");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f4f5f7] text-[#1a1d23] flex">
@@ -210,7 +269,7 @@ export default function AdminLayout({ children }: Props) {
             Ver tienda
           </Link>
           <button
-            onClick={() => signOut({ callbackUrl: "/admin/sign-in" })}
+            onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
             style={{ color: "rgba(255,255,255,0.4)" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#f87171"; (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)"; }}

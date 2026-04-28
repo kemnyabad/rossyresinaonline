@@ -1,15 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 
-const isAdmin = async (req: NextApiRequest, res: NextApiResponse) => {
-  const session: any = await getServerSession(req, res, authOptions as any);
-  return !!session && (session.user as any)?.role === "ADMIN";
-};
+const isAdmin = (req: NextApiRequest) => isAdminApiRequest(req);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!(await isAdmin(req, res))) return res.status(401).json({ error: "No autorizado" });
+  if (!isAdmin(req)) return res.status(401).json({ error: "No autorizado" });
 
   // GET /api/products/variants?productId=xxx
   if (req.method === "GET") {

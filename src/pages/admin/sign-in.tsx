@@ -1,11 +1,9 @@
 import Head from "next/head";
-import { useSession, signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { EyeIcon, EyeSlashIcon, LockClosedIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
 export default function AdminSignInPage() {
-  const { data: session } = useSession();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,11 +12,23 @@ export default function AdminSignInPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if ((session?.user as any)?.role === "ADMIN") {
-      const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/admin";
-      router.replace(cb);
-    }
-  }, [session, router]);
+    let cancelled = false;
+    const checkAdminSession = async () => {
+      try {
+        const res = await fetch("/api/admin/auth/session", { cache: "no-store" });
+        if (!cancelled && res.ok) {
+          const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/admin";
+          router.replace(cb);
+        }
+      } catch {
+        // Sin sesion admin: se muestra el formulario.
+      }
+    };
+    checkAdminSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,17 +36,19 @@ export default function AdminSignInPage() {
     setErrorMsg(null);
     const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/admin";
     try {
-      const res = await signIn("credentials", { email, password, redirect: false, callbackUrl: cb });
-      if (res?.ok) {
-        const sessionRes = await fetch("/api/auth/session");
-        const sessionJson = await sessionRes.json();
-        if (sessionJson?.user?.role === "ADMIN") {
-          router.replace(res.url || cb);
-          return;
-        }
-        setErrorMsg("Tu usuario no tiene permisos de administrador.");
-      } else {
+      const res = await fetch("/api/admin/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (res.ok) {
+        router.replace(cb);
+        return;
+      }
+      if (res.status === 401) {
         setErrorMsg("Credenciales inválidas. Verifica tu email y contraseña.");
+      } else {
+        setErrorMsg("No se pudo iniciar sesión. Intenta de nuevo.");
       }
     } catch {
       setErrorMsg("No se pudo conectar. Intenta de nuevo.");
