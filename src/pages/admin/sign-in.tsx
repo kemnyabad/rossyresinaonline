@@ -14,7 +14,7 @@ export default function AdminSignInPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (session) {
+    if ((session?.user as any)?.role === "ADMIN") {
       const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/admin";
       router.replace(cb);
     }

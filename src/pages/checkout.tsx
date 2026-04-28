@@ -48,6 +48,9 @@ export default function CheckoutPage() {
   const dispatch = useDispatch();
   const { data: session } = useSession();
   const { productData, userInfo } = useSelector((state: StateProps) => state.next);
+  const isAdminSession = (session?.user as any)?.role === "ADMIN";
+  const customerSession = !isAdminSession ? session : null;
+  const storeUser = isAdminSession ? null : (userInfo as any);
   const autofillTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAutofillKey = useRef("");
 
@@ -79,22 +82,20 @@ export default function CheckoutPage() {
   const accountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "";
 
   useEffect(() => {
-    if (userInfo) {
-      // @ts-ignore
-      setName(userInfo.name || "");
-      // @ts-ignore
-      setPhone(userInfo.phone || "");
+    if (storeUser) {
+      setName(storeUser.name || "");
+      setPhone(storeUser.phone || "");
     }
-  }, [userInfo]);
+  }, [storeUser]);
 
   useEffect(() => {
-    const sessionEmail = String((session?.user as any)?.email || "").trim().toLowerCase();
+    const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
     if (!sessionEmail || typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem(`rr_shipping_profile:${sessionEmail}`);
       if (!raw) return;
       const p = JSON.parse(raw);
-      setName(String(p.name || (session?.user as any)?.name || ""));
+      setName(String(p.name || (customerSession?.user as any)?.name || ""));
       setDni(String(p.dni || ""));
       setPhone(String(p.phone || ""));
       setLocationLine(String(p.locationLine || ""));
@@ -108,11 +109,11 @@ export default function CheckoutPage() {
     } catch {
       // Si el dato local esta corrupto, simplemente dejamos el formulario editable.
     }
-  }, [session]);
+  }, [customerSession]);
 
   useEffect(() => {
-    const sessionName = String((session?.user as any)?.name || "").trim();
-    const sessionEmail = String((session?.user as any)?.email || "").trim().toLowerCase();
+    const sessionName = String((customerSession?.user as any)?.name || "").trim();
+    const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
     if (!sessionName || name || typeof window === "undefined") return;
     const localProfile = sessionEmail ? window.localStorage.getItem(`rr_shipping_profile:${sessionEmail}`) : "";
     if (localProfile) return;
@@ -142,7 +143,7 @@ export default function CheckoutPage() {
     return () => {
       alive = false;
     };
-  }, [session, name]);
+  }, [customerSession, name]);
 
   useEffect(() => {
     return () => {
@@ -228,7 +229,7 @@ export default function CheckoutPage() {
   const isShippingReviewStep = !showShippingForm && !shippingConfirmed && !!name && !!phone && !!locationLine;
 
   const saveLocalShippingProfile = () => {
-    const sessionEmail = String((session?.user as any)?.email || "").trim().toLowerCase();
+    const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
     if (!sessionEmail || typeof window === "undefined") return;
     window.localStorage.setItem(
       `rr_shipping_profile:${sessionEmail}`,
@@ -262,7 +263,7 @@ export default function CheckoutPage() {
             name,
             dni,
             phone,
-            email: String((session?.user as any)?.email || ""),
+            email: String((customerSession?.user as any)?.email || ""),
             locationLine,
             notes,
           },
@@ -400,7 +401,7 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          const sessionEmail = String((session?.user as any)?.email || "").trim().toLowerCase();
+                          const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
                           if (sessionEmail && typeof window !== "undefined") {
                             window.localStorage.removeItem(`rr_shipping_profile:${sessionEmail}`);
                           }

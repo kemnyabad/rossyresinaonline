@@ -24,6 +24,10 @@ const Header = () => {
     (state: StateProps) => state.next
   );
   const dispatch = useDispatch();
+  const sessionRole = (session?.user as any)?.role;
+  const isAdminSession = sessionRole === "ADMIN";
+  const storeUser = isAdminSession ? null : (userInfo as any);
+  const sessionUser = !isAdminSession ? session?.user : null;
   const handleSignOut = async () => {
     dispatch(removeUser());
     setProfileOpen(false);
@@ -48,7 +52,11 @@ const Header = () => {
     };
   }, [allProducts]);
   useEffect(() => {
-    if (session) {
+    if (isAdminSession) {
+      dispatch(removeUser());
+      return;
+    }
+    if (session?.user) {
       dispatch(
         addUser({
           name: session?.user?.name,
@@ -57,7 +65,7 @@ const Header = () => {
         })
       );
     }
-  }, [session, dispatch]);
+  }, [session, isAdminSession, dispatch]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -143,7 +151,7 @@ const Header = () => {
     ? productData.reduce((s: number, p: any) => s + p.price * p.quantity, 0)
     : 0;
   const cartCount = isHydrated && productData ? productData.length : 0;
-  const isAuthenticated = Boolean(session?.user?.email || userInfo?.email);
+  const isAuthenticated = Boolean(sessionUser?.email || storeUser?.email);
 
   return (
     <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
@@ -292,9 +300,9 @@ const Header = () => {
               <div className="absolute right-0 top-[calc(100%+10px)] w-72 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
                 <div className="p-4 border-b border-gray-100">
                   <div className="flex items-center gap-3">
-                    {userInfo?.image ? (
+                    {storeUser?.image ? (
                       <Image
-                        src={userInfo.image}
+                        src={storeUser.image}
                         alt="Avatar"
                         width={44}
                         height={44}
@@ -302,13 +310,13 @@ const Header = () => {
                       />
                     ) : (
                       <div className="h-11 w-11 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-semibold">
-                        {(userInfo?.name || userInfo?.email || "U").slice(0, 1)}
+                        {(storeUser?.name || storeUser?.email || "U").slice(0, 1)}
                       </div>
                     )}
                     <div>
                       <p className="text-sm text-gray-600">Bienvenido de nuevo</p>
                       <p className="text-sm font-semibold text-gray-900">
-                        {userInfo?.name || userInfo?.email || "Invitado"}
+                        {storeUser?.name || storeUser?.email || "Invitado"}
                       </p>
                     </div>
                   </div>

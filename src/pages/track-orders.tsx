@@ -38,6 +38,8 @@ type Order = {
 
 export default function TrackOrdersPage() {
   const { data: session } = useSession();
+  const isAdminSession = (session?.user as any)?.role === "ADMIN";
+  const customerSession = !isAdminSession ? session : null;
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<TabKey>("Ver todo");
   const [search, setSearch] = useState("");
@@ -52,6 +54,10 @@ export default function TrackOrdersPage() {
 
   const fetchOrders = async () => {
     const lookupEmail = email.trim();
+    if (!lookupEmail && isAdminSession) {
+      setOrders([]);
+      return;
+    }
     const url = lookupEmail ? `/api/orders?email=${encodeURIComponent(lookupEmail)}` : "/api/orders";
     setLoading(true);
     try {
@@ -71,14 +77,14 @@ export default function TrackOrdersPage() {
   }, [email]);
 
   useEffect(() => {
-    const sessionEmail = String((session?.user as any)?.email || "").trim();
+    const sessionEmail = String((customerSession?.user as any)?.email || "").trim();
     if (!sessionEmail) return;
     setEmail(sessionEmail);
     fetch("/api/orders")
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setOrders(Array.isArray(data) ? data : []))
       .catch(() => setOrders([]));
-  }, [session?.user]);
+  }, [customerSession?.user]);
 
   const counts = useMemo(() => {
     const base: Record<string, number> = {
@@ -169,7 +175,7 @@ export default function TrackOrdersPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Correo para buscar pedidos"
-                disabled={Boolean((session?.user as any)?.email)}
+                disabled={Boolean((customerSession?.user as any)?.email)}
                 className="h-11 w-full min-w-0 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400 disabled:bg-gray-50 disabled:text-gray-600"
               />
               <button

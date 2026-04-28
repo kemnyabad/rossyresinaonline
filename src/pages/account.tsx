@@ -16,9 +16,12 @@ export default function AccountPage() {
   const { data: session, status } = useSession();
   const { userInfo } = useSelector((state: StateProps) => state.next);
   const dispatch = useDispatch();
-  const isAuthenticated = Boolean(session?.user?.email || userInfo?.email);
-  const name = userInfo?.name || session?.user?.name || userInfo?.email || session?.user?.email || "Usuario";
-  const avatar = userInfo?.image || session?.user?.image || "";
+  const isAdminSession = (session?.user as any)?.role === "ADMIN";
+  const storeUser = isAdminSession ? null : (userInfo as any);
+  const sessionUser = !isAdminSession ? session?.user : null;
+  const isAuthenticated = Boolean(sessionUser?.email || storeUser?.email);
+  const name = storeUser?.name || sessionUser?.name || storeUser?.email || sessionUser?.email || "Usuario";
+  const avatar = storeUser?.image || sessionUser?.image || "";
   const handleSignOut = () => {
     signOut();
     dispatch(removeUser());
@@ -75,7 +78,7 @@ export default function AccountPage() {
                 <div>
                   <p className="text-sm text-gray-500">Bienvenida/o</p>
                   <h1 className="text-2xl font-semibold text-gray-900">{name}</h1>
-                  <p className="mt-1 text-sm text-gray-500">{userInfo?.email || session?.user?.email}</p>
+                  <p className="mt-1 text-sm text-gray-500">{storeUser?.email || sessionUser?.email}</p>
                 </div>
               </div>
               <button

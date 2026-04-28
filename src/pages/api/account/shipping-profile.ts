@@ -17,7 +17,7 @@ const toProfile = (row: any) => ({
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session: any = await getServerSession(req, res, authOptions as any);
-  if (!session?.user?.email) {
+  if (!session?.user?.email || session?.user?.role === "ADMIN") {
     return res.status(401).json({ error: "No autorizado" });
   }
 

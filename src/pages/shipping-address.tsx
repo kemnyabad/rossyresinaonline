@@ -23,7 +23,9 @@ export default function ShippingAddressPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const sessionEmail = String((session?.user as any)?.email || "").trim().toLowerCase();
+  const isAdminSession = (session?.user as any)?.role === "ADMIN";
+  const customerSession = !isAdminSession ? session : null;
+  const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
 
   useEffect(() => {
     if (!sessionEmail) return;
@@ -42,7 +44,7 @@ export default function ShippingAddressPage() {
           setForm({ ...emptyProfile, ...data.profile });
           window.localStorage.setItem(`rr_shipping_profile:${sessionEmail}`, JSON.stringify(data.profile));
         } else if (!local) {
-          setForm((prev) => ({ ...prev, name: String((session?.user as any)?.name || "") }));
+          setForm((prev) => ({ ...prev, name: String((customerSession?.user as any)?.name || "") }));
         }
       })
       .catch(() => {})
@@ -50,7 +52,7 @@ export default function ShippingAddressPage() {
     return () => {
       alive = false;
     };
-  }, [sessionEmail, session]);
+  }, [sessionEmail, customerSession]);
 
   const update = (key: keyof typeof emptyProfile, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
