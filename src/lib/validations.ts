@@ -40,7 +40,7 @@ export const OrderItemSchema = z.object({
 export const OrderCustomerSchema = z.object({
   name: nonEmptyString("Nombre completo requerido"),
   dni: z.string().trim().min(6, "DNI requerido"),
-  phone: nonEmptyString("Telefono requerido"),
+  phone: nonEmptyString("Teléfono o WhatsApp requerido"),
   email: z.string().trim().email("Correo invalido").optional().or(z.literal("")),
   locationLine: nonEmptyString("Departamento, provincia y distrito requeridos"),
   notes: z.string().optional(),

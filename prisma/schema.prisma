@@ -103,7 +103,7 @@ model Order {
   customerAddress String
   customerCity   String
   customerDistrict String
-  customerNotes  String?
+  customerNotes  String?     @db.Text
   paymentImage   String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt

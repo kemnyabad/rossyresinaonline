@@ -385,7 +385,7 @@ export default function CheckoutPage() {
                     {shippingCarrier === "OLVA" && olvaReference && (
                       <p className="text-lg text-gray-950">Referencia: {olvaReference}</p>
                     )}
-                    <p className="text-lg text-gray-950">Teléfono: {phone}</p>
+                    <p className="text-lg text-gray-950">Teléfono o WhatsApp: {phone}</p>
                     <div className="mt-3 border-t border-gray-300 pt-3">
                       <button
                         type="button"
@@ -461,8 +461,13 @@ export default function CheckoutPage() {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-600">Telefono</label>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2" />
+                <label className="text-sm text-gray-600">Teléfono o WhatsApp</label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Ej: 961770723"
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
               </div>
               <div className="sm:col-span-2">
                 <label className="text-sm text-gray-600">Departamento - Provincia - Distrito (en un solo campo)</label>

@@ -113,8 +113,13 @@ export default function ShippingAddressPage() {
                 <input value={form.dni} onChange={(e) => update("dni", e.target.value.replace(/\D/g, ""))} className="h-11 rounded-md border border-gray-300 px-3" />
               </label>
               <label className="grid gap-1 text-sm text-gray-700">
-                Teléfono
-                <input value={form.phone} onChange={(e) => update("phone", e.target.value)} className="h-11 rounded-md border border-gray-300 px-3" />
+                Teléfono o WhatsApp
+                <input
+                  value={form.phone}
+                  onChange={(e) => update("phone", e.target.value)}
+                  placeholder="Ej: 961770723"
+                  className="h-11 rounded-md border border-gray-300 px-3"
+                />
               </label>
               <label className="grid gap-1 text-sm text-gray-700 md:col-span-2">
                 Departamento - Provincia - Distrito

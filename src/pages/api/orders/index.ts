@@ -188,7 +188,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!name) return res.status(400).json({ error: "Nombre completo requerido" });
     if (!dni || dni.length < 6) return res.status(400).json({ error: "DNI requerido" });
-    if (!phone) return res.status(400).json({ error: "Telefono requerido" });
+    if (!phone) return res.status(400).json({ error: "Teléfono o WhatsApp requerido" });
     if (!locationLine) return res.status(400).json({ error: "Departamento, provincia y distrito requeridos" });
     if (shippingCarrier === "SHALOM" && !shalomAgency) {
       return res.status(400).json({ error: "Debes indicar la agencia Shalom" });
