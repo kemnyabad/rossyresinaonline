@@ -6,10 +6,13 @@ import { useRouter } from "next/router";
 import { useSelector, useDispatch } from "react-redux";
 import { StateProps, StoreProduct } from "../../../type";
 import { useSession, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useEffect, useState, useRef, useMemo, useDeferredValue } from "react";
-import { addUser } from "@/store/nextSlice";
+import { addUser, removeUser } from "@/store/nextSlice";
 import SearchProducts from "../SearchProducts";
 import FormattedPrice from "@/components/FormattedPrice";
+import { FcGoogle } from "react-icons/fc";
+import { MdOutlineEmail } from "react-icons/md";
 
 const Header = () => {
   const router = useRouter();
@@ -21,6 +24,11 @@ const Header = () => {
     (state: StateProps) => state.next
   );
   const dispatch = useDispatch();
+  const handleSignOut = async () => {
+    dispatch(removeUser());
+    setProfileOpen(false);
+    await signOut({ callbackUrl: "/" });
+  };
   useEffect(() => {
     const list = Array.isArray(allProducts) ? allProducts : [];
     if (list.length > 0) setAllData(list);
@@ -135,6 +143,7 @@ const Header = () => {
     ? productData.reduce((s: number, p: any) => s + p.price * p.quantity, 0)
     : 0;
   const cartCount = isHydrated && productData ? productData.length : 0;
+  const isAuthenticated = Boolean(session?.user?.email || userInfo?.email);
 
   return (
     <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
@@ -257,9 +266,9 @@ const Header = () => {
         {/* actions */}
         <div className="ml-auto md:ml-0 flex items-center gap-2 sm:gap-4">
           <Link
-            href={userInfo ? "/account" : "/sign-in"}
+            href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
             className="md:hidden p-2 rounded-full border border-gray-200 text-gray-700 hover:text-amazon_blue hover:border-amazon_blue"
-            aria-label={userInfo ? "Ir a mi perfil" : "Iniciar sesión"}
+            aria-label={isAuthenticated ? "Ir a mi perfil" : "Iniciar sesión"}
           >
             <UserIcon className="w-5 h-5" />
           </Link>
@@ -304,10 +313,10 @@ const Header = () => {
                     </div>
                   </div>
                   <div className="mt-3">
-                    {userInfo ? (
+                    {isAuthenticated ? (
                       <button
                         type="button"
-                        onClick={() => signOut()}
+                        onClick={handleSignOut}
                         className="text-sm text-amazon_blue hover:underline"
                       >
                         Cerrar sesión
@@ -319,14 +328,33 @@ const Header = () => {
                     )}
                   </div>
                 </div>
+                {!isAuthenticated && (
+                  <div className="grid gap-2 border-b border-gray-100 p-4">
+                    <Link
+                      href="/register"
+                      className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      <MdOutlineEmail className="h-5 w-5 text-amazon_blue" />
+                      Registrarme con correo
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => signIn("google", { callbackUrl: "/" })}
+                      className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      <FcGoogle className="h-5 w-5" />
+                      Continuar con Google
+                    </button>
+                  </div>
+                )}
                 <div className="py-2">
-                  <Link href="/account" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                  <Link href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"} className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                     Mi Cuenta
                   </Link>
-                  <Link href="/track-orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                  <Link href={isAuthenticated ? "/track-orders" : "/sign-in?callbackUrl=/track-orders"} className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                     Mis pedidos
                   </Link>
-                  <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                  <Link href={isAuthenticated ? "/messages" : "/sign-in?callbackUrl=/messages"} className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                     Centro de mensajes
                   </Link>
                 </div>

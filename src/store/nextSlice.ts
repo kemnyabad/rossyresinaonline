@@ -55,6 +55,17 @@ export const nextSlice = createSlice({
         existingProduct!.quantity--;
       }
     },
+    setQuantity: (state, action) => {
+      const existingProduct = state.productData.find(
+        (item: StoreProduct) => item._id === action.payload._id
+      );
+      if (existingProduct) {
+        const quantity = Number(action.payload.quantity);
+        existingProduct.quantity = Number.isFinite(quantity)
+          ? Math.max(1, Math.floor(quantity))
+          : existingProduct.quantity;
+      }
+    },
     deleteProduct: (state, action) => {
       state.productData = state.productData.filter(
         (item) => item._id !== action.payload
@@ -92,6 +103,7 @@ export const {
   decreaseQuantity,
   deleteProduct,
   resetCart,
+  setQuantity,
   addUser,
   removeUser,
   setAllProducts,

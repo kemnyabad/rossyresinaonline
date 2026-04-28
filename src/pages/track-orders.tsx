@@ -154,7 +154,7 @@ export default function TrackOrdersPage() {
               <span className="px-2 py-1 rounded hover:bg-gray-50">Reembolsos y devoluciones</span>
               <span className="px-2 py-1 rounded hover:bg-gray-50">Valoraciones</span>
               <span className="px-2 py-1 rounded hover:bg-gray-50">Ajustes</span>
-              <span className="px-2 py-1 rounded hover:bg-gray-50">Dirección de envío</span>
+              <Link href="/shipping-address" className="px-2 py-1 rounded hover:bg-gray-50">Dirección de envío</Link>
               <Link href="/messages" className="px-2 py-1 rounded hover:bg-gray-50">Centro de mensajes</Link>
             </nav>
           </aside>
@@ -177,29 +177,27 @@ export default function TrackOrdersPage() {
                 ))}
               </div>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-3 items-center">
+              <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(260px,360px)_auto] xl:items-center">
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Nº de pedido o artículo"
-                  className="h-11 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
+                  className="h-11 w-full min-w-0 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
                 />
-                <div className="flex items-center gap-2">
-                  <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Correo para buscar pedidos"
-                    disabled={Boolean((session?.user as any)?.email)}
-                    className="h-11 flex-1 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={fetchOrders}
-                    className="h-11 px-4 rounded-md bg-orange-500 text-white text-sm font-semibold"
-                  >
-                    Buscar
-                  </button>
-                </div>
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Correo para buscar pedidos"
+                  disabled={Boolean((session?.user as any)?.email)}
+                  className="h-11 w-full min-w-0 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400 disabled:bg-gray-50 disabled:text-gray-600"
+                />
+                <button
+                  type="button"
+                  onClick={fetchOrders}
+                  className="h-11 w-full rounded-md bg-orange-500 px-5 text-sm font-semibold text-white xl:w-auto"
+                >
+                  Buscar
+                </button>
               </div>
             </div>
 

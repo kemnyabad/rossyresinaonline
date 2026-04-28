@@ -20,7 +20,7 @@ interface Props {
 
 const RootLayout = ({ children }: Props) => {
   const router = useRouter();
-  const hideBottomHeader = router.pathname === "/cart";
+  const hideBottomHeader = router.pathname === "/cart" || router.pathname === "/checkout";
   const isRifasPage = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/admin/rifa");
   const footerRef = useRef<HTMLDivElement | null>(null);
   const [hideAssistant, setHideAssistant] = useState(false);
