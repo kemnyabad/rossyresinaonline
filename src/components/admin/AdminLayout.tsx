@@ -301,20 +301,16 @@ export default function AdminLayout({ children }: Props) {
       <div className="ml-64 flex-1 flex flex-col min-h-screen">
 
         {/* TOPBAR */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm">
-          <div className="min-w-0">
-            <h1 className="truncate text-base font-bold text-gray-900">
-              Panel Admin Rossy Resina - Gestión Comercial
-            </h1>
-            <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-500">
-              {breadcrumb.map((crumb, i) => (
-                <span key={crumb} className="flex items-center gap-2">
-                  {i > 0 && <ChevronRightIcon className="w-3 h-3 text-gray-300" />}
-                  <span className={i === breadcrumb.length - 1 ? "font-semibold text-gray-700" : ""}>
-                    {crumb}
-                  </span>
-                </span>
-              ))}
+        <header className="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-30 shadow-sm">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="h-10 w-1.5 rounded-full bg-amazon_blue" />
+            <div className="min-w-0">
+              <h1 className="text-xl font-extrabold tracking-tight text-gray-950">
+                Panel Admin Rossy Resina
+              </h1>
+              <p className="mt-1 text-sm font-semibold text-gray-500">
+                Gestión Comercial
+              </p>
             </div>
           </div>
 
@@ -346,11 +342,6 @@ export default function AdminLayout({ children }: Props) {
 
         {/* PAGE CONTENT */}
         <main className="flex-1 p-6 overflow-auto">
-          {title !== "Panel" && (
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-            </div>
-          )}
           {children}
         </main>
       </div>
