@@ -302,15 +302,20 @@ export default function AdminLayout({ children }: Props) {
 
         {/* TOPBAR */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            {breadcrumb.map((crumb, i) => (
-              <span key={crumb} className="flex items-center gap-2">
-                {i > 0 && <ChevronRightIcon className="w-3.5 h-3.5 text-gray-300" />}
-                <span className={i === breadcrumb.length - 1 ? "font-semibold text-gray-900" : ""}>
-                  {crumb}
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-bold text-gray-900">
+              Panel Admin Rossy Resina - Gestión Comercial
+            </h1>
+            <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-500">
+              {breadcrumb.map((crumb, i) => (
+                <span key={crumb} className="flex items-center gap-2">
+                  {i > 0 && <ChevronRightIcon className="w-3 h-3 text-gray-300" />}
+                  <span className={i === breadcrumb.length - 1 ? "font-semibold text-gray-700" : ""}>
+                    {crumb}
+                  </span>
                 </span>
-              </span>
-            ))}
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -341,9 +346,11 @@ export default function AdminLayout({ children }: Props) {
 
         {/* PAGE CONTENT */}
         <main className="flex-1 p-6 overflow-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-          </div>
+          {title !== "Panel" && (
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+            </div>
+          )}
           {children}
         </main>
       </div>
