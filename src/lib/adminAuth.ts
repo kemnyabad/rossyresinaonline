@@ -94,7 +94,6 @@ export const readAdminSessionFromReq = (req: Pick<NextApiRequest, "headers">): A
     const email = String(parsed?.email || "").trim().toLowerCase();
     const exp = Number(parsed?.exp || 0);
     if (parsed?.role !== "ADMIN" || !email || exp < Math.floor(Date.now() / 1000)) return null;
-    if (!isAllowedAdminEmail(email)) return null;
     return { email, role: "ADMIN" };
   } catch {
     return null;
@@ -107,8 +106,8 @@ export const getAdminCookieHeader = (token: string) => {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   const encoded = encodeURIComponent(token);
   return [
-    `${ADMIN_PAGE_COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`,
-    `${ADMIN_PAGE_COOKIE_NAME}=${encoded}; HttpOnly; SameSite=Lax; Path=/admin; Max-Age=${SESSION_TTL_SECONDS}${secure}`,
+    `${ADMIN_PAGE_COOKIE_NAME}=${encoded}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_SECONDS}${secure}`,
+    `${ADMIN_PAGE_COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/admin; Max-Age=0${secure}`,
     `${ADMIN_API_COOKIE_NAME}=${encoded}; HttpOnly; SameSite=Lax; Path=/api/admin; Max-Age=${SESSION_TTL_SECONDS}${secure}`,
   ];
 };
