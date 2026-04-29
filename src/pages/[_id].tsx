@@ -446,12 +446,14 @@ const DynamicPage = ({ product, recs }: Props) => {
                 <div className="min-w-0">
                   <p className="text-xs text-gray-500">Patrocinado</p>
                   <h1 className="mt-1 text-xl font-semibold leading-6 line-clamp-3">{displayProductTitle}</h1>
-                  <div className="mt-2 flex items-center gap-1 text-amber-500">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
-                    ))}
-                    <span className="ml-1 text-sm text-gray-700">{reviewAverage.toFixed(1)} ({reviewCount})</span>
-                  </div>
+                  {reviewCount > 0 && (
+                    <div className="mt-2 flex items-center gap-1 text-amber-500">
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
+                      ))}
+                      <span className="ml-1 text-sm text-gray-700">{reviewAverage.toFixed(1)} ({reviewCount})</span>
+                    </div>
+                  )}
                   <div className="mt-2 flex items-center gap-2 text-3xl leading-none font-semibold text-gray-900">
                     <FormattedPrice amount={Number(product.price) || 0} />
                     <span className="text-sm font-normal text-gray-500">c/unidad</span>
@@ -548,13 +550,15 @@ const DynamicPage = ({ product, recs }: Props) => {
               <div className="lg:col-span-2 mt-6">
                 <div className="flex items-center gap-4 mb-4">
                   <h2 className="text-lg font-semibold">Reseñas</h2>
-                  <div className="flex items-center gap-1 text-yellow-500">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
-                    ))}
-                    <span className="text-gray-700 text-sm ml-2">{reviewAverage.toFixed(1)}</span>
-                  </div>
-                  <span className="text-sm text-gray-500">{reviewCount} reseñas</span>
+                  {reviewCount > 0 && (
+                    <div className="flex items-center gap-1 text-yellow-500">
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
+                      ))}
+                      <span className="text-gray-700 text-sm ml-2">{reviewAverage.toFixed(1)}</span>
+                    </div>
+                  )}
+                  <span className="text-sm text-gray-500">{reviewCount > 0 ? `${reviewCount} reseñas` : "Sin reseñas"}</span>
                 </div>
                 <div className="rounded-lg border border-gray-200 p-4 mb-4">
                   <p className="text-sm font-semibold text-gray-900 mb-2">Tu reseña</p>
@@ -655,15 +659,21 @@ const DynamicPage = ({ product, recs }: Props) => {
                 <p className="text-xs text-gray-500">Inicio / {product.category || "Categoría"}</p>
                 <h1 className="text-xl md:text-2xl font-semibold mt-2">{displayProductTitle}</h1>
                 <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
-                  <span>{salesCount} ventas</span>
-                  <span className="text-gray-300">|</span>
+                  {salesCount > 0 && (
+                    <>
+                      <span>{salesCount} ventas</span>
+                      <span className="text-gray-300">|</span>
+                    </>
+                  )}
                   <span>Distribuidor Rossy Resina</span>
-                  <div className="flex items-center gap-1 text-yellow-500 ml-auto">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
-                    ))}
-                    <span className="text-gray-700 text-sm ml-1">{reviewAverage.toFixed(1)}</span>
-                  </div>
+                  {reviewCount > 0 && (
+                    <div className="flex items-center gap-1 text-yellow-500 ml-auto">
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
+                      ))}
+                      <span className="text-gray-700 text-sm ml-1">{reviewAverage.toFixed(1)}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="mt-4 flex items-center gap-3">
                   <span className="text-2xl font-semibold text-gray-900">
