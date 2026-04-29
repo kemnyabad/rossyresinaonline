@@ -257,6 +257,8 @@ const RifaDetail = ({
     ...Array.from({ length: Math.min(amphoraQuantity, 12) }, () => currentParticipantName),
     ...amphoraParticipants,
   ];
+  const activeBannerSlide = bannerSlides[currentSlide];
+  const isImageBannerSlide = activeBannerSlide?.type === 'image';
 
   const endDateLabel = targetDate.toLocaleDateString('es-PE', {
     day: '2-digit',
@@ -327,18 +329,20 @@ const RifaDetail = ({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           <div className="space-y-5 lg:col-span-5">
             <section className="overflow-hidden rounded-[1.8rem] border border-[#eed2e4] bg-white shadow-sm">
-              <div className="relative aspect-[16/10] bg-[#f7eaf2]">
+              <div className={`relative overflow-hidden ${isImageBannerSlide ? 'bg-white' : 'aspect-[16/10] bg-[#f7eaf2]'}`}>
                 {bannerSlides.length > 0 ? (
-                  bannerSlides[currentSlide].type === 'image' ? (
-                    <div
-                      className="h-full w-full bg-cover bg-center"
-                      style={{ backgroundImage: `url(${bannerSlides[currentSlide].url})` }}
+                  activeBannerSlide.type === 'image' ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={activeBannerSlide.url}
+                      alt={activeBannerSlide.title || selectedRifa.title || 'Imagen de la rifa'}
+                      className="block h-auto w-full"
                     />
                   ) : (
-                    <div className={`flex h-full items-center justify-center bg-gradient-to-br ${bannerSlides[currentSlide].gradient} p-8 text-center text-white`}>
+                    <div className={`flex h-full items-center justify-center bg-gradient-to-br ${activeBannerSlide.gradient} p-8 text-center text-white`}>
                       <div>
-                        <h2 className="text-3xl font-black uppercase tracking-tight">{bannerSlides[currentSlide].title}</h2>
-                        <p className="mt-2 text-sm font-medium">{bannerSlides[currentSlide].subtitle}</p>
+                        <h2 className="text-3xl font-black uppercase tracking-tight">{activeBannerSlide.title}</h2>
+                        <p className="mt-2 text-sm font-medium">{activeBannerSlide.subtitle}</p>
                       </div>
                     </div>
                   )
