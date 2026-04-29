@@ -8,10 +8,13 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ["i.ibb.co"],
+    domains: ["i.ibb.co", "lh3.googleusercontent.com", "graph.facebook.com", "platform-lookaside.fbsbx.com"],
     remotePatterns: [
       { protocol: "https", hostname: "i.ibb.co" },
       { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "graph.facebook.com" },
+      { protocol: "https", hostname: "platform-lookaside.fbsbx.com" },
     ],
   },
   async redirects() {

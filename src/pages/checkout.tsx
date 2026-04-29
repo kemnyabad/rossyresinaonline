@@ -6,14 +6,51 @@ import Link from "next/link";
 import FormattedPrice from "@/components/FormattedPrice";
 import { resetCart } from "@/store/nextSlice";
 import { useSession } from "next-auth/react";
+import { FiCreditCard, FiInfo, FiShoppingCart } from "react-icons/fi";
 
 type PaymentMethod = "YAPE" | "TRANSFER";
 type ShippingCarrier = "SHALOM" | "OLVA";
+
+const CheckoutSteps = () => {
+  const steps = [
+    { label: "Carro de Compras", icon: FiShoppingCart, active: false },
+    { label: "Información de Envío", icon: FiInfo, active: true },
+    { label: "Pago", icon: FiCreditCard, active: false },
+  ];
+
+  return (
+    <div className="mx-auto max-w-3xl px-3 py-8 md:py-10">
+      <div className="grid grid-cols-3 items-start">
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          return (
+            <div key={step.label} className="relative flex flex-col items-center text-center">
+              {index > 0 && (
+                <span className="absolute right-1/2 top-8 h-px w-full bg-gray-300" aria-hidden="true" />
+              )}
+              <span
+                className={`relative z-10 flex h-16 w-16 items-center justify-center rounded-full text-3xl text-white ${
+                  step.active ? "bg-orange-600" : "bg-gray-400"
+                }`}
+              >
+                <Icon />
+              </span>
+              <span className="mt-5 text-sm font-medium text-gray-950 md:text-base">{step.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default function CheckoutPage() {
   const dispatch = useDispatch();
   const { data: session } = useSession();
   const { productData, userInfo } = useSelector((state: StateProps) => state.next);
+  const isAdminSession = (session?.user as any)?.role === "ADMIN";
+  const customerSession = !isAdminSession ? session : null;
+  const storeUser = isAdminSession ? null : (userInfo as any);
   const autofillTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAutofillKey = useRef("");
 
@@ -33,6 +70,9 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState("");
 
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showShippingForm, setShowShippingForm] = useState(true);
+  const [selectedSavedAddress, setSelectedSavedAddress] = useState(false);
+  const [shippingConfirmed, setShippingConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [successId, setSuccessId] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
@@ -42,13 +82,68 @@ export default function CheckoutPage() {
   const accountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "";
 
   useEffect(() => {
-    if (userInfo) {
-      // @ts-ignore
-      setName(userInfo.name || "");
-      // @ts-ignore
-      setPhone(userInfo.phone || "");
+    if (storeUser) {
+      setName(storeUser.name || "");
+      setPhone(storeUser.phone || "");
     }
-  }, [userInfo]);
+  }, [storeUser]);
+
+  useEffect(() => {
+    const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
+    if (!sessionEmail || typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(`rr_shipping_profile:${sessionEmail}`);
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      setName(String(p.name || (customerSession?.user as any)?.name || ""));
+      setDni(String(p.dni || ""));
+      setPhone(String(p.phone || ""));
+      setLocationLine(String(p.locationLine || ""));
+      setShippingCarrier(String(p.shippingCarrier || "SHALOM") === "OLVA" ? "OLVA" : "SHALOM");
+      setShalomAgency(String(p.shalomAgency || ""));
+      setOlvaAddress(String(p.olvaAddress || ""));
+      setOlvaReference(String(p.olvaReference || ""));
+      setShowShippingForm(false);
+      setSelectedSavedAddress(true);
+      setShippingConfirmed(false);
+    } catch {
+      // Si el dato local esta corrupto, simplemente dejamos el formulario editable.
+    }
+  }, [customerSession]);
+
+  useEffect(() => {
+    const sessionName = String((customerSession?.user as any)?.name || "").trim();
+    const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
+    if (!sessionName || name || typeof window === "undefined") return;
+    const localProfile = sessionEmail ? window.localStorage.getItem(`rr_shipping_profile:${sessionEmail}`) : "";
+    if (localProfile) return;
+
+    let alive = true;
+    fetch(`/api/orders/customer-profile?query=${encodeURIComponent(sessionName)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!alive || !data?.found) return;
+        const p = data.profile || {};
+        setName(String(p.name || sessionName));
+        setDni(String(p.dni || ""));
+        setPhone(String(p.phone || ""));
+        setLocationLine(String(p.locationLine || ""));
+        setShippingCarrier(String(p.shippingCarrier || "SHALOM") === "OLVA" ? "OLVA" : "SHALOM");
+        setShalomAgency(String(p.shalomAgency || ""));
+        setOlvaAddress(String(p.olvaAddress || ""));
+        setOlvaReference(String(p.olvaReference || ""));
+        setShowShippingForm(false);
+        setSelectedSavedAddress(true);
+        setShippingConfirmed(false);
+        if (sessionEmail) {
+          window.localStorage.setItem(`rr_shipping_profile:${sessionEmail}`, JSON.stringify(p));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [customerSession, name]);
 
   useEffect(() => {
     return () => {
@@ -77,8 +172,8 @@ export default function CheckoutPage() {
       setPaymentPreview("");
       return;
     }
-    if (file.size > 3 * 1024 * 1024) {
-      setErrorMsg("El comprobante no debe superar 3MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMsg("El comprobante no debe superar 10MB.");
       return;
     }
     setErrorMsg("");
@@ -131,6 +226,26 @@ export default function CheckoutPage() {
     return true;
   };
 
+  const isShippingReviewStep = !showShippingForm && !shippingConfirmed && !!name && !!phone && !!locationLine;
+
+  const saveLocalShippingProfile = () => {
+    const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
+    if (!sessionEmail || typeof window === "undefined") return;
+    window.localStorage.setItem(
+      `rr_shipping_profile:${sessionEmail}`,
+      JSON.stringify({
+        dni,
+        name,
+        phone,
+        locationLine,
+        shippingCarrier,
+        shalomAgency,
+        olvaAddress,
+        olvaReference,
+      })
+    );
+  };
+
   const handleConfirmOrder = async () => {
     setErrorMsg("");
     if (!canSubmit()) {
@@ -148,7 +263,7 @@ export default function CheckoutPage() {
             name,
             dni,
             phone,
-            email: String((session?.user as any)?.email || ""),
+            email: String((customerSession?.user as any)?.email || ""),
             locationLine,
             notes,
           },
@@ -169,6 +284,7 @@ export default function CheckoutPage() {
       }
 
       const saved = await res.json();
+      saveLocalShippingProfile();
       setSuccessId(saved?.orderCode || saved?.id || "");
       dispatch(resetCart());
     } catch (e: any) {
@@ -207,6 +323,7 @@ export default function CheckoutPage() {
       <Head>
         <title>Rossy Resina - Checkout</title>
       </Head>
+      <CheckoutSteps />
       {productData.length === 0 ? (
         <div className="bg-white rounded-lg p-8 shadow">
           <p className="text-lg">Tu carrito esta vacio.</p>
@@ -218,11 +335,108 @@ export default function CheckoutPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid md:grid-cols-3 gap-6">
-          <section className="md:col-span-2 bg-white rounded-lg p-6 shadow">
-            <h2 className="text-xl font-semibold mb-4">Datos de env?o</h2>
+        <div className={isShippingReviewStep ? "mx-auto max-w-5xl" : "grid md:grid-cols-3 gap-6"}>
+          <section className={isShippingReviewStep ? "bg-white p-0" : "md:col-span-2 bg-white rounded-lg p-6 shadow"}>
+            <div className="mb-6">
+              <p className="text-lg text-gray-950">Documento de venta</p>
+              <div className="mt-4 flex gap-8 text-base">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="saleDoc" defaultChecked className="accent-orange-600" />
+                  Boleta
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="saleDoc" className="accent-orange-600" />
+                  Factura
+                </label>
+              </div>
+            </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="rounded-md border border-gray-300 p-6 md:p-10">
+              <h2 className="text-2xl font-black text-gray-950">Dirección de envío</h2>
+              <p className="mt-1 text-lg text-gray-800">Recibe tu pedido en cualquier dirección del país.</p>
+
+              {!showShippingForm && name && phone && locationLine ? (
+                <>
+                  <div className="mt-8 text-lg text-gray-950">
+                    <p>¿Se encuentra la dirección que quieres utilizar desplegada a continuación?</p>
+                    <p>
+                      Si es así, haz click en el botón <span className="font-black">&quot;ENVIAR AQUÍ&quot;</span>.
+                    </p>
+                    <p>
+                      O también puedes{" "}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowShippingForm(true);
+                          setSelectedSavedAddress(false);
+                        }}
+                        className="text-orange-600 hover:underline"
+                      >
+                        Ingresar una nueva dirección.
+                      </button>
+                    </p>
+                  </div>
+
+                  <div className={`mt-8 rounded-md border p-4 ${selectedSavedAddress ? "border-orange-500 bg-orange-50" : "border-gray-300 bg-white"}`}>
+                    <p className="text-lg font-black text-gray-950">{name}</p>
+                    <p className="text-lg text-gray-950">
+                      {shippingCarrier === "OLVA" ? olvaAddress : `Agencia Shalom: ${shalomAgency}`}
+                    </p>
+                    <p className="text-lg text-gray-950">{locationLine}</p>
+                    {shippingCarrier === "OLVA" && olvaReference && (
+                      <p className="text-lg text-gray-950">Referencia: {olvaReference}</p>
+                    )}
+                    <p className="text-lg text-gray-950">Teléfono o WhatsApp: {phone}</p>
+                    <div className="mt-3 border-t border-gray-300 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSavedAddress(true);
+                          setShippingConfirmed(true);
+                        }}
+                        className="mr-2 rounded bg-orange-600 px-5 py-2 text-sm font-bold text-white hover:bg-orange-700"
+                      >
+                        ENVIAR AQUÍ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
+                          if (sessionEmail && typeof window !== "undefined") {
+                            window.localStorage.removeItem(`rr_shipping_profile:${sessionEmail}`);
+                          }
+                          setName("");
+                          setDni("");
+                          setPhone("");
+                          setLocationLine("");
+                          setShalomAgency("");
+                          setOlvaAddress("");
+                          setOlvaReference("");
+                          setShowShippingForm(true);
+                          setSelectedSavedAddress(false);
+                          setShippingConfirmed(false);
+                        }}
+                        className="mr-2 rounded border border-gray-300 px-5 py-2 text-sm font-medium text-gray-950 hover:bg-gray-50"
+                      >
+                        Borrar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowShippingForm(true);
+                          setShippingConfirmed(false);
+                        }}
+                        className="rounded border border-gray-300 px-5 py-2 text-sm font-medium text-gray-950 hover:bg-gray-50"
+                      >
+                        Editar
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : null}
+
+            {showShippingForm && (
+            <div className="mt-8 grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-600">Nombre completo</label>
                 <input
@@ -248,8 +462,13 @@ export default function CheckoutPage() {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-600">Telefono</label>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2" />
+                <label className="text-sm text-gray-600">Teléfono o WhatsApp</label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Ej: 961770723"
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
               </div>
               <div className="sm:col-span-2">
                 <label className="text-sm text-gray-600">Departamento - Provincia - Distrito (en un solo campo)</label>
@@ -347,8 +566,58 @@ export default function CheckoutPage() {
                 <span>Acepto que este pedido sera confirmado manualmente por el equipo de Rossy Resina.</span>
               </label>
             </div>
+            )}
+
+            {!showShippingForm && shippingConfirmed && (
+              <div className="mt-8 grid gap-4 border-t border-gray-200 pt-6">
+                <div>
+                  <label className="text-sm text-gray-600">Método de pago</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value === "TRANSFER" ? "TRANSFER" : "YAPE")}
+                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                  >
+                    <option value="YAPE">Yape</option>
+                    <option value="TRANSFER">Transferencia</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm text-gray-600">Comprobante de pago</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handlePaymentFile(e.target.files?.[0])}
+                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                  />
+                  {paymentFile && <p className="text-xs text-gray-500 mt-1">Archivo: {paymentFile.name}</p>}
+                </div>
+                {paymentPreview && (
+                  <div>
+                    <img src={paymentPreview} alt="Comprobante" className="max-h-64 rounded border border-gray-200" />
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-sm text-gray-600">Notas del pedido</label>
+                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 h-24" />
+                </div>
+
+                <label className="flex items-start gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={acceptTerms}
+                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <span>Acepto que este pedido sera confirmado manualmente por el equipo de Rossy Resina.</span>
+                </label>
+              </div>
+            )}
+            </div>
           </section>
 
+          {!isShippingReviewStep && (
           <aside className="md:col-span-1 md:sticky md:top-24 h-fit space-y-4">
             <div className="bg-white rounded-lg p-6 shadow">
               <h2 className="text-xl font-semibold mb-4">Resumen del pedido</h2>
@@ -388,6 +657,7 @@ export default function CheckoutPage() {
               </button>
             </div>
           </aside>
+          )}
         </div>
       )}
     </div>

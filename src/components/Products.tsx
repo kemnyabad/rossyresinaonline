@@ -32,7 +32,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   const [stats, setStats] = useState<Record<string, ProductStat>>({});
   const [addedMap, setAddedMap] = useState<Record<string, boolean>>({});
 
-  const productSlug = (code?: string, id?: number) => code ? `/${code}` : `/${id}`;
+  const productSlug = (code?: string, id?: string | number) => code ? `/${code}` : `/${id}`;
 
   const idsParam = useMemo(() => {
     const ids = (Array.isArray(productData) ? productData : [])
@@ -51,7 +51,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
 
   const toProductHref = (
     code: string | undefined,
-    _id: number,
+    _id: string | number,
     brand: string,
     category: string,
     description: string,
@@ -65,7 +65,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
     query: { _id, brand, category, description, image, isNew, oldPrice, price, title },
   });
 
-  const showAddedFeedback = (id: number) => {
+  const showAddedFeedback = (id: string | number) => {
     const key = String(id);
     setAddedMap((prev) => ({ ...prev, [key]: true }));
     setTimeout(() => {
@@ -88,6 +88,8 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
           const displayTitle = formatProductTitle(title || "Producto");
           const displayImage = pickDisplayImage(image, images);
           const href = toProductHref(code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title);
+          const hasSales = itemStats.salesCount > 0;
+          const hasReviews = itemStats.reviewCount > 0;
 
           return (
             <div
@@ -145,24 +147,24 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                     )}
                   </div>
 
-                  <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-gray-500">
-                    <span>{itemStats.salesCount} ventas</span>
-                    <span>
-                      {itemStats.reviewCount > 0
-                        ? `${itemStats.avgRating.toFixed(1)} (${itemStats.reviewCount})`
-                        : "Sin reseñas"}
-                    </span>
-                  </div>
+                  {(hasSales || hasReviews) && (
+                    <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-gray-500">
+                      {hasSales && <span>{itemStats.salesCount} ventas</span>}
+                      {hasReviews && <span>{itemStats.avgRating.toFixed(1)} ({itemStats.reviewCount})</span>}
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-2 flex items-center gap-0.5 text-xs text-gray-900">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <StarIcon
-                      key={i}
-                      className={`h-3.5 w-3.5 ${i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-200"}`}
-                    />
-                  ))}
-                </div>
+                {hasReviews && (
+                  <div className="mt-2 flex items-center gap-0.5 text-xs text-gray-900">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <StarIcon
+                        key={i}
+                        className={`h-3.5 w-3.5 ${i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-200"}`}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 <button
                   onClick={() => {

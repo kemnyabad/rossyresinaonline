@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const cloudinaryUrl = z.string().url();
+const nonEmptyString = (message: string) => z.string().trim().min(1, message);
 
 export const ProductSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres").optional(),
@@ -25,3 +26,55 @@ export const ProductSchema = z.object({
 });
 
 export type ProductInput = z.infer<typeof ProductSchema>;
+
+export const OrderItemSchema = z.object({
+  _id: z.union([z.string(), z.number()]).optional(),
+  productId: z.union([z.string(), z.number()]).optional(),
+  code: z.string().optional(),
+  quantity: z.union([z.number(), z.string()])
+    .transform((v) => Number(v))
+    .pipe(z.number().int().positive("La cantidad debe ser mayor a 0"))
+    .optional(),
+});
+
+export const OrderCustomerSchema = z.object({
+  name: nonEmptyString("Nombre completo requerido"),
+  dni: z.string().trim().min(6, "DNI requerido"),
+  phone: nonEmptyString("Teléfono o WhatsApp requerido"),
+  email: z.string().trim().email("Correo invalido").optional().or(z.literal("")),
+  locationLine: nonEmptyString("Departamento, provincia y distrito requeridos"),
+  notes: z.string().optional(),
+  shippingCarrier: z.string().optional(),
+  shalomAgency: z.string().optional(),
+  olvaAddress: z.string().optional(),
+  olvaReference: z.string().optional(),
+  paymentMethod: z.string().optional(),
+});
+
+export const CreateOrderSchema = z.object({
+  customer: OrderCustomerSchema,
+  items: z.array(OrderItemSchema).min(1, "Carrito vacio"),
+  shippingCarrier: z.string().optional(),
+  shalomAgency: z.string().optional(),
+  olvaAddress: z.string().optional(),
+  olvaReference: z.string().optional(),
+  paymentMethod: z.string().optional(),
+  paymentImage: nonEmptyString("Debes adjuntar comprobante de pago"),
+});
+
+export const AdminUserCreateSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().trim().email("Correo invalido"),
+  password: z.string().trim().min(6, "La contrasena debe tener al menos 6 caracteres"),
+  role: z.enum(["ADMIN", "EDITOR", "CUSTOMER"]).optional(),
+});
+
+export const AdminUserUpdateSchema = z.object({
+  id: nonEmptyString("ID requerido"),
+  name: z.string().optional(),
+  role: z.enum(["ADMIN", "EDITOR", "CUSTOMER"]).optional(),
+});
+
+export const AdminUserDeleteSchema = z.object({
+  id: nonEmptyString("ID requerido"),
+});

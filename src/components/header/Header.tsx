@@ -1,15 +1,18 @@
 import Image from "next/image";
 import logo from "../../images/logo.jpg";
-import { MagnifyingGlassIcon, UserIcon, HeartIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, UserIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useSelector, useDispatch } from "react-redux";
 import { StateProps, StoreProduct } from "../../../type";
 import { useSession, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useEffect, useState, useRef, useMemo, useDeferredValue } from "react";
-import { addUser } from "@/store/nextSlice";
+import { addUser, removeUser } from "@/store/nextSlice";
 import SearchProducts from "../SearchProducts";
 import FormattedPrice from "@/components/FormattedPrice";
+import { FcGoogle } from "react-icons/fc";
+import { MdOutlineEmail } from "react-icons/md";
 
 const Header = () => {
   const router = useRouter();
@@ -17,10 +20,19 @@ const Header = () => {
   const [allData, setAllData] = useState<StoreProduct[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  const { productData, favoriteData, userInfo, allProducts } = useSelector(
+  const { productData, userInfo, allProducts } = useSelector(
     (state: StateProps) => state.next
   );
   const dispatch = useDispatch();
+  const sessionRole = (session?.user as any)?.role;
+  const isAdminSession = sessionRole === "ADMIN";
+  const storeUser = isAdminSession ? null : (userInfo as any);
+  const sessionUser = !isAdminSession ? session?.user : null;
+  const handleSignOut = async () => {
+    dispatch(removeUser());
+    setProfileOpen(false);
+    await signOut({ callbackUrl: "/" });
+  };
   useEffect(() => {
     const list = Array.isArray(allProducts) ? allProducts : [];
     if (list.length > 0) setAllData(list);
@@ -40,7 +52,11 @@ const Header = () => {
     };
   }, [allProducts]);
   useEffect(() => {
-    if (session) {
+    if (isAdminSession) {
+      dispatch(removeUser());
+      return;
+    }
+    if (session?.user) {
       dispatch(
         addUser({
           name: session?.user?.name,
@@ -49,7 +65,7 @@ const Header = () => {
         })
       );
     }
-  }, [session, dispatch]);
+  }, [session, isAdminSession, dispatch]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -134,8 +150,8 @@ const Header = () => {
   const cartSubtotal = isHydrated
     ? productData.reduce((s: number, p: any) => s + p.price * p.quantity, 0)
     : 0;
-  const favoriteCount = isHydrated && favoriteData ? favoriteData.length : 0;
   const cartCount = isHydrated && productData ? productData.length : 0;
+  const isAuthenticated = Boolean(sessionUser?.email || storeUser?.email);
 
   return (
     <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
@@ -151,16 +167,7 @@ const Header = () => {
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <Link href="/favorite" className="relative p-2 rounded-full border border-gray-200 text-gray-700 hover:border-amazon_blue hover:text-amazon_blue hover:shadow-md transition-all duration-300">
-              <HeartIcon className="w-5 h-5" />
-              {favoriteCount > 0 ? (
-                <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center shadow-sm">
-                  {favoriteCount}
-                </span>
-              ) : null}
-            </Link>
-          </div>
+          <div className="flex items-center gap-2" />
         </div>
 
         <div className="mt-3">
@@ -267,9 +274,9 @@ const Header = () => {
         {/* actions */}
         <div className="ml-auto md:ml-0 flex items-center gap-2 sm:gap-4">
           <Link
-            href={userInfo ? "/account" : "/sign-in"}
+            href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
             className="md:hidden p-2 rounded-full border border-gray-200 text-gray-700 hover:text-amazon_blue hover:border-amazon_blue"
-            aria-label={userInfo ? "Ir a mi perfil" : "Iniciar sesión"}
+            aria-label={isAuthenticated ? "Ir a mi perfil" : "Iniciar sesión"}
           >
             <UserIcon className="w-5 h-5" />
           </Link>
@@ -293,9 +300,9 @@ const Header = () => {
               <div className="absolute right-0 top-[calc(100%+10px)] w-72 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
                 <div className="p-4 border-b border-gray-100">
                   <div className="flex items-center gap-3">
-                    {userInfo?.image ? (
+                    {storeUser?.image ? (
                       <Image
-                        src={userInfo.image}
+                        src={storeUser.image}
                         alt="Avatar"
                         width={44}
                         height={44}
@@ -303,21 +310,21 @@ const Header = () => {
                       />
                     ) : (
                       <div className="h-11 w-11 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-semibold">
-                        {(userInfo?.name || userInfo?.email || "U").slice(0, 1)}
+                        {(storeUser?.name || storeUser?.email || "U").slice(0, 1)}
                       </div>
                     )}
                     <div>
                       <p className="text-sm text-gray-600">Bienvenido de nuevo</p>
                       <p className="text-sm font-semibold text-gray-900">
-                        {userInfo?.name || userInfo?.email || "Invitado"}
+                        {storeUser?.name || storeUser?.email || "Invitado"}
                       </p>
                     </div>
                   </div>
                   <div className="mt-3">
-                    {userInfo ? (
+                    {isAuthenticated ? (
                       <button
                         type="button"
-                        onClick={() => signOut()}
+                        onClick={handleSignOut}
                         className="text-sm text-amazon_blue hover:underline"
                       >
                         Cerrar sesión
@@ -329,39 +336,39 @@ const Header = () => {
                     )}
                   </div>
                 </div>
+                {!isAuthenticated && (
+                  <div className="grid gap-2 border-b border-gray-100 p-4">
+                    <Link
+                      href="/register"
+                      className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      <MdOutlineEmail className="h-5 w-5 text-amazon_blue" />
+                      Registrarme con correo
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => signIn("google", { callbackUrl: "/" })}
+                      className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      <FcGoogle className="h-5 w-5" />
+                      Continuar con Google
+                    </button>
+                  </div>
+                )}
                 <div className="py-2">
-                  <Link href="/account" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                  <Link href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"} className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                     Mi Cuenta
                   </Link>
-                  <Link href="/track-orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                  <Link href={isAuthenticated ? "/track-orders" : "/sign-in?callbackUrl=/track-orders"} className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                     Mis pedidos
                   </Link>
-                  <Link href="/favorite" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Lista de deseos
-                  </Link>
-                  <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                  <Link href={isAuthenticated ? "/messages" : "/sign-in?callbackUrl=/messages"} className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                     Centro de mensajes
                   </Link>
                 </div>
               </div>
             )}
           </div>
-          <Link
-            href="/favorite"
-            className="hidden md:flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue relative"
-          >
-            <HeartIcon className="w-5 h-5" />
-            {favoriteCount > 0 && (
-              <span className="absolute -top-2 left-3 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
-                {favoriteCount}
-              </span>
-            )}
-            <div className="leading-tight">
-              <div className="text-xs text-gray-500">Favoritos</div>
-              <div className="font-semibold">Guardados</div>
-            </div>
-          </Link>
-
           {/* cart */}
           <Link
             href="/cart"

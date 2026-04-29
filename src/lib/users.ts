@@ -45,6 +45,27 @@ export async function createUser(input: {
   return user as AppUser;
 }
 
+export async function ensureOAuthUser(input: {
+  name?: string | null;
+  email: string;
+  role?: UserRole;
+}) {
+  const email = input.email.trim().toLowerCase();
+  const existing = await findUserByEmail(email);
+  if (existing) return existing;
+
+  const passwordHash = await bcrypt.hash(`oauth:${email}:${Date.now()}:${Math.random()}`, 10);
+  const user = await prisma.user.create({
+    data: {
+      name: String(input.name || "Usuario").trim() || "Usuario",
+      email,
+      passwordHash,
+      role: input.role || "CUSTOMER",
+    },
+  });
+  return user as AppUser;
+}
+
 export async function verifyUser(email: string, password: string) {
   const user = await findUserByEmail(email);
   if (!user) return null;

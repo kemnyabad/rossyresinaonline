@@ -1,8 +1,7 @@
-﻿import { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import { useMemo, useState, useEffect } from "react";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { GetServerSideProps } from "next";
+import { requireAdminPage } from "@/lib/adminAuth";
 import Image from "next/image";
 import ProductVariants, { type Variant } from "@/components/admin/ProductVariants";
 
@@ -400,11 +399,8 @@ export default function NewProduct() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) {
-    return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/new", permanent: false } };
-  }
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };
 

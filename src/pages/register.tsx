@@ -5,10 +5,19 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { signIn } from "next-auth/react";
 
+type ShippingCarrier = "SHALOM" | "OLVA";
+
 export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [dni, setDni] = useState("");
+  const [phone, setPhone] = useState("");
+  const [locationLine, setLocationLine] = useState("");
+  const [shippingCarrier, setShippingCarrier] = useState<ShippingCarrier>("SHALOM");
+  const [shalomAgency, setShalomAgency] = useState("");
+  const [olvaAddress, setOlvaAddress] = useState("");
+  const [olvaReference, setOlvaReference] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,8 +25,16 @@ export default function RegisterPage() {
 
   const handleSubmit = async () => {
     setError(null);
-    if (!email || !password) {
+    if (!name || !email || !dni || !phone || !locationLine || !password) {
       setError("Completa todos los campos");
+      return;
+    }
+    if (shippingCarrier === "SHALOM" && !shalomAgency) {
+      setError("Indica la agencia Shalom donde recibiras tu paquete");
+      return;
+    }
+    if (shippingCarrier === "OLVA" && (!olvaAddress || !olvaReference)) {
+      setError("Indica direccion y referencia para Olva");
       return;
     }
     if (password !== confirm) {
@@ -29,14 +46,29 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          dni,
+          phone,
+          locationLine,
+          shippingCarrier,
+          shalomAgency,
+          olvaAddress,
+          olvaReference,
+          password,
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError(data.error || "No se pudo registrar");
         return;
       }
-      const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/capacitaciones";
+      const data = await res.json().catch(() => ({}));
+      if (typeof window !== "undefined" && data?.profile) {
+        window.localStorage.setItem(`rr_shipping_profile:${email.trim().toLowerCase()}`, JSON.stringify(data.profile));
+      }
+      const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/checkout";
       await signIn("credentials", { email, password, callbackUrl: cb });
     } finally {
       setLoading(false);
@@ -48,16 +80,16 @@ export default function RegisterPage() {
       <Head>
         <title>Crear cuenta  -  Rossy Resina</title>
       </Head>
-      <div className="w-full max-w-md bg-white rounded-lg shadow border border-gray-200 p-8">
+      <div className="w-full max-w-2xl bg-white rounded-lg shadow border border-gray-200 p-8">
         <div className="flex flex-col items-center">
           <div className="bg-white rounded-full p-1 shadow-md ring-2 ring-white/60">
             <Image src={require("@/images/logo.jpg")} alt="Logo Rossy Resina" width={64} height={64} className="rounded-full object-contain" />
           </div>
           <h1 className="mt-4 text-2xl font-semibold text-amazon_blue">Crear cuenta</h1>
-          <p className="mt-2 text-sm text-gray-600 text-center">Registra tu cuenta para guardar favoritos y comprar m?s r?pido.</p>
+          <p className="mt-2 text-sm text-gray-600 text-center">Registra tu cuenta y la direccion donde recibiras tus paquetes.</p>
         </div>
 
-        <div className="mt-6 grid gap-3">
+        <div className="mt-6 grid gap-3 md:grid-cols-2">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -72,6 +104,55 @@ export default function RegisterPage() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
           <input
+            value={dni}
+            onChange={(e) => setDni(e.target.value.replace(/\D/g, ""))}
+            placeholder="DNI"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Telefono"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          />
+          <input
+            value={locationLine}
+            onChange={(e) => setLocationLine(e.target.value)}
+            placeholder="Departamento - Provincia - Distrito"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md md:col-span-2"
+          />
+          <select
+            value={shippingCarrier}
+            onChange={(e) => setShippingCarrier(e.target.value === "OLVA" ? "OLVA" : "SHALOM")}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white md:col-span-2"
+          >
+            <option value="SHALOM">Recoger en agencia Shalom</option>
+            <option value="OLVA">Entrega a domicilio por Olva</option>
+          </select>
+          {shippingCarrier === "SHALOM" ? (
+            <input
+              value={shalomAgency}
+              onChange={(e) => setShalomAgency(e.target.value)}
+              placeholder="Agencia Shalom donde recogerás"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md md:col-span-2"
+            />
+          ) : (
+            <>
+              <input
+                value={olvaAddress}
+                onChange={(e) => setOlvaAddress(e.target.value)}
+                placeholder="Direccion exacta"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md md:col-span-2"
+              />
+              <textarea
+                value={olvaReference}
+                onChange={(e) => setOlvaReference(e.target.value)}
+                placeholder="Referencia del domicilio"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md md:col-span-2"
+              />
+            </>
+          )}
+          <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -85,10 +166,10 @@ export default function RegisterPage() {
             placeholder="Confirmar contrasena"
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
-          {error && <div className="text-sm text-red-600">{error}</div>}
+          {error && <div className="text-sm text-red-600 md:col-span-2">{error}</div>}
           <button
             onClick={handleSubmit}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black md:col-span-2"
           >
             {loading ? "Registrando..." : "Crear cuenta"}
           </button>

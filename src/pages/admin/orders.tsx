@@ -1,8 +1,7 @@
 import Head from "next/head";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { requireAdminPage } from "@/lib/adminAuth";
 import {
   MagnifyingGlassIcon,
   ArrowPathIcon,
@@ -107,7 +106,10 @@ export default function AdminOrdersPage() {
   useEffect(() => { loadOrders(); }, [loadOrders]);
 
   const setShipField = (id: string, key: "shalomVoucherImage" | "shalomPickupCode" | "olvaTrackingImage", val: string) =>
-    setShipData((prev) => ({ ...prev, [id]: { shalomVoucherImage: "", shalomPickupCode: "", olvaTrackingImage: "", ...prev[id], [key]: val } }));
+    setShipData((prev) => {
+      const current = prev[id] || { shalomVoucherImage: "", shalomPickupCode: "", olvaTrackingImage: "" };
+      return { ...prev, [id]: { ...current, [key]: val } };
+    });
 
   const uploadImage = async (file: File) => {
     const reader  = new FileReader();
@@ -498,8 +500,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/orders", permanent: false } };
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };

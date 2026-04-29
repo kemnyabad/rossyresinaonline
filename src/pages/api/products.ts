@@ -1,9 +1,8 @@
 ﻿import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import type { Session } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { ProductSchema } from "@/lib/validations";
+import { logger } from "@/lib/logger";
 
 const db = prisma as any;
 const productBaseSelect = {
@@ -242,14 +241,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return String(value || "").trim();
   };
 
-  const isAdmin = async () => {
-    const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
-    return !!session && (session.user as any)?.role === "ADMIN";
-  };
+  const isAdmin = () => isAdminApiRequest(req);
 
   if (req.method === "GET") {
     try {
-      const products = await withDbRetry(() =>
+      const products = await withDbRetry<any[]>(() =>
         db.product.findMany({
           orderBy: { createdAt: "desc" },
           select: { ...productBaseSelect, images: true },
@@ -257,12 +253,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
       return res.status(200).json(products.map(toLegacyProduct));
     } catch (error: any) {
+      logger.error("products.get_failed", {
+        error: String(error?.message || error),
+      });
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudieron obtener productos") });
     }
   }
 
   if (req.method === "POST") {
-    const ok = await isAdmin();
+    const ok = isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
 
     const validation = validateProductPayload(req.body);
@@ -302,12 +301,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         images: cloudinaryImages,
       });
     } catch (error: any) {
+      logger.error("products.post_failed", {
+        error: String(error?.message || error),
+      });
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo crear producto") });
     }
   }
 
   if (req.method === "PUT") {
-    const ok = await isAdmin();
+    const ok = isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
 
     const validation = validateProductPayload(req.body);
@@ -394,12 +396,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         images: finalImages,
       });
     } catch (error: any) {
+      logger.error("products.put_failed", {
+        error: String(error?.message || error),
+      });
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo actualizar producto") });
     }
   }
 
   if (req.method === "DELETE") {
-    const ok = await isAdmin();
+    const ok = isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
 
     try {
@@ -407,7 +412,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const code = firstQueryValue(req.query.code) || String(req.body?.code || "").trim();
       if (!key && !code) return res.status(400).json({ error: "ID o codigo requerido" });
 
-      const existing = code
+      const existing: any = code
         ? await withDbRetry(() => db.product.findFirst({
             where: { code },
             select: { id: true, legacyId: true, code: true },
@@ -427,6 +432,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       return res.status(204).end();
     } catch (error: any) {
+      logger.error("products.delete_failed", {
+        error: String(error?.message || error),
+      });
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo eliminar producto") });
     }
   }

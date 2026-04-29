@@ -1,13 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import type { Session } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { getUsers, createUser, AppUser, UserRole } from "@/lib/users";
+import { logger } from "@/lib/logger";
+import {
+  AdminUserCreateSchema,
+  AdminUserDeleteSchema,
+  AdminUserUpdateSchema,
+} from "@/lib/validations";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
-  if (!session || (session.user as any)?.role !== "ADMIN") {
+  if (!isAdminApiRequest(req)) {
     return res.status(401).json({ error: "No autorizado" });
   }
 
@@ -17,7 +20,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "POST") {
-    const { name, email, password, role } = req.body || {};
+    const parsed = AdminUserCreateSchema.safeParse(req.body || {});
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    }
+    const { name, email, password, role } = parsed.data;
     try {
       const user = await createUser({
         name: String(name || "Usuario"),
@@ -31,12 +38,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (e?.message === "EMAIL_EXISTS") {
         return res.status(409).json({ error: "El correo ya esta registrado" });
       }
+      logger.error("admin.users.create_failed", {
+        error: String(e?.message || e),
+        email,
+      });
       return res.status(500).json({ error: "No se pudo crear" });
     }
   }
 
   if (req.method === "PUT") {
-    const { id, role, name } = req.body || {};
+    const parsed = AdminUserUpdateSchema.safeParse(req.body || {});
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    }
+    const { id, role, name } = parsed.data;
     const user = await prisma.user.findUnique({ where: { id: String(id) } });
     if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
     const updated = await prisma.user.update({
@@ -51,7 +66,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "DELETE") {
-    const id = (req.query.id as string) || (req.body?.id as string);
+    const rawId = (req.query.id as string) || (req.body?.id as string);
+    const parsed = AdminUserDeleteSchema.safeParse({ id: String(rawId || "") });
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    }
+    const { id } = parsed.data;
     const user = await prisma.user.findUnique({ where: { id: String(id) } });
     if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
     await prisma.user.delete({ where: { id: String(id) } });

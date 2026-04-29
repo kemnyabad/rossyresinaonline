@@ -1,10 +1,9 @@
 import Head from "next/head";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Products from "@/components/Products";
-import type { ProductProps } from "../../type";
 import FormattedPrice from "@/components/FormattedPrice";
 import { useSession } from "next-auth/react";
+import { ClipboardDocumentListIcon, HomeIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 
 const statusTabs = ["Ver todo", "Pendiente por confirmar", "Confirmado", "En proceso de envío", "Enviado"] as const;
 
@@ -39,12 +38,13 @@ type Order = {
 
 export default function TrackOrdersPage() {
   const { data: session } = useSession();
+  const isAdminSession = (session?.user as any)?.role === "ADMIN";
+  const customerSession = !isAdminSession ? session : null;
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<TabKey>("Ver todo");
   const [search, setSearch] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [promos, setPromos] = useState<ProductProps[]>([]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -54,6 +54,10 @@ export default function TrackOrdersPage() {
 
   const fetchOrders = async () => {
     const lookupEmail = email.trim();
+    if (!lookupEmail && isAdminSession) {
+      setOrders([]);
+      return;
+    }
     const url = lookupEmail ? `/api/orders?email=${encodeURIComponent(lookupEmail)}` : "/api/orders";
     setLoading(true);
     try {
@@ -73,14 +77,14 @@ export default function TrackOrdersPage() {
   }, [email]);
 
   useEffect(() => {
-    const sessionEmail = String((session?.user as any)?.email || "").trim();
+    const sessionEmail = String((customerSession?.user as any)?.email || "").trim();
     if (!sessionEmail) return;
     setEmail(sessionEmail);
     fetch("/api/orders")
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setOrders(Array.isArray(data) ? data : []))
       .catch(() => setOrders([]));
-  }, [session?.user]);
+  }, [customerSession?.user]);
 
   const counts = useMemo(() => {
     const base: Record<string, number> = {
@@ -118,97 +122,78 @@ export default function TrackOrdersPage() {
     return list;
   }, [orders, activeTab, search]);
 
-  useEffect(() => {
-    let mounted = true;
-    fetch(`/api/products?_=${Date.now()}`, { cache: "no-store" })
-      .then((res) => res.json())
-      .then((rows) => {
-        if (!mounted) return;
-        setPromos(Array.isArray(rows) ? rows.slice(0, 10) : []);
-      })
-      .catch(() => {
-        if (!mounted) return;
-        setPromos([]);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   return (
-    <div className="min-h-[70vh] px-6 py-8 bg-gray-50">
+    <div className="min-h-[70vh] bg-gray-50">
       <Head>
         <title>Mis pedidos - Rossy Resina</title>
         <meta name="description" content="Revisa tus pedidos y recomendaciones personalizadas." />
       </Head>
 
-      <div className="max-w-screen-2xl mx-auto">
-        <div className="text-sm text-gray-500 mb-4">Inicio / Cuenta</div>
-        <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] gap-6">
-          <aside className="bg-white border border-gray-200 rounded-xl p-4 h-fit">
-            <h2 className="text-lg font-semibold mb-3">Cuenta</h2>
-            <nav className="flex flex-col gap-2 text-sm text-gray-700">
-              <Link href="/account" className="px-2 py-1 rounded hover:bg-gray-50">General</Link>
-              <span className="px-2 py-1 rounded bg-gray-50 font-semibold">Pedidos</span>
-              <span className="px-2 py-1 rounded hover:bg-gray-50">Pago</span>
-              <span className="px-2 py-1 rounded hover:bg-gray-50">Reembolsos y devoluciones</span>
-              <span className="px-2 py-1 rounded hover:bg-gray-50">Valoraciones</span>
-              <span className="px-2 py-1 rounded hover:bg-gray-50">Ajustes</span>
-              <span className="px-2 py-1 rounded hover:bg-gray-50">Dirección de envío</span>
-              <Link href="/messages" className="px-2 py-1 rounded hover:bg-gray-50">Centro de mensajes</Link>
-            </nav>
-          </aside>
+      <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+        <div className="mb-4 text-sm text-gray-500">Inicio / Cuenta / Pedidos</div>
 
-          <section className="space-y-6">
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
-              <div className="flex flex-wrap items-center gap-6 text-sm">
-                {statusTabs.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setActiveTab(t)}
-                    className={
-                      "pb-2 border-b-2 " +
-                      (activeTab === t ? "border-orange-500 text-gray-900 font-semibold" : "border-transparent text-gray-600")
-                    }
-                  >
-                    {t}{t !== "Ver todo" ? ` (${counts[t] || 0})` : ""}
-                  </button>
-                ))}
-              </div>
+        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div className="border-b border-gray-100 p-5 md:p-7">
+            <p className="text-sm font-semibold text-amazon_blue">Cuenta</p>
+            <h1 className="mt-1 text-2xl font-semibold text-gray-900">Mis pedidos</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
+              Consulta el estado de tus compras usando tu correo, número de pedido o nombre del producto.
+            </p>
+          </div>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-3 items-center">
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Nº de pedido o artículo"
-                  className="h-11 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
-                />
-                <div className="flex items-center gap-2">
-                  <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Correo para buscar pedidos"
-                    disabled={Boolean((session?.user as any)?.email)}
-                    className="h-11 flex-1 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={fetchOrders}
-                    className="h-11 px-4 rounded-md bg-orange-500 text-white text-sm font-semibold"
-                  >
-                    Buscar
-                  </button>
-                </div>
-              </div>
+          <nav className="grid border-b border-gray-100 md:grid-cols-3">
+            <AccountTab href="/account" icon={<UserCircleIcon className="h-5 w-5" />} label="General" />
+            <AccountTab href="/track-orders" icon={<ClipboardDocumentListIcon className="h-5 w-5" />} label="Pedidos" active />
+            <AccountTab href="/shipping-address" icon={<HomeIcon className="h-5 w-5" />} label="Dirección de envío" />
+          </nav>
+
+          <div className="border-b border-gray-100 p-5 md:p-7">
+            <div className="flex flex-wrap items-center gap-6 text-sm">
+              {statusTabs.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setActiveTab(t)}
+                  className={
+                    "pb-2 border-b-2 " +
+                    (activeTab === t ? "border-orange-500 text-gray-900 font-semibold" : "border-transparent text-gray-600")
+                  }
+                >
+                  {t}{t !== "Ver todo" ? ` (${counts[t] || 0})` : ""}
+                </button>
+              ))}
             </div>
 
-            {loading ? (
-              <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-600">Cargando pedidos...</div>
-            ) : filteredOrders.length > 0 ? (
-              <div className="grid gap-4">
-                {filteredOrders.map((o) => (
-                  <div key={o.id} className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(260px,360px)_auto] xl:items-center">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Nº de pedido o artículo"
+                className="h-11 w-full min-w-0 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
+              />
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Correo para buscar pedidos"
+                disabled={Boolean((customerSession?.user as any)?.email)}
+                className="h-11 w-full min-w-0 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400 disabled:bg-gray-50 disabled:text-gray-600"
+              />
+              <button
+                type="button"
+                onClick={fetchOrders}
+                className="h-11 w-full rounded-md bg-orange-500 px-5 text-sm font-semibold text-white xl:w-auto"
+              >
+                Buscar
+              </button>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="p-6 text-sm text-gray-600">Cargando pedidos...</div>
+          ) : filteredOrders.length > 0 ? (
+            <div className="grid gap-4 p-5 md:p-7">
+              {filteredOrders.map((o) => (
+                <div key={o.id} className="rounded-xl border border-gray-200 p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="text-sm font-semibold text-gray-900">{o.status}</div>
                       <div className="text-sm text-gray-600">Pedido: {o.orderCode || o.id}</div>
@@ -248,7 +233,7 @@ export default function TrackOrdersPage() {
                     )}
                     <div className="mt-4 border-t border-gray-100 pt-4 grid gap-3">
                       <div className="text-xs text-gray-600">
-                        Mtodo de pago: <span className="font-semibold text-gray-800">{o.paymentMethodLabel || "Transferencia/Yape"}</span>
+                        Método de pago: <span className="font-semibold text-gray-800">{o.paymentMethodLabel || "Transferencia/Yape"}</span>
                       </div>
                       {o.items.map((it, idx) => (
                         <div key={`${o.id}-${idx}`} className="grid grid-cols-[72px_minmax(0,1fr)_140px] gap-3 items-center">
@@ -274,14 +259,15 @@ export default function TrackOrdersPage() {
                         Total: <FormattedPrice amount={o.total} />
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-5 md:p-7">
+              <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6">
                 <h2 className="text-lg font-semibold text-gray-900">Aún no has realizado pedidos</h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Explora nuestros productos y encuentra algo especial para ti.
+                  Cuando completes tu primera compra, podrás consultar aquí su estado.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Link
@@ -291,31 +277,42 @@ export default function TrackOrdersPage() {
                     Ver productos
                   </Link>
                   <Link
-                    href="/"
+                    href="/account"
                     className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
-                    Volver al inicio
+                    Volver a cuenta
                   </Link>
                 </div>
-
-                <div className="mt-6 rounded-lg border border-orange-200 bg-orange-50 p-4">
-                  <p className="text-sm font-semibold text-orange-700">Promocin especial</p>
-                  <p className="text-sm text-orange-700">Descuento en tu primera compra. Aprovchalo hoy.</p>
-                </div>
-
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Seguro que te gusta</h3>
-                  <Products
-                    productData={promos}
-                    gridClass="grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4 md:gap-5"
-                  />
-                </div>
               </div>
-            )}
-          </section>
-        </div>
+            </div>
+          )}
+        </section>
       </div>
     </div>
+  );
+}
+
+function AccountTab({
+  href,
+  icon,
+  label,
+  active = false,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`flex items-center gap-3 border-b border-gray-100 px-5 py-4 text-sm font-semibold transition-colors last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0 ${
+        active ? "bg-gray-50 text-amazon_blue" : "text-gray-700 hover:bg-gray-50"
+      }`}
+    >
+      <span className={active ? "text-amazon_blue" : "text-gray-500"}>{icon}</span>
+      {label}
+    </Link>
   );
 }
   const normalizeStatus = (value: string) =>

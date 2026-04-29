@@ -1,10 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
+const db = prisma as any;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // GET - listar slots con conteo de inscripciones
   if (req.method === "GET") {
-    const slots = await prisma.tallerSlot.findMany({
+    const slots = await db.tallerSlot.findMany({
       orderBy: { fecha: "asc" },
       include: { inscripciones: { select: { id: true, nombre: true, email: true, telefono: true, notas: true, createdAt: true } } },
     });
@@ -17,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!cursoNombre?.trim() || !fecha || !precio) {
       return res.status(400).json({ error: "cursoNombre, fecha y precio son requeridos" });
     }
-    const slot = await prisma.tallerSlot.create({
+    const slot = await db.tallerSlot.create({
       data: {
         cursoNombre: String(cursoNombre).trim(),
         cursoNivel: String(cursoNivel || "Basico"),
@@ -40,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "PATCH") {
     const { id, cursoNombre, cursoNivel, descripcion, modalidad, ciudad, sede, fecha, duracionHoras, precio, precioAnterior, cupoMax, notaAdmin } = req.body;
     if (!id) return res.status(400).json({ error: "ID requerido" });
-    const slot = await prisma.tallerSlot.update({
+    const slot = await db.tallerSlot.update({
       where: { id: String(id) },
       data: {
         ...(cursoNombre && { cursoNombre: String(cursoNombre).trim() }),
@@ -64,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "DELETE") {
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: "ID requerido" });
-    await prisma.tallerSlot.delete({ where: { id: String(id) } });
+    await db.tallerSlot.delete({ where: { id: String(id) } });
     return res.status(200).json({ ok: true });
   }
 

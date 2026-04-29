@@ -6,9 +6,43 @@ import ResetCart from "@/components/ResetCart";
 import Link from "next/link";
 import FormattedPrice from "@/components/FormattedPrice";
 import Products from "@/components/Products";
+import { FiCreditCard, FiInfo, FiShoppingCart } from "react-icons/fi";
+
+const CheckoutSteps = () => {
+  const steps = [
+    { label: "Carro de Compras", icon: FiShoppingCart, active: true },
+    { label: "Información de Envío", icon: FiInfo, active: false },
+    { label: "Pago", icon: FiCreditCard, active: false },
+  ];
+
+  return (
+    <div className="mx-auto max-w-3xl px-3 py-8 md:py-10">
+      <div className="grid grid-cols-3 items-start">
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          return (
+            <div key={step.label} className="relative flex flex-col items-center text-center">
+              {index > 0 && (
+                <span className="absolute right-1/2 top-8 h-px w-full bg-gray-300" aria-hidden="true" />
+              )}
+              <span
+                className={`relative z-10 flex h-16 w-16 items-center justify-center rounded-full text-3xl text-white ${
+                  step.active ? "bg-orange-600" : "bg-gray-400"
+                }`}
+              >
+                <Icon />
+              </span>
+              <span className="mt-5 text-sm font-medium text-gray-950 md:text-base">{step.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const CartPage = () => {
-  const { productData: cartItems } = useSelector((state: StateProps) => state.next);
+  const cartItems = useSelector((state: StateProps) => (state.next?.productData || []) as StoreProduct[]);
   const [recs, setRecs] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -20,8 +54,10 @@ const CartPage = () => {
     const total = subtotal;
     return { subtotal, total };
   }, [cartItems]);
-
-  const freeShippingGap = Math.max(0, 120 - totals.subtotal);
+  const totalUnits = useMemo(
+    () => cartItems.reduce((sum: number, p: StoreProduct) => sum + p.quantity, 0),
+    [cartItems]
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -46,7 +82,7 @@ const CartPage = () => {
 
   const recommendedProducts = useMemo(() => {
     if (Array.isArray(recs) && recs.length > 0) return recs;
-    const fallback = cartItems.map((item) => ({
+    const fallback = cartItems.map((item: StoreProduct) => ({
       _id: item._id,
       code: item.code,
       title: item.title,
@@ -63,97 +99,68 @@ const CartPage = () => {
   }, [recs, cartItems]);
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-3 py-4 md:px-6 md:py-6">
+    <div className="min-h-screen bg-[#f5f5f5] px-3 pb-8 md:px-6">
       {!mounted ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-6 text-center md:p-8">
+        <div className="mx-auto max-w-6xl bg-white p-6 text-center md:p-8">
           <h1 className="text-lg font-semibold text-gray-900">Cargando carrito...</h1>
         </div>
       ) : cartItems.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6">
-            <section className="space-y-4">
-              <div className="rounded-xl border border-gray-200 bg-white p-4 md:p-5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 md:text-2xl">Carrito de compras</h1>
-                  <span className="text-sm text-gray-500">{cartItems.length} articulo(s)</span>
-                </div>
-                <p className="mt-2 text-xs text-gray-500">
-                  Tu carrito queda guardado automáticamente en este dispositivo.
-                </p>
-                <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  {freeShippingGap > 0 ? (
-                    <span>
-                      Agrega <strong>S/ {freeShippingGap.toFixed(2)}</strong> para envío gratis.
-                    </span>
-                  ) : (
-                    <span>Envío gratis aplicado a tu pedido.</span>
-                  )}
-                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-emerald-100">
-                    <div
-                      className="h-full bg-emerald-500"
-                      style={{ width: `${Math.min(100, (totals.subtotal / 120) * 100)}%` }}
-                    />
-                  </div>
-                </div>
+          <CheckoutSteps />
+
+          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <section className="bg-white">
+              <div className="flex items-center justify-between border-b border-gray-300 px-4 py-4 md:px-5">
+                <h1 className="text-2xl font-black text-gray-950 md:text-3xl">Carro de Compras</h1>
+                <span className="hidden pr-20 text-lg text-gray-950 md:block">Precio</span>
               </div>
 
-              <div className="rounded-xl border border-gray-200 bg-white p-3 md:p-4">
-                <div className="flex flex-col gap-2 border-b border-gray-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">Tus productos</h2>
-                  <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
-                    <ResetCart />
-                    <Link href="/" className="text-gray-600 hover:text-amazon_blue">
-                      Seguir comprando
-                    </Link>
-                  </div>
+              <div>
+                {cartItems.map((item: StoreProduct) => (
+                  <CartProduct key={item._id} item={item} />
+                ))}
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-gray-200 px-4 py-5 sm:flex-row sm:items-center sm:justify-between md:px-5">
+                <div className="flex flex-wrap items-center gap-3 text-sm">
+                  <ResetCart />
+                  <span className="hidden h-5 w-px bg-gray-200 sm:block" />
+                  <Link href="/" className="font-semibold text-orange-600 hover:text-orange-700 hover:underline">
+                    Seguir comprando
+                  </Link>
                 </div>
-                <div className="flex flex-col gap-3 pt-3">
-                  {cartItems.map((item: StoreProduct) => (
-                    <div key={item._id}>
-                      <CartProduct item={item} />
-                    </div>
-                  ))}
-                </div>
+                <p className="text-right text-lg text-gray-950 md:text-xl">
+                  Subtotal ({totalUnits} Producto{totalUnits !== 1 ? "s" : ""}):{" "}
+                  <span className="font-black">
+                    <FormattedPrice amount={totals.subtotal} />
+                  </span>
+                </p>
               </div>
             </section>
 
-            <aside className="space-y-4">
-              <div className="rounded-xl border border-gray-200 bg-white p-4 md:p-5 lg:sticky lg:top-24">
-                <h2 className="mb-3 text-lg font-semibold text-gray-900">Resumen</h2>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-semibold text-gray-900">
+            <aside>
+              <div className="bg-white p-4 lg:sticky lg:top-24">
+                <h2 className="text-xl font-black text-gray-950">Resumen del pedido</h2>
+                <div className="mt-4 space-y-3 border-b border-gray-950 pb-3 text-lg">
+                  <div className="flex justify-between gap-4">
+                    <span className="text-gray-950">Productos</span>
+                    <span className="text-gray-950">
                       <FormattedPrice amount={totals.subtotal} />
                     </span>
                   </div>
-                  <div className="flex justify-between text-base font-semibold md:text-lg">
-                    <span>Total</span>
-                    <span>
-                      <FormattedPrice amount={totals.total} />
-                    </span>
-                  </div>
+                </div>
+                <div className="mt-4 flex justify-between gap-4 text-xl font-black text-gray-950">
+                  <span>Subtotal</span>
+                  <span>
+                    <FormattedPrice amount={totals.total} />
+                  </span>
                 </div>
                 <Link
                   href="/checkout"
-                  className="mt-4 block h-11 w-full rounded-full bg-orange-500 text-center text-sm font-semibold leading-[44px] text-white hover:brightness-105"
+                  className="mt-4 block h-16 w-full rounded-md bg-orange-600 text-center text-xl font-medium leading-[64px] text-white hover:bg-orange-700"
                 >
-                  Ir a pagar
+                  Realizar pedido
                 </Link>
-                <div className="mt-3 grid gap-2 text-xs text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                    Pagos seguros y protegidos
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                    Devoluciones sin costo segun politica
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                    Envíos a todo Perú
-                  </div>
-                </div>
               </div>
             </aside>
           </div>
@@ -171,15 +178,17 @@ const CartPage = () => {
           </section>
         </>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white p-6 text-center md:p-8">
-          <h1 className="text-lg font-semibold text-gray-900">Tu carrito esta vacio</h1>
-          <p className="mt-1 text-sm text-gray-600">Descubre productos y agrega tus favoritos.</p>
-          <Link
-            href="/"
-            className="mt-4 inline-flex rounded-full bg-amazon_blue px-5 py-2 text-sm font-semibold text-white hover:brightness-95"
-          >
-            Ir a comprar
-          </Link>
+        <div className="pt-7">
+          <div className="rounded-xl border border-gray-200 bg-white px-10 py-10 text-center md:px-12 md:py-11">
+            <h1 className="text-lg font-semibold text-gray-900">Tu carrito esta vacio</h1>
+            <p className="mt-1 text-sm text-gray-600">Descubre productos y agrega tus favoritos.</p>
+            <Link
+              href="/"
+              className="mt-5 inline-flex rounded-full bg-[#c21885] px-6 py-2 text-sm font-semibold text-white hover:brightness-105"
+            >
+              Ir a comprar
+            </Link>
+          </div>
         </div>
       )}
     </div>

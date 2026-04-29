@@ -1,10 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   // GET - listar inscripciones (solo admin)
   if (req.method === "GET") {
+    if (!isAdminApiRequest(req)) return res.status(401).json({ error: "No autorizado" });
     try {
       const rows = await (prisma as any).capacitacionInscripcion.findMany({
         orderBy: { createdAt: "desc" },
@@ -41,6 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // PATCH - actualizar estado o fecha (admin)
   if (req.method === "PATCH") {
+    if (!isAdminApiRequest(req)) return res.status(401).json({ error: "No autorizado" });
     const { id, estado, fechaProgramada, notaAdmin } = req.body;
     if (!id) return res.status(400).json({ error: "ID requerido" });
     try {
@@ -60,6 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // DELETE
   if (req.method === "DELETE") {
+    if (!isAdminApiRequest(req)) return res.status(401).json({ error: "No autorizado" });
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: "ID requerido" });
     try {

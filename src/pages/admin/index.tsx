@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { GetServerSideProps } from "next";
+import { requireAdminPage } from "@/lib/adminAuth";
 import { createPortal } from "react-dom";
 import {
   MagnifyingGlassIcon,
@@ -62,10 +61,22 @@ export default function AdminProducts() {
 
   const load = async () => {
     setLoading(true);
-    const res  = await fetch("/api/products");
-    const data = await res.json();
-    setItems(Array.isArray(data) ? data : []);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/products");
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        const msg = String((data as any)?.error || "No se pudo cargar productos.");
+        setNotice({ type: "error", text: msg });
+        setItems([]);
+        return;
+      }
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      setNotice({ type: "error", text: "Error de conexion al cargar productos." });
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); setMounted(true); }, []);
@@ -310,8 +321,7 @@ export default function AdminProducts() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin", permanent: false } };
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };
