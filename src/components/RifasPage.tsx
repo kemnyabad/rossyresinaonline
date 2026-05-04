@@ -207,7 +207,7 @@ export default function RifasPage() {
   const fetchNumbersForRifa = useCallback(async (rifa: Rifa) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/rifas/${rifa.id}/numbers?status=AVAILABLE&limit=1000`);
+      const res = await fetch(`/api/rifas/${rifa.id}/numbers?status=ALL&limit=${rifa.totalNumbers}`);
       const data = await res.json();
       setNumbers(data);
     } catch (error) {

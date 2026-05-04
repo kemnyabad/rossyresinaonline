@@ -7,6 +7,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     const { status = 'AVAILABLE', page = '1', limit = '50' } = req.query;
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const ticketWhere =
+      status === 'ALL'
+        ? { rifaId: id }
+        : { rifaId: id, status: status as string };
 
     try {
       const rifa = await prisma.rifa.findUnique({
@@ -18,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const tickets = await prisma.rifaTicket.findMany({
-        where: { rifaId: id, status: status as string },
+        where: ticketWhere,
         orderBy: { number: 'asc' },
         skip,
         take: parseInt(limit as string),
@@ -32,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       const total = await prisma.rifaTicket.count({
-        where: { rifaId: id, status: status as string },
+        where: ticketWhere,
       });
 
       res.json({ 

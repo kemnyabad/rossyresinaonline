@@ -582,15 +582,27 @@ const RifaDetail = ({
                           key={num}
                           onClick={() => isAvailable && toggleNumber(num)}
                           disabled={!isAvailable}
-                          className={`aspect-square rounded-lg border text-sm font-extrabold transition-all ${
+                          className={`relative aspect-square rounded-lg border-2 text-sm font-extrabold transition-all ${
                             isSelected
-                              ? 'border-[#7a1f61] bg-[#7a1f61] text-white'
+                              ? 'border-[#7a1f61] bg-[#7a1f61] text-white shadow-md'
                               : isAvailable
-                              ? 'border-[#e6d2df] bg-white text-slate-800 hover:border-[#7a1f61] hover:text-[#7a1f61]'
+                              ? 'border-emerald-500 bg-white text-slate-800 hover:border-emerald-600 hover:bg-emerald-50 hover:text-emerald-700'
                               : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
                           }`}
+                          aria-label={
+                            isAvailable
+                              ? `Numero ${num.toString().padStart(2, '0')} disponible`
+                              : `Numero ${num.toString().padStart(2, '0')} no disponible`
+                          }
                         >
-                          {num.toString().padStart(2, '0')}
+                          <span className={isAvailable ? '' : 'opacity-50'}>
+                            {num.toString().padStart(2, '0')}
+                          </span>
+                          {!isAvailable && (
+                            <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-3xl font-black leading-none text-red-600">
+                              X
+                            </span>
+                          )}
                         </button>
                       );
                     })}
