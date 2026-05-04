@@ -28,26 +28,6 @@ interface BannerData {
 
 const banners: BannerData[] = [
   {
-    id: 'dia-del-trabajador',
-    eyebrow: 'Sorteo especial de temporada',
-    title: 'Separa tu ticket',
-    subtitle: 'Sorteo Dia del Trabajador',
-    gradient: 'from-[#54113f] via-[#9a2f72] to-[#e25d8d]',
-    accent: '#12aeb7',
-    ticketPrice: '1.00',
-    ticketCaption: 'Ticket a solo',
-    paymentInfo: {
-      method: 'Yape',
-      phone: '961 770 723',
-      owner: 'Rosa Maribel Abad Landacay',
-    },
-    prizes: [
-      { label: '1er premio', amount: 'S/ 300' },
-      { label: '2do premio', amount: 'S/ 100' },
-      { label: 'Premios extra', amount: '4 premios de S/ 50' },
-    ],
-  },
-  {
     id: 'dia-de-la-madre',
     eyebrow: 'Campaña premium',
     title: 'Sorteo "Día de la Madre"',
@@ -67,7 +47,6 @@ const banners: BannerData[] = [
 const ROTATION_MS = 10000;
 const YAPE_LOGO_URL = 'https://upload.wikimedia.org/wikipedia/commons/7/76/Yape_peru_logotype.svg';
 const BANNER_CHARACTER_URLS: Record<string, string> = {
-  'dia-del-trabajador': '/rifas/rossy-resina-banner-personaje.png',
   'dia-de-la-madre': '/rifas/rossy-resina-banner-madre-2026.png',
 };
 
@@ -101,9 +80,7 @@ const RifaSlider = () => {
       <div className="relative h-[275px] w-screen overflow-hidden border-y border-[#f2d5e8] bg-white xs:h-[295px] sm:h-[330px] md:h-[560px]">
         {banners.map((banner, idx) => {
           const isActive = idx === activeIndex;
-          const isWorkerRaffle = banner.id === 'dia-del-trabajador';
           const isMotherRaffle = banner.id === 'dia-de-la-madre';
-          const headlineSubtitle = isWorkerRaffle ? 'Sorteo Día del Trabajador' : banner.subtitle;
           const bannerCharacterUrl = BANNER_CHARACTER_URLS[banner.id];
 
           return (
@@ -136,10 +113,10 @@ const RifaSlider = () => {
                         {banner.eyebrow}
                       </p>
                       <h1 className="rifa-highlight-title mt-1 max-w-[190px] text-[1.35rem] font-black leading-[0.9] xs:max-w-[220px] xs:text-[1.62rem] sm:max-w-[300px] sm:text-[2.05rem]">
-                        {isWorkerRaffle ? headlineSubtitle : banner.title}
+                        {banner.title}
                       </h1>
                       <p className="mt-1.5 text-[0.82rem] font-black uppercase leading-none tracking-[0.04em] xs:text-sm sm:text-base">
-                        {isWorkerRaffle ? banner.title : banner.subtitle || 'Separa tu ticket'}
+                        {banner.subtitle || 'Separa tu ticket'}
                       </p>
                       <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[#6d1b57] shadow-[0_12px_26px_rgba(0,0,0,.2)] xs:px-4 xs:py-2">
                         <span className="text-[7px] font-black uppercase tracking-[0.12em] text-[#6d1b57]/70 xs:text-[8px]">
@@ -177,28 +154,14 @@ const RifaSlider = () => {
                       {banner.eyebrow}
                     </p>
 
-                    {isWorkerRaffle ? (
-                      <>
-                        <h1 className="rifa-highlight-title mx-auto mt-2 max-w-5xl text-center text-[3.35rem] font-black leading-[0.9] sm:text-6xl md:mx-0 md:max-w-none md:text-left">
-                          {headlineSubtitle}
-                        </h1>
+                    <h1 className="rifa-highlight-title mx-auto mt-2 max-w-5xl text-center text-[3.35rem] font-bold leading-[0.95] sm:text-6xl md:mx-0 md:max-w-none md:text-left">
+                      {banner.title}
+                    </h1>
 
-                        <p className="mx-auto mt-2 max-w-4xl text-center text-2xl font-bold uppercase leading-[0.92] sm:text-3xl md:mx-0 md:text-center md:text-5xl">
-                          {banner.title}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <h1 className="rifa-highlight-title mx-auto mt-2 max-w-5xl text-center text-[3.35rem] font-bold leading-[0.95] sm:text-6xl md:mx-0 md:max-w-none md:text-left">
-                          {banner.title}
-                        </h1>
-
-                        {banner.subtitle && (
-                          <p className="mt-4 max-w-4xl text-center text-2xl font-bold uppercase leading-tight md:text-left md:text-5xl">
-                            {banner.subtitle}
-                          </p>
-                        )}
-                      </>
+                    {banner.subtitle && (
+                      <p className="mt-4 max-w-4xl text-center text-2xl font-bold uppercase leading-tight md:text-left md:text-5xl">
+                        {banner.subtitle}
+                      </p>
                     )}
 
                     {banner.supportLine && (

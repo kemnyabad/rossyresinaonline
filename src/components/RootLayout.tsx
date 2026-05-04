@@ -54,14 +54,6 @@ const RootLayout = ({ children }: Props) => {
       gradient: "from-rose-500 via-pink-500 to-fuchsia-600",
       eyebrowClass: "text-rose-100",
     },
-    {
-      eyebrow: "Especial Día del Trabajador",
-      title: "¡Participa y gana!",
-      icon: "🎟️",
-      decor: "✨",
-      gradient: "from-[#7a1f61] via-[#cb299e] to-cyan-500",
-      eyebrowClass: "text-cyan-100",
-    },
   ];
 
   useEffect(() => {
