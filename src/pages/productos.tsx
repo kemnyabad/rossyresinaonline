@@ -13,7 +13,6 @@ interface Props {
 
 export default function ProductosPage({ allProducts }: Props) {
   const router = useRouter();
-  const total = allProducts.length;
   const categoryFromQuery = String(router.query?.categoria || "").trim();
   const onlyOffers = String(router.query?.ofertas || "").trim() === "1";
 
@@ -33,13 +32,10 @@ export default function ProductosPage({ allProducts }: Props) {
       </Head>
 
       <div className="min-w-0">
-        <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div className="mb-4">
           <h1 className="text-xl font-semibold text-gray-900">
             {onlyOffers ? "Productos en oferta" : "Todos los productos"}
           </h1>
-          <span className="text-sm text-gray-500">
-            {filteredProducts.length} de {total} productos
-          </span>
         </div>
 
         {filteredProducts.length === 0 ? (

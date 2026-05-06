@@ -8,7 +8,7 @@ import { getAllProducts } from "@/lib/repositories/productRepository";
 const slugToCategory: Record<string, string> = {
   resina: "Resinas",
   "moldes-de-silicona": "Moldes de silicona",
-  pigmentos: "Pigmentos",
+  pigmentos: "Pigmentos y glitters",
   accesorios: "Accesorios",
   creaciones: "Creaciones",
   talleres: "Talleres",

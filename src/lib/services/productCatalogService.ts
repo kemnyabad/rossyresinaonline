@@ -22,6 +22,16 @@ function popularityScore(p: ProductProps): number {
   return discountAmount(p) * 10 + (p.isNew ? 5 : 0) + Number(p.price || 0) * 0.01;
 }
 
+function toCategorySlug(value: any): string {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 export function getVisibleCategories(products: ProductProps[], limit = 10): string[] {
   return Array.from(
     new Set(
@@ -55,13 +65,18 @@ export function filterAndSortProducts(
 ): ProductProps[] {
   const query = String(opts.query || "").trim().toLowerCase();
   const category = String(opts.category || "").trim().toLowerCase();
+  const categorySlug = toCategorySlug(category);
   const minPrice = typeof opts.minPrice === "number" ? opts.minPrice : null;
   const maxPrice = typeof opts.maxPrice === "number" ? opts.maxPrice : null;
   const sort = opts.sort || "relevance";
 
   let out = [...(products || [])].filter((p) => {
     const price = Number(p.price || 0);
-    const inCategory = !category || String(p.category || "").toLowerCase() === category;
+    const productCategory = String(p.category || "").trim().toLowerCase();
+    const inCategory =
+      !category ||
+      productCategory === category ||
+      toCategorySlug(productCategory) === categorySlug;
     const inMin = minPrice === null || price >= minPrice;
     const inMax = maxPrice === null || price <= maxPrice;
     const inQuery =

@@ -202,7 +202,7 @@ function AppContent({
         </div>
       ) : (
         <RootLayout>
-          <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
+          <div key={router.asPath} className={`${pageShellClass} bg-white`} style={pageTransitionStyle}>
             <Component {...pageProps} />
           </div>
         </RootLayout>
