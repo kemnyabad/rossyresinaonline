@@ -1,6 +1,16 @@
 import Image from "next/image";
 import logo from "../../images/logo.jpg";
-import { MagnifyingGlassIcon, UserIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
+import {
+  MagnifyingGlassIcon,
+  UserIcon,
+  ShoppingCartIcon,
+  Bars3Icon,
+  XMarkIcon,
+  TagIcon,
+  SparklesIcon,
+  GiftIcon,
+  BookOpenIcon,
+} from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useSelector, useDispatch } from "react-redux";
@@ -74,6 +84,7 @@ const Header = () => {
   // Search area
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -99,6 +110,17 @@ const Header = () => {
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
     setMobileSearchOpen(false);
   };
+
+  const mobileMenuItems = [
+    { href: "/categoria/moldes-de-silicona", label: "Moldes", icon: SparklesIcon },
+    { href: "/categoria/pigmentos", label: "Pigmentos", icon: SparklesIcon },
+    { href: "/categoria/accesorios", label: "Accesorios", icon: TagIcon },
+    { href: "/categoria/resina", label: "Resina", icon: SparklesIcon },
+    { href: "/categoria/creaciones", label: "Creaciones", icon: SparklesIcon },
+    { href: "/productos?ofertas=1", label: "Ofertas", icon: GiftIcon },
+    { href: "/rifas", label: "Rifas", icon: GiftIcon },
+    { href: "/blog", label: "Blog", icon: BookOpenIcon },
+  ];
 
   const filteredProducts = useMemo(() => {
     const q = deferredQuery.trim().toLowerCase();
@@ -139,6 +161,18 @@ const Header = () => {
   }, [mobileSearchOpen]);
 
   useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [router.asPath]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     if (!mobileSearchOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMobileSearchOpen(false);
@@ -167,7 +201,20 @@ const Header = () => {
             </div>
           </Link>
 
-          <div className="flex items-center gap-2" />
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
+              mobileMenuOpen
+                ? "border-[#c21885] bg-pink-50 text-[#c21885]"
+                : "border-gray-200 bg-white text-slate-700"
+            }`}
+            aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-store-menu"
+          >
+            {mobileMenuOpen ? <XMarkIcon className="h-5 w-5" /> : <Bars3Icon className="h-5 w-5" />}
+          </button>
         </div>
 
         <div className="mt-3">
@@ -182,6 +229,55 @@ const Header = () => {
           </button>
         </div>
       </div>
+
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-[58]" role="dialog" aria-modal="true" aria-label="Menú de tienda">
+          <button
+            type="button"
+            className="absolute inset-0 h-full w-full bg-slate-950/35"
+            aria-label="Cerrar menú"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div id="mobile-store-menu" className="absolute left-3 right-3 top-[76px] mx-auto max-w-md overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+              <div>
+                <p className="text-sm font-bold text-slate-900">Menú de tienda</p>
+                <p className="text-xs text-slate-500">Categorías y accesos rápidos</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-slate-500"
+                aria-label="Cerrar menú"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 p-3">
+              {mobileMenuItems.map((item) => {
+                const Icon = item.icon;
+                const active = router.asPath.split("?")[0] === item.href.split("?")[0];
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex min-h-[52px] items-center gap-3 rounded-xl border px-3 py-2 text-left transition-colors ${
+                      active
+                        ? "border-[#c21885] bg-pink-50 text-[#c21885]"
+                        : "border-gray-100 bg-white text-slate-700 hover:border-pink-200 hover:bg-pink-50"
+                    }`}
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-50 text-[#c21885]">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="text-sm font-semibold leading-tight">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="hidden md:flex max-w-screen-2xl mx-auto min-h-[72px] px-3 py-2 sm:px-4 md:px-6 items-center gap-2 sm:gap-4">
         {/* logo */}
