@@ -155,10 +155,6 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
     });
   }, [allProducts]);
   const interestProducts = diversifiedProducts.slice(0, visibleCount);
-  const interestsRef = useRef<HTMLDivElement | null>(null);
-  const offersRef = useRef<HTMLDivElement | null>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
   const normalizeImage = (img?: string) => {
     const s = String(img || "");
     if (!s) return `${SITE_URL}/favicon-96x96.png`;
@@ -216,18 +212,6 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
             <Link href="/search" className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-white px-4 text-sm font-bold text-[#1a5f3f] hover:scale-105 transition-transform">
               Explorar productos
             </Link>
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
-            {["Resina Epóxica", "Moldes Premium", "Pigmentos", "Accesorios", "Kits", "Ofertas"].map((chip) => (
-              <Link
-                key={chip}
-                href={chip === "Ofertas" ? "/productos?ofertas=1" : `/search?q=${encodeURIComponent(chip.toLowerCase())}`}
-                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:border-[#1a5f3f] hover:text-[#1a5f3f] transition-colors"
-              >
-                {chip}
-              </Link>
-            ))}
           </div>
 
           <div>
@@ -388,67 +372,6 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
           </StoreWithAdsLayout>
 
           <div className="mx-auto max-w-screen-2xl space-y-6 px-4 pb-10 md:px-6">
-            {/* Explora tus intereses */}
-            <section>
-              <div className="text-center mb-4">
-                <h2 className="text-xl font-semibold uppercase tracking-wide">
-                  Explora tus intereses
-                </h2>
-              </div>
-              <div className="relative">
-                <div
-                  ref={interestsRef}
-                  className="no-scrollbar flex items-center gap-3 overflow-x-auto whitespace-nowrap pb-2 scroll-smooth"
-                >
-                  {[
-                    "Moldes de silicona",
-                    "Moldes ecoresina",
-                    "Moldes jabones",
-                    "Moldes velas",
-                    "Resina epóxica",
-                    "Ecoresina",
-                    "Accesorios bisutería",
-                    "Accesorios eco resina",
-                    "Accesorios resina epóxica",
-                    "Accesorios manualidades",
-                  ].map((label) => (
-                    <span
-                      key={label}
-                      className="px-5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-800"
-                    >
-                      {label}
-                    </span>
-                  ))}
-                </div>
-                {canScrollLeft && (
-                  <button
-                    type="button"
-                    aria-label="Ver categoras anteriores"
-                    onClick={() => interestsRef.current?.scrollBy({ left: -260, behavior: "smooth" })}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-                  >
-                    <span className="sr-only">Anterior</span>
-                    <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
-                      <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                )}
-                {canScrollRight && (
-                  <button
-                    type="button"
-                    aria-label="Ver más categorías"
-                    onClick={() => interestsRef.current?.scrollBy({ left: 260, behavior: "smooth" })}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-                  >
-                    <span className="sr-only">Siguiente</span>
-                    <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
-                      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </section>
-
             {/* Productos por intereses */}
             <section>
               <Products

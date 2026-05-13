@@ -67,7 +67,7 @@ const navGroups = [
     items: [
       { href: "/admin/stats", label: "Estadísticas", icon: ChartBarIcon },
       { href: "/admin/visits", label: "Visitas", icon: GlobeAltIcon },
-      { href: "/admin/users", label: "Usuarios", icon: UserGroupIcon },
+      { href: "/admin/users", label: "Alumnos / Usuarios", icon: UserGroupIcon },
     ],
   },
 ];
@@ -84,7 +84,7 @@ const sectionTitleByPath = (pathname: string): { title: string; breadcrumb: stri
   if (pathname.startsWith("/admin/rifas")) return { title: "Rifas", breadcrumb: ["Comercio", "Rifas"] };
   if (pathname.startsWith("/admin/stats")) return { title: "Estadísticas", breadcrumb: ["Analítica", "Estadísticas"] };
   if (pathname.startsWith("/admin/visits")) return { title: "Visitas", breadcrumb: ["Analítica", "Visitas"] };
-  if (pathname.startsWith("/admin/users")) return { title: "Usuarios", breadcrumb: ["Analítica", "Usuarios"] };
+  if (pathname.startsWith("/admin/users")) return { title: "Alumnos y usuarios", breadcrumb: ["Analítica", "Alumnos y usuarios"] };
   if (pathname.startsWith("/admin/ofertas-express")) return { title: "Ofertas Express", breadcrumb: ["Catálogo", "Ofertas Express"] };
   if (pathname.startsWith("/admin/edit")) return { title: "Editar producto", breadcrumb: ["Catálogo", "Editar producto"] };
   return { title: "Panel", breadcrumb: ["Admin"] };

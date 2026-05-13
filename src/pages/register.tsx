@@ -176,7 +176,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <span>Ya tienes cuenta?</span> <Link href="/sign-in" className="text-amazon_blue hover:underline">Inicia sesi?n</Link>
+          <span>Ya tienes cuenta?</span> <Link href="/sign-in" className="text-amazon_blue hover:underline">Inicia sesión</Link>
         </div>
       </div>
     </div>

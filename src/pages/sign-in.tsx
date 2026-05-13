@@ -35,7 +35,7 @@ export default function SignInPage() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-6 py-12 bg-gradient-to-b from-gray-100 to-transparent">
       <Head>
-        <title>Iniciar sesi?n  -  Rossy Resina</title>
+        <title>Iniciar sesión  -  Rossy Resina</title>
         <meta name="description" content="Accede a tu cuenta para guardar favoritos y realizar compras." />
       </Head>
       <div className="w-full max-w-md bg-white rounded-lg shadow border border-gray-200 p-8">
@@ -48,7 +48,7 @@ export default function SignInPage() {
           </h1>
           <p className="mt-2 text-sm text-gray-600 text-center">
             {mode === "login"
-              ? "Inicia sesi?n para comentar y tener tu perfil."
+              ? "Inicia sesión para comentar y tener tu perfil."
               : "Registra tu cuenta para comentar y crear tu portafolio."}
           </p>
         </div>
@@ -59,7 +59,7 @@ export default function SignInPage() {
               onClick={() => setMode("login")}
               className={`px-4 py-2 rounded-full border ${mode === "login" ? "bg-amazon_blue text-white border-amazon_blue" : "border-gray-300"}`}
             >
-              Iniciar sesi?n
+              Iniciar sesión
             </button>
             <button
               onClick={() => setMode("register")}
@@ -129,7 +129,7 @@ export default function SignInPage() {
         </div>
 
         <div className="mt-4 text-center text-sm text-gray-600">
-          {mode === "login" ? "No tienes cuenta? Usa Registrarme arriba." : "Ya tienes cuenta? Usa Iniciar sesi?n arriba."}
+          {mode === "login" ? "No tienes cuenta? Usa Registrarme arriba." : "Ya tienes cuenta? Usa Iniciar sesión arriba."}
         </div>
 
         <div className="mt-6 text-center">
@@ -140,7 +140,7 @@ export default function SignInPage() {
 
         {session && (
           <div className="mt-6 text-center">
-            <button onClick={() => signOut()} className="text-sm text-gray-500 hover:text-amazon_blue">Cerrar sesi?n</button>
+            <button onClick={() => signOut()} className="text-sm text-gray-500 hover:text-amazon_blue">Cerrar sesión</button>
           </div>
         )}
       </div>

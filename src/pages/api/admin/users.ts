@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { getUsers, createUser, AppUser, UserRole } from "@/lib/users";
+import { ensureSubscriberProfile } from "@/lib/capacitaciones";
 import { logger } from "@/lib/logger";
 import {
   AdminUserCreateSchema,
@@ -15,8 +16,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "GET") {
-    const users = (await getUsers()).map(({ passwordHash, ...u }) => u);
-    return res.status(200).json(users);
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { subscriber: true },
+    });
+    const safeUsers = users.map(({ passwordHash, subscriber, ...u }) => ({
+      ...u,
+      studentProfile: subscriber
+        ? {
+            id: subscriber.id,
+            handle: subscriber.handle,
+            status: subscriber.status,
+          }
+        : null,
+    }));
+    return res.status(200).json(safeUsers);
   }
 
   if (req.method === "POST") {
@@ -32,8 +46,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         password: String(password || ""),
         role: (role as UserRole) || "CUSTOMER",
       });
+      const profile = user.role === "CUSTOMER"
+        ? await ensureSubscriberProfile({ userId: user.id, name: user.name, email: user.email })
+        : null;
       const { passwordHash, ...safe } = user;
-      return res.status(201).json(safe);
+      return res.status(201).json({
+        ...safe,
+        studentProfile: profile
+          ? { id: profile.id, handle: profile.handle, status: profile.status }
+          : null,
+      });
     } catch (e: any) {
       if (e?.message === "EMAIL_EXISTS") {
         return res.status(409).json({ error: "El correo ya esta registrado" });

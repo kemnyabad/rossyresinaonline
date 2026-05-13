@@ -524,7 +524,7 @@ export default function CheckoutPage() {
               )}
 
               <div className="sm:col-span-2">
-                <label className="text-sm text-gray-600">M?todo de pago</label>
+                <label className="text-sm text-gray-600">Método de pago</label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value === "TRANSFER" ? "TRANSFER" : "YAPE")}

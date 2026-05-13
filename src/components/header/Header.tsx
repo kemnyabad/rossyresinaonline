@@ -117,6 +117,7 @@ const Header = () => {
     { href: "/categoria/accesorios", label: "Accesorios", icon: TagIcon },
     { href: "/categoria/resina", label: "Resina", icon: SparklesIcon },
     { href: "/categoria/creaciones", label: "Creaciones", icon: SparklesIcon },
+    { href: "/escuela", label: "Escuela", icon: BookOpenIcon },
     { href: "/productos?ofertas=1", label: "Ofertas", icon: GiftIcon },
     { href: "/rifas", label: "Rifas", icon: GiftIcon },
     { href: "/blog", label: "Blog", icon: BookOpenIcon },
@@ -125,15 +126,13 @@ const Header = () => {
   const filteredProducts = useMemo(() => {
     const q = deferredQuery.trim().toLowerCase();
     if (!q) return [];
-    return allData
-      .filter((item: StoreProduct) => {
-        const hay = [item.title, item.category, item.brand, item.code, item.description]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return hay.includes(q);
-      })
-      .slice(0, 12);
+    return allData.filter((item: StoreProduct) => {
+      const hay = [item.title, item.category, item.brand, item.code, item.description]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(q);
+    });
   }, [deferredQuery, allData]);
 
   useEffect(() => {
@@ -451,17 +450,19 @@ const Header = () => {
                     </button>
                   </div>
                 )}
-                <div className="py-2">
-                  <Link href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"} className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Mi Cuenta
-                  </Link>
-                  <Link href={isAuthenticated ? "/track-orders" : "/sign-in?callbackUrl=/track-orders"} className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Mis pedidos
-                  </Link>
-                  <Link href={isAuthenticated ? "/messages" : "/sign-in?callbackUrl=/messages"} className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Centro de mensajes
-                  </Link>
-                </div>
+                {isAuthenticated && (
+                  <div className="py-2">
+                    <Link href="/account" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                      Mi Cuenta
+                    </Link>
+                    <Link href="/track-orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                      Mis pedidos
+                    </Link>
+                    <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                      Centro de mensajes
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>

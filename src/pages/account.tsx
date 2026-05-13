@@ -10,6 +10,7 @@ import {
   ClipboardDocumentListIcon,
   HomeIcon,
   UserCircleIcon,
+  AcademicCapIcon,
 } from "@heroicons/react/24/outline";
 
 export default function AccountPage() {
@@ -91,7 +92,7 @@ export default function AccountPage() {
             </div>
           </div>
 
-          <div className="grid gap-0 md:grid-cols-3">
+          <div className="grid gap-0 md:grid-cols-4">
             <AccountAction
               href="/track-orders"
               icon={<ClipboardDocumentListIcon className="h-6 w-6" />}
@@ -109,6 +110,12 @@ export default function AccountPage() {
               icon={<UserCircleIcon className="h-6 w-6" />}
               title="Centro de mensajes"
               description="Revisa comunicaciones importantes de tu cuenta."
+            />
+            <AccountAction
+              href="/estudiante"
+              icon={<AcademicCapIcon className="h-6 w-6" />}
+              title="Perfil estudiante"
+              description="Consulta tus cursos, avances y datos de alumno."
             />
           </div>
         </section>

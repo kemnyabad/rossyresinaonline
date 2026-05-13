@@ -1,5 +1,17 @@
 import Head from "next/head";
 import Link from "next/link";
+import { useState } from "react";
+import {
+  AcademicCapIcon,
+  ArrowRightIcon,
+  BanknotesIcon,
+  BeakerIcon,
+  BriefcaseIcon,
+  CalendarDaysIcon,
+  CheckCircleIcon,
+  PaintBrushIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 import Products from "@/components/Products";
 import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import type { ProductProps } from "../../../type";
@@ -11,7 +23,7 @@ const slugToCategory: Record<string, string> = {
   pigmentos: "Pigmentos y glitters",
   accesorios: "Accesorios",
   creaciones: "Creaciones",
-  talleres: "Talleres",
+  talleres: "Escuela de formación en resina",
 };
 
 const toCategorySlug = (value: any): string =>
@@ -30,6 +42,10 @@ interface Props {
 }
 
 export default function CategoryPage({ slug, label, items }: Props) {
+  if (slug === "talleres") {
+    return <ResinEducationSchool />;
+  }
+
   return (
     <StoreWithAdsLayout className="py-8">
       <Head>
@@ -77,8 +93,270 @@ export default function CategoryPage({ slug, label, items }: Props) {
   );
 }
 
+export function ResinEducationSchool() {
+  const modules = [
+    {
+      icon: BeakerIcon,
+      title: "Clase 1",
+      name: "Domina la mezcla",
+      desc: "Proporciones, seguridad, pigmentos, burbujas y curado.",
+      result: "Tu primera pieza queda limpia y sin errores básicos.",
+      accent: "from-cyan-400 to-fuchsia-500",
+    },
+    {
+      icon: PaintBrushIcon,
+      title: "Clase 2",
+      name: "Crea productos",
+      desc: "Llaveros, joyería, bandejas, inclusiones y acabados.",
+      result: "Armas piezas vendibles con mejor presentación.",
+      accent: "from-amber-300 to-pink-500",
+    },
+    {
+      icon: BriefcaseIcon,
+      title: "Clase 3",
+      name: "Vende con método",
+      desc: "Costos, precios, catálogo, empaque, atención y redes.",
+      result: "Empiezas a mirar tu resina como emprendimiento.",
+      accent: "from-emerald-300 to-sky-500",
+    },
+  ];
+  const [activeModule, setActiveModule] = useState(0);
+  const ActiveIcon = modules[activeModule].icon;
+
+  const benefits = [
+    { icon: BanknotesIcon, value: "S/ 50", label: "mensuales" },
+    { icon: CalendarDaysIcon, value: "3 clases", label: "cada mes" },
+    { icon: BriefcaseIcon, value: "Negocio", label: "incluido" },
+  ];
+
+  const businessTopics = [
+    "Costos",
+    "Precios",
+    "Fotos",
+    "Empaque",
+    "Redes",
+    "Ventas",
+  ];
+
+  return (
+    <StoreWithAdsLayout className="py-8">
+      <Head>
+        <title>Escuela de formación en resina - Rossy Resina</title>
+        <meta
+          name="description"
+          content="Escuela de formación para el trabajo en artesanía en resina. Aprende técnicas, seguridad, producción artesanal y emprendimiento."
+        />
+        <meta property="og:title" content="Escuela de formación en resina - Rossy Resina" />
+        <meta
+          property="og:description"
+          content="Formación práctica en artesanía en resina para aprender, crear y emprender."
+        />
+        <meta property="og:type" content="website" />
+      </Head>
+
+      <div className="min-w-0 space-y-10">
+        <section className="overflow-hidden rounded-lg border border-pink-100 bg-[#fff8fc] shadow-sm">
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_430px]">
+            <div className="relative px-6 py-8 md:px-10 md:py-12">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#f0b7dd] bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#a31370] shadow-sm">
+                <AcademicCapIcon className="h-4 w-4" />
+                Escuela para crear y vender
+              </div>
+              <h1 className="mt-5 max-w-3xl text-3xl font-black leading-tight text-slate-950 md:text-5xl">
+                Formación en resina para empezar tu propio camino artesanal
+              </h1>
+              <p className="mt-4 max-w-xl text-base leading-7 text-slate-700">
+                Tres clases al mes, práctica guiada y herramientas de negocio para convertir tus piezas en productos.
+              </p>
+
+              <div className="mt-7 grid max-w-3xl gap-3 sm:grid-cols-3">
+                {benefits.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className="rounded-lg border border-white bg-white p-4 shadow-sm">
+                      <Icon className="h-6 w-6 text-[#c21885]" />
+                      <p className="mt-3 text-2xl font-black text-slate-950">{item.value}</p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{item.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link
+                  href="/contact"
+                  className="group inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#c21885] px-6 text-sm font-bold text-white shadow-lg shadow-pink-200 hover:bg-[#a31370]"
+                >
+                  Reservar cupo
+                  <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-1" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setActiveModule((activeModule + 1) % modules.length)}
+                  className="inline-flex h-12 items-center justify-center rounded-md border border-slate-300 bg-white px-6 text-sm font-bold text-slate-800 transition hover:border-[#c21885] hover:text-[#c21885]"
+                >
+                  Ver siguiente clase
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t border-pink-100 bg-white p-6 lg:border-l lg:border-t-0">
+              <div className="h-full rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a31370]">Programa mensual</p>
+                <div className="mt-4 rounded-lg bg-slate-950 p-5 text-white">
+                  <p className="text-sm font-semibold text-white/70">Inscripción</p>
+                  <div className="mt-1 flex items-end gap-2">
+                    <span className="text-5xl font-black leading-none">S/ 50</span>
+                    <span className="pb-1 text-sm font-bold text-white/70">mensual</span>
+                  </div>
+                </div>
+
+                <div className="mt-5 space-y-3">
+                  {modules.map((module, index) => {
+                    const Icon = module.icon;
+                    return (
+                      <button
+                        key={module.title}
+                        type="button"
+                        onClick={() => setActiveModule(index)}
+                        className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left ${
+                          activeModule === index
+                            ? "border-[#c21885] bg-[#fff4fb]"
+                            : "border-slate-200 bg-slate-50 hover:border-pink-200"
+                        }`}
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#c21885]">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <span>
+                          <span className="block text-xs font-bold uppercase tracking-wide text-slate-500">
+                            {module.title}
+                          </span>
+                          <span className="block text-sm font-bold text-slate-950">{module.name}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-5 rounded-lg border border-emerald-100 bg-emerald-50 p-4">
+                  <p className="text-sm font-bold text-emerald-950">Incluye cursos complementarios de negocio</p>
+                  <p className="mt-1 text-xs leading-5 text-emerald-800">Costos, precios, fotos, empaque, redes y ventas.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-5 lg:grid-cols-[330px_minmax(0,1fr)]">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-950">Elige un módulo</h2>
+            <div className="mt-4 grid gap-2">
+              {modules.map((module, index) => {
+                const Icon = module.icon;
+                const active = activeModule === index;
+                return (
+                  <button
+                    key={module.title}
+                    type="button"
+                    onClick={() => setActiveModule(index)}
+                    className={`group flex items-center gap-3 rounded-lg border p-4 text-left transition ${
+                      active
+                        ? "border-[#c21885] bg-[#fff4fb] shadow-md"
+                        : "border-gray-200 bg-white hover:border-pink-200 hover:shadow-sm"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                        active ? "bg-[#c21885] text-white" : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span>
+                      <span className="block text-xs font-bold uppercase tracking-wide text-[#a31370]">
+                        {module.title}
+                      </span>
+                      <span className="block text-sm font-bold text-slate-950">{module.name}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+            <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${modules[activeModule].accent}`} />
+            <div className="flex items-center gap-4">
+              <div className={`flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br ${modules[activeModule].accent} text-white shadow-lg`}>
+                <ActiveIcon className="h-7 w-7" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a31370]">
+                  {modules[activeModule].title}
+                </p>
+                <h3 className="text-2xl font-black text-slate-950">{modules[activeModule].name}</h3>
+              </div>
+            </div>
+            <p className="mt-5 text-base leading-7 text-slate-700">{modules[activeModule].desc}</p>
+            <div className="mt-6 rounded-lg border border-emerald-100 bg-emerald-50 p-4">
+              <div className="flex gap-3">
+                <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                <p className="text-sm font-semibold leading-6 text-emerald-950">{modules[activeModule].result}</p>
+              </div>
+            </div>
+            <div className="mt-7">
+              <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-slate-500">
+                <span>Ruta mensual</span>
+                <span>{activeModule + 1}/3</span>
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className={`h-full rounded-full bg-gradient-to-r ${modules[activeModule].accent} transition-all duration-500`}
+                  style={{ width: `${((activeModule + 1) / modules.length) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="p-6 md:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a31370]">Complemento de negocio</p>
+              <h2 className="mt-2 text-2xl font-bold text-slate-950">No solo aprenden a hacer piezas. Aprenden a venderlas.</h2>
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {businessTopics.map((tag) => (
+                  <span key={tag} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-center text-sm font-bold text-slate-700 hover:border-[#c21885] hover:bg-[#fff4fb] hover:text-[#a31370]">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="bg-slate-950 p-6 text-white md:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-200">Cupos en preparación</p>
+              <h3 className="mt-3 text-3xl font-black">S/ 50 mensual</h3>
+              <p className="mt-3 text-sm leading-6 text-white/70">Incluye 3 clases al mes y cursos complementarios de emprendimiento.</p>
+              <Link
+                href="/contact"
+                className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-md bg-white px-5 text-sm font-bold text-slate-950 transition hover:bg-pink-100"
+              >
+                Quiero aprender resina
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
+    </StoreWithAdsLayout>
+  );
+}
+
 export const getServerSideProps = async (ctx: any) => {
   const slug: string = String(ctx.params.slug || "");
+
+  if (slug === "talleres") {
+    return { redirect: { destination: "/escuela", permanent: false } };
+  }
 
   try {
     const all: ProductProps[] = await getAllProducts();

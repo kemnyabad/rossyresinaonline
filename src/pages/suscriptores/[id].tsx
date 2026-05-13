@@ -238,7 +238,7 @@ export default function SuscriptorProfilePage({ profile }: any) {
                   <div className="max-w-full sm:max-w-[520px] space-y-1.5 text-sm">
                     <p className="font-semibold">{profile.displayName}</p>
                     <p className="text-[#262626]">{profile.bio || "Creadora en Rossy Resina."}</p>
-                    <p className="text-[#737373]">{profile.location || "Per?"}</p>
+                    <p className="text-[#737373]">{profile.location || "Perú"}</p>
                     <p className="text-[#737373]">{joinedText ? `Miembro desde ${joinedText}` : ""}</p>
                   </div>
 
