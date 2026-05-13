@@ -124,14 +124,22 @@ const Header = () => {
   ];
 
   const filteredProducts = useMemo(() => {
-    const q = deferredQuery.trim().toLowerCase();
+    const normalizeSearchText = (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    const q = normalizeSearchText(deferredQuery.trim());
     if (!q) return [];
+    const terms = q.split(/\s+/).filter(Boolean);
     return allData.filter((item: StoreProduct) => {
       const hay = [item.title, item.category, item.brand, item.code, item.description]
         .filter(Boolean)
         .join(" ")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase();
-      return hay.includes(q);
+      return terms.every((term) => hay.includes(term));
     });
   }, [deferredQuery, allData]);
 
