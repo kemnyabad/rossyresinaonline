@@ -196,7 +196,7 @@ const Header = () => {
 
   return (
     <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
-      <div className="md:hidden px-3 pt-2 pb-3 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
+      <div className="md:hidden border-b border-gray-100 bg-white px-3 pb-3 pt-2">
         <div className="flex items-center justify-between">
           <Link href={"/"} onClick={handleLogoClick} className="flex items-center gap-2 group">
             <div className="bg-white rounded-full p-1 shadow ring-1 ring-amazon_blue/20 group-hover:shadow-md transition-shadow duration-300">
@@ -213,7 +213,7 @@ const Header = () => {
             onClick={() => setMobileMenuOpen((open) => !open)}
             className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
               mobileMenuOpen
-                ? "border-[#c21885] bg-pink-50 text-[#c21885]"
+                ? "border-amazon_blue bg-pink-50 text-amazon_blue"
                 : "border-gray-200 bg-white text-slate-700"
             }`}
             aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
@@ -245,7 +245,7 @@ const Header = () => {
             aria-label="Cerrar menú"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div id="mobile-store-menu" className="absolute left-3 right-3 top-[76px] mx-auto max-w-md overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-2xl">
+          <div id="mobile-store-menu" className="absolute left-3 right-3 top-[76px] mx-auto max-w-md overflow-hidden rounded-lg border border-gray-200 bg-white shadow-[0_14px_34px_rgba(17,24,39,0.14)]">
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
               <div>
                 <p className="text-sm font-bold text-slate-900">Menú de tienda</p>
@@ -270,11 +270,11 @@ const Header = () => {
                     href={item.href}
                     className={`flex min-h-[52px] items-center gap-3 rounded-xl border px-3 py-2 text-left transition-colors ${
                       active
-                        ? "border-[#c21885] bg-pink-50 text-[#c21885]"
-                        : "border-gray-100 bg-white text-slate-700 hover:border-pink-200 hover:bg-pink-50"
+                        ? "border-amazon_blue bg-pink-50 text-amazon_blue"
+                        : "border-gray-100 bg-white text-slate-700 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-50 text-[#c21885]">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-50 text-amazon_blue">
                       <Icon className="h-5 w-5" />
                     </span>
                     <span className="text-sm font-semibold leading-tight">{item.label}</span>

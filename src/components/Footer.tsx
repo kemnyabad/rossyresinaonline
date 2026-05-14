@@ -82,11 +82,11 @@ const Footer = () => {
     <footer className="w-full bg-[#0B0D12] text-white border-t border-white/5">
 
       {/* Newsletter banner */}
-      <div className="border-b border-white/5 bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <div className="border-b border-white/5 bg-[#111827]">
         <div className="mx-auto max-w-screen-2xl px-4 py-8 md:px-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-400">Club Rossy Resina</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-pink-400">Club Rossy Resina</p>
               <h3 className="mt-1 text-2xl font-black text-white tracking-tighter">Únete para ofertas y nuevos sorteos</h3>
               <p className="mt-1 text-sm text-white/40 font-medium">Sé el primero en enterarte de los próximos premios.</p>
             </div>
@@ -104,13 +104,13 @@ const Footer = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="tu@correo.com"
-                    className="w-full h-12 rounded-2xl bg-white/5 border border-white/10 pl-11 pr-4 text-sm text-white placeholder:text-white/20 outline-none focus:border-purple-500/50 transition-all"
+                    className="w-full h-12 rounded-lg bg-white/5 border border-white/10 pl-11 pr-4 text-sm text-white placeholder:text-white/20 outline-none focus:border-amazon_blue/70 transition-all"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={sending}
-                  className="h-12 px-8 rounded-2xl bg-gradient-to-r from-[#6E2CA1] to-[#cb299e] text-white text-xs font-black uppercase tracking-widest hover:shadow-lg hover:shadow-purple-500/20 transition-all disabled:opacity-60 flex items-center gap-2 shrink-0"
+                  className="flex h-12 shrink-0 items-center gap-2 rounded-lg bg-amazon_blue px-8 text-xs font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-amazon_light hover:shadow-[0_8px_18px_rgba(203,41,158,0.22)] disabled:opacity-60"
                 >
                   {sending ? "..." : <><span>Unirme</span><ArrowRightIcon className="w-4 h-4 stroke-[3]" /></>}
                 </button>
@@ -135,7 +135,7 @@ const Footer = () => {
               />
               <div>
                 <p className="font-black text-white text-xl leading-none tracking-tighter uppercase">Rossy Resina</p>
-                <p className="text-[#6E2CA1] font-black uppercase tracking-widest text-[10px] md:text-xs mt-1">
+                <p className="text-pink-400 font-black uppercase tracking-widest text-[10px] md:text-xs mt-1">
                   MOLDES • RESINA • PIGMENTOS
                 </p>
               </div>
@@ -145,15 +145,15 @@ const Footer = () => {
             </p>
             <div className="mt-5 space-y-2 text-sm text-white/40">
               <div className="flex items-center gap-3">
-                <MapPinIcon className="w-4 h-4 shrink-0 text-[#6E2CA1]" />
+                <MapPinIcon className="w-4 h-4 shrink-0 text-pink-400" />
                 <span>Lima, Perú</span>
               </div>
               <div className="flex items-center gap-3">
-                <PhoneIcon className="w-4 h-4 shrink-0 text-[#6E2CA1]" />
+                <PhoneIcon className="w-4 h-4 shrink-0 text-pink-400" />
                 <span>+51 966 357 648</span>
               </div>
               <div className="flex items-center gap-3">
-                <EnvelopeIcon className="w-4 h-4 shrink-0 text-[#6E2CA1]" />
+                <EnvelopeIcon className="w-4 h-4 shrink-0 text-pink-400" />
                 <span>contacto@rossyresina.com</span>
               </div>
             </div>
@@ -175,12 +175,12 @@ const Footer = () => {
 
           {/* Tienda */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6E2CA1] mb-6">Navegación</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-400 mb-6">Navegación</p>
             <ul className="space-y-2.5">
               {LINKS.tienda.map(({ label, href }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-white/40 hover:text-purple-400 transition flex items-center gap-1.5 group font-medium">
-                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0 text-purple-500" />
+                  <Link href={href} className="text-sm text-white/40 hover:text-pink-400 transition flex items-center gap-1.5 group font-medium">
+                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0 text-pink-400" />
                     {label}
                   </Link>
                 </li>
@@ -190,12 +190,12 @@ const Footer = () => {
 
           {/* Soporte */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6E2CA1] mb-6">Ayuda</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-400 mb-6">Ayuda</p>
             <ul className="space-y-2.5">
               {LINKS.soporte.map(({ label, href }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-white/40 hover:text-purple-400 transition flex items-center gap-1.5 group font-medium">
-                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0 text-purple-500" />
+                  <Link href={href} className="text-sm text-white/40 hover:text-pink-400 transition flex items-center gap-1.5 group font-medium">
+                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0 text-pink-400" />
                     {label}
                   </Link>
                 </li>
@@ -205,12 +205,12 @@ const Footer = () => {
 
           {/* Comunidad */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6E2CA1] mb-6">Comunidad</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-400 mb-6">Comunidad</p>
             <ul className="space-y-2.5">
               {LINKS.comunidad.map(({ label, href }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-white/40 hover:text-purple-400 transition flex items-center gap-1.5 group font-medium">
-                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0 text-purple-500" />
+                  <Link href={href} className="text-sm text-white/40 hover:text-pink-400 transition flex items-center gap-1.5 group font-medium">
+                    <ArrowRightIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0 text-pink-400" />
                     {label}
                   </Link>
                 </li>
@@ -226,8 +226,8 @@ const Footer = () => {
           <p className="font-medium">© {year} Rossy Resina. Todos los derechos reservados.</p>
           <div className="flex items-center gap-6 font-medium">
             <Link href="/terms" className="hover:text-white/60 transition">Términos Legales</Link>
-            <Link href="/faq" className="hover:text-purple-400 transition">Centro de Ayuda</Link>
-            <Link href="/about-us" className="hover:text-purple-400 transition">Sobre Nosotros</Link>
+            <Link href="/faq" className="hover:text-pink-400 transition">Centro de Ayuda</Link>
+            <Link href="/about-us" className="hover:text-pink-400 transition">Sobre Nosotros</Link>
           </div>
         </div>
       </div>

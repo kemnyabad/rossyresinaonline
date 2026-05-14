@@ -87,20 +87,10 @@ export default function StudentProfilePage({ student, capacitaciones, talleres, 
       <Head>
         <title>Perfil estudiante - Escuela Rossy Resina</title>
         <meta name="description" content="Panel de estudiante de Escuela Rossy Resina." />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
       </Head>
 
       <main className="student-campus min-h-screen bg-[#f6f7f9] text-slate-900">
         <style jsx global>{`
-          .student-campus,
-          .student-campus * {
-            font-family: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-          }
           .student-campus {
             --text-primary: #111827;
             --text-secondary: #64748b;
@@ -108,7 +98,7 @@ export default function StudentProfilePage({ student, capacitaciones, talleres, 
             --accent: #c21885;
             font-size: 16px;
             line-height: 1.5;
-            letter-spacing: -0.005em;
+            letter-spacing: 0;
           }
         `}</style>
 
@@ -116,7 +106,7 @@ export default function StudentProfilePage({ student, capacitaciones, talleres, 
           <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#b00016]">Campus virtual</p>
-              <h1 className="mt-1 text-[32px] font-semibold leading-tight tracking-[-0.035em] text-slate-950 md:text-4xl">Perfil estudiante</h1>
+              <h1 className="mt-1 text-[32px] font-semibold leading-tight tracking-normal text-slate-950 md:text-4xl">Perfil estudiante</h1>
               <p className="mt-1 text-[15px] font-normal leading-6 text-slate-500">Escuela Rossy Resina</p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -138,11 +128,11 @@ export default function StudentProfilePage({ student, capacitaciones, talleres, 
           <aside className="space-y-6">
             <section className="rounded border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center gap-4">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-[#c21885] text-[30px] font-semibold tracking-[-0.04em] text-white">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-[#c21885] text-[30px] font-semibold tracking-normal text-white">
                   {student.displayName.slice(0, 1).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-[20px] font-semibold leading-7 tracking-[-0.025em] text-slate-950">{student.displayName}</p>
+                  <p className="truncate text-[20px] font-semibold leading-7 tracking-normal text-slate-950">{student.displayName}</p>
                   <p className="truncate text-[14px] font-normal leading-5 text-slate-500">{student.email}</p>
                   <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-[12px] font-medium text-emerald-700 ring-1 ring-emerald-100">
                     {student.status === "ACTIVO" ? "Alumno activo" : "Alumno desactivado"}
@@ -166,7 +156,7 @@ export default function StudentProfilePage({ student, capacitaciones, talleres, 
             </section>
 
             <section className="rounded border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-[19px] font-semibold leading-7 tracking-[-0.02em] text-slate-950">Resumen académico</h2>
+              <h2 className="text-[19px] font-semibold leading-7 tracking-normal text-slate-950">Resumen académico</h2>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <Metric value={String(activeItems)} label="Cursos" />
                 <Metric value="S/ 50" label="Mensual" />
@@ -179,7 +169,7 @@ export default function StudentProfilePage({ student, capacitaciones, talleres, 
           <section className="space-y-6">
             <div className="rounded border border-slate-200 bg-white p-6 shadow-sm">
               <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#b00016]">Bienvenida/o</p>
-              <h2 className="mt-2 text-[32px] font-semibold leading-[1.15] tracking-[-0.04em] text-slate-950">Hola, {student.displayName}</h2>
+              <h2 className="mt-2 text-[32px] font-semibold leading-[1.15] tracking-normal text-slate-950">Hola, {student.displayName}</h2>
               <p className="mt-3 max-w-2xl text-[15px] font-normal leading-7 text-slate-600">
                 Este es tu espacio de estudiante. Aquí verás tus cursos, horarios, estado de matrícula y acceso a tu portafolio de creaciones.
               </p>
@@ -219,14 +209,14 @@ export default function StudentProfilePage({ student, capacitaciones, talleres, 
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
                     <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#b00016]">Información privada del alumno</p>
-                    <h3 className="mt-1 text-[20px] font-semibold leading-7 tracking-[-0.025em] text-slate-950">{billing.plan}</h3>
+                    <h3 className="mt-1 text-[20px] font-semibold leading-7 tracking-normal text-slate-950">{billing.plan}</h3>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                       Estos datos solo se muestran dentro del campus virtual. No aparecen en tu portafolio público.
                     </p>
                   </div>
                   <div className="rounded bg-white px-5 py-4 text-center shadow-sm">
                     <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500">Inversión</p>
-                    <p className="mt-1 text-[24px] font-semibold leading-8 tracking-[-0.035em] text-[#c21885]">{billing.monthlyAmount}</p>
+                    <p className="mt-1 text-[24px] font-semibold leading-8 tracking-normal text-[#c21885]">{billing.monthlyAmount}</p>
                   </div>
                 </div>
               </div>
@@ -291,7 +281,7 @@ function InfoLine({ icon, label, value }: { icon: React.ReactNode; label: string
 function Metric({ value, label }: { value: string; label: string }) {
   return (
     <div className="rounded bg-slate-50 p-3 text-center">
-      <p className="text-[22px] font-semibold leading-7 tracking-[-0.03em] text-[#c21885]">{value}</p>
+      <p className="text-[22px] font-semibold leading-7 tracking-normal text-[#c21885]">{value}</p>
       <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500">{label}</p>
     </div>
   );
@@ -300,7 +290,7 @@ function Metric({ value, label }: { value: string; label: string }) {
 function AcademicSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-[24px] font-semibold leading-8 tracking-[-0.03em] text-slate-950 md:text-[26px]">{title}</h2>
+      <h2 className="text-[24px] font-semibold leading-8 tracking-normal text-slate-950 md:text-[26px]">{title}</h2>
       <div className="mt-4 grid gap-3">{children}</div>
     </section>
   );
@@ -342,7 +332,7 @@ function CourseCard({
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#b00016]">{mode}</p>
-          <h3 className="mt-1 text-[18px] font-semibold leading-7 tracking-[-0.02em] text-slate-950">{title}</h3>
+          <h3 className="mt-1 text-[18px] font-semibold leading-7 tracking-normal text-slate-950">{title}</h3>
           <p className="mt-1 text-[14px] font-normal leading-6 text-slate-600">{subtitle}</p>
           <p className="mt-3 flex items-center gap-2 text-[14px] font-normal leading-6 text-slate-600">
             <ClockIcon className="h-4 w-4 text-[#c21885]" />
@@ -361,7 +351,7 @@ function EmptyState() {
   return (
     <div className="rounded border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
       <AcademicCapIcon className="mx-auto h-10 w-10 text-slate-400" />
-      <h3 className="mt-3 text-[18px] font-semibold leading-7 tracking-[-0.02em] text-slate-950">Todavía no tienes cursos asignados</h3>
+      <h3 className="mt-3 text-[18px] font-semibold leading-7 tracking-normal text-slate-950">Todavía no tienes cursos asignados</h3>
       <p className="mt-2 text-[14px] font-normal leading-6 text-slate-600">
         Cuando completemos tu inscripción, tus programas aparecerán aquí.
       </p>

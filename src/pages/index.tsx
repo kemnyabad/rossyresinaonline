@@ -205,25 +205,25 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
       <main>
         {/* Home mobile app-like */}
         <section className="md:hidden px-4 pt-2 pb-2 space-y-4">
-          <div className="rounded-2xl bg-gradient-to-r from-[#1a5f3f] to-[#40a373] p-5 text-white shadow-lg">
-            <p className="text-xs uppercase tracking-wide font-medium">Tu especialista en resina</p>
-            <h1 className="mt-1 text-2xl font-bold leading-tight">Materiales premium para tus creaciones</h1>
-            <p className="mt-2 text-sm">Resina epóxica, moldes y pigmentos de calidad</p>
-            <Link href="/search" className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-white px-4 text-sm font-bold text-[#1a5f3f] hover:scale-105 transition-transform">
+          <div className="rounded-lg border border-gray-200 bg-white p-5 text-gray-950 shadow-[0_1px_3px_rgba(17,24,39,0.08)]">
+            <p className="rr-type-label text-amazon_blue">Tu especialista en resina</p>
+            <h1 className="rr-type-title mt-1 text-2xl">Materiales premium para tus creaciones</h1>
+            <p className="rr-type-muted mt-2 text-sm">Resina epóxica, moldes y pigmentos de calidad</p>
+            <Link href="/search" className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-amazon_blue px-4 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(203,41,158,0.20)] transition-transform hover:-translate-y-0.5">
               Explorar productos
             </Link>
           </div>
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-gray-900">Más visitados</h2>
+              <h2 className="text-base font-bold text-gray-900">Más visitados</h2>
               <Link href="/productos" className="text-xs font-semibold text-amazon_blue">Ver todo</Link>
             </div>
             <div className="relative">
               {/* Navigation buttons */}
               <button
                 onClick={() => scrollMobile('left', 'visited')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+                className="absolute left-0 top-1/2 z-10 -translate-x-2 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-1.5 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-all duration-200 hover:bg-gray-50"
                 aria-label="Anterior"
               >
                 <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,7 +232,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
               </button>
               <button
                 onClick={() => scrollMobile('right', 'visited')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+                className="absolute right-0 top-1/2 z-10 translate-x-2 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-1.5 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-all duration-200 hover:bg-gray-50"
                 aria-label="Siguiente"
               >
                 <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,13 +249,13 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
                   <Link
                     key={`m-visit-${p._id}`}
                     href={`/${p.code || p._id}`}
-                    className="w-[150px] shrink-0 rounded-xl border border-gray-200 bg-white p-2 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group"
+                    className="group w-[150px] shrink-0 rounded-lg border border-gray-200 bg-white p-2 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]"
                   >
                     <div className="relative h-24 overflow-hidden rounded-lg bg-gray-100">
                       <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
                     </div>
                     <p className="mt-2 line-clamp-1 text-xs font-semibold text-gray-900 group-hover:text-amazon_blue transition-colors">{p.title || "Producto"}</p>
-                    <p className="text-sm font-extrabold text-gray-900">S/ {Number(p.price || 0).toFixed(2)} c/unidad</p>
+                    <p className="text-sm font-semibold text-amazon_blue">S/ {Number(p.price || 0).toFixed(2)} c/unidad</p>
                   </Link>
                 ))}
               </div>
@@ -266,7 +266,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
 
           <div>
             <div className="relative mb-2 flex items-center justify-center">
-              <h2 className="text-center text-base font-extrabold text-gray-900">Explora tus intereses</h2>
+              <h2 className="text-center text-base font-bold text-gray-900">Explora tus intereses</h2>
               <Link href="/productos" className="absolute right-0 text-xs font-semibold text-amazon_blue">Ver catálogo</Link>
             </div>
             <Products
@@ -298,7 +298,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
               </section>
         <section className="px-4 md:px-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-semibold uppercase tracking-wide text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900">
               Productos más comprados
             </h2>
             <Link href="/productos" className="text-sm font-semibold text-amazon_blue hover:underline">
@@ -310,7 +310,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
               {/* Desktop navigation buttons */}
               <button
                 onClick={() => scrollDesktop('left', 'topProducts')}
-                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+                className="absolute left-0 top-1/2 z-10 hidden -translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-all duration-200 hover:bg-gray-50 md:flex"
                 aria-label="Anterior"
               >
                 <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,7 +319,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
               </button>
               <button
                 onClick={() => scrollDesktop('right', 'topProducts')}
-                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+                className="absolute right-0 top-1/2 z-10 hidden translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-all duration-200 hover:bg-gray-50 md:flex"
                 aria-label="Siguiente"
               >
                 <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,18 +351,18 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
         <section className="px-4 md:px-6">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xl">⚡</span>
-            <h2 className="text-xl font-semibold uppercase tracking-wide text-orange-500">Ofertas Express</h2>
+            <h2 className="text-xl font-bold text-amazon_blue">Ofertas Express</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
             {ofertasExpress.map((item) => (
-              <div key={item.id} className="rounded-xl border border-orange-100 bg-white p-2 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
+              <div key={item.id} className="group rounded-lg border border-gray-200 bg-white p-2 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]">
                 <div className="relative h-32 w-full overflow-hidden rounded-lg bg-gray-50">
                   <Image src={item.imagen} alt={item.nombre} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
                   <div className="absolute top-1.5 left-1.5">
-                    <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">EXPRESS</span>
+                    <span className="bg-amazon_blue text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">EXPRESS</span>
                   </div>
                 </div>
-                <p className="mt-2 text-xs font-semibold text-gray-800 text-center line-clamp-2 group-hover:text-orange-500 transition-colors">{item.nombre}</p>
+                <p className="mt-2 text-xs font-semibold text-gray-800 text-center line-clamp-2 group-hover:text-amazon_blue transition-colors">{item.nombre}</p>
               </div>
             ))}
           </div>
@@ -376,7 +376,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
             {/* Productos por intereses */}
             <section>
               <div className="relative mb-4 flex items-center justify-center">
-                <h2 className="text-center text-xl font-semibold uppercase tracking-wide text-gray-900">
+                <h2 className="text-center text-xl font-bold text-gray-900">
                   Explora tus intereses
                 </h2>
                 <Link href="/productos" className="absolute right-0 text-sm font-semibold text-amazon_blue hover:underline">

@@ -2,9 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowRightIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  SparklesIcon,
   TagIcon,
   TruckIcon,
   ShieldCheckIcon,
@@ -122,7 +122,7 @@ export default function HeroCarousel({
           cta: "Ver moldes",
           image: normalizeImage(moldProduct?.image || MOLDS_FLYER_IMAGE),
           product: moldProduct,
-          tone: "from-[#fff5f9] via-[#ffe6f1] to-[#fff8df]",
+          tone: "bg-white",
         },
         {
           label: "Accesorios para resina",
@@ -132,7 +132,7 @@ export default function HeroCarousel({
           cta: "Ver accesorios",
           image: normalizeImage(accessoryProduct?.image || productGroups.popular[0]?.image || MOLDS_FLYER_IMAGE),
           product: accessoryProduct,
-          tone: "from-[#f5f3ff] via-[#fce7f3] to-[#fff8df]",
+          tone: "bg-[#FAFAFA]",
         },
         {
           label: "Color y resina",
@@ -142,7 +142,7 @@ export default function HeroCarousel({
           cta: "Ver pigmentos",
           image: normalizeImage(resinProduct?.image || productGroups.popular[1]?.image || MOLDS_FLYER_IMAGE),
           product: resinProduct,
-          tone: "from-[#effcf6] via-[#dff7ed] to-[#fff8df]",
+          tone: "bg-[#F8FAFC]",
         },
         {
           label: "Ofertas activas",
@@ -152,7 +152,7 @@ export default function HeroCarousel({
           cta: "Ver ofertas",
           image: normalizeImage(offerProduct?.image || productGroups.popular[2]?.image || MOLDS_FLYER_IMAGE),
           product: offerProduct,
-          tone: "from-[#fff7ed] via-[#ffe4c7] to-[#fff8df]",
+          tone: "bg-white",
         },
       ];
     },
@@ -169,6 +169,33 @@ export default function HeroCarousel({
 
   const activeSlide = slides[activeIndex] || slides[0];
   const quickDeals = ofertasExpress.slice(0, 2);
+  const promoProducts = useMemo(
+    () =>
+      uniqueProducts([
+        ...productGroups.offers,
+        ...productGroups.molds,
+        ...productGroups.resinAndPigments,
+        ...productGroups.accessories,
+        ...productGroups.popular,
+      ]).slice(0, 4),
+    [productGroups]
+  );
+  const promoVisualPool = [
+    ...quickDeals.map((deal) => ({
+      id: deal.id,
+      title: deal.nombre,
+      image: deal.imagen,
+    })),
+    ...promoProducts.map((product) => ({
+      id: String(product._id || product.code || product.title),
+      title: product.title,
+      image: product.image,
+    })),
+  ];
+  const promoVisualItems =
+    promoVisualPool.length > 0
+      ? Array.from({ length: Math.min(2, promoVisualPool.length) }, (_, index) => promoVisualPool[(cycleIndex + index) % promoVisualPool.length])
+      : [];
 
   const goTo = (nextIndex: number) => {
     const total = slides.length;
@@ -178,17 +205,17 @@ export default function HeroCarousel({
 
   return (
     <section className="w-full">
-      <div className="grid min-h-[420px] grid-cols-[230px_minmax(0,1fr)_270px] gap-4">
-        <aside className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="grid min-h-[420px] grid-cols-[230px_minmax(0,1fr)_320px] gap-4">
+        <aside className="self-start overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-100 px-4 py-3">
-            <p className="text-sm font-bold text-gray-900">Categorías</p>
+            <p className="text-sm font-semibold text-gray-900">Categorías</p>
           </div>
           <nav className="grid py-2">
             {categoryLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-pink-50 hover:text-amazon_blue"
+                className="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-amazon_blue"
               >
                 <span>{item.label}</span>
                 <ChevronRightIcon className="h-4 w-4 text-gray-400" />
@@ -196,32 +223,32 @@ export default function HeroCarousel({
             ))}
           </nav>
           <div className="mx-3 mb-3 rounded-lg bg-gray-50 p-3">
-            <p className="text-xs font-semibold uppercase text-gray-500">Compra segura</p>
-            <p className="mt-1 text-sm font-bold text-gray-900">Te ayudamos a elegir antes de comprar</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Compra segura</p>
+            <p className="mt-1 text-sm font-semibold text-gray-900">Te ayudamos a elegir antes de comprar</p>
           </div>
         </aside>
 
         <div className="min-w-0">
-          <div className={`relative h-[420px] overflow-hidden rounded-lg bg-gradient-to-br ${activeSlide.tone}`}>
+          <div className={`relative h-[420px] overflow-hidden rounded-lg border border-gray-200 ${activeSlide.tone} shadow-[0_1px_3px_rgba(17,24,39,0.08)]`}>
             <Link href={activeSlide.href} className="absolute inset-0 z-[1]" aria-label={activeSlide.cta} />
             <div className="absolute inset-0 z-[2] grid grid-cols-[minmax(0,0.95fr)_minmax(390px,1.05fr)] items-center gap-8 px-10 py-8">
               <div className="flex h-full max-w-[455px] flex-col justify-between pl-2">
                 <div>
-                  <span className="text-[12px] font-black uppercase tracking-[0.18em] text-amazon_blue">
+                  <span className="rr-type-label text-amazon_blue">
                     {activeSlide.label}
                   </span>
-                  <h1 className="mt-5 max-w-[430px] text-[38px] font-black leading-[1.08] text-gray-950">
+                  <h1 className="rr-type-display mt-5 max-w-[430px] text-[38px]">
                     {activeSlide.title}
                   </h1>
-                  <p className="mt-5 max-w-[395px] text-[17px] leading-7 text-gray-700">
+                  <p className="rr-type-body mt-5 max-w-[395px] text-[17px]">
                     {activeSlide.text}
                   </p>
                   <div className="mt-8 flex items-center gap-5">
-                    <span className="inline-flex h-12 items-center rounded-full bg-amazon_blue px-6 text-sm font-black text-white shadow-md shadow-pink-500/20">
+                    <span className="inline-flex h-12 items-center rounded-lg bg-amazon_blue px-6 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(203,41,158,0.22)]">
                       {activeSlide.cta}
                     </span>
                     {activeSlide.product ? (
-                      <span className="text-sm font-black text-gray-950">
+                      <span className="text-sm font-semibold text-gray-950">
                         Desde {formatPrice(activeSlide.product.price)}
                       </span>
                     ) : null}
@@ -243,7 +270,7 @@ export default function HeroCarousel({
                 </div>
               </div>
 
-              <div className="relative ml-auto flex h-[340px] w-full max-w-[520px] items-center justify-center overflow-hidden rounded-md bg-white/60 p-4 shadow-xl shadow-gray-900/10 ring-1 ring-white/70">
+              <div className="relative ml-auto flex h-[340px] w-full max-w-[520px] items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-4 shadow-[0_8px_20px_rgba(17,24,39,0.08)]">
                 <Image
                   src={activeSlide.image}
                   alt={activeSlide.product?.title || activeSlide.title}
@@ -273,12 +300,12 @@ export default function HeroCarousel({
             </button>
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            {sideProducts.slice(0, 3).map((product) => (
+          <div className="mt-4 grid grid-cols-4 gap-4">
+            {sideProducts.slice(0, 4).map((product) => (
               <Link
                 key={`hero-product-${product._id}`}
                 href={productHref(product)}
-                className="group flex min-h-[92px] items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:border-pink-200 hover:shadow-sm"
+                className="group flex min-h-[92px] items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]"
               >
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-gray-50">
                   <Image
@@ -291,7 +318,7 @@ export default function HeroCarousel({
                 </div>
                 <div className="min-w-0">
                   <p className="line-clamp-2 text-sm font-semibold leading-5 text-gray-900">{product.title}</p>
-                  <p className="mt-1 text-sm font-black text-amazon_blue">{formatPrice(product.price)}</p>
+                  <p className="mt-1 text-sm font-semibold text-amazon_blue">{formatPrice(product.price)}</p>
                 </div>
               </Link>
             ))}
@@ -299,44 +326,78 @@ export default function HeroCarousel({
         </div>
 
         <aside className="grid gap-4">
-          <Link href="/productos?ofertas=1" className="rounded-lg border border-orange-100 bg-[#fff7ed] p-4 hover:shadow-sm">
-            <div className="flex items-center gap-2 text-orange-600">
-              <TagIcon className="h-5 w-5" />
-              <p className="text-sm font-black">Ofertas Express</p>
+          <Link
+            href="/productos?ofertas=1"
+            className="group relative overflow-visible rounded-lg border border-gray-200 bg-white p-4 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_10px_24px_rgba(17,24,39,0.10)]"
+          >
+            <div className="absolute -top-4 right-4 z-[3] rounded-md bg-amazon_blue px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-white shadow-[0_8px_18px_rgba(203,41,158,0.22)]">
+              Hasta 30% OFF
             </div>
-            <p className="mt-2 text-2xl font-black leading-tight text-gray-950">Promos para hoy</p>
-            <p className="mt-1 text-sm text-gray-600">Descuentos en productos seleccionados.</p>
+
+            <div className="relative h-40 overflow-visible">
+              {promoVisualItems.length > 0 ? (
+                <>
+                  <div className="absolute bottom-0 left-0 top-0 w-[46%] transition-transform duration-200 group-hover:-translate-y-0.5">
+                    <Image
+                      src={normalizeImage(promoVisualItems[0]?.image || MOLDS_FLYER_IMAGE)}
+                      alt={promoVisualItems[0]?.title || "Producto en promoción"}
+                      fill
+                      sizes="190px"
+                      className="object-contain mix-blend-multiply drop-shadow-[0_12px_18px_rgba(17,24,39,0.18)]"
+                    />
+                  </div>
+                  <div className="absolute bottom-0 right-0 top-2 w-[46%] transition-transform duration-200 group-hover:-translate-y-0.5">
+                    <Image
+                      src={normalizeImage(promoVisualItems[1]?.image || promoVisualItems[0]?.image || MOLDS_FLYER_IMAGE)}
+                      alt={promoVisualItems[1]?.title || "Oferta Rossy Resina"}
+                      fill
+                      sizes="190px"
+                      className="object-contain mix-blend-multiply drop-shadow-[0_12px_18px_rgba(17,24,39,0.18)]"
+                    />
+                  </div>
+                </>
+              ) : null}
+            </div>
+
+            <div className="mt-2 text-center">
+              <div className="mx-auto inline-flex items-center gap-2 text-amazon_blue transition-transform duration-200 group-hover:-translate-y-0.5">
+                <TagIcon className="h-4 w-4" />
+                <p className="text-xs font-semibold uppercase tracking-wide">Ofertas resineras</p>
+              </div>
+              <h3 className="rr-type-title mx-auto mt-2 max-w-none whitespace-nowrap text-[25px] transition-colors duration-200 group-hover:text-amazon_blue">
+                Promos de la semana
+              </h3>
+              <p className="rr-type-label mt-2 max-w-none whitespace-nowrap text-left text-[10px] text-amazon_blue/80">
+                Insumos para emprender con resina
+              </p>
+              <span className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-amazon_blue px-5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(203,41,158,0.22)] transition-all duration-200 group-hover:-translate-y-0.5 group-hover:bg-amazon_light group-hover:shadow-[0_14px_28px_rgba(203,41,158,0.24)]">
+                Ver promociones
+                <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </span>
+            </div>
           </Link>
 
-          {quickDeals.length > 0 ? (
-            quickDeals.map((deal) => (
-              <div key={deal.id} className="rounded-lg border border-gray-200 bg-white p-3">
-                <div className="relative h-28 overflow-hidden rounded-md bg-gray-50">
-                  <Image src={normalizeImage(deal.imagen)} alt={deal.nombre} fill sizes="240px" className="object-cover" />
+          {quickDeals.length > 0
+            ? quickDeals.map((deal) => (
+                <div key={deal.id} className="rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="relative h-28 overflow-hidden rounded-md bg-gray-50">
+                    <Image src={normalizeImage(deal.imagen)} alt={deal.nombre} fill sizes="240px" className="object-cover" />
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-sm font-medium text-gray-900">{deal.nombre}</p>
                 </div>
-                <p className="mt-2 line-clamp-2 text-sm font-bold text-gray-900">{deal.nombre}</p>
-              </div>
-            ))
-          ) : (
-            <Link href="/categoria/moldes-de-silicona" className="rounded-lg border border-pink-100 bg-pink-50 p-4 hover:shadow-sm">
-              <div className="flex items-center gap-2 text-amazon_blue">
-                <SparklesIcon className="h-5 w-5" />
-                <p className="text-sm font-black">Moldes nuevos</p>
-              </div>
-              <p className="mt-2 text-xl font-black leading-tight text-gray-950">Encuentra piezas para crear regalos únicos</p>
-            </Link>
-          )}
+              ))
+            : null}
 
           <Link
             href="/proceso-envio"
-            className="grid gap-4 rounded-lg border border-pink-100 bg-white p-4 shadow-sm hover:border-pink-200 hover:shadow-md"
+            className="grid gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]"
           >
             <div className="flex items-start gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pink-50 text-amazon_blue">
                 <TruckIcon className="h-6 w-6" />
               </span>
               <div>
-                <p className="text-base font-black leading-tight text-gray-950">Proceso de envío</p>
+                <p className="text-base font-semibold leading-tight text-gray-950">Proceso de envío</p>
                 <p className="mt-1 text-xs leading-5 text-gray-500">Conoce cómo cotizamos y despachamos tu pedido.</p>
               </div>
             </div>
@@ -346,7 +407,7 @@ export default function HeroCarousel({
                 <ShieldCheckIcon className="h-6 w-6" />
               </span>
               <div>
-                <p className="text-base font-black leading-tight text-gray-950">Pago coordinado y seguro</p>
+                <p className="text-base font-semibold leading-tight text-gray-950">Pago coordinado y seguro</p>
                 <p className="mt-1 text-xs leading-5 text-gray-500">Yape y BCP autorizados antes del envío.</p>
               </div>
             </div>

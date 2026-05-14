@@ -73,7 +73,7 @@ export default function AssistantRossy() {
   const [bubble, setBubble]       = useState(false);
   const [hovered, setHovered]     = useState(false);
   const [messages, setMessages]   = useState<Message[]>([
-    { role: "assistant", text: "¡Hola! 👋 Soy **Resiny**, tu asistente resinera virtual. ¿En qué puedo ayudarte hoy?", time: now() },
+    { role: "assistant", text: "¡Hola! 👋 Soy **Resiny**, asistente virtual de Rossy Resina, fundada por **Rosa Maribel Abad Landacay**. Estoy aquí para ayudarte con resina, materiales, capacitaciones y emprendimiento. ¿En qué puedo ayudarte hoy?", time: now() },
   ]);
   const [input, setInput]         = useState("");
   const [loading, setLoading]     = useState(false);

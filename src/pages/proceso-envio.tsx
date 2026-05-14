@@ -55,8 +55,8 @@ export default function ProcesoEnvioPage() {
         />
       </Head>
 
-      <main className="bg-[#fafafa]">
-        <section className="border-b border-pink-100 bg-white">
+      <main className="bg-[#f7f7f8]">
+        <section className="border-b border-gray-200 bg-white">
           <div className="mx-auto max-w-6xl px-4 py-10 md:px-6">
             <div className="grid items-end gap-6 md:grid-cols-[1fr_360px]">
               <div>
@@ -71,7 +71,7 @@ export default function ProcesoEnvioPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-pink-100 bg-pink-50 p-5">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-5 shadow-[0_1px_3px_rgba(17,24,39,0.08)]">
                 <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Tiempo referencial</p>
                 <div className="mt-2 flex items-end gap-2">
                   <span className="text-5xl font-semibold leading-none text-gray-950">2 a 3</span>
@@ -86,7 +86,7 @@ export default function ProcesoEnvioPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-10 md:px-6">
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm md:p-7">
+          <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-[0_1px_3px_rgba(17,24,39,0.08)] md:p-7">
             <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-amazon_blue">Paso a paso</p>
@@ -106,7 +106,7 @@ export default function ProcesoEnvioPage() {
                 return (
                   <div key={step.title} className="relative px-2">
                     <div className="flex flex-col items-center text-center">
-                      <div className="relative flex h-28 w-28 items-center justify-center rounded-2xl border-2 border-amazon_blue/70 bg-pink-50 text-amazon_blue">
+                      <div className="relative flex h-28 w-28 items-center justify-center rounded-lg border-2 border-amazon_blue/70 bg-pink-50 text-amazon_blue">
                         <Icon className="h-12 w-12" />
                         <span className="absolute -bottom-3 left-1/2 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full bg-amazon_blue text-xs font-bold text-white">
                           {index + 1}
@@ -122,12 +122,12 @@ export default function ProcesoEnvioPage() {
                           reverseRow ? "left-[-20px]" : "right-[-20px]"
                         }`}
                       >
-                        <div className={`h-1 w-12 bg-pink-100 ${reverseRow ? "order-2" : ""}`} />
+                        <div className={`h-1 w-12 bg-gray-200 ${reverseRow ? "order-2" : ""}`} />
                         <div
                           className={`h-0 w-0 border-y-[8px] border-y-transparent ${
                             reverseRow
-                              ? "order-1 border-r-[12px] border-r-pink-200"
-                              : "border-l-[12px] border-l-pink-200"
+                              ? "order-1 border-r-[12px] border-r-gray-200"
+                              : "border-l-[12px] border-l-gray-200"
                           }`}
                         />
                       </div>
@@ -135,8 +135,8 @@ export default function ProcesoEnvioPage() {
 
                     {showDownArrow ? (
                       <div className="pointer-events-none absolute -bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center md:flex">
-                        <div className="h-8 w-1 bg-pink-100" />
-                        <div className="h-0 w-0 border-x-[8px] border-t-[12px] border-x-transparent border-t-pink-200" />
+                        <div className="h-8 w-1 bg-gray-200" />
+                        <div className="h-0 w-0 border-x-[8px] border-t-[12px] border-x-transparent border-t-gray-200" />
                       </div>
                     ) : null}
                   </div>
@@ -147,7 +147,7 @@ export default function ProcesoEnvioPage() {
         </section>
 
         <section className="mx-auto grid max-w-6xl gap-5 px-4 pb-12 md:grid-cols-[1fr_1fr] md:px-6">
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-[0_1px_3px_rgba(17,24,39,0.08)]">
             <div className="flex items-center gap-3">
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-pink-50 text-amazon_blue">
                 <BanknotesIcon className="h-6 w-6" />
@@ -167,14 +167,14 @@ export default function ProcesoEnvioPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Yape</p>
                 <p className="mt-1 font-mono text-lg font-semibold text-gray-950">961770723</p>
               </div>
-              <div className="rounded-xl bg-pink-50 p-4 sm:col-span-2">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 sm:col-span-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Titular de las cuentas</p>
                 <p className="mt-1 text-lg font-semibold text-gray-950">Rosa Maribel Abad Landacay</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-[0_1px_3px_rgba(17,24,39,0.08)]">
             <div className="flex items-center gap-3">
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-pink-50 text-amazon_blue">
                 <CheckCircleIcon className="h-6 w-6" />

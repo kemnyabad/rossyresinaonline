@@ -49,8 +49,7 @@ const RootLayout = ({ children }: Props) => {
       title: "¡Sorteo Día de la Madre!",
       icon: "💝",
       decor: "🌸",
-      gradient: "from-rose-500 via-pink-500 to-fuchsia-600",
-      eyebrowClass: "text-rose-100",
+      eyebrowClass: "text-pink-100",
     },
   ];
 
@@ -81,7 +80,7 @@ const RootLayout = ({ children }: Props) => {
       {!isRifasPage && (
         <div className="md:hidden">
           <Link href="/rifas">
-            <div className={`relative overflow-hidden border-b border-white/10 bg-gradient-to-r ${mobilePromoSlides[mobilePromoIndex].gradient} px-4 py-3 shadow-md`}>
+            <div className="relative overflow-hidden border-b border-amazon_light/20 bg-amazon_blue px-4 py-3 shadow-sm">
               {/* Elemento decorativo de fondo */}
               <div className="pointer-events-none absolute -right-2 -top-1 opacity-20">
                 <span className="text-5xl">{mobilePromoSlides[mobilePromoIndex].decor}</span>
@@ -93,10 +92,10 @@ const RootLayout = ({ children }: Props) => {
                     {mobilePromoSlides[mobilePromoIndex].icon}
                   </div>
                   <div className="min-w-0 text-white">
-                    <p className={`mb-1 truncate text-[9px] font-black uppercase leading-none tracking-widest ${mobilePromoSlides[mobilePromoIndex].eyebrowClass}`}>
+                    <p className={`mb-1 truncate text-[9px] font-semibold uppercase leading-none tracking-wide ${mobilePromoSlides[mobilePromoIndex].eyebrowClass}`}>
                       {mobilePromoSlides[mobilePromoIndex].eyebrow}
                     </p>
-                    <p className="truncate text-sm font-black uppercase leading-tight">
+                    <p className="truncate text-sm font-semibold uppercase leading-tight">
                       {mobilePromoSlides[mobilePromoIndex].title}
                     </p>
                   </div>
@@ -113,7 +112,7 @@ const RootLayout = ({ children }: Props) => {
                       />
                     ))}
                   </div>
-                  <div className="flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-[10px] font-black uppercase text-white shadow-sm backdrop-blur-sm">
+                  <div className="flex items-center gap-1.5 rounded-lg border border-white/35 bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-amazon_blue shadow-sm">
                     Participar <ArrowRightIcon className="h-3 w-3 stroke-[3]" />
                   </div>
                 </div>
@@ -127,7 +126,7 @@ const RootLayout = ({ children }: Props) => {
       <div ref={footerRef}>
         {!isRifasPage && <Footer />} {/* Renderiza Footer solo si NO es la página de rifas */}
       </div>
-      <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white/95 backdrop-blur md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-4 px-2 py-2">
           {mobileTabs.map((tab) => {
             const Icon = tab.icon;
@@ -142,7 +141,7 @@ const RootLayout = ({ children }: Props) => {
                 <span className="relative">
                   <Icon className={`h-5 w-5 ${tab.active ? "text-amazon_blue" : "text-gray-500"}`} />
                   {tab.href === "/cart" && cartCount > 0 ? (
-                    <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amazon_blue px-1 text-[9px] font-bold text-white">
+                    <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amazon_blue px-1 text-[9px] font-semibold text-white">
                       {cartCount}
                     </span>
                   ) : null}

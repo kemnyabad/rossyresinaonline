@@ -47,7 +47,7 @@ const BottomHeader = () => {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`inline-flex h-8 items-center justify-center rounded-full px-1 text-[15px] font-semibold tracking-normal transition-colors duration-200 ${
+                className={`inline-flex h-8 items-center justify-center rounded-full px-1 text-[15px] font-medium tracking-normal transition-colors duration-200 ${
                   active ? "text-[#c21885]" : "text-slate-700 hover:text-[#c21885]"
                 }`}
               >
@@ -59,11 +59,11 @@ const BottomHeader = () => {
 
         <div className="flex items-center justify-end" aria-label="Anuncio de descuento">
           <div className="inline-flex h-10 max-w-full cursor-default select-none items-center gap-2 overflow-hidden whitespace-nowrap px-1 text-[#c21885]">
-            <span className="inline-flex animate-pulse items-center justify-center text-[22px] leading-none font-extrabold tracking-tight shrink-0">
+            <span className="inline-flex animate-pulse items-center justify-center text-[22px] leading-none font-semibold tracking-normal shrink-0">
               10%
             </span>
             <span className="min-w-0 leading-tight">
-              <span className="block truncate font-bold text-[14px]">Descuento en tu primera compra</span>
+              <span className="block truncate font-semibold text-[14px]">Descuento en tu primera compra</span>
               <span key={promoIndex} className="block truncate animate-[promoFade_3.2s_ease-in-out] text-[11px] text-[#a31370]">
                 {promoMessages[promoIndex]}
               </span>
@@ -80,7 +80,7 @@ const BottomHeader = () => {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`shrink-0 snap-start border-b-2 pb-2 text-[15px] font-semibold leading-tight tracking-normal whitespace-nowrap transition-colors duration-200 ${
+                className={`shrink-0 snap-start border-b-2 pb-2 text-[15px] font-medium leading-tight tracking-normal whitespace-nowrap transition-colors duration-200 ${
                   active ? "border-[#c21885] text-[#c21885]" : "border-transparent text-slate-600 hover:text-[#c21885]"
                 }`}
                 onClick={(e) => {

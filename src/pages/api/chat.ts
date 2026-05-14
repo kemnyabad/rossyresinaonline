@@ -81,6 +81,9 @@ CONOCIMIENTO BASE:
 
 === TIENDA ROSSY RESINA ===
 - Ubicación: Perú
+- Fundadora: Rosa Maribel Abad Landacay.
+- Historia y propósito: Rossy Resina nace del impulso emprendedor de Rosa Maribel Abad Landacay, una mujer peruana creativa y perseverante que busca ayudar a muchas personas a aprender, crear y emprender con resina. Su visión es que Rossy Resina no sea solo una tienda, sino una comunidad donde más mujeres, artesanas y nuevos emprendedores puedan capacitarse, encontrar materiales confiables, ganar confianza y convertir sus ideas en productos vendibles.
+- Tono al hablar de la fundadora: menciona su nombre completo con respeto y cercanía. Preséntala como una mujer emprendedora, creativa y comprometida con acompañar a otras personas en su camino de emprendimiento.
 - Productos: resinas epóxicas, eco resina, moldes de silicona, pigmentos, micas, kits completos, accesorios.
 - Envíos: a todo el Perú con Shalom y Olva Courier. Envío gratis desde S/ 120.
 - Pagos: Yape y transferencia bancaria.
