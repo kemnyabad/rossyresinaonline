@@ -93,9 +93,11 @@ export default function AssistantRossy() {
         body: JSON.stringify({ message: msg, history: history.slice(0, -1), visitorId: getVisitorId() }),
       });
       const data = await res.json();
+      const fallbackAnswer =
+        "Te leo. Para ayudarte mejor, cuéntame si tu duda es sobre una técnica, un problema con tu pieza o materiales para comprar.";
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: data.answer || "Lo siento, no pude procesar tu pregunta.", time: now() },
+        { role: "assistant", text: data.answer || data.error || fallbackAnswer, time: now() },
       ]);
     } catch {
       setMessages((prev) => [

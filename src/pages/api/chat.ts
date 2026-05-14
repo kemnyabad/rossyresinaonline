@@ -269,6 +269,56 @@ Devuelve solo la respuesta final de Resiny, sin explicar el proceso.`,
   }
 };
 
+const answerWithChatGpt = async (input: {
+  message: string;
+  history: Array<{ role: string; text: string }>;
+  learningContext: string;
+}) => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  const model = process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini";
+  const chatHistory = input.history.slice(-8).map((m) => ({
+    role: m.role === "user" ? "user" : "assistant",
+    content: String(m.text || "").slice(0, 900),
+  }));
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: input.learningContext ? `${SYSTEM_PROMPT}\n\n${input.learningContext}` : SYSTEM_PROMPT,
+          },
+          ...chatHistory,
+          { role: "user", content: input.message },
+        ],
+        temperature: 0.75,
+        max_tokens: 500,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.warn("OpenAI direct error:", String(data?.error?.message || response.statusText));
+      return null;
+    }
+
+    const answer = String(data?.choices?.[0]?.message?.content || "").trim();
+    return answer || null;
+  } catch (error) {
+    console.warn("OpenAI direct failed:", String((error as any)?.message || error));
+    return null;
+  }
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
 
@@ -285,12 +335,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const apiKey = process.env.GROQ_API_KEY;
-  const isProduction = process.env.NODE_ENV === "production";
   if (!apiKey) {
-    if (isProduction) return res.status(500).json({ error: "API key no configurada" });
-    const answer = localFallbackAnswer(message);
+    const learningContext = await getResinyLearningContext();
+    const chatGptAnswer = await answerWithChatGpt({ message, history, learningContext });
+    const answer = chatGptAnswer || localFallbackAnswer(message);
     await recordResinyLearning({ question: message, answer, visitorId });
-    return res.status(200).json({ answer, mode: "local" });
+    return res.status(200).json({ answer, mode: chatGptAnswer ? "chatgpt" : "local-no-groq" });
   }
 
   try {
@@ -323,9 +373,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ answer, mode: chatGptAnswer ? "groq+chatgpt" : "groq" });
   } catch (e: any) {
     console.error("Groq error:", String(e?.message || ""));
-    if (isProduction) return res.status(500).json({ error: "No se pudo procesar tu pregunta. Intenta de nuevo." });
-    const answer = localFallbackAnswer(message);
+    const learningContext = await getResinyLearningContext();
+    const chatGptAnswer = await answerWithChatGpt({ message, history, learningContext });
+    const answer = chatGptAnswer || localFallbackAnswer(message);
     await recordResinyLearning({ question: message, answer, visitorId });
-    return res.status(200).json({ answer, mode: "local" });
+    return res.status(200).json({ answer, mode: chatGptAnswer ? "chatgpt-fallback" : "local-fallback" });
   }
 }
