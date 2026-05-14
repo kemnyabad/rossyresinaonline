@@ -286,7 +286,7 @@ const Header = () => {
         </div>
       )}
 
-      <div className="hidden md:flex max-w-screen-2xl mx-auto min-h-[72px] px-3 py-2 sm:px-4 md:px-6 items-center gap-2 sm:gap-4">
+      <div className="hidden md:flex max-w-screen-2xl mx-auto min-h-[76px] px-3 py-2 sm:px-4 md:px-6 xl:px-8 items-center gap-3 lg:gap-5">
         {/* logo */}
         <Link
           href={"/"}
@@ -321,8 +321,8 @@ const Header = () => {
         </div>
 
         {/* searchbar */}
-        <div className="hidden md:flex flex-1 items-center justify-center">
-          <form onSubmit={submitSearch} className="w-full max-w-2xl h-11 inline-flex items-center justify-between relative">
+        <div className="hidden md:flex flex-1 min-w-[220px] items-center justify-center">
+          <form onSubmit={submitSearch} className="w-full max-w-3xl h-11 inline-flex items-center justify-between relative">
             <input
               onChange={handleSearch}
               value={searchQuery}
@@ -375,7 +375,7 @@ const Header = () => {
         </div>
 
         {/* actions */}
-        <div className="ml-auto md:ml-0 flex items-center gap-2 sm:gap-4">
+        <div className="ml-auto flex min-w-[280px] max-w-[360px] flex-none items-center justify-end gap-3 lg:gap-4 xl:min-w-[330px]">
           <Link
             href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
             className="md:hidden p-2 rounded-full border border-gray-200 text-gray-700 hover:text-amazon_blue hover:border-amazon_blue"
@@ -388,14 +388,16 @@ const Header = () => {
             <button
               type="button"
               onClick={() => setProfileOpen((v) => !v)}
-              className="flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue"
+              className="flex min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm text-gray-700 transition-colors hover:border-pink-100 hover:bg-pink-50/60 hover:text-amazon_blue"
               aria-haspopup="menu"
               aria-expanded={profileOpen}
             >
-              <UserIcon className="w-5 h-5" />
-              <div className="leading-tight text-left">
-                <div className="text-xs text-gray-500">Cuenta</div>
-                <div className="font-semibold">Mi perfil</div>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200">
+                <UserIcon className="w-5 h-5" />
+              </span>
+              <div className="min-w-0 leading-tight text-left">
+                <div className="text-xs font-semibold text-gray-500">Cuenta</div>
+                <div className="whitespace-nowrap text-[15px] font-semibold text-slate-800">Mi perfil</div>
               </div>
             </button>
 
@@ -477,19 +479,21 @@ const Header = () => {
           {/* cart */}
           <Link
             href="/cart"
-            className="px-1 sm:px-2 cursor-pointer duration-300 relative flex items-center"
+            className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-pink-100 hover:bg-pink-50/60"
             aria-label="Abrir carrito"
           >
-            <span className="flex items-center gap-2 relative">
+            <span className="flex items-center gap-3 relative">
               <div className="relative">
-                <ShoppingCartIcon className="w-8 h-8 text-gray-700" />
-                <span className="absolute -top-2 -right-2 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 group-hover:text-amazon_blue">
+                  <ShoppingCartIcon className="w-6 h-6" />
+                </span>
+                <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center ring-2 ring-white">
                   {cartCount}
                 </span>
               </div>
-              <div className="hidden md:block leading-tight text-left">
-                <div className="text-xs text-gray-500">Tu carrito</div>
-                <div className="text-sm font-semibold text-amazon_blue"><FormattedPrice amount={cartSubtotal} /></div>
+              <div className="hidden md:block min-w-[78px] leading-tight text-left">
+                <div className="text-xs font-semibold text-gray-500">Tu carrito</div>
+                <div className="text-[15px] font-semibold text-amazon_blue"><FormattedPrice amount={cartSubtotal} /></div>
               </div>
             </span>
           </Link>
