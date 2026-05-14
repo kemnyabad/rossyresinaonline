@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import Groq from "groq-sdk";
 import { getResinyLearningContext, recordResinyLearning } from "@/lib/resinyLearning";
 
 const SYSTEM_PROMPT = `Eres "Resiny", la asistente amiga de Rossy Resina (Perú). Sabes de resina epóxica, eco resina, moldes de silicona, pigmentos, proyectos artesanales, compras y emprendimiento.
@@ -342,6 +341,47 @@ const missingAiProviderResponse = (res: NextApiResponse) =>
     code: "RESINY_AI_PROVIDER_MISSING",
   });
 
+const answerWithGroq = async (input: {
+  apiKey: string;
+  model: string;
+  message: string;
+  history: Array<{ role: string; text: string }>;
+  learningContext: string;
+}) => {
+  const chatHistory = input.history.slice(-8).map((m) => ({
+    role: m.role === "user" ? "user" : "assistant",
+    content: String(m.text || "").slice(0, 900),
+  }));
+
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${input.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: input.model,
+      messages: [
+        {
+          role: "system",
+          content: input.learningContext ? `${SYSTEM_PROMPT}\n\n${input.learningContext}` : SYSTEM_PROMPT,
+        },
+        ...chatHistory,
+        { role: "user", content: input.message },
+      ],
+      max_tokens: 500,
+      temperature: 0.7,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(String(data?.error?.message || response.statusText));
+  }
+
+  return String(data?.choices?.[0]?.message?.content || "").trim();
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
 
@@ -369,33 +409,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!groqApiKey) {
     const learningContext = await getResinyLearningContext();
     const chatGptAnswer = await answerWithChatGpt({ message, history, learningContext });
-    if (!chatGptAnswer && !allowLocalFallback) return missingAiProviderResponse(res);
+    if (!chatGptAnswer && !allowLocalFallback) {
+      if (!openAiApiKey) return missingAiProviderResponse(res);
+      return res.status(503).json({
+        error:
+          "ChatGPT está configurado, pero no pudo responder. Revisa cuota, billing o permisos de la API de OpenAI.",
+        code: "RESINY_OPENAI_UNAVAILABLE",
+      });
+    }
     const answer = chatGptAnswer || localFallbackAnswer(message);
     await recordResinyLearning({ question: message, answer, visitorId });
     return res.status(200).json({ answer, mode: chatGptAnswer ? "chatgpt" : "local-no-groq" });
   }
 
   try {
-    const groq = new Groq({ apiKey: groqApiKey });
     const learningContext = await getResinyLearningContext();
-
-    const chatHistory = history.map((m: { role: string; text: string }) => ({
-      role: m.role === "user" ? "user" : "assistant" as const,
-      content: m.text,
-    }));
-
-    const completion = await groq.chat.completions.create({
-      model: groqModel,
-      messages: [
-        { role: "system", content: learningContext ? `${SYSTEM_PROMPT}\n\n${learningContext}` : SYSTEM_PROMPT },
-        ...chatHistory,
-        { role: "user", content: message },
-      ],
-      max_tokens: 500,
-      temperature: 0.7,
-    });
-
-    const groqAnswer = completion.choices[0]?.message?.content || "Lo siento, no pude generar una respuesta.";
+    const groqAnswer =
+      (await answerWithGroq({ apiKey: groqApiKey, model: groqModel, message, history, learningContext })) ||
+      "Lo siento, no pude generar una respuesta.";
     const chatGptAnswer = isResinyDomainQuestion(message, history) && shouldUseChatGptSupport(message, groqAnswer)
       ? await improveWithChatGpt({ message, answer: groqAnswer, history, learningContext })
       : null;
@@ -408,6 +439,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const learningContext = await getResinyLearningContext();
     const chatGptAnswer = await answerWithChatGpt({ message, history, learningContext });
     if (!chatGptAnswer && !allowLocalFallback) {
+      if (openAiApiKey) {
+        return res.status(503).json({
+          error:
+            "Groq no pudo responder y ChatGPT también falló. Revisa límites de Groq y cuota/billing de OpenAI.",
+          code: "RESINY_AI_PROVIDERS_UNAVAILABLE",
+        });
+      }
       return res.status(503).json({
         error:
           "Groq no pudo responder y ChatGPT no está configurado. Agrega OPENAI_API_KEY para que Resiny tenga respaldo inteligente.",
