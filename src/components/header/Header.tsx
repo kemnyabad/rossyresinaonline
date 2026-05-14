@@ -24,6 +24,8 @@ import FormattedPrice from "@/components/FormattedPrice";
 import { FcGoogle } from "react-icons/fc";
 import { MdOutlineEmail } from "react-icons/md";
 
+const RESINY_IMAGE = "/resiny.png";
+
 const Header = () => {
   const router = useRouter();
   const isResinyPage = router.pathname === "/resiny";
@@ -208,6 +210,19 @@ const Header = () => {
               <span className="text-[11px] text-gray-500">Tienda artesana</span>
             </div>
           </Link>
+
+          {!isResinyPage && (
+            <Link
+              href="/resiny"
+              className="ml-auto mr-3 flex items-center gap-2 rounded-full border border-pink-100 bg-pink-50/70 px-3 py-1.5 text-amazon_blue shadow-sm"
+              aria-label="Chatear con Resiny"
+            >
+              <span className="relative h-8 w-7 shrink-0">
+                <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" />
+              </span>
+              <span className="text-xs font-semibold leading-tight">Resiny</span>
+            </Link>
+          )}
 
           <button
             type="button"
