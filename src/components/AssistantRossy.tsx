@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
 
 type Message = { role: "assistant" | "user"; text: string; time: string; imageUrl?: string };
@@ -33,12 +34,19 @@ export default function AssistantRossy() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.style.overflowY = "";
+    document.documentElement.style.height = "";
+    document.body.style.overflowY = "";
+    document.body.style.height = "";
+  }, []);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -145,8 +153,18 @@ export default function AssistantRossy() {
   }
 
   return (
-    <section className="flex min-h-[calc(100vh-76px)] flex-col bg-white px-4">
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col">
+    <div className="resinyPage bg-white">
+      <style jsx>{`
+        .resinyPage {
+          min-height: 100vh;
+        }
+        .chatMessages {
+          padding: 0 16px 140px;
+        }
+      `}</style>
+
+      <main className="chatMessages">
+        <div className="mx-auto w-full max-w-4xl">
         <div className="flex items-center justify-between py-5">
           <div className="flex items-center gap-3">
             <div className="relative h-12 w-10 shrink-0">
@@ -159,73 +177,91 @@ export default function AssistantRossy() {
           </div>
         </div>
 
-        <div className="flex-1 space-y-8 pb-28 pt-5">
-          {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`flex max-w-[78%] gap-3 ${m.role === "user" ? "flex-row-reverse text-right" : "flex-row text-left"}`}>
-                {m.role === "assistant" ? (
+        <div className="space-y-8 pb-24 pt-5">
+            {messages.map((m, i) => (
+              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div className={`flex max-w-[78%] gap-3 ${m.role === "user" ? "flex-row-reverse text-right" : "flex-row text-left"}`}>
+                  {m.role === "assistant" ? (
+                    <div className="relative mt-0.5 h-9 w-8 shrink-0">
+                      <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" />
+                    </div>
+                  ) : null}
+                  <div>
+                    <div
+                      className={`text-[15px] leading-7 ${m.role === "user" ? "font-semibold text-amazon_blue" : "text-slate-800"}`}
+                      dangerouslySetInnerHTML={{ __html: formatText(m.text) }}
+                    />
+                    {m.imageUrl ? (
+                      <div className="relative mt-4 aspect-square w-full max-w-sm overflow-hidden border border-gray-200 bg-gray-50">
+                        <Image src={m.imageUrl} alt="Imagen generada por Resiny" fill className="object-cover" />
+                      </div>
+                    ) : null}
+                    {m.time ? <span className="mt-1 block text-[10px] text-gray-400">{m.time}</span> : null}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex justify-start">
+                <div className="flex max-w-[78%] gap-3">
                   <div className="relative mt-0.5 h-9 w-8 shrink-0">
                     <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" />
                   </div>
-                ) : null}
-                <div>
-                  <div
-                    className={`text-[15px] leading-7 ${m.role === "user" ? "font-semibold text-amazon_blue" : "text-slate-800"}`}
-                    dangerouslySetInnerHTML={{ __html: formatText(m.text) }}
-                  />
-                  {m.imageUrl ? (
-                    <div className="relative mt-4 aspect-square w-full max-w-sm overflow-hidden border border-gray-200 bg-gray-50">
-                      <Image src={m.imageUrl} alt="Imagen generada por Resiny" fill className="object-cover" />
-                    </div>
-                  ) : null}
-                  {m.time ? <span className="mt-1 block text-[10px] text-gray-400">{m.time}</span> : null}
+                  <div className="flex items-center gap-1 pt-2">
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "150ms" }} />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "300ms" }} />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-
-          {loading && (
-            <div className="flex justify-start">
-              <div className="flex max-w-[78%] gap-3">
-                <div className="relative mt-0.5 h-9 w-8 shrink-0">
-                  <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" />
-                </div>
-                <div className="flex items-center gap-1 pt-2">
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "150ms" }} />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "300ms" }} />
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={bottomRef} />
+            )}
         </div>
+        </div>
+      </main>
 
-        <div className="fixed bottom-0 left-0 right-0 bg-white px-4 py-4">
-          <form
-            onSubmit={(e) => { e.preventDefault(); send(input); }}
-            className="mx-auto flex h-14 max-w-4xl items-center gap-3 rounded-full border border-gray-200 bg-white px-5 shadow-[0_12px_34px_rgba(17,24,39,0.10)] transition-shadow focus-within:border-amazon_blue/50 focus-within:shadow-[0_14px_36px_rgba(203,41,158,0.14)]"
-          >
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Pregúntale a Resiny"
-              disabled={loading}
-              className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 disabled:opacity-60"
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || loading}
-              className="flex h-9 w-9 shrink-0 items-center justify-center text-amazon_blue transition hover:-translate-y-0.5 hover:text-amazon_light disabled:translate-y-0 disabled:text-gray-300"
-              aria-label="Enviar pregunta"
+      {mounted
+        ? createPortal(
+            <div
+              style={{
+                position: "fixed",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 9999,
+                background: "linear-gradient(to top, white 75%, rgba(255,255,255,0))",
+                padding: "20px 16px 24px",
+                display: "flex",
+                justifyContent: "center",
+              }}
             >
-              <PaperAirplaneIcon className="h-6 w-6" />
-            </button>
-          </form>
-        </div>
-      </div>
-    </section>
+              <form
+                onSubmit={(e) => { e.preventDefault(); send(input); }}
+                className="flex h-14 items-center gap-3 rounded-full border border-gray-200 bg-white px-5 shadow-[0_12px_34px_rgba(17,24,39,0.10)] transition-shadow focus-within:border-amazon_blue/50 focus-within:shadow-[0_14px_36px_rgba(203,41,158,0.14)]"
+                style={{ width: "min(820px, calc(100vw - 32px))" }}
+              >
+                <input
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Pregúntale a Resiny"
+                  disabled={loading}
+                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 disabled:opacity-60"
+                />
+                <button
+                  type="submit"
+                  disabled={!input.trim() || loading}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center text-amazon_blue transition hover:-translate-y-0.5 hover:text-amazon_light disabled:translate-y-0 disabled:text-gray-300"
+                  aria-label="Enviar pregunta"
+                >
+                  <PaperAirplaneIcon className="h-6 w-6" />
+                </button>
+              </form>
+            </div>,
+            document.body
+          )
+        : null}
+    </div>
   );
 }
 

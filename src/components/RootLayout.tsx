@@ -19,6 +19,7 @@ interface Props {
 const RootLayout = ({ children }: Props) => {
   const router = useRouter();
   const isRifasPage = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/admin/rifa");
+  const isResinyPage = router.pathname === "/resiny";
   const hideFooter = isRifasPage || router.pathname === "/resiny";
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   const cartCount = useSelector((state: any) =>
@@ -56,10 +57,25 @@ const RootLayout = ({ children }: Props) => {
 
   return (
     <>
-      {!isRifasPage && <Header />}
+      {!isRifasPage && (
+        isResinyPage ? (
+          <div className="resiny-fixed-header fixed left-0 right-0 top-0 z-[9998] bg-white">
+            <style jsx global>{`
+              .resiny-fixed-header > div {
+                position: static !important;
+                border-bottom: 1px solid #e5e7eb !important;
+                box-shadow: none !important;
+              }
+            `}</style>
+            <Header />
+          </div>
+        ) : (
+          <Header />
+        )
+      )}
 
       {/* Banner Móvil Temático: sorteos activos (Solo visible en móviles y fuera de rifas) */}
-      {!isRifasPage && (
+      {!isRifasPage && !isResinyPage && (
         <div className="md:hidden">
           <Link href="/rifas">
             <div className="relative overflow-hidden border-b border-amazon_light/20 bg-amazon_blue px-4 py-3 shadow-sm">
@@ -104,11 +120,11 @@ const RootLayout = ({ children }: Props) => {
         </div>
       )}
 
-      <div className="pb-20 md:pb-0">{children}</div>
+      <div className={`pb-20 md:pb-0 ${isResinyPage ? "bg-white pt-[104px] md:pt-[76px]" : ""}`}>{children}</div>
       <div>
         {!hideFooter && <Footer />} {/* Renderiza Footer solo en páginas públicas de tienda */}
       </div>
-      <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white md:hidden">
+      {!isResinyPage && <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-4 px-2 py-2">
           {mobileTabs.map((tab) => {
             const Icon = tab.icon;
@@ -133,7 +149,7 @@ const RootLayout = ({ children }: Props) => {
             );
           })}
         </div>
-      </nav>
+      </nav>}
     </>
   );
 };

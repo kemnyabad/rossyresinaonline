@@ -26,6 +26,7 @@ import { MdOutlineEmail } from "react-icons/md";
 
 const Header = () => {
   const router = useRouter();
+  const isResinyPage = router.pathname === "/resiny";
   const { data: session } = useSession();
   const [allData, setAllData] = useState<StoreProduct[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -224,7 +225,7 @@ const Header = () => {
           </button>
         </div>
 
-        <div className="mt-3">
+        {!isResinyPage && <div className="mt-3">
           <button
             type="button"
             onClick={() => setMobileSearchOpen(true)}
@@ -234,7 +235,7 @@ const Header = () => {
             <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <span>{searchQuery || "Buscar moldes, resina, pigmentos..."}</span>
           </button>
-        </div>
+        </div>}
       </div>
 
       {mobileMenuOpen && (
@@ -308,7 +309,7 @@ const Header = () => {
         </Link>
 
         {/* mobile search */}
-        <div className="md:hidden flex-1 min-w-0">
+        {!isResinyPage && <div className="md:hidden flex-1 min-w-0">
           <button
             type="button"
             onClick={() => setMobileSearchOpen(true)}
@@ -318,10 +319,10 @@ const Header = () => {
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <span>{searchQuery || "Buscar producto..."}</span>
           </button>
-        </div>
+        </div>}
 
         {/* searchbar */}
-        <div className="hidden md:flex flex-1 min-w-[220px] items-center justify-center">
+        {!isResinyPage && <div className="hidden md:flex flex-1 min-w-[220px] items-center justify-center">
           <form onSubmit={submitSearch} className="w-full max-w-3xl h-11 inline-flex items-center justify-between relative">
             <input
               onChange={handleSearch}
@@ -372,10 +373,10 @@ const Header = () => {
             )}
             {/* ========== Searchfield ========== */}
           </form>
-        </div>
+        </div>}
 
         {/* actions */}
-        <div className="ml-auto flex min-w-[280px] max-w-[360px] flex-none items-center justify-end gap-3 lg:gap-4 xl:min-w-[330px]">
+        <div className={`ml-auto flex flex-none items-center justify-end gap-3 lg:gap-4 ${isResinyPage ? "min-w-0" : "min-w-[280px] max-w-[360px] xl:min-w-[330px]"}`}>
           <Link
             href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
             className="md:hidden p-2 rounded-full border border-gray-200 text-gray-700 hover:text-amazon_blue hover:border-amazon_blue"
@@ -477,26 +478,28 @@ const Header = () => {
             )}
           </div>
           {/* cart */}
-          <Link
-            href="/cart"
-            className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-pink-100 hover:bg-pink-50/60"
-            aria-label="Abrir carrito"
-          >
-            <span className="flex items-center gap-3 relative">
-              <div className="relative">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 group-hover:text-amazon_blue">
-                  <ShoppingCartIcon className="w-6 h-6" />
-                </span>
-                <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center ring-2 ring-white">
-                  {cartCount}
-                </span>
-              </div>
-              <div className="hidden md:block min-w-[78px] leading-tight text-left">
-                <div className="text-xs font-semibold text-gray-500">Tu carrito</div>
-                <div className="text-[15px] font-semibold text-amazon_blue"><FormattedPrice amount={cartSubtotal} /></div>
-              </div>
-            </span>
-          </Link>
+          {!isResinyPage && (
+            <Link
+              href="/cart"
+              className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-pink-100 hover:bg-pink-50/60"
+              aria-label="Abrir carrito"
+            >
+              <span className="flex items-center gap-3 relative">
+                <div className="relative">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 group-hover:text-amazon_blue">
+                    <ShoppingCartIcon className="w-6 h-6" />
+                  </span>
+                  <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center ring-2 ring-white">
+                    {cartCount}
+                  </span>
+                </div>
+                <div className="hidden md:block min-w-[78px] leading-tight text-left">
+                  <div className="text-xs font-semibold text-gray-500">Tu carrito</div>
+                  <div className="text-[15px] font-semibold text-amazon_blue"><FormattedPrice amount={cartSubtotal} /></div>
+                </div>
+              </span>
+            </Link>
+          )}
         </div>
       </div>
 
