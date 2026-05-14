@@ -34,6 +34,16 @@ const pickMainFromGallery = (currentImage: any, nextImages: string[]): string =>
   return "";
 };
 
+const sanitizePriceInput = (value: any): string => {
+  const cleaned = String(value ?? "")
+    .replace(",", ".")
+    .replace(/[^\d.]/g, "");
+  const [whole, ...decimalParts] = cleaned.split(".");
+  return decimalParts.length > 0 ? `${whole}.${decimalParts.join("")}` : whole;
+};
+
+const sanitizeStockInput = (value: any): string => String(value ?? "").replace(/\D/g, "");
+
 export default function EditProduct() {
   const router = useRouter();
   const { id } = router.query as { id?: string };
@@ -294,32 +304,43 @@ const mainImagePreview = useMemo(() => {
 
             <label className="grid gap-1">
               <span className="text-sm text-gray-700">Precio anterior</span>
-              <input
-                type="number"
-                className="rounded-md border border-gray-300 px-3 py-2"
-                value={form.oldPrice || 0}
-                onChange={(e) => setForm({ ...form, oldPrice: Number(e.target.value) })}
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500">S/</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
+                  className="w-full rounded-md border border-gray-300 py-2 pl-10 pr-3"
+                  value={form.oldPrice ?? ""}
+                  onChange={(e) => setForm({ ...form, oldPrice: sanitizePriceInput(e.target.value) })}
+                />
+              </div>
             </label>
 
             <label className="grid gap-1">
               <span className="text-sm text-gray-700">Precio</span>
-              <input
-                type="number"
-                className="rounded-md border border-gray-300 px-3 py-2"
-                value={form.price || 0}
-                onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500">S/</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
+                  className="w-full rounded-md border border-gray-300 py-2 pl-10 pr-3"
+                  value={form.price ?? ""}
+                  onChange={(e) => setForm({ ...form, price: sanitizePriceInput(e.target.value) })}
+                />
+              </div>
             </label>
 
             <label className="grid gap-1">
               <span className="text-sm text-gray-700">Inventario (stock)</span>
               <input
-                type="number"
-                min={0}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className="rounded-md border border-gray-300 px-3 py-2"
-                value={form.stock ?? 0}
-                onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
+                value={form.stock ?? ""}
+                onChange={(e) => setForm({ ...form, stock: sanitizeStockInput(e.target.value) })}
               />
             </label>
 
@@ -465,4 +486,3 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   if (redirect) return redirect;
   return { props: {} };
 };
-
