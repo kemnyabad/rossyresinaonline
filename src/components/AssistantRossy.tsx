@@ -129,7 +129,7 @@ export default function AssistantRossy() {
           }
         `}</style>
         <div className="w-full max-w-4xl -translate-y-8" style={{ animation: "resiny-enter 480ms ease-out both" }}>
-          <div className="mx-auto mb-5 h-32 w-28">
+          <div className="mx-auto mb-5 h-40 w-36">
             <div className="relative h-full w-full">
               <Image
                 src={RESINY_IMAGE}

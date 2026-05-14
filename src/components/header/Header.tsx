@@ -214,15 +214,15 @@ const Header = () => {
           {!isResinyPage && (
             <Link
               href="/resiny"
-              className="ml-auto mr-3 flex min-h-[46px] min-w-[118px] items-center justify-center gap-2 rounded-lg px-2.5 py-1 text-amazon_blue transition-colors active:bg-gray-50"
+              className="ml-2 mr-3 flex min-h-[60px] flex-1 max-w-[220px] items-center justify-center gap-3 px-1 text-amazon_blue transition-transform duration-300 active:scale-[0.98]"
               aria-label="Chatear con Resiny"
             >
-              <span className="relative h-10 w-9 shrink-0">
+              <span className="relative h-14 w-12 shrink-0">
                 <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" />
               </span>
-              <span className="text-[13px] font-bold leading-tight">
+              <span className="text-[16px] font-bold leading-tight">
                 Chatea
-                <span className="block text-[12px] font-semibold text-slate-600">con Resiny</span>
+                <span className="block text-[15px] font-semibold text-slate-600">con Resiny</span>
               </span>
             </Link>
           )}
