@@ -117,7 +117,7 @@ export default function AssistantRossy() {
 
   if (isInitial) {
     return (
-      <section className="flex min-h-[calc(100vh-76px)] items-center justify-center bg-white px-4 py-10">
+      <section className="flex min-h-[calc(100svh-76px)] items-start justify-center bg-white px-4 pb-28 pt-20 md:items-center md:py-10">
         <style jsx global>{`
           @keyframes resiny-enter {
             from { opacity: 0; transform: translateY(14px) scale(0.98); }
@@ -128,8 +128,8 @@ export default function AssistantRossy() {
             50% { transform: translateY(-6px); }
           }
         `}</style>
-        <div className="w-full max-w-4xl -translate-y-8" style={{ animation: "resiny-enter 480ms ease-out both" }}>
-          <div className="mx-auto mb-5 h-40 w-36">
+        <div className="w-full max-w-4xl md:-translate-y-8" style={{ animation: "resiny-enter 480ms ease-out both" }}>
+          <div className="mx-auto mb-5 h-36 w-32 md:h-40 md:w-36">
             <div className="relative h-full w-full">
               <Image
                 src={RESINY_IMAGE}
