@@ -93,8 +93,21 @@ export default function AssistantRossy() {
         body: JSON.stringify({ message: msg, history: history.slice(0, -1), visitorId: getVisitorId() }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            text:
+              data?.error ||
+              "Resiny no pudo conectar con su proveedor de IA en este momento. Revisa la configuración del servidor.",
+            time: now(),
+          },
+        ]);
+        return;
+      }
       const fallbackAnswer =
-        "Te leo. Para ayudarte mejor, cuéntame si tu duda es sobre una técnica, un problema con tu pieza o materiales para comprar.";
+        "Resiny no recibió una respuesta válida del proveedor de IA. Revisa la configuración de Groq o ChatGPT.";
       setMessages((prev) => [
         ...prev,
         { role: "assistant", text: data.answer || data.error || fallbackAnswer, time: now() },

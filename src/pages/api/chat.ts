@@ -150,6 +150,18 @@ const outOfScopeAnswer = () =>
 const localFallbackAnswer = (message: string) => {
   const text = normalize(message);
 
+  if (/^(si|sí|sii|claro|ok|dale|quiero|me interesa|aprender|ayudame|ayúdame)\b/.test(text)) {
+    return "Perfecto. Empecemos por algo práctico: si quieres aprender resina desde cero, te recomiendo iniciar con llaveros o dijes pequeños. Necesitas resina, endurecedor, un molde sencillo, pigmento, guantes, vasitos y palitos mezcladores. ¿Quieres que te guíe para hacer tu primera pieza o para elegir materiales?";
+  }
+
+  if (/informacion|información|explicame|explícame|que es|qué es|resina$|resina epoxica|resina epóxica/.test(text)) {
+    return "La resina epóxica es un material de dos componentes: resina y endurecedor. Al mezclarlos en la proporción correcta, se endurece y queda transparente, brillante y resistente. Sirve para llaveros, dijes, bandejas, encapsulados, joyería y decoración. Lo más importante es medir bien, mezclar lento 3 a 5 minutos y trabajar con ventilación. ¿Quieres aprender la mezcla básica o ideas de proyectos?";
+  }
+
+  if (/material|materiales|necesito|comprar|kit|basico|básico/.test(text)) {
+    return "Para empezar necesitas pocos materiales: resina epóxica con su endurecedor, un molde de silicona, pigmento o mica, guantes, vasitos medidores y palitos para mezclar. Si recién inicias, conviene un molde pequeño para practicar sin gastar mucha resina. ¿Quieres hacer llaveros, aretes o una pieza decorativa?";
+  }
+
   if (/envio|envios|enviar|shalom|olva|delivery|provincia/.test(text)) {
     return "Sí, podemos ayudarte con envíos a provincia. Normalmente se coordina por WhatsApp y se despacha por Shalom u Olva Courier según te convenga. Para orientarte mejor, dime a qué ciudad quieres enviar y qué productos estás pensando comprar.";
   }
@@ -182,7 +194,11 @@ const localFallbackAnswer = (message: string) => {
     return "Hola, soy Resiny. Con gusto te ayudo. Cuéntame si quieres crear una pieza, resolver un problema con tu resina o elegir materiales para comprar.";
   }
 
-  return "Hola, soy Resiny. No logré comprender bien tu pregunta. ¿Me cuentas si necesitas ayuda con una técnica, un problema en tu pieza o materiales para comprar?";
+  if (text.length <= 2 || /^[^a-z0-9]+$/.test(text)) {
+    return "Hola, soy Resiny. No logré comprender bien tu pregunta. ¿Me cuentas si necesitas ayuda con una técnica, un problema en tu pieza o materiales para comprar?";
+  }
+
+  return "Te ayudo. Por lo que me cuentas, puedo orientarte en resina, moldes, pigmentos, materiales o técnicas. Para darte una respuesta más precisa, dime qué quieres lograr: ¿crear una pieza, resolver un problema o elegir productos?";
 };
 
 const shouldUseChatGptSupport = (message: string, answer: string) => {
@@ -209,7 +225,7 @@ const improveWithChatGpt = async (input: {
   history: Array<{ role: string; text: string }>;
   learningContext: string;
 }) => {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
   if (!apiKey) return null;
 
   const model = process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini";
@@ -274,7 +290,7 @@ const answerWithChatGpt = async (input: {
   history: Array<{ role: string; text: string }>;
   learningContext: string;
 }) => {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
   if (!apiKey) return null;
 
   const model = process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini";
@@ -319,6 +335,13 @@ const answerWithChatGpt = async (input: {
   }
 };
 
+const missingAiProviderResponse = (res: NextApiResponse) =>
+  res.status(503).json({
+    error:
+      "Resiny no tiene un proveedor de IA configurado. Agrega GROQ_API_KEY u OPENAI_API_KEY en el entorno para activar respuestas inteligentes.",
+    code: "RESINY_AI_PROVIDER_MISSING",
+  });
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
 
@@ -334,17 +357,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ answer, mode: "resiny-scope" });
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
+  const groqApiKey = process.env.GROQ_API_KEY || process.env.GROQ_KEY;
+  const openAiApiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
+  const groqModel = process.env.GROQ_CHAT_MODEL || "llama-3.3-70b-versatile";
+  const allowLocalFallback = process.env.RESINY_ALLOW_LOCAL_FALLBACK === "true";
+
+  if (!groqApiKey && !openAiApiKey && !allowLocalFallback) {
+    return missingAiProviderResponse(res);
+  }
+
+  if (!groqApiKey) {
     const learningContext = await getResinyLearningContext();
     const chatGptAnswer = await answerWithChatGpt({ message, history, learningContext });
+    if (!chatGptAnswer && !allowLocalFallback) return missingAiProviderResponse(res);
     const answer = chatGptAnswer || localFallbackAnswer(message);
     await recordResinyLearning({ question: message, answer, visitorId });
     return res.status(200).json({ answer, mode: chatGptAnswer ? "chatgpt" : "local-no-groq" });
   }
 
   try {
-    const groq = new Groq({ apiKey });
+    const groq = new Groq({ apiKey: groqApiKey });
     const learningContext = await getResinyLearningContext();
 
     const chatHistory = history.map((m: { role: string; text: string }) => ({
@@ -353,7 +385,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }));
 
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: groqModel,
       messages: [
         { role: "system", content: learningContext ? `${SYSTEM_PROMPT}\n\n${learningContext}` : SYSTEM_PROMPT },
         ...chatHistory,
@@ -375,6 +407,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error("Groq error:", String(e?.message || ""));
     const learningContext = await getResinyLearningContext();
     const chatGptAnswer = await answerWithChatGpt({ message, history, learningContext });
+    if (!chatGptAnswer && !allowLocalFallback) {
+      return res.status(503).json({
+        error:
+          "Groq no pudo responder y ChatGPT no está configurado. Agrega OPENAI_API_KEY para que Resiny tenga respaldo inteligente.",
+        code: "RESINY_AI_FALLBACK_MISSING",
+      });
+    }
     const answer = chatGptAnswer || localFallbackAnswer(message);
     await recordResinyLearning({ question: message, answer, visitorId });
     return res.status(200).json({ answer, mode: chatGptAnswer ? "chatgpt-fallback" : "local-fallback" });

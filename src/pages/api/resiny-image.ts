@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const prompt = String(req.body?.prompt || "").trim();
   if (!prompt) return res.status(400).json({ error: "Describe la imagen que quieres generar." });
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
   if (!apiKey) {
     return res.status(503).json({
       error: "Todavía no tengo activa la creación de imágenes aquí. Puedo ayudarte a armar la idea visual con colores, estilo y materiales para que tengas una guía clara.",
