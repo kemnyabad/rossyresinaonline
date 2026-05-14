@@ -120,7 +120,7 @@ const RootLayout = ({ children }: Props) => {
         </div>
       )}
 
-      <div className={`pb-20 md:pb-0 ${isResinyPage ? "bg-white pt-[104px] md:pt-[76px]" : ""}`}>{children}</div>
+      <div className={`pb-20 md:pb-0 ${isResinyPage ? "bg-white pt-[72px] md:pt-[76px]" : ""}`}>{children}</div>
       <div>
         {!hideFooter && <Footer />} {/* Renderiza Footer solo en páginas públicas de tienda */}
       </div>

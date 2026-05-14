@@ -25,13 +25,7 @@ const getVisitorId = () => {
 };
 
 export default function AssistantRossy() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      text: "Hola, soy **Resiny**. Puedo ayudarte con resina, materiales, moldes, pigmentos, técnicas, compras y capacitaciones. ¿Qué quieres crear hoy?",
-      time: "",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -92,7 +86,7 @@ export default function AssistantRossy() {
         return;
       }
 
-      const history = newMessages.slice(1).map((m) => ({ role: m.role, text: m.text }));
+      const history = newMessages.map((m) => ({ role: m.role, text: m.text }));
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -113,7 +107,7 @@ export default function AssistantRossy() {
     }
   };
 
-  const isInitial = messages.length <= 1 && !loading;
+  const isInitial = messages.length === 0 && !loading;
 
   if (isInitial) {
     return (
@@ -191,7 +185,7 @@ export default function AssistantRossy() {
 
       <main className="chatMessages">
         <div className="mx-auto w-full max-w-4xl">
-        <div className="flex items-center justify-between py-5">
+        <div className="flex items-center justify-between py-3 md:py-5">
           <div className="flex items-center gap-3">
             <div className="relative h-14 w-12 shrink-0 transition-transform duration-300 hover:scale-105">
               <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" priority />
@@ -203,7 +197,7 @@ export default function AssistantRossy() {
           </div>
         </div>
 
-        <div className="space-y-8 pb-24 pt-5">
+        <div className="space-y-6 pb-24 pt-2 md:space-y-8 md:pt-5">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`flex max-w-[78%] gap-3 ${m.role === "user" ? "flex-row-reverse text-right" : "flex-row text-left"}`}>

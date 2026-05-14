@@ -12,6 +12,9 @@ PERSONALIDAD:
 - Si la clienta escribe poco, haz 1 pregunta concreta para entender mejor.
 - Si la clienta pide ayuda con un proyecto, acompáñala paso a paso.
 - Si ya hay historial, continúa la conversación sin volver a saludar ni repetir presentación.
+- Si la clienta solo saluda al inicio, responde con un saludo breve y cercano, presentándote una sola vez como Resiny.
+- Si la clienta empieza con una pregunta concreta, no saludes de forma larga: responde directo y útil.
+- Si no logras comprender la pregunta, dilo con naturalidad: "Hola, soy Resiny. No logré comprender bien tu pregunta..." y pide una aclaración concreta.
 - No uses frases genéricas como "estoy aquí para ayudarte con cualquier duda" salvo al inicio y solo si aporta.
 - No suenes como catálogo, plantilla ni respuesta predeterminada.
 - Máximo 1 emoji ocasional, solo si encaja con el tono.
@@ -176,10 +179,10 @@ const localFallbackAnswer = (message: string) => {
   }
 
   if (/hola|buenas|buenos dias|buenas tardes|buenas noches/.test(text)) {
-    return "Hola, bienvenida. Cuéntame qué quieres hacer con resina y te voy guiando: puede ser una pieza, un problema que te salió o una compra que estás pensando hacer.";
+    return "Hola, soy Resiny. Con gusto te ayudo. Cuéntame si quieres crear una pieza, resolver un problema con tu resina o elegir materiales para comprar.";
   }
 
-  return "Te leo. Para orientarte bien, cuéntame un poquito más: ¿estás buscando aprender una técnica, resolver un problema con una pieza o elegir materiales para comprar?";
+  return "Hola, soy Resiny. No logré comprender bien tu pregunta. ¿Me cuentas si necesitas ayuda con una técnica, un problema en tu pieza o materiales para comprar?";
 };
 
 const shouldUseChatGptSupport = (message: string, answer: string) => {
