@@ -1,7 +1,6 @@
 import React, { ReactElement, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Header from "./header/Header";
-import BottomHeader from "./header/BottomHeader";
 import Footer from "./Footer";
 import Link from "next/link";
 import { 
@@ -20,7 +19,6 @@ interface Props {
 
 const RootLayout = ({ children }: Props) => {
   const router = useRouter();
-  const hideBottomHeader = router.pathname === "/cart" || router.pathname === "/checkout";
   const isRifasPage = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/admin/rifa");
   const footerRef = useRef<HTMLDivElement | null>(null);
   const [hideAssistant, setHideAssistant] = useState(false);
@@ -78,11 +76,6 @@ const RootLayout = ({ children }: Props) => {
   return (
     <>
       {!isRifasPage && <Header />}
-      {!hideBottomHeader && !isRifasPage && (
-        <div className="hidden md:block">
-          <BottomHeader />
-        </div>
-      )}
 
       {/* Banner Móvil Temático: sorteos activos (Solo visible en móviles y fuera de rifas) */}
       {!isRifasPage && (

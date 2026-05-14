@@ -265,9 +265,9 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
 
 
           <div>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-gray-900">Todos los productos</h2>
-              <Link href="/productos" className="text-xs font-semibold text-amazon_blue">Ver catálogo</Link>
+            <div className="relative mb-2 flex items-center justify-center">
+              <h2 className="text-center text-base font-extrabold text-gray-900">Explora tus intereses</h2>
+              <Link href="/productos" className="absolute right-0 text-xs font-semibold text-amazon_blue">Ver catálogo</Link>
             </div>
             <Products
               productData={interestProducts.slice(0, 12)}
@@ -293,6 +293,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
                   remateProducts={remateProducts}
                   topVisitedProducts={topVisitedForHero}
                   moldProducts={moldProductsForHero}
+                  ofertasExpress={ofertasExpress}
                 />
               </section>
         <section className="px-4 md:px-6">
@@ -374,6 +375,14 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
           <div className="mx-auto max-w-screen-2xl space-y-6 px-4 pb-10 md:px-6">
             {/* Productos por intereses */}
             <section>
+              <div className="relative mb-4 flex items-center justify-center">
+                <h2 className="text-center text-xl font-semibold uppercase tracking-wide text-gray-900">
+                  Explora tus intereses
+                </h2>
+                <Link href="/productos" className="absolute right-0 text-sm font-semibold text-amazon_blue hover:underline">
+                  Ver catálogo
+                </Link>
+              </div>
               <Products
                 productData={interestProducts}
                 gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"

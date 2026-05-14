@@ -195,7 +195,7 @@ const Header = () => {
   const isAuthenticated = Boolean(sessionUser?.email || storeUser?.email);
 
   return (
-    <div className="w-full bg-white text-black sticky top-0 z-50">
+    <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
       <div className="md:hidden px-3 pt-2 pb-3 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <Link href={"/"} onClick={handleLogoClick} className="flex items-center gap-2 group">
