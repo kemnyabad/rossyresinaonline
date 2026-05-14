@@ -2,7 +2,21 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import Groq from "groq-sdk";
 import { getResinyLearningContext, recordResinyLearning } from "@/lib/resinyLearning";
 
-const SYSTEM_PROMPT = `Eres "Asistente Rossy", una experta en resina epóxica, eco resina, moldes de silicona y artesanía de la tienda Rossy Resina (Perú). Tu misión es ayudar a resineras y artesanos con respuestas precisas, prácticas y detalladas.
+const SYSTEM_PROMPT = `Eres "Resiny", la asistente amiga de Rossy Resina (Perú). Sabes de resina epóxica, eco resina, moldes de silicona, pigmentos, proyectos artesanales, compras y emprendimiento.
+
+Tu misión no es repetir respuestas guardadas. Debes leer con atención lo que la clienta escribe, inferir qué necesita, adaptar tu respuesta a su caso y conversar de forma natural, cálida y útil.
+
+PERSONALIDAD:
+- Habla como una asesora cercana, no como manual ni bot de soporte.
+- Responde directamente a la intención de la clienta.
+- Si la clienta escribe poco, haz 1 pregunta concreta para entender mejor.
+- Si la clienta pide ayuda con un proyecto, acompáñala paso a paso.
+- Si ya hay historial, continúa la conversación sin volver a saludar ni repetir presentación.
+- No uses frases genéricas como "estoy aquí para ayudarte con cualquier duda" salvo al inicio y solo si aporta.
+- No suenes como catálogo, plantilla ni respuesta predeterminada.
+- Máximo 1 emoji ocasional, solo si encaja con el tono.
+- Mantente dentro del mundo de Rossy Resina: resina, artesanía, moldes, pigmentos, materiales, compras, envíos, pagos, capacitaciones y emprendimiento artesanal.
+- Si te piden temas ajenos a ese propósito, responde de forma breve y amable que puedes ayudar con proyectos de resina/artesanía, y redirige la conversación.
 
 CONOCIMIENTO BASE:
 
@@ -101,13 +115,15 @@ CONOCIMIENTO BASE:
 
 REGLAS DE RESPUESTA:
 1. Responde SIEMPRE en español.
-2. Sé precisa y práctica — da pasos concretos, proporciones exactas, tiempos reales.
-3. Si la pregunta es ambigua, pide más detalles específicos.
+2. Antes de responder, piensa qué quiere lograr la clienta y qué información falta.
+3. Sé precisa y práctica: da pasos concretos, proporciones exactas y tiempos reales cuando sea útil.
 4. Usa emojis con moderación para hacer la respuesta más amigable.
 5. Si no sabes algo con certeza, dilo claramente y sugiere consultar con un especialista.
-6. Máximo 250 palabras por respuesta, a menos que la pregunta requiera más detalle.
+6. Máximo 170 palabras por respuesta, salvo que la clienta pida una explicación larga.
 7. Cuando sea relevante, menciona que en Rossy Resina pueden encontrar los materiales.
-8. No inventes marcas, precios exactos ni información que no tengas.`;
+8. No inventes marcas, precios exactos ni información que no tengas.
+9. Evita listas largas si la clienta solo está conversando. Prefiere respuestas humanas, breves y con una pregunta final útil.
+10. Si la clienta pide una imagen, describe primero la idea visual con detalle y confirma el estilo si falta información.`;
 
 const normalize = (value: string) =>
   String(value || "")
@@ -115,38 +131,139 @@ const normalize = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
+const isResinyDomainQuestion = (message: string, history: Array<{ role: string; text: string }> = []) => {
+  const text = normalize(`${history.slice(-4).map((m) => m.text).join(" ")} ${message}`);
+
+  if (/^(hola|buenas|buenos dias|buenas tardes|buenas noches|gracias|ok|dale|si|sí|no)\b/.test(text.trim())) {
+    return true;
+  }
+
+  return /resina|epoxi|epoxica|epóxica|uv|eco resina|molde|moldes|silicona|pigmento|mica|colorante|glitter|escarcha|artesania|artesanía|manualidad|llavero|dije|arete|joyeria|joyería|lapicero|shaker|bandeja|portavaso|curado|mezcla|catalizador|endurecedor|burbuja|burbujas|soplete|pistola de calor|lijar|pulir|barniz|flores secas|encapsulado|emprender|vender|precio|costear|taller|capacitacion|capacitación|curso|clase|rossy|compra|comprar|pedido|envio|envío|shalom|olva|delivery|pago|yape|transferencia|whatsapp|material|materiales|proyecto|crear|diseño|diseno|imagen|foto|boceto/.test(text);
+};
+
+const outOfScopeAnswer = () =>
+  "Puedo ayudarte mejor con temas de resina, artesanía, moldes, pigmentos, materiales, compras o emprendimiento resinero. Cuéntame qué proyecto quieres hacer y te guío paso a paso.";
+
 const localFallbackAnswer = (message: string) => {
   const text = normalize(message);
 
   if (/envio|envios|enviar|shalom|olva|delivery|provincia/.test(text)) {
-    return "Sí, hacemos envíos a todo el Perú mediante Shalom y Olva Courier. El pedido se coordina por WhatsApp, se confirma el pago y luego se despacha con los datos del cliente. En Rossy Resina también puedes consultar el costo de envío antes de confirmar tu compra.";
+    return "Sí, podemos ayudarte con envíos a provincia. Normalmente se coordina por WhatsApp y se despacha por Shalom u Olva Courier según te convenga. Para orientarte mejor, dime a qué ciudad quieres enviar y qué productos estás pensando comprar.";
   }
 
   if (/fundadora|fundador|duena|dueña|gerencia|gerente|dirige|cargo|administra/.test(text)) {
-    return "La fundadora y quien gerencia Rossy Resina es Rosa Maribel Abad Landacay, una mujer emprendedora que impulsa este proyecto para ayudar a más personas a aprender, crear y emprender con resina. El administrador comercial es Kemeny Yahir Rojas Abad.";
+    return "Rossy Resina fue fundada y es dirigida por Rosa Maribel Abad Landacay. Ella impulsa este proyecto para que más personas aprendan, creen y puedan emprender con resina. ¿Quieres saber sobre la historia de la tienda o necesitas contactar con el equipo?";
   }
 
   if (/administrador comercial|comercial|kemeny|yahir/.test(text)) {
-    return "El administrador comercial de Rossy Resina es Kemeny Yahir Rojas Abad. Él apoya la gestión comercial del proyecto junto con la dirección de Rosa Maribel Abad Landacay.";
+    return "El administrador comercial de Rossy Resina es Kemeny Yahir Rojas Abad. Él apoya la parte comercial junto con la dirección de Rosa Maribel Abad Landacay. ¿Necesitas ayuda con una compra, pedido o coordinación?";
   }
 
   if (/pago|yape|transferencia|bcp|deposito|depósito/.test(text)) {
-    return "Puedes coordinar tu pago por Yape o transferencia bancaria. Después de pagar, envía tu comprobante por WhatsApp para validar el pedido y continuar con el despacho.";
+    return "Puedes pagar por Yape o transferencia bancaria. Lo mejor es confirmar primero tu pedido y luego enviar el comprobante por WhatsApp para validar todo sin confusiones. ¿Ya tienes armado tu carrito o estás consultando antes de comprar?";
   }
 
   if (/molde|moldes|silicona/.test(text)) {
-    return "En Rossy Resina puedes encontrar moldes de silicona para piezas decorativas, llaveros, dijes, lapiceros y más. Para cuidarlos, lávalos con agua tibia y jabón suave, evita objetos cortantes y guárdalos lejos del sol.";
+    return "Para elegir un molde conviene partir del tipo de pieza que quieres hacer: llaveros, dijes, lapiceros, bandejas o decoración. Si estás empezando, te recomendaría moldes pequeños porque gastan menos resina y te dejan practicar mejor. ¿Qué pieza tienes en mente?";
   }
 
   if (/burbuja|burbujas/.test(text)) {
-    return "Para reducir burbujas, mezcla la resina despacio durante 3 a 5 minutos, raspando paredes y fondo del vaso. Luego puedes usar una pistola de calor o soplete suave a unos 10 cm, sin acercarlo demasiado para no dañar la pieza.";
+    return "Las burbujas casi siempre aparecen por mezclar muy rápido, trabajar con frío o verter de golpe. Prueba mezclar lento 3 a 5 minutos, deja reposar un momento y pasa calor suave a unos 10 cm. ¿Te salen burbujas al mezclar o después de poner la resina en el molde?";
   }
 
   if (/empezar|inicio|principiante|cero|emprender/.test(text)) {
-    return "Para empezar desde cero, te conviene iniciar con proyectos pequeños: llaveros, dijes, aretes o piezas decorativas. Necesitas resina, endurecedor, moldes de silicona, pigmentos, guantes, vasos medidores y palitos mezcladores. Rossy Resina busca acompañarte para que aprendas y puedas emprender con confianza.";
+    return "Si estás empezando, iría por algo pequeño y vendible: llaveros, dijes o aretes. Necesitas resina, endurecedor, un molde sencillo, pigmento, guantes, vasitos y palitos mezcladores. Así practicas sin gastar mucho material. ¿Quieres aprender para hobby o para vender?";
   }
 
-  return "Puedo ayudarte con resina, moldes, pigmentos, envíos, pagos, capacitaciones y emprendimiento. En este momento estoy respondiendo en modo local porque la API de IA no está configurada en este entorno.";
+  if (/hola|buenas|buenos dias|buenas tardes|buenas noches/.test(text)) {
+    return "Hola, bienvenida. Cuéntame qué quieres hacer con resina y te voy guiando: puede ser una pieza, un problema que te salió o una compra que estás pensando hacer.";
+  }
+
+  return "Te leo. Para orientarte bien, cuéntame un poquito más: ¿estás buscando aprender una técnica, resolver un problema con una pieza o elegir materiales para comprar?";
+};
+
+const shouldUseChatGptSupport = (message: string, answer: string) => {
+  const text = normalize(message);
+  const draft = normalize(answer);
+
+  if (message.length > 90) return true;
+  if (/como|porque|por que|ayudame|recomienda|recomendacion|paso a paso|proyecto|problema|fallo|error|pegajosa|burbujas|emprender|vender|precio|costear|comparar|diferencia/.test(text)) {
+    return true;
+  }
+  if (/p\.? ej\.?|por ejemplo|ideas|inspiracion|inspiración|diseño|diseno|colores|combinar/.test(text)) {
+    return true;
+  }
+  if (/puedo ayudarte|cuentame un poquito mas|lo siento, no pude/.test(draft)) {
+    return true;
+  }
+
+  return false;
+};
+
+const improveWithChatGpt = async (input: {
+  message: string;
+  answer: string;
+  history: Array<{ role: string; text: string }>;
+  learningContext: string;
+}) => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  const model = process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini";
+  const chatHistory = input.history.slice(-8).map((m) => ({
+    role: m.role === "user" ? "user" : "assistant",
+    content: String(m.text || "").slice(0, 900),
+  }));
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: `${SYSTEM_PROMPT}
+
+Estás apoyando internamente a Resiny. Groq ya generó un borrador; tu trabajo es mejorarlo solo si hace falta.
+No cambies datos de tienda, precios, contactos ni políticas. No inventes información.
+Haz que la respuesta suene más conversacional, amiga y adaptada a la clienta.
+Mantén la respuesta breve, natural y útil.
+${input.learningContext ? `\n${input.learningContext}` : ""}`,
+          },
+          ...chatHistory,
+          {
+            role: "user",
+            content: `Mensaje actual de la clienta:
+${input.message}
+
+Borrador de Groq:
+${input.answer}
+
+Devuelve solo la respuesta final de Resiny, sin explicar el proceso.`,
+          },
+        ],
+        temperature: 0.75,
+        max_tokens: 420,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.warn("OpenAI support error:", String(data?.error?.message || response.statusText));
+      return null;
+    }
+
+    const improved = String(data?.choices?.[0]?.message?.content || "").trim();
+    return improved || null;
+  } catch (error) {
+    console.warn("OpenAI support failed:", String((error as any)?.message || error));
+    return null;
+  }
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -157,6 +274,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const visitorId = String(req.body?.visitorId || "").trim();
 
   if (!message) return res.status(400).json({ error: "Mensaje vacío" });
+
+  if (!isResinyDomainQuestion(message, history)) {
+    const answer = outOfScopeAnswer();
+    await recordResinyLearning({ question: message, answer, visitorId });
+    return res.status(200).json({ answer, mode: "resiny-scope" });
+  }
 
   const apiKey = process.env.GROQ_API_KEY;
   const isProduction = process.env.NODE_ENV === "production";
@@ -187,9 +310,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       temperature: 0.7,
     });
 
-    const answer = completion.choices[0]?.message?.content || "Lo siento, no pude generar una respuesta.";
+    const groqAnswer = completion.choices[0]?.message?.content || "Lo siento, no pude generar una respuesta.";
+    const chatGptAnswer = isResinyDomainQuestion(message, history) && shouldUseChatGptSupport(message, groqAnswer)
+      ? await improveWithChatGpt({ message, answer: groqAnswer, history, learningContext })
+      : null;
+    const answer = chatGptAnswer || groqAnswer;
+
     await recordResinyLearning({ question: message, answer, visitorId });
-    return res.status(200).json({ answer });
+    return res.status(200).json({ answer, mode: chatGptAnswer ? "groq+chatgpt" : "groq" });
   } catch (e: any) {
     console.error("Groq error:", String(e?.message || ""));
     if (isProduction) return res.status(500).json({ error: "No se pudo procesar tu pregunta. Intenta de nuevo." });

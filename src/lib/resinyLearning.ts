@@ -113,7 +113,7 @@ Temas frecuentes recientes: ${topics || "sin datos suficientes"}.
 Preguntas recientes anonimizadas:
 ${examples || "- Sin preguntas recientes."}
 
-Instrucción: cuando respondas, prioriza los temas y dudas frecuentes de las resineras, pide detalles si falta información y no menciones datos privados ni digas que tienes datos personales.
+Instrucción: usa estas dudas solo para entender patrones comunes. No copies respuestas anteriores, no suenes como plantilla y adapta cada respuesta al mensaje actual de la clienta. No menciones datos privados ni digas que tienes datos personales.
 `;
   } catch (error) {
     console.warn("resiny.learning.context_failed", String((error as any)?.message || error));

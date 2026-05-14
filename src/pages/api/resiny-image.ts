@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return res.status(503).json({
-      error: "Para generar imágenes falta configurar OPENAI_API_KEY en el entorno.",
+      error: "Todavía no tengo activa la creación de imágenes aquí. Puedo ayudarte a armar la idea visual con colores, estilo y materiales para que tengas una guía clara.",
     });
   }
 
