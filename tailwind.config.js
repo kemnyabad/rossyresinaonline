@@ -27,7 +27,7 @@ module.exports = {
         lightText: "#ccc",
       },
       fontFamily: {
-        bodyFont: ["Outfit", "Inter", "Sora", "Arial", "Helvetica", "sans-serif"],
+        bodyFont: ["Arial", "Helvetica", "sans-serif"],
       },
     },
   },

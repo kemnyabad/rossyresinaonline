@@ -305,7 +305,7 @@ const RifaSlider = () => {
       </div>
       <style jsx>{`
         .rifa-impact-title {
-          font-family: "Outfit", "Sora", "Inter", Arial, sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
           letter-spacing: 0.02em;
           text-shadow:
             2px 2px 0 rgba(0, 0, 0, 0.22),
@@ -313,7 +313,7 @@ const RifaSlider = () => {
         }
         .rifa-worker-headline {
           color: #efff1a;
-          font-family: "Outfit", "Sora", "Inter", Arial, sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
           letter-spacing: 0.01em;
           text-shadow:
             3px 3px 0 rgba(20, 18, 22, 0.95),
@@ -322,7 +322,7 @@ const RifaSlider = () => {
         }
         .rifa-script-title,
         .rifa-highlight-title {
-          font-family: "Outfit", "Sora", "Inter", Arial, sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
           font-weight: 600;
           letter-spacing: 0;
           text-transform: none;

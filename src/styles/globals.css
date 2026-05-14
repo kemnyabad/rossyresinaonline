@@ -8,18 +8,18 @@
 @import "./compat.css";
 
 :root {
-  --rr-font-sans: "Outfit", "Inter", "Sora", Arial, sans-serif;
+  --rr-font-sans: Arial, Helvetica, sans-serif;
   --rr-font-weight-regular: 400;
   --rr-font-weight-medium: 500;
   --rr-font-weight-semibold: 600;
   --rr-font-weight-bold: 700;
-  --rr-leading-heading: 1.12;
-  --rr-leading-body: 1.62;
-  --rr-leading-compact: 1.32;
+  --rr-leading-heading: 1.16;
+  --rr-leading-body: 1.6;
+  --rr-leading-compact: 1.36;
   --rr-tracking-body: 0;
-  --rr-tracking-label: 0.055em;
+  --rr-tracking-label: 0.045em;
   --rr-tracking-button: 0.01em;
-  --rr-text-strong: #171717;
+  --rr-text-strong: #18181b;
   --rr-text-body: #374151;
   --rr-text-muted: #6b7280;
   --rr-text-soft: #8a8f98;
@@ -62,8 +62,21 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--rr-font-sans) !important;
   font-weight: var(--rr-font-weight-bold);
   line-height: var(--rr-leading-heading);
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
   color: var(--rr-text-strong);
+}
+
+h1 {
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+h2 {
+  line-height: 1.14;
+}
+
+h3 {
+  line-height: 1.18;
 }
 
 p, li, label, input, select, textarea {
@@ -173,7 +186,7 @@ strong, b {
   font-family: var(--rr-font-sans) !important;
   font-weight: var(--rr-font-weight-bold);
   line-height: 1.08;
-  letter-spacing: 0;
+  letter-spacing: -0.015em;
   color: var(--rr-text-strong);
 }
 
@@ -181,7 +194,7 @@ strong, b {
   font-family: var(--rr-font-sans) !important;
   font-weight: var(--rr-font-weight-bold);
   line-height: 1.14;
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
   color: var(--rr-text-strong);
 }
 

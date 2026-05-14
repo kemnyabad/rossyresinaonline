@@ -108,6 +108,46 @@ REGLAS DE RESPUESTA:
 7. Cuando sea relevante, menciona que en Rossy Resina pueden encontrar los materiales.
 8. No inventes marcas, precios exactos ni información que no tengas.`;
 
+const normalize = (value: string) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+const localFallbackAnswer = (message: string) => {
+  const text = normalize(message);
+
+  if (/envio|envios|enviar|shalom|olva|delivery|provincia/.test(text)) {
+    return "Sí, hacemos envíos a todo el Perú mediante Shalom y Olva Courier. El pedido se coordina por WhatsApp, se confirma el pago y luego se despacha con los datos del cliente. En Rossy Resina también puedes consultar el costo de envío antes de confirmar tu compra.";
+  }
+
+  if (/fundadora|fundador|duena|dueña|gerencia|gerente|dirige|cargo|administra/.test(text)) {
+    return "La fundadora y quien gerencia Rossy Resina es Rosa Maribel Abad Landacay, una mujer emprendedora que impulsa este proyecto para ayudar a más personas a aprender, crear y emprender con resina. El administrador comercial es Kemeny Yahir Rojas Abad.";
+  }
+
+  if (/administrador comercial|comercial|kemeny|yahir/.test(text)) {
+    return "El administrador comercial de Rossy Resina es Kemeny Yahir Rojas Abad. Él apoya la gestión comercial del proyecto junto con la dirección de Rosa Maribel Abad Landacay.";
+  }
+
+  if (/pago|yape|transferencia|bcp|deposito|depósito/.test(text)) {
+    return "Puedes coordinar tu pago por Yape o transferencia bancaria. Después de pagar, envía tu comprobante por WhatsApp para validar el pedido y continuar con el despacho.";
+  }
+
+  if (/molde|moldes|silicona/.test(text)) {
+    return "En Rossy Resina puedes encontrar moldes de silicona para piezas decorativas, llaveros, dijes, lapiceros y más. Para cuidarlos, lávalos con agua tibia y jabón suave, evita objetos cortantes y guárdalos lejos del sol.";
+  }
+
+  if (/burbuja|burbujas/.test(text)) {
+    return "Para reducir burbujas, mezcla la resina despacio durante 3 a 5 minutos, raspando paredes y fondo del vaso. Luego puedes usar una pistola de calor o soplete suave a unos 10 cm, sin acercarlo demasiado para no dañar la pieza.";
+  }
+
+  if (/empezar|inicio|principiante|cero|emprender/.test(text)) {
+    return "Para empezar desde cero, te conviene iniciar con proyectos pequeños: llaveros, dijes, aretes o piezas decorativas. Necesitas resina, endurecedor, moldes de silicona, pigmentos, guantes, vasos medidores y palitos mezcladores. Rossy Resina busca acompañarte para que aprendas y puedas emprender con confianza.";
+  }
+
+  return "Puedo ayudarte con resina, moldes, pigmentos, envíos, pagos, capacitaciones y emprendimiento. En este momento estoy respondiendo en modo local porque la API de IA no está configurada en este entorno.";
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
 
@@ -117,7 +157,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!message) return res.status(400).json({ error: "Mensaje vacío" });
 
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "API key no configurada" });
+  const isProduction = process.env.NODE_ENV === "production";
+  if (!apiKey) {
+    if (isProduction) return res.status(500).json({ error: "API key no configurada" });
+    return res.status(200).json({ answer: localFallbackAnswer(message), mode: "local" });
+  }
 
   try {
     const groq = new Groq({ apiKey });
@@ -142,6 +186,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ answer });
   } catch (e: any) {
     console.error("Groq error:", String(e?.message || ""));
-    return res.status(500).json({ error: "No se pudo procesar tu pregunta. Intenta de nuevo." });
+    if (isProduction) return res.status(500).json({ error: "No se pudo procesar tu pregunta. Intenta de nuevo." });
+    return res.status(200).json({ answer: localFallbackAnswer(message), mode: "local" });
   }
 }
