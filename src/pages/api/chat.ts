@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Groq from "groq-sdk";
+import { getResinyLearningContext, recordResinyLearning } from "@/lib/resinyLearning";
 
 const SYSTEM_PROMPT = `Eres "Asistente Rossy", una experta en resina epóxica, eco resina, moldes de silicona y artesanía de la tienda Rossy Resina (Perú). Tu misión es ayudar a resineras y artesanos con respuestas precisas, prácticas y detalladas.
 
@@ -153,6 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const message  = String(req.body?.message || "").trim();
   const history  = Array.isArray(req.body?.history) ? req.body.history : [];
+  const visitorId = String(req.body?.visitorId || "").trim();
 
   if (!message) return res.status(400).json({ error: "Mensaje vacío" });
 
@@ -160,11 +162,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const isProduction = process.env.NODE_ENV === "production";
   if (!apiKey) {
     if (isProduction) return res.status(500).json({ error: "API key no configurada" });
-    return res.status(200).json({ answer: localFallbackAnswer(message), mode: "local" });
+    const answer = localFallbackAnswer(message);
+    await recordResinyLearning({ question: message, answer, visitorId });
+    return res.status(200).json({ answer, mode: "local" });
   }
 
   try {
     const groq = new Groq({ apiKey });
+    const learningContext = await getResinyLearningContext();
 
     const chatHistory = history.map((m: { role: string; text: string }) => ({
       role: m.role === "user" ? "user" : "assistant" as const,
@@ -174,7 +179,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: learningContext ? `${SYSTEM_PROMPT}\n\n${learningContext}` : SYSTEM_PROMPT },
         ...chatHistory,
         { role: "user", content: message },
       ],
@@ -183,10 +188,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const answer = completion.choices[0]?.message?.content || "Lo siento, no pude generar una respuesta.";
+    await recordResinyLearning({ question: message, answer, visitorId });
     return res.status(200).json({ answer });
   } catch (e: any) {
     console.error("Groq error:", String(e?.message || ""));
     if (isProduction) return res.status(500).json({ error: "No se pudo procesar tu pregunta. Intenta de nuevo." });
-    return res.status(200).json({ answer: localFallbackAnswer(message), mode: "local" });
+    const answer = localFallbackAnswer(message);
+    await recordResinyLearning({ question: message, answer, visitorId });
+    return res.status(200).json({ answer, mode: "local" });
   }
 }

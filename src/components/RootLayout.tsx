@@ -1,17 +1,16 @@
-import React, { ReactElement, useEffect, useRef, useState } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Header from "./header/Header";
 import Footer from "./Footer";
 import Link from "next/link";
-import { 
-  HomeIcon, 
-  MagnifyingGlassIcon, 
+import {
+  HomeIcon,
+  MagnifyingGlassIcon,
   ShoppingCartIcon, 
   UserIcon,
   ArrowRightIcon 
 } from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
-import AssistantRossy from "./AssistantRossy";
 
 interface Props {
   children: ReactElement;
@@ -20,28 +19,11 @@ interface Props {
 const RootLayout = ({ children }: Props) => {
   const router = useRouter();
   const isRifasPage = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/admin/rifa");
-  const footerRef = useRef<HTMLDivElement | null>(null);
-  const [hideAssistant, setHideAssistant] = useState(false);
+  const hideFooter = isRifasPage || router.pathname === "/resiny";
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   const cartCount = useSelector((state: any) =>
     Array.isArray(state?.next?.productData) ? state.next.productData.length : 0
   );
-
-  useEffect(() => {
-    const footerEl = footerRef.current;
-    if (!footerEl || typeof window === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        setHideAssistant(Boolean(entry?.isIntersecting));
-      },
-      { threshold: 0.05 }
-    );
-
-    observer.observe(footerEl);
-    return () => observer.disconnect();
-  }, []);
 
   const mobilePromoSlides = [
     {
@@ -123,8 +105,8 @@ const RootLayout = ({ children }: Props) => {
       )}
 
       <div className="pb-20 md:pb-0">{children}</div>
-      <div ref={footerRef}>
-        {!isRifasPage && <Footer />} {/* Renderiza Footer solo si NO es la página de rifas */}
+      <div>
+        {!hideFooter && <Footer />} {/* Renderiza Footer solo en páginas públicas de tienda */}
       </div>
       <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-4 px-2 py-2">
@@ -152,7 +134,6 @@ const RootLayout = ({ children }: Props) => {
           })}
         </div>
       </nav>
-      {!hideAssistant && <AssistantRossy />}
     </>
   );
 };

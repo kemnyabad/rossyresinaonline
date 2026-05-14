@@ -10,6 +10,7 @@ import {
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import type { ProductProps } from "../../type";
+import { ResinyInvite } from "./AssistantRossy";
 
 interface Props {
   productData?: ProductProps[];
@@ -206,27 +207,28 @@ export default function HeroCarousel({
   return (
     <section className="w-full">
       <div className="grid min-h-[420px] grid-cols-[230px_minmax(0,1fr)_320px] gap-4">
-        <aside className="self-start overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-100 px-4 py-3">
-            <p className="text-sm font-semibold text-gray-900">Categorías</p>
+        <div className="self-start">
+          <aside className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-100 px-4 py-3">
+              <p className="text-sm font-semibold text-gray-900">Categorías</p>
+            </div>
+            <nav className="grid py-2">
+              {categoryLinks.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-amazon_blue"
+                >
+                  <span>{item.label}</span>
+                  <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+                </Link>
+              ))}
+            </nav>
+          </aside>
+          <div className="mt-3">
+            <ResinyInvite />
           </div>
-          <nav className="grid py-2">
-            {categoryLinks.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-amazon_blue"
-              >
-                <span>{item.label}</span>
-                <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-              </Link>
-            ))}
-          </nav>
-          <div className="mx-3 mb-3 rounded-lg bg-gray-50 p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Compra segura</p>
-            <p className="mt-1 text-sm font-semibold text-gray-900">Te ayudamos a elegir antes de comprar</p>
-          </div>
-        </aside>
+        </div>
 
         <div className="min-w-0">
           <div className={`relative h-[420px] overflow-hidden rounded-lg border border-gray-200 ${activeSlide.tone} shadow-[0_1px_3px_rgba(17,24,39,0.08)]`}>
