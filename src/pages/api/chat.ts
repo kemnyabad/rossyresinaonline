@@ -1,7 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getResinyBrowserContext } from "@/lib/resinyBrowser";
+import { getResinyKnowledgeContext } from "@/lib/resinyKnowledge";
 import { getResinyLearningContext, recordResinyLearning } from "@/lib/resinyLearning";
+import { getResinyWebContext } from "@/lib/resinyWebSearch";
 
-const SYSTEM_PROMPT = `Eres "Resiny", la asistente amiga de Rossy Resina (Perú). Sabes de resina epóxica, eco resina, moldes de silicona, pigmentos, proyectos artesanales, compras y emprendimiento.
+const SYSTEM_PROMPT = `Eres "Resiny", la asistente amiga de Rossy Resina (Perú). Sabes de artesanía general, resina epóxica, eco resina, resina UV, moldes de silicona, pigmentos, proyectos artesanales, compras y emprendimiento.
 
 Tu misión no es repetir respuestas guardadas. Debes leer con atención lo que la clienta escribe, inferir qué necesita, adaptar tu respuesta a su caso y conversar de forma natural, cálida y útil.
 
@@ -18,6 +21,9 @@ PERSONALIDAD:
 - No suenes como catálogo, plantilla ni respuesta predeterminada.
 - Máximo 1 emoji ocasional, solo si encaja con el tono.
 - Mantente dentro del mundo de Rossy Resina: resina, artesanía, moldes, pigmentos, materiales, compras, envíos, pagos, capacitaciones y emprendimiento artesanal.
+- También puedes ayudar con artesanía general cuando sea útil para una clienta creativa: velas, jabones artesanales, bisutería, empaques, fotografía de producto, costos, ventas y proyectos hechos a mano.
+- Si recibes paginas leidas por Resiny Browser, tratalas como contexto de apoyo y no como verdad absoluta.
+- Si recibes contexto reciente de internet, úsalo solo cuando esté relacionado con artesanía/resina y no salgas de ese dominio.
 - Si te piden temas ajenos a ese propósito, responde de forma breve y amable que puedes ayudar con proyectos de resina/artesanía, y redirige la conversación.
 
 CONOCIMIENTO BASE:
@@ -140,7 +146,7 @@ const isResinyDomainQuestion = (message: string, history: Array<{ role: string; 
     return true;
   }
 
-  return /resina|epoxi|epoxica|epóxica|uv|eco resina|molde|moldes|silicona|pigmento|mica|colorante|glitter|escarcha|artesania|artesanía|manualidad|llavero|dije|arete|joyeria|joyería|lapicero|shaker|bandeja|portavaso|curado|mezcla|catalizador|endurecedor|burbuja|burbujas|soplete|pistola de calor|lijar|pulir|barniz|flores secas|encapsulado|emprender|vender|precio|costear|taller|capacitacion|capacitación|curso|clase|rossy|compra|comprar|pedido|envio|envío|shalom|olva|delivery|pago|yape|transferencia|whatsapp|material|materiales|proyecto|crear|diseño|diseno|imagen|foto|boceto/.test(text);
+  return /resina|epoxi|epoxica|epóxica|uv|eco resina|molde|moldes|silicona|pigmento|mica|colorante|glitter|escarcha|artesania|artesanía|manualidad|manualidades|hecho a mano|handmade|llavero|dije|arete|aretes|joyeria|joyería|bisuteria|bisutería|collar|pulsera|lapicero|shaker|bandeja|portavaso|curado|mezcla|catalizador|endurecedor|burbuja|burbujas|soplete|pistola de calor|lijar|pulir|barniz|flores secas|encapsulado|vela|velas|jabon|jabón|jabones|aroma|ceramica|cerámica|porcelana fria|porcelana fría|crochet|tejido|macrame|macramé|sublimacion|sublimación|vinil|scrapbook|empaque|packaging|emprender|vender|precio|costear|taller|capacitacion|capacitación|curso|clase|rossy|compra|comprar|pedido|envio|envío|shalom|olva|delivery|pago|yape|transferencia|whatsapp|material|materiales|proyecto|crear|diseño|diseno|imagen|foto|boceto/.test(text);
 };
 
 const outOfScopeAnswer = () =>
@@ -382,6 +388,17 @@ const answerWithGroq = async (input: {
   return String(data?.choices?.[0]?.message?.content || "").trim();
 };
 
+const getResinyExternalContext = async (message: string) => {
+  const [knowledgeContext, browserContext, learningContext, webContext] = await Promise.all([
+    getResinyKnowledgeContext(message),
+    getResinyBrowserContext(message),
+    getResinyLearningContext(),
+    getResinyWebContext(message),
+  ]);
+
+  return [knowledgeContext, browserContext, learningContext, webContext].filter(Boolean).join("\n\n");
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
 
@@ -407,8 +424,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (!groqApiKey) {
-    const learningContext = await getResinyLearningContext();
-    const chatGptAnswer = await answerWithChatGpt({ message, history, learningContext });
+    const externalContext = await getResinyExternalContext(message);
+    const chatGptAnswer = await answerWithChatGpt({ message, history, learningContext: externalContext });
     if (!chatGptAnswer && !allowLocalFallback) {
       if (!openAiApiKey) return missingAiProviderResponse(res);
       return res.status(503).json({
@@ -423,12 +440,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const learningContext = await getResinyLearningContext();
+    const externalContext = await getResinyExternalContext(message);
     const groqAnswer =
-      (await answerWithGroq({ apiKey: groqApiKey, model: groqModel, message, history, learningContext })) ||
+      (await answerWithGroq({ apiKey: groqApiKey, model: groqModel, message, history, learningContext: externalContext })) ||
       "Lo siento, no pude generar una respuesta.";
     const chatGptAnswer = isResinyDomainQuestion(message, history) && shouldUseChatGptSupport(message, groqAnswer)
-      ? await improveWithChatGpt({ message, answer: groqAnswer, history, learningContext })
+      ? await improveWithChatGpt({ message, answer: groqAnswer, history, learningContext: externalContext })
       : null;
     const answer = chatGptAnswer || groqAnswer;
 
@@ -436,8 +453,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ answer, mode: chatGptAnswer ? "groq+chatgpt" : "groq" });
   } catch (e: any) {
     console.error("Groq error:", String(e?.message || ""));
-    const learningContext = await getResinyLearningContext();
-    const chatGptAnswer = await answerWithChatGpt({ message, history, learningContext });
+    const externalContext = await getResinyExternalContext(message);
+    const chatGptAnswer = await answerWithChatGpt({ message, history, learningContext: externalContext });
     if (!chatGptAnswer && !allowLocalFallback) {
       if (openAiApiKey) {
         return res.status(503).json({
