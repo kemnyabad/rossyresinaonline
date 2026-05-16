@@ -287,6 +287,19 @@ export default function AdminRifas() {
   const pendingTickets = filteredTickets.filter(t => t.status === 'PENDING');
   const paidTickets = filteredTickets.filter(t => t.status === 'PAID');
 
+  const getTicketCount = (ticket: Ticket) => ticket.ticketCount || ticket.numbers.length;
+  const getTicketPrice = (ticket: Ticket) => Number(ticket.pricePerNumber || 0);
+  const getRefundAmount = (ticket: Ticket) => getTicketCount(ticket) * getTicketPrice(ticket);
+
+  const paidTicketTotal = paidTickets.reduce(
+    (sum, ticket) => sum + getTicketCount(ticket),
+    0
+  );
+  const paidRefundTotal = paidTickets.reduce(
+    (sum, ticket) => sum + getRefundAmount(ticket),
+    0
+  );
+
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('es-PE', {
       style: 'currency',
@@ -310,13 +323,13 @@ export default function AdminRifas() {
     }
 
     const totalTickets = reportTickets.reduce(
-      (sum, ticket) => sum + (ticket.ticketCount || ticket.numbers.length),
+      (sum, ticket) => sum + getTicketCount(ticket),
       0
     );
-    const totalRefund = reportTickets.reduce((sum, ticket) => {
-      const ticketCount = ticket.ticketCount || ticket.numbers.length;
-      return sum + ticketCount * Number(ticket.pricePerNumber || 0);
-    }, 0);
+    const totalRefund = reportTickets.reduce(
+      (sum, ticket) => sum + getRefundAmount(ticket),
+      0
+    );
     const now = new Date();
     const printedDate = now.toLocaleDateString('es-PE');
     const reportTitle = selectedRifaFilter
@@ -325,9 +338,9 @@ export default function AdminRifas() {
 
     const rows = reportTickets
       .map((ticket, index) => {
-        const ticketCount = ticket.ticketCount || ticket.numbers.length;
-        const price = Number(ticket.pricePerNumber || 0);
-        const refund = ticketCount * price;
+        const ticketCount = getTicketCount(ticket);
+        const price = getTicketPrice(ticket);
+        const refund = getRefundAmount(ticket);
         const participation =
           ticket.raffleMode === 'AMPHORA'
             ? `${ticketCount} tickets`
@@ -360,46 +373,48 @@ export default function AdminRifas() {
           <meta charset="utf-8" />
           <title>Devoluciones - ${escapeHtml(reportTitle)}</title>
           <style>
-            @page { size: A4 landscape; margin: 14mm; }
+            @page { size: A4 landscape; margin: 5mm; }
             * { box-sizing: border-box; }
             body {
               margin: 0;
               color: #111;
               background: #fff;
               font-family: "Courier New", Courier, monospace;
-              font-size: 10px;
-              line-height: 1.25;
+              font-size: 9px;
+              line-height: 1.15;
             }
             .page { width: 100%; }
             .header {
               display: grid;
               grid-template-columns: 1fr 1.4fr 1fr;
               align-items: start;
-              margin-bottom: 18px;
+              margin-bottom: 6px;
               text-transform: uppercase;
             }
             .header-center { text-align: center; font-weight: 700; }
             .header-right { text-align: right; }
             .title {
-              margin: 10px 0 4px;
+              margin: 5px 0 2px;
               text-align: center;
               font-weight: 700;
               text-transform: uppercase;
             }
             .subtitle {
-              margin-bottom: 12px;
+              margin-bottom: 6px;
               text-align: center;
               text-transform: uppercase;
             }
-            .rule { border-top: 1px dashed #111; margin: 8px 0; }
+            .rule { border-top: 1px dashed #111; margin: 4px 0; }
             table {
               width: 100%;
               border-collapse: collapse;
               table-layout: fixed;
               text-transform: uppercase;
             }
+            thead { display: table-header-group; }
+            tr { page-break-inside: avoid; }
             th, td {
-              padding: 4px 5px;
+              padding: 2px 4px;
               vertical-align: top;
               overflow-wrap: anywhere;
             }
@@ -413,22 +428,22 @@ export default function AdminRifas() {
             .right { text-align: right; }
             .summary {
               display: grid;
-              grid-template-columns: 1fr 220px;
-              gap: 18px;
-              margin-top: 12px;
+              grid-template-columns: 1fr 190px;
+              gap: 10px;
+              margin-top: 6px;
               font-weight: 700;
               text-transform: uppercase;
             }
             .summary-table {
-              width: 220px;
+              width: 190px;
               margin-left: auto;
             }
             .summary-table td { padding: 2px 0; }
             .signatures {
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 80px;
-              margin-top: 50px;
+              gap: 45px;
+              margin-top: 24px;
               text-align: center;
               text-transform: uppercase;
             }
@@ -465,13 +480,13 @@ export default function AdminRifas() {
             <table>
               <thead>
                 <tr>
-                  <th style="width: 36px;">N</th>
-                  <th style="width: 25%;">Nombre completo</th>
-                  <th style="width: 12%;">WhatsApp</th>
+                  <th style="width: 26px;">N</th>
+                  <th style="width: 24%;">Nombre completo</th>
+                  <th style="width: 11%;">WhatsApp</th>
                   <th>Participacion</th>
-                  <th style="width: 78px;">Tickets</th>
-                  <th style="width: 95px;">Costo ticket</th>
-                  <th style="width: 105px;">Devolucion</th>
+                  <th style="width: 54px;">Tickets</th>
+                  <th style="width: 82px;">Costo ticket</th>
+                  <th style="width: 88px;">Devolucion</th>
                 </tr>
               </thead>
               <tbody>${rows}</tbody>
@@ -960,14 +975,24 @@ export default function AdminRifas() {
             {paidTickets.length > 0 && (
               <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <h2 className="text-2xl font-bold text-green-600">✅ Pagos Confirmados ({paidTickets.length})</h2>
-                  <button
-                    type="button"
-                    onClick={printRefundsPdf}
-                    className="inline-flex items-center justify-center rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-bold text-green-700 transition hover:bg-green-100"
-                  >
-                    📄 Devoluciones
-                  </button>
+                  <div>
+                    <h2 className="text-2xl font-bold text-green-600">✅ Pagos Confirmados ({paidTickets.length})</h2>
+                    <p className="mt-1 text-sm font-semibold text-gray-600">
+                      Total tickets: {paidTicketTotal} · Total a devolver: {formatCurrency(paidRefundTotal)}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-start gap-2 sm:items-end">
+                    <button
+                      type="button"
+                      onClick={printRefundsPdf}
+                      className="inline-flex items-center justify-center rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-bold text-green-700 transition hover:bg-green-100"
+                    >
+                      📄 Devoluciones
+                    </button>
+                    <span className="text-xs font-semibold text-gray-500">
+                      PDF: {paidTicketTotal} tickets · {formatCurrency(paidRefundTotal)}
+                    </span>
+                  </div>
                 </div>
                 
                 <div className="overflow-x-auto">

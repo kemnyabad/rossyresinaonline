@@ -221,9 +221,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         orderBy: [{ createdAt: 'desc' }, { number: 'asc' }],
       });
 
-      // Agrupar por transacción/comprador
+      const normalizeKeyPart = (value: unknown) =>
+        String(value || '')
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, ' ');
+
+      // Agrupar por rifa, estado y cliente. Separar el estado evita mezclar
+      // tickets pendientes con tickets ya pagados del mismo comprador.
       const grouped = tickets.reduce((acc: any, ticket: any) => {
-        const key = `${ticket.rifaId}-${ticket.buyerName || 'Unknown'}`;
+        const key = [
+          ticket.rifaId,
+          ticket.status,
+          normalizeKeyPart(ticket.buyerName || 'Unknown'),
+          normalizeKeyPart(ticket.buyerPhone || ''),
+        ].join('|');
+
         if (!acc[key]) {
           acc[key] = {
             rifaId: ticket.rifaId,
@@ -241,6 +254,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           };
         }
         acc[key].numbers.push(ticket.number);
+        acc[key].numbers.sort((a: number, b: number) => a - b);
         acc[key].ticketCount += 1;
         return acc;
       }, {});
