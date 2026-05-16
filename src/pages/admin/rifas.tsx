@@ -31,6 +31,7 @@ interface Ticket {
   numbers: number[];
   raffleMode?: 'NUMBERS' | 'AMPHORA';
   ticketCount?: number;
+  pricePerNumber?: number;
 }
 
 export default function AdminRifas() {
@@ -285,6 +286,233 @@ export default function AdminRifas() {
 
   const pendingTickets = filteredTickets.filter(t => t.status === 'PENDING');
   const paidTickets = filteredTickets.filter(t => t.status === 'PAID');
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('es-PE', {
+      style: 'currency',
+      currency: 'PEN',
+      minimumFractionDigits: 2,
+    }).format(value);
+
+  const escapeHtml = (value: string | number | null | undefined) =>
+    String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+  const printRefundsPdf = () => {
+    const reportTickets = paidTickets;
+    if (reportTickets.length === 0) {
+      alert('No hay pagos confirmados para imprimir devoluciones.');
+      return;
+    }
+
+    const totalTickets = reportTickets.reduce(
+      (sum, ticket) => sum + (ticket.ticketCount || ticket.numbers.length),
+      0
+    );
+    const totalRefund = reportTickets.reduce((sum, ticket) => {
+      const ticketCount = ticket.ticketCount || ticket.numbers.length;
+      return sum + ticketCount * Number(ticket.pricePerNumber || 0);
+    }, 0);
+    const now = new Date();
+    const printedDate = now.toLocaleDateString('es-PE');
+    const reportTitle = selectedRifaFilter
+      ? selectedRifaFilter.title
+      : 'Todas las rifas';
+
+    const rows = reportTickets
+      .map((ticket, index) => {
+        const ticketCount = ticket.ticketCount || ticket.numbers.length;
+        const price = Number(ticket.pricePerNumber || 0);
+        const refund = ticketCount * price;
+        const participation =
+          ticket.raffleMode === 'AMPHORA'
+            ? `${ticketCount} tickets`
+            : ticket.numbers.join(', ');
+
+        return `
+          <tr>
+            <td class="center">${index + 1}</td>
+            <td>${escapeHtml(ticket.buyerName || 'Sin nombre')}</td>
+            <td>${escapeHtml(ticket.buyerPhone || '-')}</td>
+            <td>${escapeHtml(participation)}</td>
+            <td class="center">${ticketCount}</td>
+            <td class="right">${formatCurrency(price)}</td>
+            <td class="right">${formatCurrency(refund)}</td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    const printWindow = window.open('', '_blank', 'width=1100,height=800');
+    if (!printWindow) {
+      alert('El navegador bloqueó la ventana de impresión. Permite ventanas emergentes para generar el PDF.');
+      return;
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Devoluciones - ${escapeHtml(reportTitle)}</title>
+          <style>
+            @page { size: A4 landscape; margin: 14mm; }
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              color: #111;
+              background: #fff;
+              font-family: "Courier New", Courier, monospace;
+              font-size: 10px;
+              line-height: 1.25;
+            }
+            .page { width: 100%; }
+            .header {
+              display: grid;
+              grid-template-columns: 1fr 1.4fr 1fr;
+              align-items: start;
+              margin-bottom: 18px;
+              text-transform: uppercase;
+            }
+            .header-center { text-align: center; font-weight: 700; }
+            .header-right { text-align: right; }
+            .title {
+              margin: 10px 0 4px;
+              text-align: center;
+              font-weight: 700;
+              text-transform: uppercase;
+            }
+            .subtitle {
+              margin-bottom: 12px;
+              text-align: center;
+              text-transform: uppercase;
+            }
+            .rule { border-top: 1px dashed #111; margin: 8px 0; }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              table-layout: fixed;
+              text-transform: uppercase;
+            }
+            th, td {
+              padding: 4px 5px;
+              vertical-align: top;
+              overflow-wrap: anywhere;
+            }
+            thead th {
+              border-top: 1px dashed #111;
+              border-bottom: 1px dashed #111;
+              font-weight: 700;
+            }
+            tbody tr:last-child td { border-bottom: 1px dashed #111; }
+            .center { text-align: center; }
+            .right { text-align: right; }
+            .summary {
+              display: grid;
+              grid-template-columns: 1fr 220px;
+              gap: 18px;
+              margin-top: 12px;
+              font-weight: 700;
+              text-transform: uppercase;
+            }
+            .summary-table {
+              width: 220px;
+              margin-left: auto;
+            }
+            .summary-table td { padding: 2px 0; }
+            .signatures {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 80px;
+              margin-top: 50px;
+              text-align: center;
+              text-transform: uppercase;
+            }
+            .signature-line {
+              border-top: 1px dashed #111;
+              padding-top: 6px;
+            }
+            @media print {
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          <main class="page">
+            <section class="header">
+              <div>
+                ROSSY RESINA<br />
+                PANEL ADMIN
+              </div>
+              <div class="header-center">
+                REPORTE DE DEVOLUCIONES<br />
+                PAGOS CONFIRMADOS
+              </div>
+              <div class="header-right">
+                FECHA: ${escapeHtml(printedDate)}<br />
+                PAGINA: 1
+              </div>
+            </section>
+
+            <div class="title">${escapeHtml(reportTitle)}</div>
+            <div class="subtitle">Clientes con dinero por devolver según tickets comprados</div>
+            <div class="rule"></div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 36px;">N</th>
+                  <th style="width: 25%;">Nombre completo</th>
+                  <th style="width: 12%;">WhatsApp</th>
+                  <th>Participacion</th>
+                  <th style="width: 78px;">Tickets</th>
+                  <th style="width: 95px;">Costo ticket</th>
+                  <th style="width: 105px;">Devolucion</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+
+            <section class="summary">
+              <div>
+                OBSERVACION: La devolucion se calcula con el costo de cada ticket registrado en la rifa
+                multiplicado por la cantidad de tickets comprados por cliente.
+              </div>
+              <table class="summary-table">
+                <tr>
+                  <td>Total clientes:</td>
+                  <td class="right">${reportTickets.length}</td>
+                </tr>
+                <tr>
+                  <td>Total tickets:</td>
+                  <td class="right">${totalTickets}</td>
+                </tr>
+                <tr>
+                  <td>Total devolver:</td>
+                  <td class="right">${formatCurrency(totalRefund)}</td>
+                </tr>
+              </table>
+            </section>
+
+            <section class="signatures">
+              <div class="signature-line">Rossy Resina</div>
+              <div class="signature-line">Responsable de devoluciones</div>
+            </section>
+          </main>
+          <script>
+            window.addEventListener('load', function () {
+              window.print();
+            });
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   const goToRifasTab = () => {
     setActiveAdminTab('rifas');
@@ -731,7 +959,16 @@ export default function AdminRifas() {
             {/* Tabla de Comprobantes Pagados */}
             {paidTickets.length > 0 && (
               <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                <h2 className="text-2xl font-bold text-green-600 mb-4">✅ Pagos Confirmados ({paidTickets.length})</h2>
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="text-2xl font-bold text-green-600">✅ Pagos Confirmados ({paidTickets.length})</h2>
+                  <button
+                    type="button"
+                    onClick={printRefundsPdf}
+                    className="inline-flex items-center justify-center rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-bold text-green-700 transition hover:bg-green-100"
+                  >
+                    📄 Devoluciones
+                  </button>
+                </div>
                 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">

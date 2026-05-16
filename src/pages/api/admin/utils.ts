@@ -216,7 +216,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const tickets = await prisma.rifaTicket.findMany({
         where,
         include: {
-          rifa: { select: { title: true, raffleMode: true } }
+          rifa: { select: { title: true, raffleMode: true, pricePerNumber: true } }
         },
         orderBy: [{ createdAt: 'desc' }, { number: 'asc' }],
       });
@@ -229,6 +229,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             rifaId: ticket.rifaId,
             rifaTitle: ticket.rifa?.title,
             raffleMode: ticket.rifa?.raffleMode || 'NUMBERS',
+            pricePerNumber: Number(ticket.rifa?.pricePerNumber || 0),
             buyerName: ticket.buyerName,
             buyerPhone: ticket.buyerPhone,
             buyerEmail: ticket.buyerEmail,
