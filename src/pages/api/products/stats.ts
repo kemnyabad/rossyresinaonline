@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   );
 
   try {
-    const products = await db.product.findMany({
+    const products: any[] = await db.product.findMany({
       where: {
         OR: [
           { id: { in: identifiers } },
@@ -41,8 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     if (products.length === 0) return res.status(200).json(out);
 
-    const productIds = products.map((p) => p.id);
-    const byProductId = new Map(products.map((p) => [p.id, p]));
+    const productIds = products.map((p: any) => p.id);
+    const byProductId = new Map(products.map((p: any) => [p.id, p]));
 
     const orders = await db.order.findMany({
       where: { status: { in: ["PAID", "SHIPPED"] } },
@@ -58,14 +58,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    const groupedReviews = await db.review.groupBy({
+    const groupedReviews: any[] = await db.review.groupBy({
       by: ["productId"],
       where: { productId: { in: productIds } },
       _avg: { rating: true },
       _count: { _all: true },
     });
     const ratingsByProductId = new Map(
-      groupedReviews.map((g) => [
+      groupedReviews.map((g: any) => [
         g.productId,
         { avg: Number(g._avg.rating || 0), count: Number(g._count._all || 0) },
       ])
@@ -73,9 +73,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     for (const inputId of identifiers) {
       const product =
-        products.find((p) => p.id === inputId) ||
-        products.find((p) => String(p.legacyId || "") === inputId) ||
-        products.find((p) => String(p.code || "") === inputId);
+        products.find((p: any) => p.id === inputId) ||
+        products.find((p: any) => String(p.legacyId || "") === inputId) ||
+        products.find((p: any) => String(p.code || "") === inputId);
       if (!product) continue;
 
       const salesCount = salesByProductId[product.id] || 0;

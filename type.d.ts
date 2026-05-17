@@ -39,8 +39,8 @@ export interface StoreProduct {
 }
 
 export interface StateProps {
-  productData: [];
-  favoriteData: [];
+  productData: StoreProduct[];
+  favoriteData: StoreProduct[];
   userInfo: null | string;
   next: any;
 }

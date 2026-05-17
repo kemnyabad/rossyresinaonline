@@ -61,7 +61,12 @@ export const normalizeShippingCarrier = (raw: unknown): ShippingCarrier => {
   return "SHALOM";
 };
 
-const normalizeMeta = (partial: Partial<OrderMeta>): OrderMeta => ({
+type RawOrderMeta = Omit<Partial<OrderMeta>, "paymentMethod" | "shippingCarrier"> & {
+  paymentMethod?: string;
+  shippingCarrier?: string;
+};
+
+const normalizeMeta = (partial: RawOrderMeta): OrderMeta => ({
   version: 2,
   orderCode: String(partial.orderCode || "").trim(),
   workflowStatus: String(partial.workflowStatus || "").trim() || "Pendiente por confirmar",

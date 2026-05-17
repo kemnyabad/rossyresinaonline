@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { GetServerSideProps } from "next";
+import { requireAdminPage } from "@/lib/adminAuth";
 import { createPortal } from "react-dom";
 import {
   MagnifyingGlassIcon,
@@ -37,6 +36,27 @@ interface DeleteTarget { id: number | string; code?: string; title: string; }
 
 const fmt = (n: number) => new Intl.NumberFormat("es-PE", { minimumFractionDigits: 2 }).format(n);
 
+const inventoryCode = (p: Product) => {
+  const existingCode = String(p.code || "").trim();
+  if (existingCode) return existingCode;
+
+  const brandLetters =
+    String(p.brand || "RR")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 4) || "RR";
+  const productNumber = String(p.barcode || p._id || "")
+    .replace(/\D/g, "")
+    .slice(-8);
+
+  return productNumber ? `${brandLetters}-${productNumber}` : brandLetters;
+};
+
 const normalizeImg = (img: string) => {
   const s = String(img || "");
   const u = s.replace(/\\/g, "/");
@@ -62,10 +82,22 @@ export default function AdminProducts() {
 
   const load = async () => {
     setLoading(true);
-    const res  = await fetch("/api/products");
-    const data = await res.json();
-    setItems(Array.isArray(data) ? data : []);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/products");
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        const msg = String((data as any)?.error || "No se pudo cargar productos.");
+        setNotice({ type: "error", text: msg });
+        setItems([]);
+        return;
+      }
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      setNotice({ type: "error", text: "Error de conexion al cargar productos." });
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); setMounted(true); }, []);
@@ -126,25 +158,14 @@ export default function AdminProducts() {
       )}
 
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <div>
-          <p className="text-xs text-gray-400">{items.length} productos en total</p>
-          {lowStockCount > 0 && (
-            <p className="flex items-center gap-1 text-xs text-yellow-600 mt-0.5">
-              <ExclamationTriangleIcon className="w-3.5 h-3.5" />
-              {lowStockCount} producto(s) con stock bajo
-            </p>
-          )}
+      {lowStockCount > 0 && (
+        <div className="mb-5">
+          <p className="flex items-center gap-1 text-xs text-yellow-600">
+            <ExclamationTriangleIcon className="w-3.5 h-3.5" />
+            {lowStockCount} producto(s) con stock bajo
+          </p>
         </div>
-        <Link
-          href="/admin/new"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition hover:opacity-90"
-          style={{ background: "linear-gradient(135deg, #cb299e, #6E2CA1)" }}
-        >
-          <PlusIcon className="w-4 h-4" />
-          Nuevo producto
-        </Link>
-      </div>
+      )}
 
       {/* Filtros */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 mb-5">
@@ -169,13 +190,21 @@ export default function AdminProducts() {
             <ArrowPathIcon className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Actualizar
           </button>
+          <Link
+            href="/admin/new"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, #cb299e, #6E2CA1)" }}
+          >
+            <PlusIcon className="w-4 h-4" />
+            Nuevo producto
+          </Link>
         </div>
       </div>
 
       {/* Tabla */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden [font-family:Inter,Arial,Helvetica,sans-serif]">
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-          <p className="text-sm font-semibold text-gray-700">
+          <p className="text-base font-extrabold tracking-tight text-black">
             {filtered.length} producto{filtered.length !== 1 ? "s" : ""}
             {categoryFilter !== "Todas" && <span className="ml-1 text-gray-400">· {categoryFilter}</span>}
           </p>
@@ -194,7 +223,7 @@ export default function AdminProducts() {
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
                   {["Producto", "Código", "Categoría / Marca", "Precio", "Stock", "Acciones"].map((h) => (
-                    <th key={h} className="text-left text-xs font-semibold text-gray-400 px-4 py-3 whitespace-nowrap">{h}</th>
+                    <th key={h} className="text-left text-[12px] font-bold uppercase tracking-[0.04em] text-black px-4 py-3 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -227,7 +256,7 @@ export default function AdminProducts() {
                       </td>
                       {/* Código */}
                       <td className="px-4 py-3">
-                        <p className="font-mono text-xs text-gray-500">{p.code || "—"}</p>
+                        <p className="font-mono text-xs font-semibold text-gray-800">{inventoryCode(p)}</p>
                         {p.barcode && <p className="font-mono text-[10px] text-gray-400">{p.barcode}</p>}
                       </td>
                       {/* Categoría / Marca */}
@@ -310,8 +339,7 @@ export default function AdminProducts() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin", permanent: false } };
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };

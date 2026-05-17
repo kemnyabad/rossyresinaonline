@@ -55,15 +55,9 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
           name="description"
           content="Comunidad resinera estilo red social para compartir creaciones e interactuar entre artistas."
         />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
       </Head>
 
-      <div className="min-h-screen bg-[#f0f2f5] text-[#1c1e21]" style={{ fontFamily: '"Manrope", sans-serif' }}>
+      <div className="min-h-screen bg-[#f0f2f5] text-[#1c1e21]">
         <header className="sticky top-0 z-40 border-b border-[#d9dde3] bg-[#1877f2]">
           <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -71,7 +65,7 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
                 <img src="/logo.png" alt="Rossy Resina" className="h-full w-full object-cover" />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold uppercase tracking-[0.2em] text-white" style={{ fontFamily: '"Oswald", sans-serif' }}>
+                <p className="truncate text-sm font-semibold uppercase tracking-wide text-white">
                   Comunidad
                 </p>
                 <p className="truncate text-xs text-white/80">Artistas resineros conectados</p>
@@ -143,7 +137,7 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
 
             {feed.length === 0 ? (
               <section className="rounded-2xl border border-[#d9dde3] bg-white p-10 text-center shadow-sm">
-                <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Oswald", sans-serif' }}>
+                <h2 className="text-2xl font-semibold">
                   No hay publicaciones a?n
                 </h2>
                 <p className="mt-2 text-sm text-[#65676b]">

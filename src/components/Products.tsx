@@ -32,7 +32,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   const [stats, setStats] = useState<Record<string, ProductStat>>({});
   const [addedMap, setAddedMap] = useState<Record<string, boolean>>({});
 
-  const productSlug = (code?: string, id?: number) => code ? `/${code}` : `/${id}`;
+  const productSlug = (code?: string, id?: string | number) => code ? `/${code}` : `/${id}`;
 
   const idsParam = useMemo(() => {
     const ids = (Array.isArray(productData) ? productData : [])
@@ -51,7 +51,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
 
   const toProductHref = (
     code: string | undefined,
-    _id: number,
+    _id: string | number,
     brand: string,
     category: string,
     description: string,
@@ -65,7 +65,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
     query: { _id, brand, category, description, image, isNew, oldPrice, price, title },
   });
 
-  const showAddedFeedback = (id: number) => {
+  const showAddedFeedback = (id: string | number) => {
     const key = String(id);
     setAddedMap((prev) => ({ ...prev, [key]: true }));
     setTimeout(() => {
@@ -88,14 +88,16 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
           const displayTitle = formatProductTitle(title || "Producto");
           const displayImage = pickDisplayImage(image, images);
           const href = toProductHref(code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title);
+          const hasSales = itemStats.salesCount > 0;
+          const hasReviews = itemStats.reviewCount > 0;
 
           return (
             <div
               key={_id}
-              className="snap-start flex h-full flex-col rounded-xl border border-gray-200 bg-white p-2.5 text-black transition-all duration-300 hover:border-gray-300 hover:shadow-lg hover:-translate-y-1 group"
+              className="group snap-start flex h-full flex-col rounded-lg border border-gray-200 bg-white p-2.5 text-black shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_10px_22px_rgba(17,24,39,0.10)]"
             >
               <Link href={href} className="block">
-                <div className="relative w-full overflow-hidden rounded-lg bg-white pb-[100%] group-hover:bg-gray-50 transition-colors duration-300">
+                <div className="relative w-full overflow-hidden rounded-md bg-gray-50 pb-[100%] transition-colors duration-200 group-hover:bg-white">
                   {isPlaceholderImage(displayImage) ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-2 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                       Producto en Proceso
@@ -112,12 +114,12 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
 
                   <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1 z-10">
                     {isNew && (
-                      <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-md">
+                      <span className="rounded-full bg-gray-900 px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-sm">
                         Nuevo
                       </span>
                     )}
                     {hasDiscount && (
-                      <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-md">
+                      <span className="rounded-full bg-amazon_blue px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-sm">
                         Oferta
                       </span>
                     )}
@@ -134,7 +136,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
 
                 <div className="mt-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-base font-semibold text-gray-900 md:text-xl">
+                    <span className="text-base font-semibold text-amazon_blue md:text-xl">
                       <FormattedPrice amount={price} />
                     </span>
                     <span className="text-xs text-gray-500 md:text-sm">c/unidad</span>
@@ -145,24 +147,24 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                     )}
                   </div>
 
-                  <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-gray-500">
-                    <span>{itemStats.salesCount} ventas</span>
-                    <span>
-                      {itemStats.reviewCount > 0
-                        ? `${itemStats.avgRating.toFixed(1)} (${itemStats.reviewCount})`
-                        : "Sin reseñas"}
-                    </span>
-                  </div>
+                  {(hasSales || hasReviews) && (
+                    <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-gray-500">
+                      {hasSales && <span>{itemStats.salesCount} ventas</span>}
+                      {hasReviews && <span>{itemStats.avgRating.toFixed(1)} ({itemStats.reviewCount})</span>}
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-2 flex items-center gap-0.5 text-xs text-gray-900">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <StarIcon
-                      key={i}
-                      className={`h-3.5 w-3.5 ${i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-200"}`}
-                    />
-                  ))}
-                </div>
+                {hasReviews && (
+                  <div className="mt-2 flex items-center gap-0.5 text-xs text-gray-900">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <StarIcon
+                        key={i}
+                        className={`h-3.5 w-3.5 ${i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-200"}`}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 <button
                   onClick={() => {
@@ -173,7 +175,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                     "mt-3 flex h-9 w-full items-center justify-center gap-1 rounded-full border text-xs font-semibold duration-300 transition-all " +
                     (wasAdded
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md"
-                      : "border-gray-300 hover:border-amazon_blue hover:bg-amazon_blue hover:text-white hover:shadow-md")
+                      : "border-gray-300 text-gray-800 hover:border-amazon_blue hover:bg-amazon_blue hover:text-white hover:shadow-[0_8px_18px_rgba(203,41,158,0.20)]")
                   }
                   aria-label="Agregar al carrito"
                 >

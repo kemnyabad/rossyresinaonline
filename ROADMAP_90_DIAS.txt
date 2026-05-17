@@ -1,0 +1,97 @@
+ROADMAP TECNICO DE 90 DIAS - ROSSY RESINA
+Fecha: 7 de abril de 2026
+
+OBJETIVO GENERAL
+Escalar de tienda estable a plataforma con videos + comunidad, sin romper produccion.
+
+==================================================
+FASE 1 (DIAS 1-30): BASE SOLIDA
+==================================================
+
+1) Estabilizar produccion actual
+- Dejar checklist fijo de despliegue.
+- Usar MAINTENANCE_MODE en cambios grandes.
+- Ejecutar backups semanales de productos y pedidos.
+
+2) Blindaje tecnico
+- Zod en endpoints criticos (products, orders, users).
+- Centralizar logs de errores.
+- CI obligatorio en PR: lint + build.
+
+3) Estructura modular
+- Separar por dominio:
+  - src/modules/ecommerce
+  - src/modules/videos
+  - src/modules/comunidad
+- Mantener rutas actuales funcionando.
+
+Entregable de Fase 1:
+- Tienda estable + pipeline confiable + base modular preparada.
+
+==================================================
+FASE 2 (DIAS 31-60): MODULO DE VIDEOS/CURSOS
+==================================================
+
+1) MVP de videos
+- Catalogo de cursos/videos.
+- Reproduccion con control basico de acceso.
+- Panel admin para subir/editar contenido.
+
+2) Datos y permisos
+- Tablas separadas para cursos, lecciones y progreso.
+- Roles claros: admin, alumno, cliente.
+
+3) Integracion con tienda
+- Producto de curso dentro de ecommerce (compra -> acceso).
+
+Entregable de Fase 2:
+- Seccion de videos funcional e integrada con login y pagos.
+
+==================================================
+FASE 3 (DIAS 61-90): COMUNIDAD SOCIAL (MVP)
+==================================================
+
+1) Comunidad minima viable
+- Perfil de usuario.
+- Publicaciones con imagen/video.
+- Comentarios y likes basicos.
+
+2) Moderacion y seguridad
+- Reportes de contenido.
+- Reglas anti-spam basicas.
+- Validaciones y limites por usuario.
+
+3) Rendimiento y observabilidad
+- Metricas de uso (posts, vistas, actividad).
+- Optimizacion de consultas criticas.
+
+Entregable de Fase 3:
+- Comunidad activa basica sin comprometer tienda ni cursos.
+
+==================================================
+REGLAS OPERATIVAS (SIEMPRE)
+==================================================
+
+1. Nada grande sin feature flag.
+2. Todo cambio pasa por PR + CI.
+3. Cambios riesgosos con MAINTENANCE_MODE=true.
+4. Backup antes de cambios masivos de datos.
+5. Publicar por lotes pequenos (no todo junto).
+
+==================================================
+CHECKLIST RAPIDO DE PUBLICACION
+==================================================
+
+ANTES
+- Backup rapido.
+- Activar mantenimiento si el cambio es sensible.
+- Verificar variables de entorno.
+
+DURANTE
+- Deploy por PR/merge.
+- Revisar logs y endpoints clave.
+
+DESPUES
+- Validar home, productos, carrito, checkout y admin.
+- Desactivar mantenimiento cuando todo este correcto.
+

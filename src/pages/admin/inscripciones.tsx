@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import type { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { requireAdminPage } from "@/lib/adminAuth";
 import {
   UserIcon,
   EnvelopeIcon,
@@ -240,9 +239,7 @@ export default function AdminInscripcionesPage() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  if (!session || (session.user as any)?.role !== "ADMIN") {
-    return { redirect: { destination: "/admin/sign-in", permanent: false } };
-  }
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };

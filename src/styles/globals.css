@@ -7,9 +7,33 @@
 @import "./layout.css";
 @import "./compat.css";
 
+:root {
+  --rr-font-sans: Arial, Helvetica, sans-serif;
+  --rr-font-weight-regular: 400;
+  --rr-font-weight-medium: 500;
+  --rr-font-weight-semibold: 600;
+  --rr-font-weight-bold: 700;
+  --rr-leading-heading: 1.16;
+  --rr-leading-body: 1.6;
+  --rr-leading-compact: 1.36;
+  --rr-tracking-body: 0;
+  --rr-tracking-label: 0.045em;
+  --rr-tracking-button: 0.01em;
+  --rr-text-strong: #18181b;
+  --rr-text-body: #374151;
+  --rr-text-muted: #6b7280;
+  --rr-text-soft: #8a8f98;
+}
+
 html, body, button, input, select, textarea {
-  font-family: 'Nunito', 'Barlow', Arial, sans-serif !important;
+  font-family: var(--rr-font-sans) !important;
   font-size: 15px;
+  font-weight: var(--rr-font-weight-regular);
+  line-height: var(--rr-leading-body);
+  letter-spacing: var(--rr-tracking-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a, button, input, select, textarea, [role="button"] {
@@ -30,11 +54,198 @@ html, body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  background: #f7f7f8;
+  color: var(--rr-text-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--rr-font-sans) !important;
+  font-weight: var(--rr-font-weight-bold);
+  line-height: var(--rr-leading-heading);
+  letter-spacing: -0.01em;
+  color: var(--rr-text-strong);
+}
+
+h1 {
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+h2 {
+  line-height: 1.14;
+}
+
+h3 {
+  line-height: 1.18;
+}
+
+p, li, label, input, select, textarea {
+  line-height: var(--rr-leading-body);
+}
+
+small, figcaption {
+  line-height: 1.5;
+}
+
+button, .btn, [role="button"], input[type="submit"], input[type="button"] {
+  font-weight: var(--rr-font-weight-semibold);
+  letter-spacing: var(--rr-tracking-button);
+  line-height: 1.2;
+}
+
+strong, b {
+  font-weight: var(--rr-font-weight-semibold);
+}
+
+.font-black {
+  font-weight: var(--rr-font-weight-bold) !important;
+}
+
+.font-extrabold {
+  font-weight: var(--rr-font-weight-bold) !important;
+}
+
+.font-bold {
+  font-weight: var(--rr-font-weight-bold) !important;
+}
+
+.font-semibold {
+  font-weight: var(--rr-font-weight-semibold) !important;
+}
+
+.font-medium {
+  font-weight: var(--rr-font-weight-medium) !important;
+}
+
+.tracking-tighter,
+.tracking-tight,
+.tracking-normal {
+  letter-spacing: 0 !important;
+}
+
+.tracking-wide {
+  letter-spacing: var(--rr-tracking-label) !important;
+}
+
+.tracking-wider,
+.tracking-widest {
+  letter-spacing: var(--rr-tracking-label) !important;
+}
+
+[class*="tracking-["] {
+  letter-spacing: var(--rr-tracking-label) !important;
+}
+
+.leading-none {
+  line-height: 1.08 !important;
+}
+
+.leading-tight {
+  line-height: 1.16 !important;
+}
+
+.leading-snug {
+  line-height: var(--rr-leading-compact) !important;
+}
+
+.uppercase {
+  letter-spacing: var(--rr-tracking-label);
+}
+
+.text-gray-950,
+.text-slate-950 {
+  color: var(--rr-text-strong) !important;
+}
+
+.text-gray-900,
+.text-slate-900 {
+  color: #1f2937 !important;
+}
+
+.text-gray-700,
+.text-slate-700 {
+  color: var(--rr-text-body) !important;
+}
+
+.text-gray-600,
+.text-slate-600 {
+  color: #5f6673 !important;
+}
+
+.text-gray-500,
+.text-slate-500 {
+  color: var(--rr-text-muted) !important;
+}
+
+.text-gray-400,
+.text-slate-400 {
+  color: var(--rr-text-soft) !important;
+}
+
+.rr-type-display {
+  font-family: var(--rr-font-sans) !important;
+  font-weight: var(--rr-font-weight-bold);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: var(--rr-text-strong);
+}
+
+.rr-type-title {
+  font-family: var(--rr-font-sans) !important;
+  font-weight: var(--rr-font-weight-bold);
+  line-height: 1.14;
+  letter-spacing: -0.01em;
+  color: var(--rr-text-strong);
+}
+
+.rr-type-subtitle {
+  font-weight: var(--rr-font-weight-semibold);
+  line-height: 1.38;
+  letter-spacing: 0;
+  color: var(--rr-text-body);
+}
+
+.rr-type-body {
+  font-weight: var(--rr-font-weight-regular);
+  line-height: var(--rr-leading-body);
+  letter-spacing: 0;
+  color: var(--rr-text-body);
+}
+
+.rr-type-muted {
+  font-weight: var(--rr-font-weight-regular);
+  line-height: 1.56;
+  letter-spacing: 0;
+  color: var(--rr-text-muted);
+}
+
+.rr-type-label {
+  font-size: 0.75rem;
+  font-weight: var(--rr-font-weight-semibold);
+  line-height: 1.25;
+  letter-spacing: var(--rr-tracking-label);
+  text-transform: uppercase;
 }
 
 img, video, canvas, svg {
   max-width: 100%;
   height: auto;
+}
+
+@keyframes promoFade {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  16%,
+  78% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
 }
 
 /* Scrollbar estético para el sidebar del admin */

@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import type { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { requireAdminPage } from "@/lib/adminAuth";
 import { PlusIcon, PencilIcon, TrashIcon, VideoCameraIcon, AcademicCapIcon, FilmIcon, UserGroupIcon, ChevronDownIcon, ChevronUpIcon, PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import type { VideoItem, ShortItem } from "@/data/capacitaciones";
 
@@ -29,7 +28,22 @@ type Curso = {
   fechas: CursoFecha[];
 };
 
-const emptyCurso = () => ({ nombre: "", nivel: "Basico", descripcion: "", modalidad: "Presencial", ciudad: "", sede: "", duracionHoras: 2, precio: 0, precioAnterior: "", cupoMax: 6, imagen: "", notaAdmin: "" });
+type CursoForm = {
+  nombre: string;
+  nivel: string;
+  descripcion: string;
+  modalidad: string;
+  ciudad: string;
+  sede: string;
+  duracionHoras: number;
+  precio: number;
+  precioAnterior: number | "";
+  cupoMax: number;
+  imagen: string;
+  notaAdmin: string;
+};
+
+const emptyCurso = (): CursoForm => ({ nombre: "", nivel: "Basico", descripcion: "", modalidad: "Presencial", ciudad: "", sede: "", duracionHoras: 2, precio: 0, precioAnterior: "", cupoMax: 6, imagen: "", notaAdmin: "" });
 
 const fmtFecha = (iso: string) => new Date(iso).toLocaleDateString("es-PE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
 const fmtHora = (iso: string) => new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
@@ -56,7 +70,7 @@ export default function AdminCapacitacionesPage() {
 
   // Cursos state
   const [cursos, setCursos] = useState<Curso[]>([]);
-  const [cursoForm, setCursoForm] = useState(emptyCurso());
+  const [cursoForm, setCursoForm] = useState<CursoForm>(emptyCurso());
   const [editingCursoId, setEditingCursoId] = useState<string | null>(null);
   const [showCursoForm, setShowCursoForm] = useState(false);
   const [expandedCurso, setExpandedCurso] = useState<string | null>(null);
@@ -486,7 +500,7 @@ export default function AdminCapacitacionesPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600">Precio anterior (S/)</label>
-                  <input type="number" min={0} value={cursoForm.precioAnterior} onChange={(e) => setCursoForm({ ...cursoForm, precioAnterior: e.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-slate-900" placeholder="Opcional" />
+                  <input type="number" min={0} value={cursoForm.precioAnterior} onChange={(e) => setCursoForm({ ...cursoForm, precioAnterior: e.target.value === "" ? "" : Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-slate-900" placeholder="Opcional" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600">Flyer (opcional)</label>
@@ -652,10 +666,8 @@ export default function AdminCapacitacionesPage() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  if (!session || (session.user as any)?.role !== "ADMIN") {
-    return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/capacitaciones", permanent: false } };
-  }
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };
 

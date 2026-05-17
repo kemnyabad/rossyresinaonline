@@ -1,26 +1,51 @@
 import Image from "next/image";
 import logo from "../../images/logo.jpg";
-import { MagnifyingGlassIcon, UserIcon, HeartIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
+import {
+  MagnifyingGlassIcon,
+  UserIcon,
+  ShoppingCartIcon,
+  Bars3Icon,
+  XMarkIcon,
+  TagIcon,
+  SparklesIcon,
+  GiftIcon,
+  BookOpenIcon,
+} from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useSelector, useDispatch } from "react-redux";
 import { StateProps, StoreProduct } from "../../../type";
 import { useSession, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useEffect, useState, useRef, useMemo, useDeferredValue } from "react";
-import { addUser } from "@/store/nextSlice";
+import { addUser, removeUser } from "@/store/nextSlice";
 import SearchProducts from "../SearchProducts";
 import FormattedPrice from "@/components/FormattedPrice";
+import { FcGoogle } from "react-icons/fc";
+import { MdOutlineEmail } from "react-icons/md";
+
+const RESINY_IMAGE = "/resiny.png";
 
 const Header = () => {
   const router = useRouter();
+  const isResinyPage = router.pathname === "/resiny";
   const { data: session } = useSession();
   const [allData, setAllData] = useState<StoreProduct[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  const { productData, favoriteData, userInfo, allProducts } = useSelector(
+  const { productData, userInfo, allProducts } = useSelector(
     (state: StateProps) => state.next
   );
   const dispatch = useDispatch();
+  const sessionRole = (session?.user as any)?.role;
+  const isAdminSession = sessionRole === "ADMIN";
+  const storeUser = isAdminSession ? null : (userInfo as any);
+  const sessionUser = !isAdminSession ? session?.user : null;
+  const handleSignOut = async () => {
+    dispatch(removeUser());
+    setProfileOpen(false);
+    await signOut({ callbackUrl: "/" });
+  };
   useEffect(() => {
     const list = Array.isArray(allProducts) ? allProducts : [];
     if (list.length > 0) setAllData(list);
@@ -40,7 +65,11 @@ const Header = () => {
     };
   }, [allProducts]);
   useEffect(() => {
-    if (session) {
+    if (isAdminSession) {
+      dispatch(removeUser());
+      return;
+    }
+    if (session?.user) {
       dispatch(
         addUser({
           name: session?.user?.name,
@@ -49,7 +78,7 @@ const Header = () => {
         })
       );
     }
-  }, [session, dispatch]);
+  }, [session, isAdminSession, dispatch]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -58,6 +87,7 @@ const Header = () => {
   // Search area
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -84,18 +114,36 @@ const Header = () => {
     setMobileSearchOpen(false);
   };
 
+  const mobileMenuItems = [
+    { href: "/categoria/moldes-de-silicona", label: "Moldes", icon: SparklesIcon },
+    { href: "/categoria/pigmentos", label: "Pigmentos", icon: SparklesIcon },
+    { href: "/categoria/accesorios", label: "Accesorios", icon: TagIcon },
+    { href: "/categoria/resina", label: "Resina", icon: SparklesIcon },
+    { href: "/categoria/creaciones", label: "Creaciones", icon: SparklesIcon },
+    { href: "/escuela", label: "Escuela", icon: BookOpenIcon },
+    { href: "/productos?ofertas=1", label: "Ofertas", icon: GiftIcon },
+    { href: "/rifas", label: "Rifas", icon: GiftIcon },
+    { href: "/blog", label: "Blog", icon: BookOpenIcon },
+  ];
+
   const filteredProducts = useMemo(() => {
-    const q = deferredQuery.trim().toLowerCase();
+    const normalizeSearchText = (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    const q = normalizeSearchText(deferredQuery.trim());
     if (!q) return [];
-    return allData
-      .filter((item: StoreProduct) => {
-        const hay = [item.title, item.category, item.brand, item.code, item.description]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return hay.includes(q);
-      })
-      .slice(0, 12);
+    const terms = q.split(/\s+/).filter(Boolean);
+    return allData.filter((item: StoreProduct) => {
+      const hay = [item.title, item.category, item.brand, item.code, item.description]
+        .filter(Boolean)
+        .join(" ")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+      return terms.every((term) => hay.includes(term));
+    });
   }, [deferredQuery, allData]);
 
   useEffect(() => {
@@ -123,6 +171,18 @@ const Header = () => {
   }, [mobileSearchOpen]);
 
   useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [router.asPath]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     if (!mobileSearchOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMobileSearchOpen(false);
@@ -134,12 +194,12 @@ const Header = () => {
   const cartSubtotal = isHydrated
     ? productData.reduce((s: number, p: any) => s + p.price * p.quantity, 0)
     : 0;
-  const favoriteCount = isHydrated && favoriteData ? favoriteData.length : 0;
   const cartCount = isHydrated && productData ? productData.length : 0;
+  const isAuthenticated = Boolean(sessionUser?.email || storeUser?.email);
 
   return (
     <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
-      <div className="md:hidden px-3 pt-2 pb-3 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
+      <div className="md:hidden border-b border-gray-100 bg-white px-3 pb-3 pt-2">
         <div className="flex items-center justify-between">
           <Link href={"/"} onClick={handleLogoClick} className="flex items-center gap-2 group">
             <div className="bg-white rounded-full p-1 shadow ring-1 ring-amazon_blue/20 group-hover:shadow-md transition-shadow duration-300">
@@ -151,19 +211,39 @@ const Header = () => {
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <Link href="/favorite" className="relative p-2 rounded-full border border-gray-200 text-gray-700 hover:border-amazon_blue hover:text-amazon_blue hover:shadow-md transition-all duration-300">
-              <HeartIcon className="w-5 h-5" />
-              {favoriteCount > 0 ? (
-                <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center shadow-sm">
-                  {favoriteCount}
-                </span>
-              ) : null}
+          {!isResinyPage && (
+            <Link
+              href="/resiny"
+              className="ml-2 mr-3 flex min-h-[60px] flex-1 max-w-[210px] items-center justify-center gap-0.5 px-1 text-amazon_blue transition-transform duration-300 active:scale-[0.98]"
+              aria-label="Chatear con Resiny"
+            >
+              <span className="relative h-14 w-12 shrink-0">
+                <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" />
+              </span>
+              <span className="-ml-2 text-[16px] font-bold leading-tight">
+                Chatea
+                <span className="block text-[15px] font-semibold text-slate-600">con Resiny</span>
+              </span>
             </Link>
-          </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
+              mobileMenuOpen
+                ? "border-amazon_blue bg-pink-50 text-amazon_blue"
+                : "border-gray-200 bg-white text-slate-700"
+            }`}
+            aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-store-menu"
+          >
+            {mobileMenuOpen ? <XMarkIcon className="h-5 w-5" /> : <Bars3Icon className="h-5 w-5" />}
+          </button>
         </div>
 
-        <div className="mt-3">
+        {!isResinyPage && <div className="mt-3">
           <button
             type="button"
             onClick={() => setMobileSearchOpen(true)}
@@ -173,10 +253,59 @@ const Header = () => {
             <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <span>{searchQuery || "Buscar moldes, resina, pigmentos..."}</span>
           </button>
-        </div>
+        </div>}
       </div>
 
-      <div className="hidden md:flex max-w-screen-2xl mx-auto min-h-[72px] px-3 py-2 sm:px-4 md:px-6 items-center gap-2 sm:gap-4">
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-[58]" role="dialog" aria-modal="true" aria-label="Menú de tienda">
+          <button
+            type="button"
+            className="absolute inset-0 h-full w-full bg-slate-950/35"
+            aria-label="Cerrar menú"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div id="mobile-store-menu" className="absolute left-3 right-3 top-[76px] mx-auto max-w-md overflow-hidden rounded-lg border border-gray-200 bg-white shadow-[0_14px_34px_rgba(17,24,39,0.14)]">
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+              <div>
+                <p className="text-sm font-bold text-slate-900">Menú de tienda</p>
+                <p className="text-xs text-slate-500">Categorías y accesos rápidos</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-slate-500"
+                aria-label="Cerrar menú"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 p-3">
+              {mobileMenuItems.map((item) => {
+                const Icon = item.icon;
+                const active = router.asPath.split("?")[0] === item.href.split("?")[0];
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex min-h-[52px] items-center gap-3 rounded-xl border px-3 py-2 text-left transition-colors ${
+                      active
+                        ? "border-amazon_blue bg-pink-50 text-amazon_blue"
+                        : "border-gray-100 bg-white text-slate-700 hover:border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-50 text-amazon_blue">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="text-sm font-semibold leading-tight">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="hidden md:flex max-w-screen-2xl mx-auto min-h-[76px] px-3 py-2 sm:px-4 md:px-6 xl:px-8 items-center gap-3 lg:gap-5">
         {/* logo */}
         <Link
           href={"/"}
@@ -198,7 +327,7 @@ const Header = () => {
         </Link>
 
         {/* mobile search */}
-        <div className="md:hidden flex-1 min-w-0">
+        {!isResinyPage && <div className="md:hidden flex-1 min-w-0">
           <button
             type="button"
             onClick={() => setMobileSearchOpen(true)}
@@ -208,11 +337,11 @@ const Header = () => {
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <span>{searchQuery || "Buscar producto..."}</span>
           </button>
-        </div>
+        </div>}
 
         {/* searchbar */}
-        <div className="hidden md:flex flex-1 items-center justify-center">
-          <form onSubmit={submitSearch} className="w-full max-w-2xl h-11 inline-flex items-center justify-between relative">
+        {!isResinyPage && <div className="hidden md:flex flex-1 min-w-[220px] items-center justify-center">
+          <form onSubmit={submitSearch} className="w-full max-w-3xl h-11 inline-flex items-center justify-between relative">
             <input
               onChange={handleSearch}
               value={searchQuery}
@@ -262,14 +391,14 @@ const Header = () => {
             )}
             {/* ========== Searchfield ========== */}
           </form>
-        </div>
+        </div>}
 
         {/* actions */}
-        <div className="ml-auto md:ml-0 flex items-center gap-2 sm:gap-4">
+        <div className={`ml-auto flex flex-none items-center justify-end gap-3 lg:gap-4 ${isResinyPage ? "min-w-0" : "min-w-[280px] max-w-[360px] xl:min-w-[330px]"}`}>
           <Link
-            href={userInfo ? "/account" : "/sign-in"}
+            href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
             className="md:hidden p-2 rounded-full border border-gray-200 text-gray-700 hover:text-amazon_blue hover:border-amazon_blue"
-            aria-label={userInfo ? "Ir a mi perfil" : "Iniciar sesión"}
+            aria-label={isAuthenticated ? "Ir a mi perfil" : "Iniciar sesión"}
           >
             <UserIcon className="w-5 h-5" />
           </Link>
@@ -278,14 +407,16 @@ const Header = () => {
             <button
               type="button"
               onClick={() => setProfileOpen((v) => !v)}
-              className="flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue"
+              className="group flex min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm text-gray-700 transition-colors hover:border-emerald-700 hover:bg-emerald-700 hover:text-white"
               aria-haspopup="menu"
               aria-expanded={profileOpen}
             >
-              <UserIcon className="w-5 h-5" />
-              <div className="leading-tight text-left">
-                <div className="text-xs text-gray-500">Cuenta</div>
-                <div className="font-semibold">Mi perfil</div>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-emerald-700 group-hover:ring-white">
+                <UserIcon className="w-5 h-5" />
+              </span>
+              <div className="min-w-0 leading-tight text-left">
+                <div className="text-xs font-semibold text-gray-500 transition-colors group-hover:!text-white">Cuenta</div>
+                <div className="whitespace-nowrap text-[15px] font-semibold text-slate-800 transition-colors group-hover:text-white">Mi perfil</div>
               </div>
             </button>
 
@@ -293,9 +424,9 @@ const Header = () => {
               <div className="absolute right-0 top-[calc(100%+10px)] w-72 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
                 <div className="p-4 border-b border-gray-100">
                   <div className="flex items-center gap-3">
-                    {userInfo?.image ? (
+                    {storeUser?.image ? (
                       <Image
-                        src={userInfo.image}
+                        src={storeUser.image}
                         alt="Avatar"
                         width={44}
                         height={44}
@@ -303,21 +434,21 @@ const Header = () => {
                       />
                     ) : (
                       <div className="h-11 w-11 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-semibold">
-                        {(userInfo?.name || userInfo?.email || "U").slice(0, 1)}
+                        {(storeUser?.name || storeUser?.email || "U").slice(0, 1)}
                       </div>
                     )}
                     <div>
                       <p className="text-sm text-gray-600">Bienvenido de nuevo</p>
                       <p className="text-sm font-semibold text-gray-900">
-                        {userInfo?.name || userInfo?.email || "Invitado"}
+                        {storeUser?.name || storeUser?.email || "Invitado"}
                       </p>
                     </div>
                   </div>
                   <div className="mt-3">
-                    {userInfo ? (
+                    {isAuthenticated ? (
                       <button
                         type="button"
-                        onClick={() => signOut()}
+                        onClick={handleSignOut}
                         className="text-sm text-amazon_blue hover:underline"
                       >
                         Cerrar sesión
@@ -329,58 +460,64 @@ const Header = () => {
                     )}
                   </div>
                 </div>
-                <div className="py-2">
-                  <Link href="/account" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Mi Cuenta
-                  </Link>
-                  <Link href="/track-orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Mis pedidos
-                  </Link>
-                  <Link href="/favorite" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Lista de deseos
-                  </Link>
-                  <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Centro de mensajes
-                  </Link>
-                </div>
+                {!isAuthenticated && (
+                  <div className="grid gap-2 border-b border-gray-100 p-4">
+                    <Link
+                      href="/register"
+                      className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      <MdOutlineEmail className="h-5 w-5 text-amazon_blue" />
+                      Registrarme con correo
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => signIn("google", { callbackUrl: "/" })}
+                      className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      <FcGoogle className="h-5 w-5" />
+                      Continuar con Google
+                    </button>
+                  </div>
+                )}
+                {isAuthenticated && (
+                  <div className="py-2">
+                    <Link href="/account" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                      Mi Cuenta
+                    </Link>
+                    <Link href="/track-orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                      Mis pedidos
+                    </Link>
+                    <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                      Centro de mensajes
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>
-          <Link
-            href="/favorite"
-            className="hidden md:flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue relative"
-          >
-            <HeartIcon className="w-5 h-5" />
-            {favoriteCount > 0 && (
-              <span className="absolute -top-2 left-3 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
-                {favoriteCount}
-              </span>
-            )}
-            <div className="leading-tight">
-              <div className="text-xs text-gray-500">Favoritos</div>
-              <div className="font-semibold">Guardados</div>
-            </div>
-          </Link>
-
           {/* cart */}
-          <Link
-            href="/cart"
-            className="px-1 sm:px-2 cursor-pointer duration-300 relative flex items-center"
-            aria-label="Abrir carrito"
-          >
-            <span className="flex items-center gap-2 relative">
-              <div className="relative">
-                <ShoppingCartIcon className="w-8 h-8 text-gray-700" />
-                <span className="absolute -top-2 -right-2 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              </div>
-              <div className="hidden md:block leading-tight text-left">
-                <div className="text-xs text-gray-500">Tu carrito</div>
-                <div className="text-sm font-semibold text-amazon_blue"><FormattedPrice amount={cartSubtotal} /></div>
-              </div>
-            </span>
-          </Link>
+          {!isResinyPage && (
+            <Link
+              href="/cart"
+              className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-emerald-700 hover:bg-emerald-700"
+              aria-label="Abrir carrito"
+            >
+              <span className="flex items-center gap-3 relative">
+                <div className="relative">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-emerald-700 group-hover:ring-white">
+                    <ShoppingCartIcon className="w-6 h-6" />
+                  </span>
+                  <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center ring-2 ring-white">
+                    {cartCount}
+                  </span>
+                </div>
+                <div className="hidden md:block min-w-[78px] leading-tight text-left">
+                  <div className="text-xs font-semibold text-gray-500 transition-colors group-hover:!text-white">Tu carrito</div>
+                  <div className="text-[15px] font-semibold text-amazon_blue transition-colors group-hover:text-white"><FormattedPrice amount={cartSubtotal} /></div>
+                </div>
+              </span>
+            </Link>
+          )}
         </div>
       </div>
 
