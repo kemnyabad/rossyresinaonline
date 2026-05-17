@@ -98,8 +98,8 @@ export default function TrackOrdersPage() {
         base[o.status] += 1;
         return;
       }
-      if (normalizeStatus(o.status) === normalizeStatus("En proceso de env?o")) {
-        base["En proceso de env?o"] += 1;
+      if (normalizeStatus(o.status) === normalizeStatus("En proceso de envío")) {
+        base["En proceso de envío"] += 1;
       }
     });
     return base;
@@ -204,7 +204,7 @@ export default function TrackOrdersPage() {
                         Pedido confirmado. En proceso de envío. Comunícate al 961770723 para seguimiento.
                       </div>
                     )}
-                    {normalizeStatus(o.status) === normalizeStatus("En proceso de env?o") && (
+                    {normalizeStatus(o.status) === normalizeStatus("En proceso de envío") && (
                       <div className="mt-2 text-sm text-emerald-700">
                         En proceso de envío. Comunícate al 961770723 para seguimiento.
                       </div>

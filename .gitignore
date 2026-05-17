@@ -28,6 +28,7 @@ frontend-next/out/
 .DS_Store
 *.pem
 backups/
+reports/
 
 # debug
 npm-debug.log*

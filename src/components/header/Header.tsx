@@ -407,16 +407,16 @@ const Header = () => {
             <button
               type="button"
               onClick={() => setProfileOpen((v) => !v)}
-              className="flex min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm text-gray-700 transition-colors hover:border-pink-100 hover:bg-pink-50/60 hover:text-amazon_blue"
+              className="group flex min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm text-gray-700 transition-colors hover:border-emerald-700 hover:bg-emerald-700 hover:text-white"
               aria-haspopup="menu"
               aria-expanded={profileOpen}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-emerald-700 group-hover:ring-white">
                 <UserIcon className="w-5 h-5" />
               </span>
               <div className="min-w-0 leading-tight text-left">
-                <div className="text-xs font-semibold text-gray-500">Cuenta</div>
-                <div className="whitespace-nowrap text-[15px] font-semibold text-slate-800">Mi perfil</div>
+                <div className="text-xs font-semibold text-gray-500 transition-colors group-hover:!text-white">Cuenta</div>
+                <div className="whitespace-nowrap text-[15px] font-semibold text-slate-800 transition-colors group-hover:text-white">Mi perfil</div>
               </div>
             </button>
 
@@ -499,12 +499,12 @@ const Header = () => {
           {!isResinyPage && (
             <Link
               href="/cart"
-              className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-pink-100 hover:bg-pink-50/60"
+              className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-emerald-700 hover:bg-emerald-700"
               aria-label="Abrir carrito"
             >
               <span className="flex items-center gap-3 relative">
                 <div className="relative">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 group-hover:text-amazon_blue">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-emerald-700 group-hover:ring-white">
                     <ShoppingCartIcon className="w-6 h-6" />
                   </span>
                   <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center ring-2 ring-white">
@@ -512,8 +512,8 @@ const Header = () => {
                   </span>
                 </div>
                 <div className="hidden md:block min-w-[78px] leading-tight text-left">
-                  <div className="text-xs font-semibold text-gray-500">Tu carrito</div>
-                  <div className="text-[15px] font-semibold text-amazon_blue"><FormattedPrice amount={cartSubtotal} /></div>
+                  <div className="text-xs font-semibold text-gray-500 transition-colors group-hover:!text-white">Tu carrito</div>
+                  <div className="text-[15px] font-semibold text-amazon_blue transition-colors group-hover:text-white"><FormattedPrice amount={cartSubtotal} /></div>
                 </div>
               </span>
             </Link>

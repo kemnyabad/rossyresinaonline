@@ -306,7 +306,7 @@ export default function CheckoutPage() {
             Tu pedido fue registrado correctamente. Codigo: <strong>{successId}</strong>
           </p>
           <p className="mt-2 text-sm text-gray-600">
-            En breve confirmaremos tu compra y env?o.
+            En breve confirmaremos tu compra y envío.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/" className="px-4 py-2 rounded bg-amazon_blue text-white text-sm font-semibold hover:brightness-95">
@@ -326,7 +326,7 @@ export default function CheckoutPage() {
       <CheckoutSteps />
       {productData.length === 0 ? (
         <div className="bg-white rounded-lg p-8 shadow">
-          <p className="text-lg">Tu carrito esta vacio.</p>
+          <p className="text-lg">Tu carrito está vacío.</p>
           <Link
             href="/"
             className="mt-4 inline-flex rounded-full bg-amazon_blue px-5 py-2 text-sm font-semibold text-white hover:brightness-95"
@@ -481,7 +481,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-sm text-gray-600">Agencia de env?o</label>
+                <label className="text-sm text-gray-600">Agencia de envío</label>
                 <select
                   value={shippingCarrier}
                   onChange={(e) => setShippingCarrier(e.target.value === "OLVA" ? "OLVA" : "SHALOM")}
@@ -494,7 +494,7 @@ export default function CheckoutPage() {
 
               {shippingCarrier === "SHALOM" ? (
                 <div className="sm:col-span-2">
-                  <label className="text-sm text-gray-600">Agencia Shalom donde recogera</label>
+                  <label className="text-sm text-gray-600">Agencia Shalom donde recogerá</label>
                   <input
                     value={shalomAgency}
                     onChange={(e) => setShalomAgency(e.target.value)}
@@ -505,7 +505,7 @@ export default function CheckoutPage() {
               ) : (
                 <>
                   <div className="sm:col-span-2">
-                    <label className="text-sm text-gray-600">Direccion donde Olva entregara</label>
+                    <label className="text-sm text-gray-600">Dirección donde Olva entregará</label>
                     <input
                       value={olvaAddress}
                       onChange={(e) => setOlvaAddress(e.target.value)}
@@ -563,7 +563,7 @@ export default function CheckoutPage() {
                   onChange={(e) => setAcceptTerms(e.target.checked)}
                   className="mt-1"
                 />
-                <span>Acepto que este pedido sera confirmado manualmente por el equipo de Rossy Resina.</span>
+                <span>Acepto que este pedido será confirmado manualmente por el equipo de Rossy Resina.</span>
               </label>
             </div>
             )}
@@ -610,7 +610,7 @@ export default function CheckoutPage() {
                     onChange={(e) => setAcceptTerms(e.target.checked)}
                     className="mt-1"
                   />
-                  <span>Acepto que este pedido sera confirmado manualmente por el equipo de Rossy Resina.</span>
+                  <span>Acepto que este pedido será confirmado manualmente por el equipo de Rossy Resina.</span>
                 </label>
               </div>
             )}

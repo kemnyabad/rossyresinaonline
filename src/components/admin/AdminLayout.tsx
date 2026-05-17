@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import logo from "@/images/logo.jpg";
 import {
   CubeIcon,
   TagIcon,
@@ -180,7 +182,6 @@ export default function AdminLayout({ children }: Props) {
   }
 
   const userName = adminUser.email || "Admin";
-  const userInitial = String(userName).slice(0, 1).toUpperCase();
   const handleLogout = async () => {
     try {
       await fetch("/api/admin/auth/logout", { method: "POST" });
@@ -197,8 +198,8 @@ export default function AdminLayout({ children }: Props) {
 
         {/* Logo */}
         <div className="h-16 flex items-center gap-3 px-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          <div className="h-9 w-9 rounded-xl flex items-center justify-center text-white text-xs font-black shrink-0" style={{ background: "linear-gradient(135deg, #cb299e, #6E2CA1)" }}>
-            RR
+          <div className="h-9 w-9 overflow-hidden rounded-xl bg-white ring-1 ring-white/15 shrink-0">
+            <Image src={logo} alt="Logo Rossy Resina" className="h-full w-full object-contain" priority />
           </div>
           <div className="leading-tight">
             <p className="text-sm font-bold text-white tracking-wide">Rossy Resina</p>
@@ -285,8 +286,8 @@ export default function AdminLayout({ children }: Props) {
         {/* User */}
         <div className="p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.06)" }}>
-            <div className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: "linear-gradient(135deg, #cb299e, #6E2CA1)" }}>
-              {userInitial}
+            <div className="h-8 w-8 overflow-hidden rounded-full bg-white ring-1 ring-white/15 shrink-0">
+              <Image src={logo} alt="Logo Rossy Resina" className="h-full w-full object-contain" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-white truncate">{userName}</p>
@@ -334,8 +335,8 @@ export default function AdminLayout({ children }: Props) {
             <button className="h-9 w-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition">
               <Cog6ToothIcon className="w-4 h-4" />
             </button>
-            <div className="h-9 w-9 rounded-lg bg-amazon_blue flex items-center justify-center text-white text-xs font-bold">
-              {userInitial}
+            <div className="h-9 w-9 overflow-hidden rounded-lg bg-white ring-1 ring-gray-200">
+              <Image src={logo} alt="Logo Rossy Resina" className="h-full w-full object-contain" />
             </div>
           </div>
         </header>

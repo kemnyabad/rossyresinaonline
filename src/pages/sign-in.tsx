@@ -29,7 +29,7 @@ export default function SignInPage() {
   };
 
   useEffect(() => {
-    // Evita redireccionar autom?ticamente para que el usuario pueda ver el formulario.
+    // Evita redireccionar automáticamente para que el usuario pueda ver el formulario.
   }, []);
 
   return (
@@ -72,7 +72,7 @@ export default function SignInPage() {
           <div className="grid gap-2">
             {mode === "register" && (
               <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-center text-sm text-gray-700">
-                Para registrarte con correo necesitamos tus datos de envio.
+                Para registrarte con correo necesitamos tus datos de envío.
                 <Link href="/register" className="mt-3 inline-flex rounded-md bg-amazon_blue px-4 py-2 font-semibold text-white hover:brightness-95">
                   Crear cuenta con correo
                 </Link>
@@ -91,7 +91,7 @@ export default function SignInPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Contrasea"
+                  placeholder="Contraseña"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
                 {error && <div className="text-sm text-red-600">{error}</div>}
@@ -124,7 +124,7 @@ export default function SignInPage() {
 
         <div className="mt-6 text-center text-sm text-gray-600">
           <p>
-            Al continuar aceptas nuestros <Link href="/terms" className="text-amazon_blue hover:underline">trminos</Link> y <Link href="/privacy" className="text-amazon_blue hover:underline">privacidad</Link>.
+            Al continuar aceptas nuestros <Link href="/terms" className="text-amazon_blue hover:underline">términos</Link> y <Link href="/privacy" className="text-amazon_blue hover:underline">privacidad</Link>.
           </p>
         </div>
 

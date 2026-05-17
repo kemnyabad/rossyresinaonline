@@ -180,7 +180,7 @@ const CartPage = () => {
       ) : (
         <div className="pt-7">
           <div className="rounded-xl border border-gray-200 bg-white px-10 py-10 text-center md:px-12 md:py-11">
-            <h1 className="text-lg font-semibold text-gray-900">Tu carrito esta vacio</h1>
+            <h1 className="text-lg font-semibold text-gray-900">Tu carrito está vacío</h1>
             <p className="mt-1 text-sm text-gray-600">Descubre productos y agrega tus favoritos.</p>
             <Link
               href="/"
