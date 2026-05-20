@@ -1,4 +1,6 @@
 import prisma from "@/lib/prisma";
+import { getAllProducts } from "@/lib/repositories/productRepository";
+import { buildSmartCatalogContext } from "@/lib/smartCatalog";
 
 type KnowledgeChunk = {
   title: string;
@@ -134,6 +136,15 @@ const queryWords = (message: string) =>
 
 const getProductContext = async (message: string) => {
   const words = queryWords(message);
+
+  try {
+    const allProducts = await getAllProducts();
+    const smartContext = buildSmartCatalogContext(allProducts, message, 6);
+    if (smartContext) return smartContext;
+  } catch (error) {
+    console.warn("resiny.knowledge.smart_catalog_failed", String((error as any)?.message || error));
+  }
+
   if (words.length === 0) return "";
 
   try {

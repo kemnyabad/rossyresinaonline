@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
+import { readProductMetricsStore, writeProductMetricsStore } from "@/lib/productMetricsStore";
 const db = prisma as any;
 
 const findProductByIdentifier = async (identifier: string) => {
@@ -41,6 +42,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     } catch {
       return res.status(500).json({ error: "No se pudo obtener m?tricas" });
+    }
+  }
+
+  if (req.method === "POST") {
+    const event = String(req.body?.event || "").trim();
+    if (event !== "cart_add") return res.status(400).json({ error: "Evento no soportado" });
+
+    const quantity = Math.max(1, Math.floor(Number(req.body?.quantity || 1)));
+    try {
+      const product = await findProductByIdentifier(productIdentifier);
+      const metricKey = String(product?.id || productIdentifier);
+      const store = readProductMetricsStore();
+      const current = store[metricKey] || { cartAdds: 0, updatedAt: new Date(0).toISOString() };
+      store[metricKey] = {
+        cartAdds: Number(current.cartAdds || 0) + quantity,
+        updatedAt: new Date().toISOString(),
+      };
+      writeProductMetricsStore(store);
+      return res.status(200).json({ ok: true, productId: productIdentifier, cartAdds: store[metricKey].cartAdds });
+    } catch {
+      return res.status(500).json({ error: "No se pudo registrar la metrica" });
     }
   }
 

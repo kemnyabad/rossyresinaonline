@@ -13,6 +13,7 @@ import {
 } from "@/lib/services/productCatalogService";
 import { getAllProducts } from "@/lib/repositories/productRepository";
 import { getPurchaseBehaviorSnapshot, type PurchaseBehaviorSnapshot } from "@/lib/repositories/categoryInsightsRepository";
+import { getSmartProductRecommendations, type SmartRecommendation } from "@/lib/smartCatalog";
 
 interface Props {
   productData: ProductProps[];
@@ -145,6 +146,17 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
     () => (realTopProducts.length > 0 ? realTopProducts : allProducts).slice(0, 8),
     [realTopProducts, allProducts]
   );
+  const smartRecommendations = useMemo<SmartRecommendation[]>(() => {
+    const signalText = hasBehaviorData && behavior.topCategories.length > 0
+      ? `emprender con ${behavior.topCategories.slice(0, 3).join(" ")}`
+      : "principiante empezar resina moldes pigmentos kit";
+    return getSmartProductRecommendations(
+      allProducts,
+      signalText,
+      6,
+      behavior.topProductKeys || []
+    );
+  }, [allProducts, behavior.topCategories, behavior.topProductKeys, hasBehaviorData]);
 
   const moldProductsForHero = useMemo(() => {
     return allProducts.filter((p) => {
@@ -364,6 +376,38 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
                 </div>
                 <p className="mt-2 text-xs font-semibold text-gray-800 text-center line-clamp-2 group-hover:text-amazon_blue transition-colors">{item.nombre}</p>
               </div>
+            ))}
+          </div>
+        </section>
+        )}
+
+        {smartRecommendations.length > 0 && (
+        <section className="px-4 md:px-6">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="rr-type-label text-amazon_blue">Resiny analiza tu tienda</p>
+              <h2 className="text-xl font-bold text-gray-900">Recomendados con intención</h2>
+            </div>
+            <Link href="/resiny" className="text-sm font-semibold text-amazon_blue hover:underline">
+              Pedir asesoría
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {smartRecommendations.slice(0, 3).map(({ product, reason }) => (
+              <Link
+                key={`smart-${product._id}`}
+                href={`/${product.code || product._id}`}
+                className="group grid grid-cols-[92px_minmax(0,1fr)] gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_10px_22px_rgba(17,24,39,0.10)]"
+              >
+                <div className="relative aspect-square overflow-hidden rounded-md bg-gray-50">
+                  <Image src={normalizeMobileImage(product.image)} alt={product.title || "Producto recomendado"} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                </div>
+                <div className="min-w-0">
+                  <p className="line-clamp-2 text-sm font-bold leading-snug text-gray-950 group-hover:text-amazon_blue">{product.title}</p>
+                  <p className="mt-1 text-sm font-semibold text-amazon_blue">S/ {Number(product.price || 0).toFixed(2)}</p>
+                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-gray-600">{reason}</p>
+                </div>
+              </Link>
             ))}
           </div>
         </section>

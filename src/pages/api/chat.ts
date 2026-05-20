@@ -3,6 +3,8 @@ import { getResinyBrowserContext } from "@/lib/resinyBrowser";
 import { getResinyKnowledgeContext } from "@/lib/resinyKnowledge";
 import { getResinyLearningContext, recordResinyLearning } from "@/lib/resinyLearning";
 import { getResinyWebContext } from "@/lib/resinyWebSearch";
+import { getAllProducts } from "@/lib/repositories/productRepository";
+import { getSmartProductRecommendations } from "@/lib/smartCatalog";
 
 const SYSTEM_PROMPT = `Eres "Resiny", la asistente amiga de Rossy Resina (Perú). Sabes de artesanía general, resina epóxica, eco resina, resina UV, moldes de silicona, pigmentos, proyectos artesanales, compras y emprendimiento.
 
@@ -152,11 +154,25 @@ const isResinyDomainQuestion = (message: string, history: Array<{ role: string; 
 const outOfScopeAnswer = () =>
   "Puedo ayudarte mejor con temas de resina, artesanía, moldes, pigmentos, materiales, compras o emprendimiento resinero. Cuéntame qué proyecto quieres hacer y te guío paso a paso.";
 
-const localFallbackAnswer = (message: string) => {
+const getLocalProductHint = async (message: string) => {
+  try {
+    const products = await getAllProducts();
+    const recommendations = getSmartProductRecommendations(products, message, 3);
+    if (recommendations.length === 0) return "";
+    const names = recommendations.map(({ product }) => product.title).filter(Boolean).slice(0, 3);
+    if (names.length === 0) return "";
+    return ` En catálogo revisaría: ${names.join(", ")}.`;
+  } catch {
+    return "";
+  }
+};
+
+const localFallbackAnswer = async (message: string) => {
   const text = normalize(message);
+  const productHint = await getLocalProductHint(message);
 
   if (/^(si|sí|sii|claro|ok|dale|quiero|me interesa|aprender|ayudame|ayúdame)\b/.test(text)) {
-    return "Perfecto. Empecemos por algo práctico: si quieres aprender resina desde cero, te recomiendo iniciar con llaveros o dijes pequeños. Necesitas resina, endurecedor, un molde sencillo, pigmento, guantes, vasitos y palitos mezcladores. ¿Quieres que te guíe para hacer tu primera pieza o para elegir materiales?";
+    return `Perfecto. Empecemos por algo práctico: si quieres aprender resina desde cero, te recomiendo iniciar con llaveros o dijes pequeños. Necesitas resina, endurecedor, un molde sencillo, pigmento, guantes, vasitos y palitos mezcladores.${productHint} ¿Quieres que te guíe para hacer tu primera pieza o para elegir materiales?`;
   }
 
   if (/informacion|información|explicame|explícame|que es|qué es|resina$|resina epoxica|resina epóxica/.test(text)) {
@@ -164,7 +180,7 @@ const localFallbackAnswer = (message: string) => {
   }
 
   if (/material|materiales|necesito|comprar|kit|basico|básico/.test(text)) {
-    return "Para empezar necesitas pocos materiales: resina epóxica con su endurecedor, un molde de silicona, pigmento o mica, guantes, vasitos medidores y palitos para mezclar. Si recién inicias, conviene un molde pequeño para practicar sin gastar mucha resina. ¿Quieres hacer llaveros, aretes o una pieza decorativa?";
+    return `Para empezar necesitas pocos materiales: resina epóxica con su endurecedor, un molde de silicona, pigmento o mica, guantes, vasitos medidores y palitos para mezclar. Si recién inicias, conviene un molde pequeño para practicar sin gastar mucha resina.${productHint} ¿Quieres hacer llaveros, aretes o una pieza decorativa?`;
   }
 
   if (/envio|envios|enviar|shalom|olva|delivery|provincia/.test(text)) {
@@ -184,7 +200,7 @@ const localFallbackAnswer = (message: string) => {
   }
 
   if (/molde|moldes|silicona/.test(text)) {
-    return "Para elegir un molde conviene partir del tipo de pieza que quieres hacer: llaveros, dijes, lapiceros, bandejas o decoración. Si estás empezando, te recomendaría moldes pequeños porque gastan menos resina y te dejan practicar mejor. ¿Qué pieza tienes en mente?";
+    return `Para elegir un molde conviene partir del tipo de pieza que quieres hacer: llaveros, dijes, lapiceros, bandejas o decoración. Si estás empezando, te recomendaría moldes pequeños porque gastan menos resina y te dejan practicar mejor.${productHint} ¿Qué pieza tienes en mente?`;
   }
 
   if (/burbuja|burbujas/.test(text)) {
@@ -192,7 +208,7 @@ const localFallbackAnswer = (message: string) => {
   }
 
   if (/empezar|inicio|principiante|cero|emprender/.test(text)) {
-    return "Si estás empezando, iría por algo pequeño y vendible: llaveros, dijes o aretes. Necesitas resina, endurecedor, un molde sencillo, pigmento, guantes, vasitos y palitos mezcladores. Así practicas sin gastar mucho material. ¿Quieres aprender para hobby o para vender?";
+    return `Si estás empezando, iría por algo pequeño y vendible: llaveros, dijes o aretes. Necesitas resina, endurecedor, un molde sencillo, pigmento, guantes, vasitos y palitos mezcladores. Así practicas sin gastar mucho material.${productHint} ¿Quieres aprender para hobby o para vender?`;
   }
 
   if (/hola|buenas|buenos dias|buenas tardes|buenas noches/.test(text)) {
@@ -203,7 +219,7 @@ const localFallbackAnswer = (message: string) => {
     return "Hola, soy Resiny. No logré comprender bien tu pregunta. ¿Me cuentas si necesitas ayuda con una técnica, un problema en tu pieza o materiales para comprar?";
   }
 
-  return "Te ayudo. Por lo que me cuentas, puedo orientarte en resina, moldes, pigmentos, materiales o técnicas. Para darte una respuesta más precisa, dime qué quieres lograr: ¿crear una pieza, resolver un problema o elegir productos?";
+  return `Te ayudo. Por lo que me cuentas, puedo orientarte en resina, moldes, pigmentos, materiales o técnicas.${productHint} Para darte una respuesta más precisa, dime qué quieres lograr: ¿crear una pieza, resolver un problema o elegir productos?`;
 };
 
 const shouldUseChatGptSupport = (message: string, answer: string) => {
@@ -434,7 +450,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         code: "RESINY_OPENAI_UNAVAILABLE",
       });
     }
-    const answer = chatGptAnswer || localFallbackAnswer(message);
+    const answer = chatGptAnswer || (await localFallbackAnswer(message));
     await recordResinyLearning({ question: message, answer, visitorId });
     return res.status(200).json({ answer, mode: chatGptAnswer ? "chatgpt" : "local-no-groq" });
   }
@@ -469,7 +485,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         code: "RESINY_AI_FALLBACK_MISSING",
       });
     }
-    const answer = chatGptAnswer || localFallbackAnswer(message);
+    const answer = chatGptAnswer || (await localFallbackAnswer(message));
     await recordResinyLearning({ question: message, answer, visitorId });
     return res.status(200).json({ answer, mode: chatGptAnswer ? "chatgpt-fallback" : "local-fallback" });
   }

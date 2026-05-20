@@ -13,6 +13,7 @@ import {
   normalizeImageUrl,
   isPlaceholderImage,
   pickDisplayImage,
+  trackProductCartAdd,
   type ProductStat,
 } from "@/lib/productMetricsClient";
 
@@ -169,6 +170,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                 <button
                   onClick={() => {
                     dispatch(addToCart({ _id, brand, category, description, image: displayImage, isNew, oldPrice, price, title, quantity: 1 }));
+                    trackProductCartAdd(_id, 1);
                     showAddedFeedback(_id);
                   }}
                   className={

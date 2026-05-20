@@ -155,19 +155,19 @@ export default function AssistantRossy() {
           </h1>
           <form
             onSubmit={(e) => { e.preventDefault(); send(input); }}
-            className="mx-auto mt-8 flex h-16 max-w-3xl items-center gap-3 rounded-full border border-gray-200 bg-white px-5 shadow-[0_16px_42px_rgba(17,24,39,0.10)] transition-shadow focus-within:border-amazon_blue/50 focus-within:shadow-[0_18px_46px_rgba(203,41,158,0.14)]"
+            className="mx-auto mt-8 flex h-16 max-w-3xl items-center gap-3 rounded-full border-2 border-black bg-white px-5 shadow-[0_16px_42px_rgba(17,24,39,0.14)] transition-shadow focus-within:border-black focus-within:shadow-[0_18px_46px_rgba(0,0,0,0.18)]"
           >
             <input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Pregúntale a Resiny"
-              className="min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400"
+              className="min-w-0 flex-1 bg-transparent text-base font-medium text-black outline-none placeholder:text-black"
             />
             <button
               type="submit"
               disabled={!input.trim()}
-              className="flex h-10 w-10 shrink-0 items-center justify-center text-amazon_blue transition hover:-translate-y-0.5 hover:text-amazon_light disabled:translate-y-0 disabled:text-gray-300"
+              className="flex h-10 w-10 shrink-0 items-center justify-center text-black transition hover:-translate-y-0.5 hover:text-black disabled:translate-y-0 disabled:text-black"
               aria-label="Enviar pregunta"
             >
               <PaperAirplaneIcon className="h-6 w-6" />
@@ -277,7 +277,7 @@ export default function AssistantRossy() {
             >
               <form
                 onSubmit={(e) => { e.preventDefault(); send(input); }}
-                className="flex h-14 items-center gap-3 rounded-full border border-gray-200 bg-white px-5 shadow-[0_12px_34px_rgba(17,24,39,0.10)] transition-shadow focus-within:border-amazon_blue/50 focus-within:shadow-[0_14px_36px_rgba(203,41,158,0.14)]"
+                className="flex h-14 items-center gap-3 rounded-full border-2 border-black bg-white px-5 shadow-[0_12px_34px_rgba(17,24,39,0.14)] transition-shadow focus-within:border-black focus-within:shadow-[0_14px_36px_rgba(0,0,0,0.18)]"
                 style={{ width: "min(820px, calc(100vw - 32px))" }}
               >
                 <input
@@ -286,12 +286,12 @@ export default function AssistantRossy() {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Pregúntale a Resiny"
                   disabled={loading}
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 disabled:opacity-60"
+                  className="min-w-0 flex-1 bg-transparent text-sm font-medium text-black outline-none placeholder:text-black disabled:opacity-100"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || loading}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center text-amazon_blue transition hover:-translate-y-0.5 hover:text-amazon_light disabled:translate-y-0 disabled:text-gray-300"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center text-black transition hover:-translate-y-0.5 hover:text-black disabled:translate-y-0 disabled:text-black"
                   aria-label="Enviar pregunta"
                 >
                   <PaperAirplaneIcon className="h-6 w-6" />
