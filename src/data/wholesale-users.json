@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "id": "952108738",
+      "name": "kemeny Abad",
+      "business": "rossy resina perú",
+      "phone": "952108738",
+      "city": "lima",
+      "channel": "Redes sociales",
+      "volume": "Pedido mixto mayorista",
+      "passwordHash": "$2a$10$uUCkU2KycjsDmSqgXZKN7epTtGYVOUEHcELoTvIst/5RhRvHK/SG6",
+      "status": "ACTIVE",
+      "createdAt": "2026-05-20T04:38:35.735Z",
+      "updatedAt": "2026-05-20T04:38:35.735Z"
+    }
+  ],
+  "sessions": []
+}

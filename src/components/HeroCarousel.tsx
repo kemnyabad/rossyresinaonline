@@ -8,6 +8,7 @@ import {
   TagIcon,
   TruckIcon,
   ShieldCheckIcon,
+  BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 import type { ProductProps } from "../../type";
 import { ResinyInvite } from "./AssistantRossy";
@@ -41,6 +42,33 @@ const normalizeImage = (src?: string) => {
 const productHref = (product?: ProductProps) => `/${product?.code || product?._id || "productos"}`;
 
 const formatPrice = (price?: number) => `S/ ${Number(price || 0).toFixed(2)}`;
+
+function WholesaleMiniCard() {
+  return (
+    <Link
+      href="/mayoristas"
+      className="group flex min-h-[116px] items-center justify-between gap-5 rounded-lg border border-pink-200 bg-white p-5 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]"
+    >
+      <div className="flex items-center gap-4">
+        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md bg-pink-50 text-amazon_blue">
+          <BuildingStorefrontIcon className="h-10 w-10" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase text-amazon_blue">Distribuidora resinera</p>
+          <p className="mt-1 text-xl font-bold leading-tight text-gray-950 group-hover:text-amazon_blue">
+            Conviertete en distribuidora resinera
+          </p>
+          <p className="mt-1 text-sm font-medium text-gray-600">
+            Trabaja y emprende con nosotros vendiendo moldes, resina y accesorios para abastecer a mas resineras como tu.
+          </p>
+        </div>
+      </div>
+      <span className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(203,41,158,0.20)]">
+        Ir a tienda mayorista
+      </span>
+    </Link>
+  );
+}
 
 const normalizeText = (value: any) =>
   String(value || "")
@@ -302,28 +330,8 @@ export default function HeroCarousel({
             </button>
           </div>
 
-          <div className="mt-4 grid grid-cols-4 gap-4">
-            {sideProducts.slice(0, 4).map((product) => (
-              <Link
-                key={`hero-product-${product._id}`}
-                href={productHref(product)}
-                className="group flex min-h-[92px] items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]"
-              >
-                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-gray-50">
-                  <Image
-                    src={normalizeImage(product.image)}
-                    alt={product.title || "Producto"}
-                    fill
-                    sizes="64px"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <p className="line-clamp-2 text-sm font-semibold leading-5 text-gray-900">{product.title}</p>
-                  <p className="mt-1 text-sm font-semibold text-amazon_blue">{formatPrice(product.price)}</p>
-                </div>
-              </Link>
-            ))}
+          <div className="mt-4">
+            <WholesaleMiniCard />
           </div>
         </div>
 
