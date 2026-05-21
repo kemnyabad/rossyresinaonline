@@ -17,14 +17,73 @@ const RESINY_IMAGE = "/resiny.png";
 
 const now = () => new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+const thinkingDelayFor = (text: string) => {
+  const length = String(text || "").length;
+  const base = 900;
+  const byLength = Math.min(2600, length * 12);
+  const jitter = Math.floor(Math.random() * 450);
+  return base + byLength + jitter;
+};
+
+const escapeHtml = (text: string) =>
+  String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 const formatText = (text: string) => {
-  return text
+  const anchors: string[] = [];
+  const withMarkdownLinks = escapeHtml(text)
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(
+      /\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/[^\s)]+)\)/g,
+      (_match, label, href) => {
+        const token = `@@RR_LINK_${anchors.length}@@`;
+        anchors.push(
+          `<a href="${href}" target="_blank" rel="noopener noreferrer" class="font-semibold underline">${label}</a>`
+        );
+        return token;
+      }
+    );
+
+  return withMarkdownLinks
+    .replace(
+      /(https?:\/\/[^\s<]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="font-semibold underline">$1</a>'
+    )
+    .replace(/@@RR_LINK_(\d+)@@/g, (_match, index) => anchors[Number(index)] || "")
     .replace(/\n/g, "<br/>");
 };
 
 const isImageRequest = (text: string) =>
-  /\b(imagen|dibuja|dibujar|genera|generar|crea|crear|diseña|disena|ilustra|visual|foto|boceto|idea visual)\b/i.test(text);
+  /\b(imagen|dibuja|dibujar|genera|generar|crea|crear|diseña|disena|diseño|diseno|ilustra|visual|foto|boceto|idea visual|moodboard)\b/i.test(text);
+
+const isReferenceRequest = (text: string) =>
+  /\b(referencia|referencias|links?|enlaces?|ideas?|inspiracion|inspiración|pinterest|google|youtube|ver ejemplos|modelos?)\b/i.test(text);
+
+const buildReferenceAnswer = (text: string) => {
+  const clean = text
+    .replace(/\b(referencia|referencias|links?|enlaces?|ideas?|inspiracion|inspiración|pinterest|google|youtube|ver ejemplos|modelos?)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const query = clean || text || "llavero baby shower resina";
+  const resinQuery = `${query} resina artesanal`;
+  const encoded = encodeURIComponent(resinQuery);
+  const storeQuery = encodeURIComponent(query);
+
+  return `Claro. Te dejo referencias para inspirarte en un diseño original de resina:
+
+[Ver ideas en Pinterest](https://www.pinterest.com/search/pins/?q=${encoded})
+[Ver imágenes en Google](https://www.google.com/search?tbm=isch&q=${encoded})
+[Ver tutoriales en YouTube](https://www.youtube.com/results?search_query=${encoded})
+[Buscar materiales en Rossy Resina](/search?q=${storeQuery})
+
+Tip de Resiny: usa esas referencias como moodboard, no como copia exacta. Para un llavero de baby shower funcionaría bien una paleta pastel, nombre del bebé, fecha, glitter fino y molde pequeño tipo dije o llavero.`;
+};
 
 const getVisitorId = () => {
   if (typeof window === "undefined") return "";
@@ -121,7 +180,16 @@ export default function AssistantRossy({ conversationId = "default" }: { convers
   }, [historyLoaded, messages, storageKey]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+    };
+    const first = window.setTimeout(scrollToBottom, 30);
+    const second = window.setTimeout(scrollToBottom, 220);
+    return () => {
+      window.clearTimeout(first);
+      window.clearTimeout(second);
+    };
   }, [messages, loading]);
 
   const send = async (text: string) => {
@@ -146,6 +214,20 @@ export default function AssistantRossy({ conversationId = "default" }: { convers
     setLoading(true);
 
     try {
+      if (isReferenceRequest(msg) && !isImageRequest(msg)) {
+        const answer = buildReferenceAnswer(msg);
+        await wait(thinkingDelayFor(answer));
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            text: answer,
+            time: now(),
+          },
+        ]);
+        return;
+      }
+
       if (isImageRequest(msg)) {
         const res = await fetch("/api/resiny-image", {
           method: "POST",
@@ -154,16 +236,19 @@ export default function AssistantRossy({ conversationId = "default" }: { convers
         });
         const data = await res.json();
         if (!res.ok || !data?.imageUrl) {
+          const errorText = data?.error || "No pude generar la imagen en este momento. Intenta con una descripción más específica.";
+          await wait(thinkingDelayFor(errorText));
           setMessages((prev) => [
             ...prev,
             {
               role: "assistant",
-              text: data?.error || "No pude generar la imagen en este momento. Intenta con una descripción más específica.",
+              text: errorText,
               time: now(),
             },
           ]);
           return;
         }
+        await wait(thinkingDelayFor("Aquí tienes una propuesta visual para tu proyecto:"));
         setMessages((prev) => [
           ...prev,
           {
@@ -189,13 +274,15 @@ export default function AssistantRossy({ conversationId = "default" }: { convers
       });
       const data = await res.json();
       if (!res.ok) {
+        const errorText =
+          data?.error ||
+          "Resiny no pudo conectar con su proveedor de IA en este momento. Revisa la configuración del servidor.";
+        await wait(thinkingDelayFor(errorText));
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            text:
-              data?.error ||
-              "Resiny no pudo conectar con su proveedor de IA en este momento. Revisa la configuración del servidor.",
+            text: errorText,
             time: now(),
           },
         ]);
@@ -203,14 +290,18 @@ export default function AssistantRossy({ conversationId = "default" }: { convers
       }
       const fallbackAnswer =
         "Resiny no recibió una respuesta válida del proveedor de IA. Revisa la configuración de Groq o ChatGPT.";
+      const answerText = data.answer || data.error || fallbackAnswer;
+      await wait(thinkingDelayFor(answerText));
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: data.answer || data.error || fallbackAnswer, time: now() },
+        { role: "assistant", text: answerText, time: now() },
       ]);
     } catch {
+      const errorText = "Hubo un error al conectar. Por favor intenta de nuevo.";
+      await wait(thinkingDelayFor(errorText));
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: "Hubo un error al conectar. Por favor intenta de nuevo.", time: now() },
+        { role: "assistant", text: errorText, time: now() },
       ]);
     } finally {
       setLoading(false);

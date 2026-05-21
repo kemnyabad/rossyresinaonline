@@ -199,7 +199,7 @@ const Header = () => {
 
   return (
     <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
-      <div className="md:hidden border-b border-gray-100 bg-white px-3 pb-3 pt-2">
+      <div className="lg:hidden border-b border-gray-100 bg-white px-3 pb-3 pt-2">
         <div className="flex items-center justify-between">
           <Link href={"/"} onClick={handleLogoClick} className="flex items-center gap-2 group">
             <div className="bg-white rounded-full p-1 shadow ring-1 ring-amazon_blue/20 group-hover:shadow-md transition-shadow duration-300">
@@ -269,7 +269,7 @@ const Header = () => {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[58]" role="dialog" aria-modal="true" aria-label="Menú de tienda">
+        <div className="lg:hidden fixed inset-0 z-[58]" role="dialog" aria-modal="true" aria-label="Menú de tienda">
           <button
             type="button"
             className="absolute inset-0 h-full w-full bg-slate-950/35"
@@ -317,7 +317,7 @@ const Header = () => {
         </div>
       )}
 
-      <div className="hidden md:flex max-w-screen-2xl mx-auto min-h-[76px] px-3 py-2 sm:px-4 md:px-6 xl:px-8 items-center gap-3 lg:gap-5">
+      <div className="hidden lg:flex max-w-screen-2xl mx-auto min-h-[76px] px-3 py-2 sm:px-4 md:px-6 xl:px-8 items-center gap-3 lg:gap-5">
         {/* logo */}
         <Link
           href={"/"}
@@ -351,7 +351,7 @@ const Header = () => {
         )}
 
         {/* mobile search */}
-        {!isResinyPage && <div className="md:hidden flex-1 min-w-0">
+        {!isResinyPage && <div className="lg:hidden flex-1 min-w-0">
           <button
             type="button"
             onClick={() => setMobileSearchOpen(true)}
@@ -364,7 +364,7 @@ const Header = () => {
         </div>}
 
         {/* searchbar */}
-        {!isResinyPage && <div className="hidden md:flex flex-1 min-w-[220px] items-center justify-center">
+        {!isResinyPage && <div className="hidden lg:flex flex-1 min-w-[220px] items-center justify-center">
           <form onSubmit={submitSearch} className="w-full max-w-3xl h-11 inline-flex items-center justify-between relative">
             <input
               onChange={handleSearch}
@@ -421,7 +421,7 @@ const Header = () => {
         <div className={`ml-auto flex flex-none items-center justify-end gap-3 lg:gap-4 ${isResinyPage ? "min-w-0" : "min-w-[280px] max-w-[360px] xl:min-w-[330px]"}`}>
           <Link
             href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
-            className="md:hidden p-2 rounded-full border border-gray-200 text-gray-700 hover:text-amazon_blue hover:border-amazon_blue"
+            className="lg:hidden p-2 rounded-full border border-gray-200 text-gray-700 hover:text-amazon_blue hover:border-amazon_blue"
             aria-label={isAuthenticated ? "Ir a mi perfil" : "Iniciar sesión"}
           >
             <UserIcon className="w-5 h-5" />
@@ -546,7 +546,7 @@ const Header = () => {
       </div>
 
       {mobileSearchOpen && (
-        <div className="md:hidden fixed inset-0 z-[60] bg-white">
+        <div className="lg:hidden fixed inset-0 z-[60] bg-white">
           <div className="h-full flex flex-col">
             <div className="px-3 py-3 border-b border-gray-200 flex items-center gap-2">
               <button

@@ -319,7 +319,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-6 py-6">
+    <div className="max-w-screen-2xl mx-auto px-3 py-5 md:px-6 md:py-6">
       <Head>
         <title>Rossy Resina - Checkout</title>
       </Head>
@@ -335,8 +335,8 @@ export default function CheckoutPage() {
           </Link>
         </div>
       ) : (
-        <div className={isShippingReviewStep ? "mx-auto max-w-5xl" : "grid md:grid-cols-3 gap-6"}>
-          <section className={isShippingReviewStep ? "bg-white p-0" : "md:col-span-2 bg-white rounded-lg p-6 shadow"}>
+        <div className={isShippingReviewStep ? "mx-auto max-w-5xl" : "grid gap-6 lg:grid-cols-3"}>
+          <section className={isShippingReviewStep ? "bg-white p-0" : "bg-white rounded-lg p-4 shadow md:p-6 lg:col-span-2"}>
             <div className="mb-6">
               <p className="text-lg text-gray-950">Documento de venta</p>
               <div className="mt-4 flex gap-8 text-base">
@@ -618,7 +618,7 @@ export default function CheckoutPage() {
           </section>
 
           {!isShippingReviewStep && (
-          <aside className="md:col-span-1 md:sticky md:top-24 h-fit space-y-4">
+          <aside className="h-fit space-y-4 lg:col-span-1 lg:sticky lg:top-24">
             <div className="bg-white rounded-lg p-6 shadow">
               <h2 className="text-xl font-semibold mb-4">Resumen del pedido</h2>
               <ul className="divide-y divide-gray-200">

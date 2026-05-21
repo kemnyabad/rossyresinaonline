@@ -234,8 +234,8 @@ export default function HeroCarousel({
 
   return (
     <section className="w-full">
-      <div className="grid min-h-[420px] grid-cols-[230px_minmax(0,1fr)_320px] gap-4">
-        <div className="self-start">
+      <div className="grid min-h-[420px] grid-cols-1 gap-4 xl:grid-cols-[230px_minmax(0,1fr)_320px]">
+        <div className="self-start xl:block">
           <aside className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="border-b border-gray-100 px-4 py-3">
               <p className="text-sm font-semibold text-gray-900">Categorías</p>
@@ -253,27 +253,27 @@ export default function HeroCarousel({
               ))}
             </nav>
           </aside>
-          <div className="mt-3">
+          <div className="mt-3 hidden xl:block">
             <ResinyInvite />
           </div>
         </div>
 
         <div className="min-w-0">
-          <div className={`relative h-[420px] overflow-hidden rounded-lg border border-gray-200 ${activeSlide.tone} shadow-[0_1px_3px_rgba(17,24,39,0.08)]`}>
+          <div className={`relative min-h-[520px] overflow-hidden rounded-lg border border-gray-200 ${activeSlide.tone} shadow-[0_1px_3px_rgba(17,24,39,0.08)] lg:h-[420px] lg:min-h-0`}>
             <Link href={activeSlide.href} className="absolute inset-0 z-[1]" aria-label={activeSlide.cta} />
-            <div className="absolute inset-0 z-[2] grid grid-cols-[minmax(0,0.95fr)_minmax(390px,1.05fr)] items-center gap-8 px-10 py-8">
-              <div className="flex h-full max-w-[455px] flex-col justify-between pl-2">
+            <div className="relative z-[2] grid min-h-[520px] grid-cols-1 items-center gap-5 px-5 py-6 sm:px-7 md:grid-cols-[minmax(0,0.95fr)_minmax(300px,1.05fr)] md:px-8 lg:absolute lg:inset-0 lg:min-h-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)] lg:gap-8 lg:px-10 lg:py-8">
+              <div className="flex h-full max-w-[455px] flex-col justify-between pl-0 lg:pl-2">
                 <div>
                   <span className="rr-type-label text-amazon_blue">
                     {activeSlide.label}
                   </span>
-                  <h1 className="rr-type-display mt-5 max-w-[430px] text-[38px]">
+                  <h1 className="rr-type-display mt-4 max-w-[430px] text-[30px] md:text-[34px] lg:mt-5 lg:text-[38px]">
                     {activeSlide.title}
                   </h1>
-                  <p className="rr-type-body mt-5 max-w-[395px] text-[17px]">
+                  <p className="rr-type-body mt-4 max-w-[395px] text-[15px] md:text-[16px] lg:mt-5 lg:text-[17px]">
                     {activeSlide.text}
                   </p>
-                  <div className="mt-8 flex items-center gap-5">
+                  <div className="mt-6 flex flex-wrap items-center gap-4 lg:mt-8 lg:gap-5">
                     <span className="inline-flex h-12 items-center rounded-lg bg-amazon_blue px-6 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(203,41,158,0.22)]">
                       {activeSlide.cta}
                     </span>
@@ -300,7 +300,7 @@ export default function HeroCarousel({
                 </div>
               </div>
 
-              <div className="relative ml-auto flex h-[340px] w-full max-w-[520px] items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-4 shadow-[0_8px_20px_rgba(17,24,39,0.08)]">
+              <div className="relative ml-auto flex h-[280px] w-full max-w-[520px] items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-4 shadow-[0_8px_20px_rgba(17,24,39,0.08)] md:h-[320px] lg:h-[340px]">
                 <Image
                   src={activeSlide.image}
                   alt={activeSlide.product?.title || activeSlide.title}
@@ -335,7 +335,7 @@ export default function HeroCarousel({
           </div>
         </div>
 
-        <aside className="grid gap-4">
+        <aside className="grid gap-4 lg:grid-cols-2 xl:grid-cols-1">
           <Link
             href="/productos?ofertas=1"
             className="group relative overflow-visible rounded-lg border border-gray-200 bg-white p-4 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_10px_24px_rgba(17,24,39,0.10)]"
