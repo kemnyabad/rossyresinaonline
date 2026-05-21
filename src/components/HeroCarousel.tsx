@@ -227,10 +227,10 @@ export default function HeroCarousel({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="group flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-amazon_blue hover:text-white"
+                  className="group flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-600 hover:!text-white"
                 >
-                  <span>{item.label}</span>
-                  <ChevronRightIcon className="h-4 w-4 text-gray-400 group-hover:text-white" />
+                  <span className="group-hover:!text-white">{item.label}</span>
+                  <ChevronRightIcon className="h-4 w-4 text-gray-400 group-hover:!text-white" />
                 </Link>
               ))}
             </nav>

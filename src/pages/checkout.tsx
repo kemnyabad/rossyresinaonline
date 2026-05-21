@@ -640,12 +640,6 @@ export default function CheckoutPage() {
             </div>
 
             <div className="bg-white rounded-lg p-6 shadow">
-              <div className="text-sm text-gray-700">
-                <p className="font-semibold">Datos de pago</p>
-                <p className="mt-2">Yape: <span className="font-semibold">{yapeNumber}</span></p>
-                <p className="mt-1">Transferencia: <span className="font-semibold">{bankName}</span> {accountNumber ? `- ${accountNumber}` : ""}</p>
-                <p className="text-xs text-gray-600 mt-1">Debes adjuntar comprobante para confirmar el pedido.</p>
-              </div>
               {errorMsg && <div className="mt-3 text-xs text-red-600">{errorMsg}</div>}
               <button
                 type="button"
