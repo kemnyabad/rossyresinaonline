@@ -47,7 +47,7 @@ function WholesaleMiniCard() {
   return (
     <Link
       href="/mayoristas"
-      className="group flex min-h-[116px] items-center justify-between gap-5 rounded-lg border border-pink-200 bg-white p-5 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]"
+      className="group flex min-h-[116px] items-center justify-between gap-5 rounded-lg bg-white p-5 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]"
     >
       <div className="flex items-center gap-4">
         <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md bg-pink-50 text-amazon_blue">
@@ -198,29 +198,11 @@ export default function HeroCarousel({
 
   const activeSlide = slides[activeIndex] || slides[0];
   const quickDeals = ofertasExpress.slice(0, 2);
-  const promoProducts = useMemo(
-    () =>
-      uniqueProducts([
-        ...productGroups.offers,
-        ...productGroups.molds,
-        ...productGroups.resinAndPigments,
-        ...productGroups.accessories,
-        ...productGroups.popular,
-      ]).slice(0, 4),
-    [productGroups]
-  );
-  const promoVisualPool = [
-    ...quickDeals.map((deal) => ({
-      id: deal.id,
-      title: deal.nombre,
-      image: deal.imagen,
-    })),
-    ...promoProducts.map((product) => ({
-      id: String(product._id || product.code || product.title),
-      title: product.title,
-      image: product.image,
-    })),
-  ];
+  const promoVisualPool = quickDeals.map((deal) => ({
+    id: deal.id,
+    title: deal.nombre,
+    image: deal.imagen,
+  }));
   const promoVisualItems =
     promoVisualPool.length > 0
       ? Array.from({ length: Math.min(2, promoVisualPool.length) }, (_, index) => promoVisualPool[(cycleIndex + index) % promoVisualPool.length])
@@ -245,10 +227,10 @@ export default function HeroCarousel({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-amazon_blue"
+                  className="group flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-amazon_blue hover:text-white"
                 >
                   <span>{item.label}</span>
-                  <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+                  <ChevronRightIcon className="h-4 w-4 text-gray-400 group-hover:text-white" />
                 </Link>
               ))}
             </nav>
@@ -261,13 +243,10 @@ export default function HeroCarousel({
         <div className="min-w-0">
           <div className={`relative min-h-[520px] overflow-hidden rounded-lg border border-gray-200 ${activeSlide.tone} shadow-[0_1px_3px_rgba(17,24,39,0.08)] lg:h-[420px] lg:min-h-0`}>
             <Link href={activeSlide.href} className="absolute inset-0 z-[1]" aria-label={activeSlide.cta} />
-            <div className="relative z-[2] grid min-h-[520px] grid-cols-1 items-center gap-5 px-5 py-6 sm:px-7 md:grid-cols-[minmax(0,0.95fr)_minmax(300px,1.05fr)] md:px-8 lg:absolute lg:inset-0 lg:min-h-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)] lg:gap-8 lg:px-10 lg:py-8">
+            <div className="relative z-[2] grid min-h-[520px] grid-cols-1 items-start gap-5 px-5 py-5 sm:px-7 md:grid-cols-[minmax(0,0.95fr)_minmax(300px,1.05fr)] md:px-8 lg:absolute lg:inset-0 lg:min-h-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)] lg:gap-8 lg:px-10 lg:py-5">
               <div className="flex h-full max-w-[455px] flex-col justify-between pl-0 lg:pl-2">
                 <div>
-                  <span className="rr-type-label text-amazon_blue">
-                    {activeSlide.label}
-                  </span>
-                  <h1 className="rr-type-display mt-4 max-w-[430px] text-[30px] md:text-[34px] lg:mt-5 lg:text-[38px]">
+                  <h1 className="rr-type-display max-w-[430px] text-[30px] md:text-[34px] lg:text-[38px]">
                     {activeSlide.title}
                   </h1>
                   <p className="rr-type-body mt-4 max-w-[395px] text-[15px] md:text-[16px] lg:mt-5 lg:text-[17px]">
@@ -278,7 +257,7 @@ export default function HeroCarousel({
                       {activeSlide.cta}
                     </span>
                     {activeSlide.product ? (
-                      <span className="text-sm font-semibold text-gray-950">
+                      <span className="text-lg font-bold text-gray-950 md:text-xl">
                         Desde {formatPrice(activeSlide.product.price)}
                       </span>
                     ) : null}
@@ -366,7 +345,11 @@ export default function HeroCarousel({
                     />
                   </div>
                 </>
-              ) : null}
+              ) : (
+                <div className="flex h-full items-center justify-center rounded-md bg-pink-50 px-4 text-center text-sm font-semibold text-amazon_blue">
+                  Aún no hay promociones express
+                </div>
+              )}
             </div>
 
             <div className="mt-2 text-center">
