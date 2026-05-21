@@ -28,7 +28,7 @@ const RESINY_IMAGE = "/resiny.png";
 
 const Header = () => {
   const router = useRouter();
-  const isResinyPage = router.pathname === "/resiny";
+  const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
   const { data: session } = useSession();
   const [allData, setAllData] = useState<StoreProduct[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -211,6 +211,18 @@ const Header = () => {
             </div>
           </Link>
 
+          {isResinyPage && (
+            <div className="ml-1 flex min-w-0 items-center gap-1.5">
+              <span className="relative h-14 w-14 shrink-0 md:h-16 md:w-16">
+                <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" priority />
+              </span>
+              <div className="min-w-0 leading-tight">
+                <p className="truncate text-[15px] font-bold text-slate-950 md:text-base">Resiny</p>
+                <p className="hidden text-xs font-medium text-slate-500 sm:block">Asistente de Rossy Resina</p>
+              </div>
+            </div>
+          )}
+
           {!isResinyPage && (
             <Link
               href="/resiny"
@@ -325,6 +337,18 @@ const Header = () => {
             </div>
           </div>
         </Link>
+
+        {isResinyPage && (
+          <div className="flex min-w-0 items-center gap-2 border-l border-gray-200 pl-4">
+            <span className="relative h-16 w-16 shrink-0">
+              <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" priority />
+            </span>
+            <div className="min-w-0 leading-tight">
+              <p className="truncate text-lg font-bold text-slate-950">Resiny</p>
+              <p className="truncate text-xs font-medium text-slate-500">Asistente de Rossy Resina</p>
+            </div>
+          </div>
+        )}
 
         {/* mobile search */}
         {!isResinyPage && <div className="md:hidden flex-1 min-w-0">

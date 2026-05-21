@@ -421,12 +421,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const message  = String(req.body?.message || "").trim();
   const history  = Array.isArray(req.body?.history) ? req.body.history : [];
   const visitorId = String(req.body?.visitorId || "").trim();
+  const conversationId = String(req.body?.conversationId || "").trim();
 
   if (!message) return res.status(400).json({ error: "Mensaje vacío" });
 
   if (!isResinyDomainQuestion(message, history)) {
     const answer = outOfScopeAnswer();
-    await recordResinyLearning({ question: message, answer, visitorId });
+    await recordResinyLearning({ question: message, answer, visitorId: conversationId ? `${visitorId}:${conversationId}` : visitorId });
     return res.status(200).json({ answer, mode: "resiny-scope" });
   }
 
@@ -451,7 +452,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
     const answer = chatGptAnswer || (await localFallbackAnswer(message));
-    await recordResinyLearning({ question: message, answer, visitorId });
+    await recordResinyLearning({ question: message, answer, visitorId: conversationId ? `${visitorId}:${conversationId}` : visitorId });
     return res.status(200).json({ answer, mode: chatGptAnswer ? "chatgpt" : "local-no-groq" });
   }
 
@@ -465,7 +466,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       : null;
     const answer = chatGptAnswer || groqAnswer;
 
-    await recordResinyLearning({ question: message, answer, visitorId });
+    await recordResinyLearning({ question: message, answer, visitorId: conversationId ? `${visitorId}:${conversationId}` : visitorId });
     return res.status(200).json({ answer, mode: chatGptAnswer ? "groq+chatgpt" : "groq" });
   } catch (e: any) {
     console.error("Groq error:", String(e?.message || ""));
@@ -486,7 +487,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
     const answer = chatGptAnswer || (await localFallbackAnswer(message));
-    await recordResinyLearning({ question: message, answer, visitorId });
+    await recordResinyLearning({ question: message, answer, visitorId: conversationId ? `${visitorId}:${conversationId}` : visitorId });
     return res.status(200).json({ answer, mode: chatGptAnswer ? "chatgpt-fallback" : "local-fallback" });
   }
 }

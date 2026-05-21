@@ -7,7 +7,7 @@ export default function ResinyPage() {
   const [loadingResiny, setLoadingResiny] = useState(true);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setLoadingResiny(false), 900);
+    const timer = window.setTimeout(() => setLoadingResiny(false), 500);
     return () => window.clearTimeout(timer);
   }, []);
 

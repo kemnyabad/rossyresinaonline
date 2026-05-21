@@ -3,6 +3,13 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { useSession } from "next-auth/react";
+import {
+  createResinyConversationId,
+  ensureResinyVisitorId,
+  getResinyOwnerKey,
+  rememberResinyConversation,
+} from "@/lib/resinyConversationClient";
 
 type Message = { role: "assistant" | "user"; text: string; time: string; imageUrl?: string };
 
@@ -21,15 +28,59 @@ const isImageRequest = (text: string) =>
 
 const getVisitorId = () => {
   if (typeof window === "undefined") return "";
-  return localStorage.getItem("rr_visitor_id") || "";
+  return ensureResinyVisitorId();
 };
 
-export default function AssistantRossy() {
+const getStorageKey = (email?: string | null, conversationId?: string) => {
+  if (typeof window === "undefined") return "";
+  const convo = String(conversationId || "default").trim() || "default";
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  if (normalizedEmail) return `rr_resiny_chat:user:${normalizedEmail}:conversation:${convo}`;
+  return `rr_resiny_chat:visitor:${getVisitorId()}:conversation:${convo}`;
+};
+
+const readStoredMessages = (key: string): Message[] => {
+  if (!key || typeof window === "undefined") return [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((m) => m && (m.role === "assistant" || m.role === "user") && typeof m.text === "string")
+      .map((m) => ({
+        role: m.role,
+        text: String(m.text || ""),
+        time: String(m.time || ""),
+        imageUrl: m.imageUrl ? String(m.imageUrl) : undefined,
+      }))
+      .slice(-80);
+  } catch {
+    return [];
+  }
+};
+
+const writeStoredMessages = (key: string, messages: Message[]) => {
+  if (!key || typeof window === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify(messages.slice(-80)));
+  } catch {
+    // El chat debe seguir funcionando aunque el navegador bloquee storage.
+  }
+};
+
+export default function AssistantRossy({ conversationId = "default" }: { conversationId?: string }) {
+  const { data: session } = useSession();
+  const userEmail = String(session?.user?.email || "").trim().toLowerCase();
+  const initialConversationId = conversationId && conversationId !== "default" ? conversationId : "";
+  const [activeConversationId, setActiveConversationId] = useState(initialConversationId);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [storageKey, setStorageKey] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const justCreatedConversationRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -46,9 +97,48 @@ export default function AssistantRossy() {
     inputRef.current?.focus();
   }, []);
 
+  useEffect(() => {
+    if (!mounted) return;
+    if (!activeConversationId) {
+      setStorageKey("");
+      setMessages([]);
+      setHistoryLoaded(true);
+      return;
+    }
+    const key = getStorageKey(userEmail, activeConversationId);
+    setStorageKey(key);
+    if (justCreatedConversationRef.current) {
+      justCreatedConversationRef.current = false;
+    } else {
+      setMessages(readStoredMessages(key));
+    }
+    setHistoryLoaded(true);
+  }, [mounted, userEmail, activeConversationId]);
+
+  useEffect(() => {
+    if (!historyLoaded || !storageKey) return;
+    writeStoredMessages(storageKey, messages);
+  }, [historyLoaded, messages, storageKey]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, loading]);
+
   const send = async (text: string) => {
     const msg = text.trim();
     if (!msg || loading) return;
+
+    let conversationForRequest = activeConversationId;
+    if (!conversationForRequest) {
+      const ownerKey = getResinyOwnerKey(userEmail);
+      conversationForRequest = createResinyConversationId();
+      rememberResinyConversation(ownerKey, conversationForRequest);
+      justCreatedConversationRef.current = true;
+      setActiveConversationId(conversationForRequest);
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", `/resiny/${encodeURIComponent(conversationForRequest)}`);
+      }
+    }
 
     setInput("");
     const newMessages = [...messages, { role: "user" as const, text: msg, time: now() }];
@@ -90,7 +180,12 @@ export default function AssistantRossy() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg, history: history.slice(0, -1), visitorId: getVisitorId() }),
+        body: JSON.stringify({
+          message: msg,
+          history: history.slice(0, -1),
+          visitorId: getVisitorId(),
+          conversationId: conversationForRequest,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -155,19 +250,19 @@ export default function AssistantRossy() {
           </h1>
           <form
             onSubmit={(e) => { e.preventDefault(); send(input); }}
-            className="mx-auto mt-8 flex h-16 max-w-3xl items-center gap-3 rounded-full border-2 border-black bg-white px-5 shadow-[0_16px_42px_rgba(17,24,39,0.14)] transition-shadow focus-within:border-black focus-within:shadow-[0_18px_46px_rgba(0,0,0,0.18)]"
+            className="mx-auto mt-8 flex h-16 max-w-3xl items-center gap-3 rounded-full border border-slate-300 bg-white px-5 shadow-[0_16px_42px_rgba(17,24,39,0.10)] transition-shadow focus-within:border-slate-900 focus-within:shadow-[0_18px_46px_rgba(0,0,0,0.14)]"
           >
             <input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Pregúntale a Resiny"
-              className="min-w-0 flex-1 bg-transparent text-base font-medium text-black outline-none placeholder:text-black"
+              className="min-w-0 flex-1 bg-transparent text-base font-medium text-slate-950 outline-none placeholder:text-slate-500"
             />
             <button
               type="submit"
               disabled={!input.trim()}
-              className="flex h-10 w-10 shrink-0 items-center justify-center text-black transition hover:-translate-y-0.5 hover:text-black disabled:translate-y-0 disabled:text-black"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0a84ff] text-white transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:bg-slate-200 disabled:text-slate-500"
               aria-label="Enviar pregunta"
             >
               <PaperAirplaneIcon className="h-6 w-6" />
@@ -190,48 +285,46 @@ export default function AssistantRossy() {
           40% { opacity: 1; transform: translateY(-3px); }
         }
         .resinyPage {
-          min-height: 100vh;
+          min-height: 100svh;
           animation: resiny-page-in 360ms ease-out both;
         }
         .chatMessages {
-          padding: 0 16px 140px;
+          padding: 34px 14px 130px;
+        }
+        @media (min-width: 768px) {
+          .chatMessages {
+            padding-top: 42px;
+          }
         }
       `}</style>
 
       <main className="chatMessages">
         <div className="mx-auto w-full max-w-4xl">
-        <div className="flex items-center justify-between py-3 md:py-5">
-          <div className="flex items-center gap-3">
-            <div className="relative h-14 w-12 shrink-0 transition-transform duration-300 hover:scale-105">
-              <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" priority />
-            </div>
-            <div className="leading-tight">
-              <p className="text-sm font-semibold text-slate-950">Resiny</p>
-              <p className="text-xs font-medium text-green-700">En línea</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-6 pb-24 pt-2 md:space-y-8 md:pt-5">
+        <div className="space-y-3 pb-24 pt-2 md:space-y-4 md:pt-5">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`flex max-w-[78%] gap-3 ${m.role === "user" ? "flex-row-reverse text-right" : "flex-row text-left"}`}>
+                <div className={`flex max-w-[86%] items-end gap-2 md:max-w-[72%] ${m.role === "user" ? "flex-row-reverse text-right" : "flex-row text-left"}`}>
                   {m.role === "assistant" ? (
-                    <div className="relative mt-0.5 h-10 w-9 shrink-0 transition-transform duration-300">
+                    <div className="relative h-14 w-14 shrink-0">
                       <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" />
                     </div>
                   ) : null}
-                  <div>
+                  <div className={m.role === "user" ? "flex flex-col items-end" : "flex flex-col items-start"}>
                     <div
-                      className={`text-[15px] leading-7 ${m.role === "user" ? "font-semibold text-amazon_blue" : "text-slate-800"}`}
+                      className={
+                        "rounded-[22px] px-4 py-2.5 text-[15px] leading-6 md:text-base md:leading-7 " +
+                        (m.role === "user"
+                          ? "bg-[#0a84ff] font-medium text-white"
+                          : "bg-[#f0f0f2] text-slate-950")
+                      }
                       dangerouslySetInnerHTML={{ __html: formatText(m.text) }}
                     />
                     {m.imageUrl ? (
-                      <div className="relative mt-4 aspect-square w-full max-w-sm overflow-hidden border border-gray-200 bg-gray-50">
+                      <div className="relative mt-2 aspect-square w-full max-w-sm overflow-hidden rounded-[22px] border border-gray-200 bg-gray-50">
                         <Image src={m.imageUrl} alt="Imagen generada por Resiny" fill className="object-cover" />
                       </div>
                     ) : null}
-                    {m.time ? <span className="mt-1 block text-[10px] text-gray-400">{m.time}</span> : null}
+                    {m.time ? <span className="mt-1 block px-1 text-[10px] text-gray-400">{m.time}</span> : null}
                   </div>
                 </div>
               </div>
@@ -239,23 +332,24 @@ export default function AssistantRossy() {
 
             {loading && (
               <div className="flex justify-start">
-                <div className="flex max-w-[78%] gap-3">
-                  <div className="relative mt-0.5 h-10 w-9 shrink-0">
+                <div className="flex max-w-[86%] items-end gap-2 md:max-w-[72%]">
+                  <div className="relative h-14 w-14 shrink-0">
                     <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" />
                   </div>
-                  <div className="pt-1.5">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-                      <span>Pensando en cómo ayudarte</span>
+                  <div className="rounded-[22px] bg-[#f0f0f2] px-4 py-3">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                      <span>Pensando</span>
                       <span className="flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-amazon_blue" style={{ animation: "resiny-thinking-dot 1.1s infinite" }} />
-                        <span className="h-1.5 w-1.5 rounded-full bg-amazon_blue" style={{ animation: "resiny-thinking-dot 1.1s infinite 140ms" }} />
-                        <span className="h-1.5 w-1.5 rounded-full bg-amazon_blue" style={{ animation: "resiny-thinking-dot 1.1s infinite 280ms" }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-500" style={{ animation: "resiny-thinking-dot 1.1s infinite" }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-500" style={{ animation: "resiny-thinking-dot 1.1s infinite 140ms" }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-500" style={{ animation: "resiny-thinking-dot 1.1s infinite 280ms" }} />
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} className="h-1" />
         </div>
         </div>
       </main>
@@ -269,29 +363,30 @@ export default function AssistantRossy() {
                 right: 0,
                 bottom: 0,
                 zIndex: 9999,
-                background: "linear-gradient(to top, white 75%, rgba(255,255,255,0))",
-                padding: "20px 16px 24px",
+                background: "white",
+                borderTop: "1px solid #d1d5db",
+                padding: "12px 12px 14px",
                 display: "flex",
                 justifyContent: "center",
               }}
             >
               <form
                 onSubmit={(e) => { e.preventDefault(); send(input); }}
-                className="flex h-14 items-center gap-3 rounded-full border-2 border-black bg-white px-5 shadow-[0_12px_34px_rgba(17,24,39,0.14)] transition-shadow focus-within:border-black focus-within:shadow-[0_14px_36px_rgba(0,0,0,0.18)]"
+                className="flex h-12 items-center gap-2 rounded-full border border-slate-300 bg-white px-4 transition-colors focus-within:border-slate-900"
                 style={{ width: "min(820px, calc(100vw - 32px))" }}
               >
                 <input
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Pregúntale a Resiny"
+                  placeholder="Escribe un mensaje..."
                   disabled={loading}
-                  className="min-w-0 flex-1 bg-transparent text-sm font-medium text-black outline-none placeholder:text-black disabled:opacity-100"
+                  className="min-w-0 flex-1 bg-transparent text-base text-slate-950 outline-none placeholder:text-slate-400 disabled:opacity-70"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || loading}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center text-black transition hover:-translate-y-0.5 hover:text-black disabled:translate-y-0 disabled:text-black"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0a84ff] text-white transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:bg-slate-200 disabled:text-slate-500"
                   aria-label="Enviar pregunta"
                 >
                   <PaperAirplaneIcon className="h-6 w-6" />

@@ -19,8 +19,8 @@ interface Props {
 const RootLayout = ({ children }: Props) => {
   const router = useRouter();
   const isRifasPage = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/admin/rifa");
-  const isResinyPage = router.pathname === "/resiny";
-  const hideFooter = isRifasPage || router.pathname === "/resiny";
+  const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
+  const hideFooter = isRifasPage || isResinyPage;
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   const cartCount = useSelector((state: any) =>
     Array.isArray(state?.next?.productData) ? state.next.productData.length : 0
