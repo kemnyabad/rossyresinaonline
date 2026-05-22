@@ -18,10 +18,14 @@ interface Props {
 
 const RootLayout = ({ children }: Props) => {
   const router = useRouter();
-  const isRifasPage = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/admin/rifa");
+  const isRifasPage =
+    router.pathname.startsWith("/rifas") ||
+    router.pathname.startsWith("/rifa/") ||
+    router.pathname.startsWith("/admin/rifa");
   const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
   const hideFooter = isRifasPage || isResinyPage;
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
+  const [hasActiveRifas, setHasActiveRifas] = useState(false);
   const cartCount = useSelector((state: any) =>
     Array.isArray(state?.next?.productData) ? state.next.productData.length : 0
   );
@@ -42,6 +46,27 @@ const RootLayout = ({ children }: Props) => {
     }, 4200);
     return () => window.clearInterval(interval);
   }, [mobilePromoSlides.length]);
+
+  useEffect(() => {
+    if (isRifasPage || isResinyPage) {
+      setHasActiveRifas(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    fetch("/api/rifas", { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setHasActiveRifas(Array.isArray(data) && data.length > 0);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setHasActiveRifas(false);
+      });
+
+    return () => controller.abort();
+  }, [isRifasPage, isResinyPage]);
 
   const mobileTabs = [
     { href: "/", label: "Inicio", icon: HomeIcon, active: router.pathname === "/" },
@@ -75,7 +100,7 @@ const RootLayout = ({ children }: Props) => {
       )}
 
       {/* Banner Móvil Temático: sorteos activos (Solo visible en móviles y fuera de rifas) */}
-      {!isRifasPage && !isResinyPage && (
+      {!isRifasPage && !isResinyPage && hasActiveRifas && (
         <div className="md:hidden">
           <Link href="/rifas">
             <div className="relative overflow-hidden border-b border-amazon_light/20 bg-amazon_blue px-4 py-3 shadow-sm">
