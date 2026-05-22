@@ -41,8 +41,7 @@ export default function AccountPage() {
   if (!isAuthenticated) {
     return (
       <div className="max-w-screen-2xl mx-auto px-4 py-6 md:py-10">
-        <div className="text-sm text-gray-500 mb-4">Inicio / Cuenta</div>
-        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
+        <div className="bg-white rounded-xl p-8 text-center">
           <h1 className="text-2xl font-semibold text-gray-900">Inicia sesión para ver tu cuenta</h1>
           <p className="mt-2 text-sm text-gray-600">
             Accede o regístrate para ver tus pedidos, dirección de envío y mensajes.

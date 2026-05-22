@@ -182,11 +182,20 @@ const CartPage = () => {
           <div className="rounded-xl border border-gray-200 bg-white px-10 py-10 text-center md:px-12 md:py-11">
             <h1 className="text-lg font-semibold text-gray-900">Tu carrito está vacío</h1>
             <p className="mt-1 text-sm text-gray-600">Descubre productos y agrega tus favoritos.</p>
+            <p className="mt-4 text-sm text-gray-600">
+              ¿Ya realizaste una compra? Consulta el estado de tu pedido con tu correo y número de pedido.
+            </p>
             <Link
               href="/"
               className="mt-5 inline-flex rounded-full bg-[#c21885] px-6 py-2 text-sm font-semibold text-white hover:brightness-105"
             >
               Ir a comprar
+            </Link>
+            <Link
+              href="/track-orders"
+              className="ml-0 mt-3 inline-flex rounded-full border border-gray-300 bg-white px-6 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50 sm:ml-3"
+            >
+              Consultar mi pedido
             </Link>
           </div>
         </div>

@@ -57,6 +57,7 @@ export default function CheckoutPage() {
   const [name, setName] = useState("");
   const [dni, setDni] = useState("");
   const [phone, setPhone] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
   const [locationLine, setLocationLine] = useState("");
 
   const [shippingCarrier, setShippingCarrier] = useState<ShippingCarrier>("SHALOM");
@@ -77,9 +78,9 @@ export default function CheckoutPage() {
   const [successId, setSuccessId] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
 
-  const yapeNumber = process.env.NEXT_PUBLIC_YAPE_NUMBER || "961770723";
-  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "Banco";
-  const accountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "";
+  const sessionCustomerEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
+  const checkoutEmail = sessionCustomerEmail || guestEmail.trim().toLowerCase();
+  const isGuestCheckout = !sessionCustomerEmail;
 
   useEffect(() => {
     if (storeUser) {
@@ -218,6 +219,7 @@ export default function CheckoutPage() {
     if (!name.trim()) return false;
     if (!dni.trim()) return false;
     if (!phone.trim()) return false;
+    if (isGuestCheckout && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim())) return false;
     if (!locationLine.trim()) return false;
     if (!paymentFile || !paymentPreview) return false;
     if (!acceptTerms) return false;
@@ -263,7 +265,7 @@ export default function CheckoutPage() {
             name,
             dni,
             phone,
-            email: String((customerSession?.user as any)?.email || ""),
+            email: checkoutEmail,
             locationLine,
             notes,
           },
@@ -302,13 +304,20 @@ export default function CheckoutPage() {
         </Head>
         <div className="bg-white rounded-lg p-8 shadow border border-emerald-100">
           <h1 className="text-2xl font-semibold text-emerald-700">Pedido recibido</h1>
-          <p className="mt-2 text-gray-700">
-            Tu pedido fue registrado correctamente. Codigo: <strong>{successId}</strong>
+          <p className="mt-2 text-gray-700">Tu pedido fue registrado correctamente.</p>
+          <p className="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-lg font-black text-emerald-800">
+            Código de pedido: {successId}
           </p>
           <p className="mt-2 text-sm text-gray-600">
-            En breve confirmaremos tu compra y envío.
+            Guarda este código. Lo necesitarás junto con tu correo para consultar el estado de tu pedido.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href={`/track-orders?email=${encodeURIComponent(checkoutEmail)}&order=${encodeURIComponent(successId)}`}
+              className="px-4 py-2 rounded bg-emerald-700 text-white text-sm font-semibold hover:brightness-95"
+            >
+              Ver estado del pedido
+            </Link>
             <Link href="/" className="px-4 py-2 rounded bg-amazon_blue text-white text-sm font-semibold hover:brightness-95">
               Seguir comprando
             </Link>
@@ -470,6 +479,18 @@ export default function CheckoutPage() {
                   className="w-full border border-gray-300 rounded px-3 py-2"
                 />
               </div>
+              {isGuestCheckout && (
+                <div>
+                  <label className="text-sm text-gray-600">Correo para consultar tu pedido</label>
+                  <input
+                    type="email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    placeholder="correo@ejemplo.com"
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <label className="text-sm text-gray-600">Departamento - Provincia - Distrito (en un solo campo)</label>
                 <input

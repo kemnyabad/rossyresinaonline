@@ -123,6 +123,7 @@ const Header = () => {
     { href: "/escuela", label: "Escuela", icon: BookOpenIcon },
     { href: "/productos?ofertas=1", label: "Ofertas", icon: GiftIcon },
     { href: "/rifas", label: "Rifas", icon: GiftIcon },
+    { href: "/track-orders", label: "Mis pedidos", icon: ShoppingCartIcon },
     { href: "/blog", label: "Blog", icon: BookOpenIcon },
   ];
 
@@ -486,6 +487,12 @@ const Header = () => {
                 </div>
                 {!isAuthenticated && (
                   <div className="grid gap-2 border-b border-gray-100 p-4">
+                    <Link
+                      href="/track-orders"
+                      className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      Mis pedidos
+                    </Link>
                     <Link
                       href="/register"
                       className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"

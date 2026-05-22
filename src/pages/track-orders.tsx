@@ -44,21 +44,33 @@ export default function TrackOrdersPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("Ver todo");
   const [search, setSearch] = useState("");
   const [email, setEmail] = useState("");
+  const [orderCode, setOrderCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const isGuestLookup = !customerSession && !isAdminSession;
 
   useEffect(() => {
     const url = new URL(window.location.href);
     const qEmail = url.searchParams.get("email") || "";
+    const qOrder = url.searchParams.get("order") || url.searchParams.get("orderCode") || "";
     if (qEmail) setEmail(qEmail);
+    if (qOrder) setOrderCode(qOrder);
   }, []);
 
   const fetchOrders = async () => {
     const lookupEmail = email.trim();
+    const lookupOrder = orderCode.trim();
     if (!lookupEmail && isAdminSession) {
       setOrders([]);
       return;
     }
-    const url = lookupEmail ? `/api/orders?email=${encodeURIComponent(lookupEmail)}` : "/api/orders";
+    if (isGuestLookup && (!lookupEmail || !lookupOrder)) {
+      setOrders([]);
+      return;
+    }
+    const params = new URLSearchParams();
+    if (lookupEmail) params.set("email", lookupEmail);
+    if (lookupOrder) params.set("order", lookupOrder);
+    const url = params.toString() ? `/api/orders?${params.toString()}` : "/api/orders";
     setLoading(true);
     try {
       const res = await fetch(url);
@@ -72,9 +84,9 @@ export default function TrackOrdersPage() {
   };
 
   useEffect(() => {
-    if (email.trim()) fetchOrders();
+    if (email.trim() && (!isGuestLookup || orderCode.trim())) fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email]);
+  }, [email, orderCode, isGuestLookup]);
 
   useEffect(() => {
     const sessionEmail = String((customerSession?.user as any)?.email || "").trim();
@@ -137,7 +149,9 @@ export default function TrackOrdersPage() {
             <p className="text-sm font-semibold text-amazon_blue">Cuenta</p>
             <h1 className="mt-1 text-2xl font-semibold text-gray-900">Mis pedidos</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
-              Consulta el estado de tus compras usando tu correo, número de pedido o nombre del producto.
+              {isGuestLookup
+                ? "Consulta el estado de tu compra usando tu correo y número de pedido."
+                : "Consulta el estado de tus compras usando tu correo, número de pedido o nombre del producto."}
             </p>
           </div>
 
@@ -164,19 +178,27 @@ export default function TrackOrdersPage() {
               ))}
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(260px,360px)_auto] xl:items-center">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Nº de pedido o artículo"
-                className="h-11 w-full min-w-0 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
-              />
+            <div className={`mt-4 grid grid-cols-1 gap-3 xl:items-center ${isGuestLookup ? "xl:grid-cols-[minmax(260px,360px)_minmax(220px,320px)_auto]" : "xl:grid-cols-[minmax(0,1fr)_minmax(220px,320px)_minmax(220px,320px)_auto]"}`}>
+              {!isGuestLookup && (
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Nº de pedido o artículo"
+                  className="h-11 w-full min-w-0 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
+                />
+              )}
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Correo para buscar pedidos"
                 disabled={Boolean((customerSession?.user as any)?.email)}
                 className="h-11 w-full min-w-0 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400 disabled:bg-gray-50 disabled:text-gray-600"
+              />
+              <input
+                value={orderCode}
+                onChange={(e) => setOrderCode(e.target.value)}
+                placeholder="Número de pedido"
+                className="h-11 w-full min-w-0 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
               />
               <button
                 type="button"
@@ -265,9 +287,13 @@ export default function TrackOrdersPage() {
           ) : (
             <div className="p-5 md:p-7">
               <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6">
-                <h2 className="text-lg font-semibold text-gray-900">Aún no has realizado pedidos</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {isGuestLookup ? "Consulta tu pedido" : "Aún no has realizado pedidos"}
+                </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Cuando completes tu primera compra, podrás consultar aquí su estado.
+                  {isGuestLookup
+                    ? "Ingresa el correo usado en la compra y el número de pedido para ver su estado."
+                    : "Cuando completes tu primera compra, podrás consultar aquí su estado."}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Link

@@ -113,14 +113,31 @@ const serializeOrder = (order: any) => {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
     const email = String(req.query.email || "").trim().toLowerCase();
+    const orderQuery = String(req.query.order || req.query.orderCode || "").trim().toLowerCase();
     const includeHistory = String(req.query.includeHistory || "").trim() === "1";
     try {
+      const session: any = await getServerSession(req, res, authOptions as any);
+      const sessionEmail = String((session?.user as any)?.email || "").trim().toLowerCase();
+      const isAdminSession = (session?.user as any)?.role === "ADMIN";
+      const canBrowseByEmail = isAdminApiRequest(req) || isAdminSession || (email && sessionEmail === email);
+
       if (email) {
+        if (!canBrowseByEmail && !orderQuery) {
+          return res.status(400).json({ error: "Correo y número de pedido requeridos" });
+        }
         const orders = await db.order.findMany({
           where: { customerEmail: email },
           orderBy: { createdAt: "desc" },
         });
-        return res.status(200).json(orders.map(serializeOrder));
+        const serialized = orders.map(serializeOrder);
+        const filtered = orderQuery
+          ? serialized.filter((o: any) => {
+              const code = String(o.orderCode || "").trim().toLowerCase();
+              const id = String(o.id || "").trim().toLowerCase();
+              return code === orderQuery || id === orderQuery;
+            })
+          : serialized;
+        return res.status(200).json(filtered);
       }
       if (isAdminApiRequest(req)) {
         const orders = await db.order.findMany({ orderBy: { createdAt: "desc" } });
@@ -136,10 +153,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json(active);
       }
 
-      const session: any = await getServerSession(req, res, authOptions as any);
       if (!session) return res.status(401).json({ error: "No autorizado" });
 
-      const sessionEmail = String((session.user as any)?.email || "").trim().toLowerCase();
       if (!sessionEmail) return res.status(200).json([]);
       const user = await db.user.findUnique({ where: { email: sessionEmail } });
       const orders = await db.order.findMany({
@@ -189,6 +204,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!name) return res.status(400).json({ error: "Nombre completo requerido" });
     if (!dni || dni.length < 6) return res.status(400).json({ error: "DNI requerido" });
     if (!phone) return res.status(400).json({ error: "Teléfono o WhatsApp requerido" });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: "Correo requerido para consultar el pedido" });
+    }
     if (!locationLine) return res.status(400).json({ error: "Departamento, provincia y distrito requeridos" });
     if (shippingCarrier === "SHALOM" && !shalomAgency) {
       return res.status(400).json({ error: "Debes indicar la agencia Shalom" });

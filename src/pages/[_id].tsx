@@ -460,6 +460,11 @@ const DynamicPage = ({ product, recs }: Props) => {
                   </div>
                   <p className="mt-2 text-sm text-gray-700">{"Entrega entre 2 a 3 días aproximadamente"}</p>
                   <p className="text-sm text-gray-500">{"Se envía a Perú"}</p>
+                  {product.description && (
+                    <div className="mt-3 rounded-lg bg-gray-50 p-3 text-sm leading-6 text-gray-700 whitespace-pre-line">
+                      {product.description}
+                    </div>
+                  )}
                   <button
                     onClick={() => addProductToCart(qty)}
                     className="mt-3 h-11 w-full rounded-full bg-orange-500 text-white text-base font-semibold hover:brightness-95"
