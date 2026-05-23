@@ -1,16 +1,24 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { StateProps, StoreProduct } from "../../type";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import CartProduct from "@/components/CartProduct";
 import ResetCart from "@/components/ResetCart";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import FormattedPrice from "@/components/FormattedPrice";
 import Products from "@/components/Products";
-import { ChevronLeftIcon, EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
+import {
+  Bars3Icon,
+  ChevronLeftIcon,
+  ShoppingCartIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { addToCart, decreaseQuantity, deleteProduct, increaseQuantity } from "@/store/nextSlice";
 
 const CartPage = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const cartItems = useSelector((state: StateProps) => (state.next?.productData || []) as StoreProduct[]);
   const [recs, setRecs] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -28,6 +36,18 @@ const CartPage = () => {
     [cartItems]
   );
   const shippingAmount = 0;
+  const selectedCount = cartItems.length;
+  const formatPlainPrice = (value: number) => `S/ ${Number(value || 0).toFixed(2)}`;
+  const normalizeCartImage = (src?: string) => {
+    const raw = String(src || "").replace(/\\/g, "/");
+    if (!raw) return "/favicon-96x96.png";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return raw.startsWith("/") ? raw : `/${raw}`;
+  };
+  const discountLabel = (oldPrice?: number, price?: number) => {
+    if (typeof oldPrice !== "number" || !price || oldPrice <= price) return "";
+    return `-${Math.round(((oldPrice - price) / oldPrice) * 100)}%`;
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -76,28 +96,147 @@ const CartPage = () => {
         </div>
       ) : cartItems.length > 0 ? (
         <>
-          <div className="sticky top-0 z-30 bg-white px-4 pb-3 pt-4 md:hidden">
-            <div className="grid grid-cols-[46px_minmax(0,1fr)_46px] items-center">
+          <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-4 pb-3 pt-4 md:hidden">
+            <div className="grid grid-cols-[74px_minmax(0,1fr)_46px] items-center">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-950"
+                className="flex items-center gap-2 text-gray-950"
                 aria-label="Volver"
               >
                 <ChevronLeftIcon className="h-5 w-5 stroke-[2.5]" />
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-sm font-black text-white">
+                  ✓
+                </span>
+                <span className="text-lg leading-none">All</span>
               </button>
-              <h1 className="text-center text-xl font-black text-gray-950">Carrito</h1>
-              <Link
-                href="/"
-                className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-950"
-                aria-label="Seguir comprando"
+              <h1 className="text-center text-xl font-black text-gray-950">Cart ({selectedCount})</h1>
+              <button
+                type="button"
+                className="ml-auto flex h-9 w-9 items-center justify-center text-gray-950"
+                aria-label="Menú"
               >
-                <EllipsisHorizontalIcon className="h-5 w-5 stroke-[2.5]" />
-              </Link>
+                <Bars3Icon className="h-7 w-7 stroke-[2.2]" />
+              </button>
             </div>
           </div>
 
-          <div className="mx-auto grid w-full max-w-[480px] grid-cols-1 gap-2 px-2.5 pt-2.5 md:max-w-6xl md:px-0 md:pt-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="md:hidden">
+            <section className="mt-3 bg-white">
+              {cartItems.map((item) => {
+                const itemDiscount = discountLabel(item.oldPrice, item.price);
+                return (
+                  <article key={item._id} className="grid grid-cols-[42px_180px_minmax(0,1fr)] gap-2 border-b border-gray-100 px-3 py-3">
+                    <div className="flex items-center">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-lg font-black text-white">✓</span>
+                    </div>
+                    <Link href={`/${item.code || item._id}`} className="relative h-[180px] overflow-hidden bg-gray-100">
+                      <Image src={normalizeCartImage(item.image)} alt={item.title || "Producto"} fill className="object-cover" />
+                    </Link>
+                    <div className="min-w-0">
+                      <div className="flex items-start gap-2">
+                        <Link href={`/${item.code || item._id}`} className="min-w-0 flex-1">
+                          <p className="line-clamp-2 text-base leading-5 text-gray-700">{item.title}</p>
+                          <p className="mt-1 text-base text-gray-700">{item.quantity}pcs</p>
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => dispatch(deleteProduct(item._id))}
+                          className="shrink-0 text-gray-500"
+                          aria-label="Eliminar producto"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                      <div className="mt-20 flex items-end justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="flex flex-wrap items-center gap-1 text-xl font-black text-gray-950">
+                            {itemDiscount && (
+                              <span className="rounded border border-amazon_blue px-1 text-sm font-bold leading-5 text-amazon_blue">
+                                {itemDiscount}
+                              </span>
+                            )}
+                            <FormattedPrice amount={item.price} />
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-amazon_blue">
+                            About {formatPlainPrice(item.price / Math.max(1, item.quantity))}/pc
+                          </p>
+                        </div>
+                        <div className="flex h-9 items-center rounded-md border border-gray-200 bg-white">
+                          <button
+                            type="button"
+                            onClick={() => dispatch(decreaseQuantity({ _id: item._id }))}
+                            className="flex h-9 w-9 items-center justify-center text-lg"
+                            aria-label="Reducir cantidad"
+                          >
+                            -
+                          </button>
+                          <span className="min-w-[34px] text-center text-base">{item.quantity}</span>
+                          <button
+                            type="button"
+                            onClick={() => dispatch(increaseQuantity({ _id: item._id }))}
+                            className="flex h-9 w-9 items-center justify-center text-lg"
+                            aria-label="Aumentar cantidad"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </section>
+
+            <section className="grid grid-cols-2 gap-1 bg-white pt-3">
+              {recommendedProducts.slice(0, 10).map((product: any) => {
+                const recDiscount = discountLabel(product.oldPrice, product.price);
+                return (
+                  <Link key={`cart-rec-${product._id}`} href={`/${product.code || product._id}`} className="min-w-0 bg-white">
+                    <div className="relative aspect-square overflow-hidden bg-gray-100">
+                      <Image src={normalizeCartImage(product.image)} alt={product.title || "Producto"} fill className="object-cover" />
+                    </div>
+                    <div className="px-2 py-2">
+                      <p className="line-clamp-1 text-sm text-gray-700">{product.title || "Producto"}</p>
+                      <div className="mt-1 flex items-center gap-1 text-xs text-gray-900">
+                        ★★★★★ <span className="text-gray-500">ventas</span>
+                      </div>
+                      <div className="mt-1 flex items-end gap-1">
+                        {recDiscount && <span className="rounded border border-amazon_blue px-1 text-xs font-bold text-amazon_blue">{recDiscount}</span>}
+                        <span className="text-lg font-black text-amazon_blue">
+                          <FormattedPrice amount={Number(product.price || 0)} />
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            dispatch(addToCart({
+                              _id: product._id,
+                              brand: product.brand,
+                              category: product.category,
+                              description: product.description,
+                              image: product.image,
+                              isNew: product.isNew,
+                              oldPrice: product.oldPrice,
+                              price: Number(product.price || 0),
+                              title: product.title,
+                              quantity: 1,
+                            }));
+                          }}
+                          className="ml-auto flex h-9 w-9 items-center justify-center rounded-full border-2 border-gray-950 bg-white text-gray-950"
+                          aria-label="Agregar al carrito"
+                        >
+                          <ShoppingCartIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </section>
+          </div>
+
+          <div className="mx-auto hidden w-full max-w-[480px] grid-cols-1 gap-2 px-2.5 pt-2.5 md:grid md:max-w-6xl md:px-0 md:pt-0 lg:grid-cols-[minmax(0,1fr)_360px]">
             <section className="bg-white p-4 md:rounded-none md:p-0">
               <div className="hidden items-center justify-between border-b border-gray-300 px-4 py-4 md:flex md:px-5">
                 <h1 className="text-2xl font-black text-gray-950 md:text-3xl">Carro de Compras</h1>
@@ -127,7 +266,7 @@ const CartPage = () => {
               </div>
             </section>
 
-            <aside className="fixed bottom-0 left-0 right-0 z-[80] md:static md:z-auto">
+            <aside className="md:static md:z-auto">
               <div className="mx-auto w-full max-w-[480px] border-t border-gray-200 bg-white px-4 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-4 shadow-[0_-6px_18px_rgba(17,24,39,0.08)] lg:sticky lg:top-24 md:max-w-none md:rounded-none md:border-t-0 md:p-4 md:shadow-none">
                 <h2 className="hidden text-xl font-black text-gray-950 md:block">Resumen del pedido</h2>
                 <div className="hidden space-y-2.5 border-b border-dashed border-gray-300 pb-3 text-sm md:mt-4 md:block md:space-y-3 md:border-gray-950 md:pb-3 md:text-lg">
@@ -169,6 +308,27 @@ const CartPage = () => {
               </div>
             </aside>
           </div>
+
+          <aside className="fixed bottom-0 left-0 right-0 z-[80] md:hidden">
+            <div className="mx-auto flex w-full max-w-[480px] items-center gap-3 rounded-t-2xl bg-white px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-6px_18px_rgba(17,24,39,0.12)]">
+              <div className="min-w-0 flex-1">
+                {cartItems.some((item) => typeof item.oldPrice === "number" && item.oldPrice > item.price) && (
+                  <p className="text-sm text-gray-500 line-through">
+                    <FormattedPrice amount={cartItems.reduce((sum, item) => sum + Number(item.oldPrice || item.price) * item.quantity, 0)} />
+                  </p>
+                )}
+                <p className="text-2xl font-black leading-none text-amazon_blue">
+                  <FormattedPrice amount={totals.total + shippingAmount} />
+                </p>
+              </div>
+              <Link
+                href="/checkout"
+                className="flex h-14 min-w-[230px] items-center justify-center rounded-full bg-amazon_blue px-5 text-lg font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
+              >
+                Comprar ahora
+              </Link>
+            </div>
+          </aside>
 
           <section className="mt-4 hidden rounded-xl border border-gray-200 bg-white p-4 md:block md:p-5">
             <h3 className="mb-3 text-lg font-semibold text-gray-900">Puede que te interese</h3>
