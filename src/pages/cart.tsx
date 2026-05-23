@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { StateProps, StoreProduct } from "../../type";
 import { useDispatch, useSelector } from "react-redux";
 import CartProduct from "@/components/CartProduct";
@@ -91,7 +92,7 @@ const CartPage = () => {
   }, [recs, cartItems]);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] px-0 pb-[104px] pt-0 md:px-6 md:pb-8">
+    <div className="min-h-screen bg-[#f5f5f5] px-0 pb-[92px] pt-0 md:px-6 md:pb-8">
       {!mounted ? (
         <div className="mx-auto max-w-6xl rounded-3xl bg-white p-6 text-center md:rounded-none md:p-8">
           <h1 className="text-lg font-semibold text-gray-900">Cargando carrito...</h1>
@@ -99,18 +100,14 @@ const CartPage = () => {
       ) : cartItems.length > 0 ? (
         <>
           <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-4 pb-3 pt-4 md:hidden">
-            <div className="grid grid-cols-[86px_minmax(0,1fr)_46px] items-center">
+            <div className="grid grid-cols-[46px_minmax(0,1fr)_46px] items-center">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="flex items-center gap-2 text-gray-950"
+                className="flex h-9 w-9 items-center justify-center text-gray-950"
                 aria-label="Volver"
               >
                 <ChevronLeftIcon className="h-5 w-5 stroke-[2.5]" />
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-sm font-black text-white">
-                  ✓
-                </span>
-                <span className="text-base leading-none">Todos</span>
               </button>
               <h1 className="text-center text-xl font-black text-gray-950">Carrito ({selectedCount})</h1>
               <button
@@ -313,26 +310,41 @@ const CartPage = () => {
             </aside>
           </div>
 
-          <aside className="fixed bottom-0 left-0 right-0 z-[80] md:hidden">
-            <div className="mx-auto flex w-full max-w-[480px] items-center gap-3 rounded-t-2xl bg-white px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-6px_18px_rgba(17,24,39,0.12)]">
-              <div className="min-w-0 flex-1">
-                {hasCartDiscount && (
-                  <p className="text-sm text-gray-500 line-through">
-                    <FormattedPrice amount={originalTotal} />
-                  </p>
-                )}
-                <p className="text-2xl font-black leading-none text-amazon_blue">
-                  <FormattedPrice amount={totals.total + shippingAmount} />
-                </p>
-              </div>
-              <Link
-                href="/checkout"
-                className="flex h-14 min-w-[230px] items-center justify-center rounded-full bg-amazon_blue px-5 text-base font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
-              >
-                Pagar ({selectedCount})
-              </Link>
-            </div>
-          </aside>
+          {mounted
+            ? createPortal(
+                <aside
+                  className="md:hidden"
+                  style={{
+                    position: "fixed",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 9999,
+                    width: "100%",
+                  }}
+                >
+                  <div className="flex w-full items-center gap-3 bg-white px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-6px_18px_rgba(17,24,39,0.12)]">
+                    <div className="min-w-0 flex-1">
+                      {hasCartDiscount && (
+                        <p className="text-sm text-gray-500 line-through">
+                          <FormattedPrice amount={originalTotal} />
+                        </p>
+                      )}
+                      <p className="text-2xl font-black leading-none text-amazon_blue">
+                        <FormattedPrice amount={totals.total + shippingAmount} />
+                      </p>
+                    </div>
+                    <Link
+                      href="/checkout"
+                      className="flex h-14 min-w-[220px] items-center justify-center rounded-full bg-amazon_blue px-5 text-base font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
+                    >
+                      Pagar ({selectedCount})
+                    </Link>
+                  </div>
+                </aside>,
+                document.body
+              )
+            : null}
 
           <section className="mt-4 hidden rounded-xl border border-gray-200 bg-white p-4 md:block md:p-5">
             <h3 className="mb-3 text-lg font-semibold text-gray-900">Puede que te interese</h3>
