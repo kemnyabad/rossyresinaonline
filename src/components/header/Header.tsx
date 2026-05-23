@@ -2,6 +2,7 @@ import Image from "next/image";
 import logo from "../../images/logo.jpg";
 import {
   MagnifyingGlassIcon,
+  CameraIcon,
   UserIcon,
   ShoppingCartIcon,
   Bars3Icon,
@@ -28,6 +29,7 @@ const RESINY_IMAGE = "/resiny.png";
 
 const Header = () => {
   const router = useRouter();
+  const isHomePage = router.pathname === "/";
   const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
   const { data: session } = useSession();
   const [allData, setAllData] = useState<StoreProduct[]>([]);
@@ -201,6 +203,25 @@ const Header = () => {
   return (
     <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
       <div className="lg:hidden border-b border-gray-100 bg-white px-3 pb-3 pt-2">
+        {isHomePage && !isResinyPage ? (
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => setMobileSearchOpen(true)}
+              className="relative h-12 flex-1 rounded-full border-2 border-amazon_blue bg-white pl-4 pr-20 text-left text-base text-gray-500 shadow-sm"
+              aria-label="Abrir buscador"
+            >
+              <span>{searchQuery || "Buscar productos"}</span>
+              <span className="absolute right-12 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-gray-700">
+                <CameraIcon className="h-5 w-5" />
+              </span>
+              <span className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-amazon_blue text-white">
+                <MagnifyingGlassIcon className="h-6 w-6 stroke-[2.5]" />
+              </span>
+            </button>
+          </div>
+        ) : (
+        <>
         <div className="flex items-center justify-between">
           <Link href={"/"} onClick={handleLogoClick} className="flex items-center gap-2 group">
             <div className="bg-white rounded-full p-1 shadow ring-1 ring-amazon_blue/20 group-hover:shadow-md transition-shadow duration-300">
@@ -267,6 +288,8 @@ const Header = () => {
             <span>{searchQuery || "Buscar moldes, resina, pigmentos..."}</span>
           </button>
         </div>}
+        </>
+        )}
       </div>
 
       {mobileMenuOpen && (
@@ -432,11 +455,11 @@ const Header = () => {
             <button
               type="button"
               onClick={() => setProfileOpen((v) => !v)}
-              className="group flex min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm text-gray-700 transition-colors hover:border-emerald-700 hover:bg-emerald-700 hover:text-white"
+              className="group flex min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm text-gray-700 transition-colors hover:border-amazon_blue hover:bg-amazon_blue hover:text-white"
               aria-haspopup="menu"
               aria-expanded={profileOpen}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-emerald-700 group-hover:ring-white">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-amazon_blue group-hover:ring-white">
                 <UserIcon className="w-5 h-5" />
               </span>
               <div className="min-w-0 leading-tight text-left">
@@ -530,12 +553,12 @@ const Header = () => {
           {!isResinyPage && (
             <Link
               href="/cart"
-              className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-emerald-700 hover:bg-emerald-700"
+              className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-amazon_blue hover:bg-amazon_blue"
               aria-label="Abrir carrito"
             >
               <span className="flex items-center gap-3 relative">
                 <div className="relative">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-emerald-700 group-hover:ring-white">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-amazon_blue group-hover:ring-white">
                     <ShoppingCartIcon className="w-6 h-6" />
                   </span>
                   <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center ring-2 ring-white">

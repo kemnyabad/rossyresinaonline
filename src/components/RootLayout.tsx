@@ -5,10 +5,10 @@ import Footer from "./Footer";
 import Link from "next/link";
 import {
   HomeIcon,
-  MagnifyingGlassIcon,
   ShoppingCartIcon, 
   UserIcon,
-  ArrowRightIcon 
+  ArrowRightIcon,
+  Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
 
@@ -22,6 +22,7 @@ const RootLayout = ({ children }: Props) => {
     router.pathname.startsWith("/rifas") ||
     router.pathname.startsWith("/rifa/") ||
     router.pathname.startsWith("/admin/rifa");
+  const isProductDetailPage = router.pathname === "/[_id]";
   const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
   const hideFooter = isRifasPage || isResinyPage;
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
@@ -70,19 +71,24 @@ const RootLayout = ({ children }: Props) => {
 
   const mobileTabs = [
     { href: "/", label: "Inicio", icon: HomeIcon, active: router.pathname === "/" },
-    { href: "/search", label: "Buscar", icon: MagnifyingGlassIcon, active: router.pathname.startsWith("/search") },
-    { href: "/cart", label: "Carrito", icon: ShoppingCartIcon, active: router.pathname.startsWith("/cart") },
+    {
+      href: "/productos",
+      label: "Categorías",
+      icon: Squares2X2Icon,
+      active: router.pathname.startsWith("/productos") || router.pathname.startsWith("/categoria"),
+    },
     {
       href: "/account",
       label: "Cuenta",
       icon: UserIcon,
       active: router.pathname.startsWith("/account") || router.pathname.startsWith("/sign-in"),
     },
+    { href: "/cart", label: "Carrito", icon: ShoppingCartIcon, active: router.pathname.startsWith("/cart"), promo: true },
   ];
 
   return (
     <>
-      {!isRifasPage && (
+      {!isRifasPage && !isProductDetailPage && (
         isResinyPage ? (
           <div className="resiny-fixed-header fixed left-0 right-0 top-0 z-[9998] bg-white">
             <style jsx global>{`
@@ -149,20 +155,25 @@ const RootLayout = ({ children }: Props) => {
       <div>
         {!hideFooter && <Footer />} {/* Renderiza Footer solo en páginas públicas de tienda */}
       </div>
-      {!isResinyPage && <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-4 px-2 py-2">
+      {!isResinyPage && !isProductDetailPage && <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white md:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-4 px-1.5 py-1.5">
           {mobileTabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex flex-col items-center justify-center gap-0.5 rounded-lg py-1 text-[11px] ${
-                  tab.active ? "font-semibold text-amazon_blue" : "text-gray-500"
+                className={`relative flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 text-[11px] leading-tight ${
+                  tab.active ? "font-bold text-amazon_blue" : "font-semibold text-gray-700"
                 }`}
               >
-                <span className="relative">
-                  <Icon className={`h-5 w-5 ${tab.active ? "text-amazon_blue" : "text-gray-500"}`} />
+                {tab.promo ? (
+                  <span className="absolute right-0 top-0 rounded-full bg-amazon_blue px-1.5 py-0.5 text-[8px] font-bold leading-none text-white">
+                    Oferta
+                  </span>
+                ) : null}
+                <span className="relative flex h-6 items-center justify-center">
+                  <Icon className={`h-6 w-6 ${tab.active ? "text-amazon_blue" : "text-black"}`} />
                   {tab.href === "/cart" && cartCount > 0 ? (
                     <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amazon_blue px-1 text-[9px] font-semibold text-white">
                       {cartCount}
@@ -170,6 +181,11 @@ const RootLayout = ({ children }: Props) => {
                   ) : null}
                 </span>
                 <span>{tab.label}</span>
+                {tab.promo ? (
+                  <span className="-mt-0.5 rounded-full bg-pink-100 px-1.5 py-0.5 text-[9px] font-bold leading-none text-amazon_blue">
+                    Envío rápido
+                  </span>
+                ) : null}
               </Link>
             );
           })}

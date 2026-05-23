@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { FaStar } from "react-icons/fa";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import type { ProductProps } from "../../type";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -13,6 +13,17 @@ import Products from "@/components/Products";
 import { getAllProducts } from "@/lib/repositories/productRepository";
 import { useSession, signIn } from "next-auth/react";
 import { formatProductTitle } from "@/lib/textFormat";
+import {
+  ArrowLeftIcon,
+  ChevronRightIcon,
+  MagnifyingGlassIcon,
+  MinusIcon,
+  PlusIcon,
+  ShareIcon,
+  ShieldCheckIcon,
+  ShoppingCartIcon,
+  TruckIcon,
+} from "@heroicons/react/24/outline";
 
 interface Props {
   product: ProductProps | null;
@@ -36,8 +47,10 @@ const DynamicPage = ({ product, recs }: Props) => {
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [justAdded, setJustAdded] = useState(false);
   const addNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mobileImageTouchStart = useRef<{ x: number; y: number } | null>(null);
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [mobileBuyBarReady, setMobileBuyBarReady] = useState(false);
   const [salesCount, setSalesCount] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
@@ -46,11 +59,18 @@ const DynamicPage = ({ product, recs }: Props) => {
   const [reviewError, setReviewError] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const [viewerReady, setViewerReady] = useState(false);
+  const [mobileProductSearchOpen, setMobileProductSearchOpen] = useState(false);
+  const [mobileProductSearchQuery, setMobileProductSearchQuery] = useState("");
   const [offerCtaText, setOfferCtaText] = useState("!PRODUCTOS EN OFERTA! APROVÉCHALO AHORA!");
   const [offerCtaVisible, setOfferCtaVisible] = useState(true);
   const [showShippingProcess, setShowShippingProcess] = useState(false);
   const { data: session } = useSession();
   const dispatch = useDispatch();
+  const cartCount = useSelector((state: any) =>
+    Array.isArray(state?.next?.productData)
+      ? state.next.productData.reduce((sum: number, item: any) => sum + Number(item?.quantity || 1), 0)
+      : 0
+  );
   const router = useRouter();
 
   const getOptionalPrice = (value: unknown) => {
@@ -88,14 +108,6 @@ const DynamicPage = ({ product, recs }: Props) => {
     const text = `Mira este producto: ${title} - S/ ${price.toFixed(2)}\n${product?.description || ""}`;
     return `https://wa.me/?text=${encodeURIComponent(text)}`;
   }, [product]);
-
-  const waBuyHref = useMemo(() => {
-    const title = product?.title || product?.code || "Producto";
-    const price = Number(product?.price) || 0;
-    const total = price * qty;
-    const text = `Hola Rossy Resina, quiero comprar:\nProducto: ${title}\nCantidad: ${qty}\nPrecio unitario: S/ ${price.toFixed(2)}\nTotal estimado: S/ ${total.toFixed(2)}\n\nPor favor, ayúdame con el pedido.`;
-    return `https://wa.me/?text=${encodeURIComponent(text)}`;
-  }, [product, qty]);
 
   const productImages = useMemo(() => {
     const rawImages = (product as any)?.images;
@@ -149,6 +161,62 @@ const DynamicPage = ({ product, recs }: Props) => {
     setViewerIndex((viewerIndex + 1) % productImages.length);
   };
 
+  const submitMobileProductSearch = (event?: React.FormEvent) => {
+    event?.preventDefault();
+    const q = mobileProductSearchQuery.trim();
+    router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+  };
+
+  const showPrevProductImage = () => {
+    if (productImages.length <= 1) return;
+    const currentIndex = productImages.findIndex((item) => item === mainImage);
+    const nextIndex = (Math.max(0, currentIndex) - 1 + productImages.length) % productImages.length;
+    setActiveImage(productImages[nextIndex]);
+  };
+
+  const showNextProductImage = () => {
+    if (productImages.length <= 1) return;
+    const currentIndex = productImages.findIndex((item) => item === mainImage);
+    const nextIndex = (Math.max(0, currentIndex) + 1) % productImages.length;
+    setActiveImage(productImages[nextIndex]);
+  };
+
+  const handleMobileImageTouchStart = (event: React.TouchEvent<HTMLButtonElement>) => {
+    const touch = event.touches[0];
+    mobileImageTouchStart.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleMobileImageTouchEnd = (event: React.TouchEvent<HTMLButtonElement>) => {
+    const start = mobileImageTouchStart.current;
+    mobileImageTouchStart.current = null;
+    if (!start || productImages.length <= 1) return;
+
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    const horizontalSwipe = Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.35;
+    if (!horizontalSwipe) return;
+
+    if (dx < 0) showNextProductImage();
+    else showPrevProductImage();
+  };
+
+  const shareProduct = async () => {
+    const title = product?.title || product?.code || "Producto Rossy Resina";
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title, text: product?.description || title, url });
+        return;
+      } catch {
+        // Fall back to WhatsApp when native sharing is cancelled or unavailable.
+      }
+    }
+    if (typeof window !== "undefined") {
+      window.open(waHref, "_blank", "noopener,noreferrer");
+    }
+  };
+
   const addProductToCart = (quantity: number) => {
     if (!product) return;
     dispatch(
@@ -182,7 +250,11 @@ const DynamicPage = ({ product, recs }: Props) => {
 
   useEffect(() => {
     setViewerReady(true);
-    return () => setViewerReady(false);
+    setMobileBuyBarReady(true);
+    return () => {
+      setViewerReady(false);
+      setMobileBuyBarReady(false);
+    };
   }, []);
 
   useEffect(() => {
@@ -393,98 +465,292 @@ const DynamicPage = ({ product, recs }: Props) => {
         </div>
       ) : (
         <>
-          <div className="md:hidden mb-6">
-            <div className="rounded-xl border border-gray-200 bg-white p-3">
-              <div className="flex flex-col gap-3">
+          <div className="md:hidden -mx-4 -mt-4 mb-8 bg-white pb-28">
+            <div className="relative bg-white">
+              <button
+                type="button"
+                onClick={() => openImageViewer(mainImage)}
+                onTouchStart={handleMobileImageTouchStart}
+                onTouchEnd={handleMobileImageTouchEnd}
+                className="relative block w-full overflow-hidden bg-white pb-[100%]"
+                aria-label="Ver imágenes del producto"
+              >
+                {mainImageIsProcess ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-2 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Producto en Proceso
+                  </div>
+                ) : (
+                  <Image
+                    src={mainImage}
+                    alt={displayProductTitle}
+                    fill
+                    sizes="100vw"
+                    className="object-contain"
+                    priority
+                  />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="absolute left-3 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/55 text-white backdrop-blur"
+                aria-label="Volver"
+              >
+                <ArrowLeftIcon className="h-6 w-6" />
+              </button>
+              <div className="absolute right-3 top-4 flex gap-2">
+                <div className="relative h-11 w-11">
+                  {mobileProductSearchOpen ? (
+                    <form
+                      onSubmit={submitMobileProductSearch}
+                      className="absolute right-0 top-0 z-20 flex h-11 w-[min(calc(100vw-112px),270px)] items-center overflow-hidden rounded-full border border-amazon_blue bg-white shadow-[0_8px_22px_rgba(17,24,39,0.16)]"
+                    >
+                      <input
+                        value={mobileProductSearchQuery}
+                        onChange={(event) => setMobileProductSearchQuery(event.target.value)}
+                        autoFocus
+                        className="h-full min-w-0 flex-1 bg-white px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400"
+                        placeholder="Buscar producto..."
+                      />
+                      <button
+                        type="submit"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amazon_blue text-white"
+                        aria-label="Buscar"
+                      >
+                        <MagnifyingGlassIcon className="h-6 w-6" />
+                      </button>
+                    </form>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setMobileProductSearchOpen(true)}
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/55 text-white backdrop-blur"
+                      aria-label="Buscar productos"
+                    >
+                      <MagnifyingGlassIcon className="h-6 w-6" />
+                    </button>
+                  )}
+                </div>
                 <button
                   type="button"
-                  onClick={() => openImageViewer(mainImage)}
-                  className="relative w-full overflow-hidden rounded-lg bg-white pb-[100%]"
-                  aria-label="Ver imgenes del producto"
+                  onClick={shareProduct}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/55 text-white backdrop-blur"
+                  aria-label="Compartir producto"
                 >
-                  {mainImageIsProcess ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-2 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">
-                      Producto en Proceso
-                    </div>
-                  ) : (
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        backgroundImage: `url(${mainImage})`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundSize: "contain",
-                        backgroundPosition: "50% 50%",
-                        backgroundColor: "transparent",
-                      }}
-                    />
-                  )}
+                  <ShareIcon className="h-6 w-6" />
                 </button>
-                {productImages.length > 1 ? (
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-                    {productImages.map((img) => (
+              </div>
+              <div className="absolute bottom-3 right-3 rounded-full bg-slate-900/70 px-3 py-1 text-xs font-semibold text-white">
+                {Math.max(1, productImages.findIndex((img) => img === mainImage) + 1)}/{productImages.length}
+              </div>
+            </div>
+
+            {productImages.length > 1 ? (
+              <div className="no-scrollbar flex gap-2 overflow-x-auto border-b border-gray-100 px-4 py-2">
+                {productImages.map((img, index) => (
+                  <button
+                    key={`mobile-thumb-${img}`}
+                    type="button"
+                    onClick={() => setActiveImage(img)}
+                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-white ${
+                      mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"
+                    }`}
+                    aria-label={`Ver imagen ${index + 1}`}
+                  >
+                    {isProcessImage(img) ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
+                        Proceso
+                      </div>
+                    ) : (
+                      <Image src={img} alt="Miniatura" fill className="object-cover" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="flex items-center gap-3 border-b border-pink-100 bg-pink-50 px-4 py-2 text-xs font-semibold text-amazon_blue">
+              <span className="inline-flex items-center gap-1">
+                <TruckIcon className="h-4 w-4" />
+                Envío a Perú
+              </span>
+              <span className="h-4 w-px bg-pink-200" />
+              <span className="inline-flex items-center gap-1">
+                <ShieldCheckIcon className="h-4 w-4" />
+                Compra segura
+              </span>
+              <ChevronRightIcon className="ml-auto h-4 w-4" />
+            </div>
+
+            <div className="px-4 py-3">
+              <h1 className="text-base font-medium leading-6 text-gray-950">{displayProductTitle}</h1>
+              <div className="mt-1 flex items-center justify-between gap-3 text-sm text-gray-600">
+                <span>{salesCount > 0 ? `${salesCount} vendidos` : "Rossy Resina"}</span>
+                <span className="flex items-center gap-1">
+                  {reviewCount > 0 ? reviewAverage.toFixed(1) : "5.0"}
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <FaStar
+                      key={i}
+                      className={`h-3.5 w-3.5 ${
+                        i < Math.round(reviewCount > 0 ? reviewAverage : 5) ? "text-amazon_blue" : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                </span>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-end gap-2">
+                <span className="text-3xl font-bold leading-none text-amazon_blue">
+                  <FormattedPrice amount={activePrice} />
+                </span>
+                {hasActiveDiscount && (
+                  <span className="pb-0.5 text-sm text-gray-400 line-through">
+                    <FormattedPrice amount={activeOldPriceValue} />
+                  </span>
+                )}
+                {hasActiveDiscount && (
+                  <span className="mb-0.5 rounded border border-amazon_blue/30 bg-pink-50 px-2 py-0.5 text-xs font-bold text-amazon_blue">
+                    {Math.round((((activeOldPriceValue || 0) - activePrice) / (activeOldPriceValue || 1)) * 100)}% OFF
+                  </span>
+                )}
+              </div>
+
+              {productVariants.length > 0 ? (
+                <div className="mt-4">
+                  <p className="text-sm font-semibold text-gray-900">Presentación</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {productVariants.map((v: any) => (
                       <button
-                        key={`mobile-thumb-${img}`}
+                        key={`mobile-variant-${v.id}`}
                         type="button"
-                        onClick={() => setActiveImage(img)}
-                        className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-white ${
-                          mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"
+                        onClick={() => setSelectedVariant(selectedVariant?.id === v.id ? null : v)}
+                        className={`rounded-md border px-3 py-2 text-sm font-semibold ${
+                          selectedVariant?.id === v.id
+                            ? "border-amazon_blue bg-pink-50 text-amazon_blue"
+                            : "border-gray-300 text-gray-700"
                         }`}
-                        aria-label="Cambiar imagen"
                       >
-                        {isProcessImage(img) ? (
-                          <div className="absolute inset-0 flex items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
-                            Proceso
-                          </div>
-                        ) : (
-                          <Image src={img} alt="Miniatura" fill className="object-cover" />
-                        )}
+                        {v.label}
                       </button>
                     ))}
                   </div>
-                ) : null}
+                </div>
+              ) : null}
 
-                <div className="min-w-0">
-                  <p className="text-xs text-gray-500">Patrocinado</p>
-                  <h1 className="mt-1 text-xl font-semibold leading-6 line-clamp-3">{displayProductTitle}</h1>
-                  {reviewCount > 0 && (
-                    <div className="mt-2 flex items-center gap-1 text-amber-500">
-                      {[0, 1, 2, 3, 4].map((i) => (
-                        <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
-                      ))}
-                      <span className="ml-1 text-sm text-gray-700">{reviewAverage.toFixed(1)} ({reviewCount})</span>
-                    </div>
-                  )}
-                  <div className="mt-2 flex items-center gap-2 text-3xl leading-none font-semibold text-gray-900">
-                    <FormattedPrice amount={Number(product.price) || 0} />
-                    <span className="text-sm font-normal text-gray-500">c/unidad</span>
-                  </div>
-                  <p className="mt-2 text-sm text-gray-700">{"Entrega entre 2 a 3 días aproximadamente"}</p>
-                  <p className="text-sm text-gray-500">{"Se envía a Perú"}</p>
-                  {product.description && (
-                    <div className="mt-3 rounded-lg bg-gray-50 p-3 text-sm leading-6 text-gray-700 whitespace-pre-line">
-                      {product.description}
-                    </div>
-                  )}
+              <div className="mt-4 flex items-center gap-3">
+                <span className="text-sm font-semibold text-gray-900">Cantidad</span>
+                <div className="grid h-9 grid-cols-3 overflow-hidden rounded-md border border-gray-300 bg-gray-50">
                   <button
-                    onClick={() => addProductToCart(qty)}
-                    className="mt-3 h-11 w-full rounded-full bg-orange-500 text-white text-base font-semibold hover:brightness-95"
+                    type="button"
+                    onClick={() => setQty((q) => Math.max(1, q - 1))}
+                    className="flex w-10 items-center justify-center text-gray-700"
+                    aria-label="Reducir cantidad"
                   >
-                    Agregar al carrito
+                    <MinusIcon className="h-4 w-4" />
                   </button>
-                  {justAdded && (
-                    <p className="mt-2 text-sm font-semibold text-emerald-700">{"Producto añadido"}</p>
-                  )}
-                  <a
-                    href={waBuyHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 h-11 w-full rounded-full border border-brand_green text-brand_green text-base font-semibold flex items-center justify-center hover:bg-brand_green hover:text-white"
+                  <span className="flex w-10 items-center justify-center border-x border-gray-300 bg-white text-sm font-semibold">
+                    {qty}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQty((q) => q + 1)}
+                    className="flex w-10 items-center justify-center text-gray-900"
+                    aria-label="Aumentar cantidad"
                   >
-                    Comprar por WhatsApp
-                  </a>
+                    <PlusIcon className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </div>
+
+            <div className="border-y border-gray-100 px-4 py-4">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowShippingProcess((v) => !v);
+                }}
+                className="flex w-full items-center gap-3 text-left"
+              >
+                <TruckIcon className="h-5 w-5 shrink-0 text-amazon_blue" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-amazon_blue">Envío disponible para este producto</span>
+                  <span className="block text-xs text-gray-600">Entrega entre 2 a 3 días aproximadamente</span>
+                </span>
+                <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+              </button>
+              {showShippingProcess ? (
+                <div className="mt-3 rounded-md bg-gray-50 px-3 py-3 text-xs text-gray-700">
+                  <p className="font-semibold text-amazon_blue">Proceso de envío</p>
+                  <p className="mt-1">1. Agrega tus productos al carrito.</p>
+                  <p className="mt-1">2. Completa tus datos en checkout.</p>
+                  <p className="mt-1">3. Coordinamos el despacho por nuestros canales disponibles.</p>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="border-b border-gray-100 px-4 py-4">
+              <div className="flex items-center gap-3">
+                <ShieldCheckIcon className="h-5 w-5 shrink-0 text-amazon_blue" />
+                <span className="text-sm font-bold text-amazon_blue">¿Por qué elegir Rossy Resina?</span>
+                <ChevronRightIcon className="ml-auto h-5 w-5 text-gray-400" />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-md bg-pink-50 p-3 text-gray-700">
+                  <p className="font-semibold text-gray-900">Asesoría con Resiny</p>
+                  <p className="mt-1">Te ayudamos a elegir el producto ideal.</p>
+                </div>
+                <div className="rounded-md bg-pink-50 p-3 text-gray-700">
+                  <p className="font-semibold text-gray-900">Comunidad resinera</p>
+                  <p className="mt-1">Acompañamiento para tus proyectos.</p>
+                </div>
+              </div>
+            </div>
+
+            {product.description && (
+              <div className="px-4 py-4 text-sm leading-6 text-gray-700 whitespace-pre-line">
+                {product.description}
+              </div>
+            )}
+
+            {mobileBuyBarReady
+              ? createPortal(
+                  <div
+                    className="fixed bottom-0 left-0 right-0 z-[1000] flex items-center gap-3 border-t border-gray-200 bg-white px-4 py-2 shadow-[0_-6px_20px_rgba(17,24,39,0.10)] md:hidden"
+                    style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
+                  >
+                    <div className="min-w-[82px] leading-tight">
+                      {hasActiveDiscount && (
+                        <p className="text-xs text-gray-400 line-through">
+                          <FormattedPrice amount={activeOldPriceValue} />
+                        </p>
+                      )}
+                      <p className="text-xl font-bold leading-none text-amazon_blue">
+                        <FormattedPrice amount={activePrice} />
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => addProductToCart(qty)}
+                      className="flex h-12 flex-1 items-center justify-center rounded-full bg-amazon_blue px-4 text-base font-bold text-white shadow-[0_8px_18px_rgba(203,41,158,0.24)]"
+                    >
+                      <span className="flex-1 text-center">
+                        {justAdded ? "Producto añadido" : "¡Agrégalo al carrito!"}
+                      </span>
+                      <span className="relative ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20">
+                        <ShoppingCartIcon className="h-5 w-5" />
+                        {cartCount > 0 ? (
+                          <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-amazon_blue">
+                            {cartCount > 99 ? "99+" : cartCount}
+                          </span>
+                        ) : null}
+                      </span>
+                    </button>
+                  </div>,
+                  document.body
+                )
+              : null}
           </div>
 
           <div className="hidden md:grid grid-cols-1 lg:grid-cols-[72px_minmax(0,720px)_minmax(0,1fr)] gap-4 items-start">
@@ -691,7 +957,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                     </span>
                   )}
                   {hasActiveDiscount && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600">Descuento</span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-pink-50 text-amazon_blue">Descuento</span>
                   )}
                 </div>
 
@@ -796,7 +1062,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                 <div className="mt-5 grid gap-2">
                   <button
                     onClick={() => addProductToCart(qty)}
-                    className="w-full h-12 rounded-full text-base font-semibold bg-orange-500 text-white hover:brightness-95"
+                    className="w-full h-12 rounded-full text-base font-semibold bg-amazon_blue text-white hover:brightness-95"
                   >
                     Agregar al carrito
                   </button>

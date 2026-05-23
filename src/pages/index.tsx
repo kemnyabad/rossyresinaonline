@@ -9,6 +9,15 @@ import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
 import {
+  ArrowRightIcon,
+  BoltIcon,
+  ChatBubbleLeftRightIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  TruckIcon,
+  UserGroupIcon,
+} from "@heroicons/react/24/solid";
+import {
   getOfferProducts,
 } from "@/lib/services/productCatalogService";
 import { getAllProducts } from "@/lib/repositories/productRepository";
@@ -197,6 +206,26 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
     });
   });
   const keywords = Array.from(keywordSet).slice(0, 60).join(", ");
+  const mobileCategories = [
+    { label: "Todo", href: "/" },
+    { label: "Moldes", href: "/categoria/moldes-de-silicona" },
+    { label: "Resina", href: "/categoria/resina" },
+    { label: "Pigmentos", href: "/categoria/pigmentos" },
+    { label: "Accesorios", href: "/categoria/accesorios" },
+    { label: "Escuela", href: "/escuela" },
+  ];
+  const mobileDiscoveryTabs = [
+    { label: "Todo", href: "/" },
+    { label: "Nuevos", href: "/productos", icon: SparklesIcon },
+  ];
+  const lightningProducts = (offerProducts.length > 0 ? offerProducts : allProducts).slice(0, 8);
+  const mobileGridProducts = interestProducts.slice(0, 20);
+  const getDiscountLabel = (product: ProductProps) => {
+    const oldPrice = Number(product.oldPrice || 0);
+    const price = Number(product.price || 0);
+    if (oldPrice > price && oldPrice > 0) return `-${Math.round(((oldPrice - price) / oldPrice) * 100)}%`;
+    return "Oferta";
+  };
 
   return (
     <>
@@ -216,83 +245,130 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
       </Head>
       <main>
         {/* Home mobile app-like */}
-        <section className="md:hidden px-4 pt-2 pb-2 space-y-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-5 text-gray-950 shadow-[0_1px_3px_rgba(17,24,39,0.08)]">
-            <p className="rr-type-label text-amazon_blue">Tu especialista en resina</p>
-            <h1 className="rr-type-title mt-1 text-2xl">Materiales premium para tus creaciones</h1>
-            <p className="rr-type-muted mt-2 text-sm">Resina epóxica, moldes y pigmentos de calidad</p>
-            <Link href="/search" className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-amazon_blue px-4 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(203,41,158,0.20)] transition-transform hover:-translate-y-0.5">
-              Explorar productos
-            </Link>
-          </div>
-
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-bold text-gray-900">Más visitados</h2>
-              <Link href="/productos" className="text-xs font-semibold text-amazon_blue">Ver todo</Link>
-            </div>
-            <div className="relative">
-              {/* Navigation buttons */}
-              <button
-                onClick={() => scrollMobile('left', 'visited')}
-                className="absolute left-0 top-1/2 z-10 -translate-x-2 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-1.5 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-all duration-200 hover:bg-gray-50"
-                aria-label="Anterior"
-              >
-                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                onClick={() => scrollMobile('right', 'visited')}
-                className="absolute right-0 top-1/2 z-10 translate-x-2 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-1.5 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-all duration-200 hover:bg-gray-50"
-                aria-label="Siguiente"
-              >
-                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              
-              <div 
-                ref={visitedCarouselRef}
-                className="flex gap-3 overflow-x-auto no-scrollbar pb-1 scroll-smooth"
-                style={{ scrollBehavior: 'smooth' }}
-              >
-                {mobileTopVisited.map((p, idx) => (
-                  <Link
-                    key={`m-visit-${p._id}`}
-                    href={`/${p.code || p._id}`}
-                    className="group w-[150px] shrink-0 rounded-lg border border-gray-200 bg-white p-2 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]"
-                  >
-                    <div className="relative h-24 overflow-hidden rounded-lg bg-gray-100">
-                      <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                    </div>
-                    <p className="mt-2 line-clamp-1 text-xs font-semibold text-gray-900 group-hover:text-amazon_blue transition-colors">{p.title || "Producto"}</p>
-                    <p className="text-sm font-semibold text-amazon_blue">S/ {Number(p.price || 0).toFixed(2)} c/unidad</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-
-
-
-          <div>
-            <div className="relative mb-2 flex items-center justify-center">
-              <h2 className="text-center text-base font-bold text-gray-900">Explora tus intereses</h2>
-              <Link href="/productos" className="absolute right-0 text-xs font-semibold text-amazon_blue">Ver catálogo</Link>
-            </div>
-            <Products
-              productData={interestProducts.slice(0, 12)}
-              gridClass="grid-cols-2 gap-3"
-            />
-            <div className="mt-3 flex justify-center">
+        <section className="md:hidden bg-white pb-3">
+          <nav className="no-scrollbar flex gap-6 overflow-x-auto border-b border-gray-100 px-4 pt-1 text-[15px] font-medium text-gray-500">
+            {mobileCategories.map((item, index) => (
               <Link
-                href="/productos"
-                className="inline-flex h-10 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-semibold text-white"
+                key={item.href}
+                href={item.href}
+                className={`shrink-0 border-b-[3px] pb-2 ${
+                  index === 0 ? "border-amazon_blue font-semibold text-amazon_blue" : "border-transparent"
+                }`}
               >
-                Ver más productos
+                {item.label}
               </Link>
+            ))}
+          </nav>
+
+          <div className="grid grid-cols-2 border-b border-pink-100 bg-pink-50 px-4 py-2">
+            <Link href="/resiny" className="flex items-start gap-2 border-r border-pink-200 pr-3">
+              <ChatBubbleLeftRightIcon className="mt-0.5 h-5 w-5 shrink-0 text-amazon_blue" />
+              <span className="min-w-0">
+                <span className="block text-sm font-bold leading-tight text-amazon_blue">Resiny</span>
+                <span className="block truncate text-xs text-gray-600">Asistente IA</span>
+              </span>
+            </Link>
+            <a
+              href="https://chat.whatsapp.com/LL8QQddRrGYLxuV8j7BnBA"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-start gap-2 pl-3"
+            >
+              <UserGroupIcon className="mt-0.5 h-5 w-5 shrink-0 text-amazon_light" />
+              <span className="min-w-0">
+                <span className="block text-sm font-bold leading-tight text-gray-900">Comunidad</span>
+                <span className="block truncate text-xs text-gray-600">Grupo WhatsApp</span>
+              </span>
+            </a>
+          </div>
+
+          <Link href="/faq" className="mx-4 mt-2 flex h-9 items-center justify-between rounded-md bg-amazon_blue px-3 text-white">
+            <span className="flex items-center gap-2 text-sm font-bold">
+              <ShieldCheckIcon className="h-5 w-5" />
+              ¿Por qué elegir Rossy Resina?
+            </span>
+            <span className="flex items-center gap-1 text-sm font-semibold">
+              Pagos seguros <ArrowRightIcon className="h-4 w-4" />
+            </span>
+          </Link>
+
+          <section className="mt-3">
+            <div className="mb-2 flex items-center justify-between px-4">
+              <h2 className="flex items-center gap-1 text-base font-bold text-amazon_blue">
+                <BoltIcon className="h-5 w-5 text-amazon_blue" />
+                Ofertas relámpago
+                <ArrowRightIcon className="h-4 w-4" />
+              </h2>
+              <Link href="/productos?ofertas=1" className="text-sm text-gray-700">Por tiempo limitado</Link>
             </div>
+            <div
+              ref={visitedCarouselRef}
+              className="no-scrollbar flex gap-3 overflow-x-auto px-4 pb-2"
+              style={{ scrollBehavior: "smooth" }}
+            >
+              {lightningProducts.map((p) => (
+                <Link key={`flash-${p._id}`} href={`/${p.code || p._id}`} className="w-[132px] shrink-0">
+                  <div className="relative h-[132px] overflow-hidden rounded-sm bg-gray-100">
+                    <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover" />
+                  </div>
+                  <p className="mt-1 line-clamp-1 text-xs font-bold text-gray-900">{getDiscountLabel(p)} especial</p>
+                  <p className="text-[15px] font-bold leading-tight text-amazon_blue">
+                    S/ {Number(p.price || 0).toFixed(2)}
+                    <span className="ml-1 text-xs font-medium text-gray-500">c/u</span>
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <nav className="no-scrollbar sticky top-[65px] z-20 mt-1 flex gap-5 overflow-x-auto border-y border-gray-100 bg-white px-4 py-2 text-[15px] font-medium text-gray-500">
+            {mobileDiscoveryTabs.map((tab, index) => {
+              const Icon = tab.icon;
+              return (
+                <Link
+                  key={tab.label}
+                  href={tab.href}
+                  className={`flex shrink-0 items-center gap-1 border-b-[3px] pb-1 ${
+                    index === 0 ? "border-amazon_blue font-semibold text-amazon_blue" : "border-transparent"
+                  }`}
+                >
+                  {Icon ? <Icon className="h-4 w-4" /> : null}
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <section className="grid grid-cols-2 gap-1.5 bg-gray-100 p-1.5">
+            {mobileGridProducts.map((p) => (
+              <Link key={`mobile-grid-${p._id}`} href={`/${p.code || p._id}`} className="min-w-0 bg-white">
+                <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
+                  <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover" />
+                  {typeof p.oldPrice === "number" && p.oldPrice > p.price ? (
+                    <span className="absolute left-1.5 top-1.5 rounded-sm bg-amazon_blue px-1.5 py-0.5 text-[10px] font-bold text-white">
+                      {getDiscountLabel(p)}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="p-2">
+                  <p className="line-clamp-2 min-h-[32px] text-xs font-medium leading-4 text-gray-900">{p.title || "Producto"}</p>
+                  <div className="mt-1 flex items-end gap-1">
+                    <p className="text-lg font-bold leading-none text-amazon_blue">S/ {Number(p.price || 0).toFixed(2)}</p>
+                    <span className="pb-0.5 text-[10px] text-gray-500">c/u</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
+                    <TruckIcon className="h-3.5 w-3.5 text-amazon_blue" />
+                    Envío disponible
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </section>
+
+          <div className="mt-4 flex justify-center">
+            <Link href="/productos" className="inline-flex h-10 items-center justify-center rounded-full bg-amazon_blue px-6 text-sm font-semibold text-white">
+              Ver más productos
+            </Link>
           </div>
         </section>
 
