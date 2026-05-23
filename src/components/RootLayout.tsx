@@ -25,6 +25,7 @@ const RootLayout = ({ children }: Props) => {
   const isProductDetailPage = router.pathname === "/[_id]";
   const isCartPage = router.pathname === "/cart";
   const isCheckoutPage = router.pathname === "/checkout";
+  const isAccountPage = router.pathname === "/account";
   const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
   const showHeader = !isRifasPage && !isProductDetailPage && !isCartPage && !isCheckoutPage;
   const showMobileBottomNav = !isResinyPage && !isProductDetailPage && !isCartPage && !isCheckoutPage;
@@ -32,7 +33,7 @@ const RootLayout = ({ children }: Props) => {
   const [isHydrated, setIsHydrated] = useState(false);
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   const [hasActiveRifas, setHasActiveRifas] = useState(false);
-  const showMobilePromoBanner = !isRifasPage && !isResinyPage && !isCartPage && !isCheckoutPage && hasActiveRifas;
+  const showMobilePromoBanner = !isRifasPage && !isResinyPage && !isCartPage && !isCheckoutPage && !isAccountPage && hasActiveRifas;
   const storedCartCount = useSelector((state: any) =>
     Array.isArray(state?.next?.productData) ? state.next.productData.length : 0
   );
@@ -109,6 +110,10 @@ const RootLayout = ({ children }: Props) => {
                 box-shadow: none !important;
               }
             `}</style>
+            <Header />
+          </div>
+        ) : isAccountPage ? (
+          <div className="hidden md:block">
             <Header />
           </div>
         ) : (
