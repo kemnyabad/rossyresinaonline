@@ -2,31 +2,77 @@ import { useSelector } from "react-redux";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { StateProps } from "../../type";
+import { useEffect, useMemo, useState } from "react";
+import { StateProps, StoreProduct } from "../../type";
 import { useDispatch } from "react-redux";
 import { removeUser } from "@/store/nextSlice";
+import FormattedPrice from "@/components/FormattedPrice";
 import {
   ArrowRightIcon,
   ClipboardDocumentListIcon,
   HomeIcon,
   UserCircleIcon,
   AcademicCapIcon,
+  ChatBubbleOvalLeftEllipsisIcon,
+  ClockIcon,
+  Cog6ToothIcon,
+  GiftIcon,
+  MapPinIcon,
+  MegaphoneIcon,
+  StarIcon,
+  TagIcon,
+  TruckIcon,
 } from "@heroicons/react/24/outline";
 
 export default function AccountPage() {
   const { data: session, status } = useSession();
-  const { userInfo } = useSelector((state: StateProps) => state.next);
+  const { userInfo, productData } = useSelector((state: StateProps) => state.next);
   const dispatch = useDispatch();
+  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
   const isAdminSession = (session?.user as any)?.role === "ADMIN";
   const storeUser = isAdminSession ? null : (userInfo as any);
   const sessionUser = !isAdminSession ? session?.user : null;
   const isAuthenticated = Boolean(sessionUser?.email || storeUser?.email);
   const name = storeUser?.name || sessionUser?.name || storeUser?.email || sessionUser?.email || "Usuario";
   const avatar = storeUser?.image || sessionUser?.image || "";
+  const cartItems = useMemo(
+    () => (Array.isArray(productData) ? (productData as StoreProduct[]) : []),
+    [productData]
+  );
+  const cartPreview = cartItems.slice(0, 3);
+  const cartUnits = cartItems.reduce((sum: number, item: StoreProduct) => sum + Number(item.quantity || 0), 0);
   const handleSignOut = () => {
     signOut();
     dispatch(removeUser());
   };
+  const normalizeImage = (src?: string) => {
+    const raw = String(src || "").replace(/\\/g, "/");
+    if (!raw) return "/favicon-96x96.png";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return raw.startsWith("/") ? raw : `/${raw}`;
+  };
+
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/products?_=${Date.now()}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((rows) => {
+        if (!alive) return;
+        setRecommendedProducts(Array.isArray(rows) ? rows.slice(0, 12) : []);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setRecommendedProducts([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const mobileProducts = useMemo(() => {
+    if (recommendedProducts.length > 0) return recommendedProducts;
+    return cartItems.slice(0, 8);
+  }, [recommendedProducts, cartItems]);
 
   if (status === "loading") {
     return (
@@ -61,7 +107,107 @@ export default function AccountPage() {
 
   return (
     <div className="bg-gray-50">
-      <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+      <div className="md:hidden">
+        <section className="bg-white px-4 pb-3 pt-5">
+          <div className="flex items-center gap-3">
+            {avatar ? (
+              <Image src={avatar} alt="Avatar" width={44} height={44} className="h-11 w-11 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-lg font-black text-gray-700">
+                {String(name).slice(0, 1)}
+              </div>
+            )}
+            <h1 className="min-w-0 flex-1 truncate text-[26px] font-black leading-tight text-gray-950">{name}</h1>
+            <Link href="/messages" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-950" aria-label="Mensajes">
+              <ChatBubbleOvalLeftEllipsisIcon className="h-7 w-7 stroke-[2.2]" />
+            </Link>
+            <Link href="/account" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-950" aria-label="Configurar cuenta">
+              <Cog6ToothIcon className="h-7 w-7 stroke-[2.2]" />
+            </Link>
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 divide-x divide-gray-200 text-center">
+            <div>
+              <p className="text-2xl font-black text-gray-950">S/ 0.00</p>
+              <p className="text-sm text-gray-700">Saldo de crédito</p>
+            </div>
+            <div>
+              <p className="text-2xl font-black text-gray-950">0</p>
+              <p className="text-sm text-gray-700">Cupones y ofertas</p>
+            </div>
+          </div>
+
+          <Link href="/productos" className="mt-3 flex items-center gap-3 rounded border border-gray-200 bg-white px-2 py-2 shadow-sm">
+            <span className="flex h-9 w-9 items-center justify-center rounded bg-amazon_blue/10 text-amazon_blue">
+              <GiftIcon className="h-6 w-6" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-gray-950">Regalos y ofertas Rossy Resina</span>
+              <span className="block truncate text-xs text-gray-500">Descubre promociones listas para ti</span>
+            </span>
+            <span className="rounded-full bg-amazon_blue px-3 py-1 text-xs font-black text-white">Ver</span>
+          </Link>
+        </section>
+
+        <section className="mt-2 divide-y divide-gray-100 bg-white">
+          <MobileAccountRow href="/track-orders" icon={<ClipboardDocumentListIcon className="h-6 w-6" />} label="Tus pedidos" />
+          <MobileAccountRow href="/messages" icon={<ChatBubbleOvalLeftEllipsisIcon className="h-6 w-6" />} label="Mensajes" />
+          <MobileAccountRow href="/track-orders" icon={<StarIcon className="h-6 w-6" />} label="Reseñas" />
+        </section>
+
+        <section className="mt-2 grid grid-cols-4 bg-white px-2 py-4 text-center">
+          <MobileQuickLink href="/track-orders" icon={<ClockIcon className="h-7 w-7" />} label="Historial" />
+          <MobileQuickLink href="/productos" icon={<GiftIcon className="h-7 w-7" />} label="Gana y gratis" />
+          <MobileQuickLink href="/shipping-address" icon={<MapPinIcon className="h-7 w-7" />} label="Direcciones" />
+          <MobileQuickLink href="/comunidad" icon={<TagIcon className="h-7 w-7" />} label="Siguiendo" />
+        </section>
+
+        {cartPreview.length > 0 && (
+          <Link href="/cart" className="mt-2 block bg-white px-4 py-3">
+            <div className="flex items-center gap-1 text-sm">
+              <span className="font-black uppercase text-amazon_blue">Casi agotados</span>
+              <span className="text-gray-950">- {cartUnits} artículo{cartUnits !== 1 ? "s" : ""} en el carrito</span>
+              <ArrowRightIcon className="h-4 w-4" />
+            </div>
+            <div className="mt-2 flex gap-1">
+              {cartPreview.map((item: StoreProduct) => (
+                <div key={item._id} className="relative h-20 w-20 overflow-hidden bg-gray-100">
+                  <Image src={normalizeImage(item.image)} alt={item.title || "Producto"} fill className="object-cover" />
+                  <span className="absolute bottom-0 left-0 right-0 bg-black/55 px-1 py-0.5 text-[10px] font-semibold text-white">
+                    Casi agotado
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Link>
+        )}
+
+        <Link href="/shipping-address" className="mt-2 flex items-center gap-3 bg-[#fff1e5] px-4 py-3 text-sm font-black text-green-700">
+          <TruckIcon className="h-5 w-5" />
+          <span>Envío gratis</span>
+          <span className="h-6 w-px bg-green-700/30" />
+          <span>S/ 4.00 de crédito por retraso</span>
+          <ArrowRightIcon className="ml-auto h-4 w-4" />
+        </Link>
+
+        <section className="grid grid-cols-2 gap-1 bg-white pt-2">
+          {mobileProducts.slice(0, 12).map((product: any) => (
+            <Link key={product._id} href={`/${product.code || product._id}`} className="min-w-0 bg-white">
+              <div className="relative aspect-square overflow-hidden bg-gray-100">
+                <Image src={normalizeImage(product.image)} alt={product.title || "Producto"} fill className="object-cover" />
+              </div>
+              <div className="px-1.5 py-2">
+                <p className="line-clamp-1 text-xs text-gray-700">{product.title || "Producto"}</p>
+                <p className="mt-1 text-sm font-black text-amazon_blue">
+                  <FormattedPrice amount={Number(product.price || 0)} />
+                </p>
+              </div>
+            </Link>
+          ))}
+        </section>
+      </div>
+
+      <div className="mx-auto hidden max-w-6xl px-4 py-6 md:block md:py-10">
         <div className="mb-4 text-sm text-gray-500">Inicio / Cuenta</div>
 
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -166,6 +312,25 @@ function AccountAction({
         Abrir
         <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
       </span>
+    </Link>
+  );
+}
+
+function MobileAccountRow({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link href={href} className="flex h-[62px] items-center gap-4 px-4 text-gray-950">
+      <span className="flex h-8 w-8 items-center justify-center text-gray-950">{icon}</span>
+      <span className="flex-1 text-lg font-medium">{label}</span>
+      <ArrowRightIcon className="h-5 w-5 text-gray-500" />
+    </Link>
+  );
+}
+
+function MobileQuickLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link href={href} className="flex min-w-0 flex-col items-center gap-2 px-1 text-gray-950">
+      <span className="relative flex h-8 items-center justify-center">{icon}</span>
+      <span className="w-full truncate text-sm font-medium">{label}</span>
     </Link>
   );
 }
