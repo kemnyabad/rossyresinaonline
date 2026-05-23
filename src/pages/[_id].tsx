@@ -690,24 +690,6 @@ const DynamicPage = ({ product, recs }: Props) => {
               ) : null}
             </div>
 
-            <div className="border-b border-gray-100 px-4 py-4">
-              <div className="flex items-center gap-3">
-                <ShieldCheckIcon className="h-5 w-5 shrink-0 text-amazon_blue" />
-                <span className="text-sm font-bold text-amazon_blue">¿Por qué elegir Rossy Resina?</span>
-                <ChevronRightIcon className="ml-auto h-5 w-5 text-gray-400" />
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-md bg-pink-50 p-3 text-gray-700">
-                  <p className="font-semibold text-gray-900">Asesoría con Resiny</p>
-                  <p className="mt-1">Te ayudamos a elegir el producto ideal.</p>
-                </div>
-                <div className="rounded-md bg-pink-50 p-3 text-gray-700">
-                  <p className="font-semibold text-gray-900">Comunidad resinera</p>
-                  <p className="mt-1">Acompañamiento para tus proyectos.</p>
-                </div>
-              </div>
-            </div>
-
             {product.description && (
               <div className="px-4 py-4 text-sm leading-6 text-gray-700 whitespace-pre-line">
                 {product.description}
