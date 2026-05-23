@@ -25,11 +25,13 @@ const RootLayout = ({ children }: Props) => {
   const isProductDetailPage = router.pathname === "/[_id]";
   const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
   const hideFooter = isRifasPage || isResinyPage;
+  const [isHydrated, setIsHydrated] = useState(false);
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   const [hasActiveRifas, setHasActiveRifas] = useState(false);
-  const cartCount = useSelector((state: any) =>
+  const storedCartCount = useSelector((state: any) =>
     Array.isArray(state?.next?.productData) ? state.next.productData.length : 0
   );
+  const cartCount = isHydrated ? storedCartCount : 0;
 
   const mobilePromoSlides = [
     {
@@ -40,6 +42,10 @@ const RootLayout = ({ children }: Props) => {
       eyebrowClass: "text-pink-100",
     },
   ];
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     const interval = window.setInterval(() => {

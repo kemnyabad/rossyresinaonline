@@ -1060,28 +1060,6 @@ const DynamicPage = ({ product, recs }: Props) => {
                 </div>
               </div>
 
-              <div className="rounded-xl p-5">
-                <h3 className="text-sm font-semibold text-gray-800 mb-2">¿Por qué elegir Rossy Resina?</h3>
-                <div className="grid sm:grid-cols-2 gap-3 text-sm text-gray-600">
-                  <div className="border border-gray-200 rounded-lg p-3">
-                    <p className="font-semibold text-gray-800">Seguridad y privacidad</p>
-                    <ul className="mt-2 list-disc list-inside">
-                      <li>Pagos seguros</li>
-                      <li>Privacidad segura</li>
-                    </ul>
-                  </div>
-                  <div className="border border-gray-200 rounded-lg p-3">
-                    <p className="font-semibold text-gray-800">Entrega garantizada</p>
-                    <ul className="mt-2 list-disc list-inside">
-                      <li>Reembolso por 30 días</li>
-                      <li>Crédito por retraso</li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="mt-3 text-sm text-emerald-700">
-                  Devoluciones gratis | Ajuste de precios
-                </div>
-              </div>
             </div>
           </div>
 

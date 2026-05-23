@@ -12,7 +12,8 @@ import {
   ArrowRightIcon,
   BoltIcon,
   ChatBubbleLeftRightIcon,
-  ShieldCheckIcon,
+  CheckBadgeIcon,
+  QuestionMarkCircleIcon,
   SparklesIcon,
   TruckIcon,
   UserGroupIcon,
@@ -282,14 +283,19 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
             </a>
           </div>
 
-          <Link href="/faq" className="mx-4 mt-2 flex h-9 items-center justify-between rounded-md bg-amazon_blue px-3 text-white">
-            <span className="flex items-center gap-2 text-sm font-bold">
-              <ShieldCheckIcon className="h-5 w-5" />
-              ¿Por qué elegir Rossy Resina?
+          <Link
+            href="/proceso-envio"
+            className="mx-4 mt-2 flex h-11 items-center gap-3 overflow-hidden rounded-md bg-amazon_blue px-3 text-white"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
+              <TruckIcon className="h-5 w-5" />
             </span>
-            <span className="flex items-center gap-1 text-sm font-semibold">
-              Pagos seguros <ArrowRightIcon className="h-4 w-4" />
+            <span className="min-w-0 flex-1 truncate text-sm font-bold">
+              Entrega rápida
+              <span className="ml-2 font-semibold text-white/90">Soporte ante inconvenientes</span>
             </span>
+            <CheckBadgeIcon className="h-6 w-6 shrink-0 text-white/85" />
+            <QuestionMarkCircleIcon className="h-5 w-5 shrink-0 text-white/75" />
           </Link>
 
           <section className="mt-3">
