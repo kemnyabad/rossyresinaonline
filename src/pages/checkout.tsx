@@ -88,7 +88,7 @@ export default function CheckoutPage() {
         setOlvaReference(String(p.olvaReference || ""));
         setShowShippingForm(false);
         setSelectedSavedAddress(true);
-        setShippingConfirmed(false);
+        setShippingConfirmed(true);
         setShippingProfileChecked(true);
       }
     } catch {
@@ -119,7 +119,7 @@ export default function CheckoutPage() {
         setOlvaReference(String(p.olvaReference || ""));
         setShowShippingForm(false);
         setSelectedSavedAddress(true);
-        setShippingConfirmed(false);
+        setShippingConfirmed(true);
         window.localStorage.setItem(`rr_shipping_profile:${sessionEmail}`, JSON.stringify(p));
         setShippingProfileChecked(true);
       })
@@ -415,56 +415,25 @@ export default function CheckoutPage() {
           </div>
         </div>
       ) : (
-        <div className={isShippingReviewStep ? "mx-auto max-w-5xl" : "grid gap-6 lg:grid-cols-3"}>
-          <section className={isShippingReviewStep ? "bg-white p-0" : "bg-white rounded-lg p-4 shadow md:p-6 lg:col-span-2"}>
-            <div className="mb-6">
-              <p className="text-lg text-gray-950">Documento de venta</p>
-              <div className="mt-4 flex gap-8 text-base">
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="saleDoc" defaultChecked className="accent-orange-600" />
-                  Boleta
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="saleDoc" className="accent-orange-600" />
-                  Factura
-                </label>
-              </div>
-            </div>
-
-            <div className="rounded-md border border-gray-300 p-6 md:p-10">
-              <h2 className="text-2xl font-black text-gray-950">Dirección de envío</h2>
-              <p className="mt-1 text-lg text-gray-800">Recibe tu pedido en cualquier dirección del país.</p>
+        <div className={isShippingReviewStep ? "mx-auto max-w-5xl" : "grid gap-3 lg:grid-cols-3 lg:gap-6"}>
+          <section className={isShippingReviewStep ? "bg-white p-0" : "space-y-3 lg:col-span-2"}>
+            <div className="rounded-lg bg-white p-4 shadow-sm md:p-6">
+              <h2 className="text-lg font-black text-gray-950 md:text-2xl">Dirección de entrega</h2>
+              <p className="mt-1 text-sm text-gray-600 md:text-base">Usaremos la dirección guardada en tu cuenta.</p>
 
               {!showShippingForm && name && phone && locationLine ? (
                 <>
-                  <div className="mt-8 rounded-lg border border-amazon_blue/20 bg-amazon_blue/5 px-4 py-3 text-sm text-gray-800">
-                    <p className="font-semibold text-gray-950">Usaremos la dirección guardada en tu cuenta.</p>
-                    <p className="mt-1">
-                      Si quieres recibir este pedido en otro lugar, puedes cambiarla solo para esta compra.
-                    </p>
-                  </div>
-
-                  <div className={`mt-4 rounded-md border p-4 ${selectedSavedAddress ? "border-amazon_blue bg-amazon_blue/5" : "border-gray-300 bg-white"}`}>
-                    <p className="text-lg font-black text-gray-950">{name}</p>
-                    <p className="text-lg text-gray-950">
+                  <div className={`mt-4 rounded-lg border p-4 ${selectedSavedAddress ? "border-amazon_blue bg-amazon_blue/5" : "border-gray-300 bg-white"}`}>
+                    <p className="text-base font-black text-gray-950 md:text-lg">{name}</p>
+                    <p className="mt-1 text-sm font-semibold text-amazon_blue md:text-base">
                       {shippingCarrier === "OLVA" ? olvaAddress : `Agencia Shalom: ${shalomAgency}`}
                     </p>
-                    <p className="text-lg text-gray-950">{locationLine}</p>
+                    <p className="mt-1 text-sm text-gray-800 md:text-base">{locationLine}</p>
                     {shippingCarrier === "OLVA" && olvaReference && (
-                      <p className="text-lg text-gray-950">Referencia: {olvaReference}</p>
+                      <p className="text-sm text-gray-800 md:text-base">Referencia: {olvaReference}</p>
                     )}
-                    <p className="text-lg text-gray-950">Teléfono o WhatsApp: {phone}</p>
-                    <div className="mt-3 border-t border-gray-300 pt-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedSavedAddress(true);
-                          setShippingConfirmed(true);
-                        }}
-                        className="mr-2 rounded bg-amazon_blue px-5 py-2 text-sm font-bold text-white hover:brightness-95"
-                      >
-                        Usar esta dirección
-                      </button>
+                    <p className="mt-1 text-sm text-gray-800 md:text-base">WhatsApp: {phone}</p>
+                    <div className="mt-3 border-t border-gray-200 pt-3">
                       <button
                         type="button"
                         onClick={() => {
@@ -472,7 +441,7 @@ export default function CheckoutPage() {
                           setSelectedSavedAddress(false);
                           setShippingConfirmed(false);
                         }}
-                        className="rounded border border-gray-300 px-5 py-2 text-sm font-medium text-gray-950 hover:bg-gray-50"
+                        className="rounded-full border border-gray-300 px-4 py-2 text-sm font-black text-gray-950 hover:bg-gray-50"
                       >
                         Deseo usar otra dirección
                       </button>
