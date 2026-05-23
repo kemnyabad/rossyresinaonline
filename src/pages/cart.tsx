@@ -157,9 +157,7 @@ const CartPage = () => {
                               </span>
                             )}
                             <FormattedPrice amount={item.price} />
-                          </p>
-                          <p className="mt-1 text-sm font-semibold text-amazon_blue">
-                            About {formatPlainPrice(item.price / Math.max(1, item.quantity))}/pc
+                            <span className="text-sm font-semibold text-amazon_blue">c/u</span>
                           </p>
                         </div>
                         <div className="flex h-9 items-center rounded-md border border-gray-200 bg-white">
