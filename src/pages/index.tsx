@@ -294,7 +294,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
           <section className="mt-3">
             <div className="mb-2 flex items-center justify-between px-4">
               <h2 className="text-base font-bold text-amazon_blue">
-                Promos Rossy
+                Super ofertas
               </h2>
               <Link href="/productos?ofertas=1" className="text-sm text-gray-700">Por tiempo limitado</Link>
             </div>

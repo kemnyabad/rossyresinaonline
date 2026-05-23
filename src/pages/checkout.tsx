@@ -6,43 +6,9 @@ import Link from "next/link";
 import FormattedPrice from "@/components/FormattedPrice";
 import { resetCart } from "@/store/nextSlice";
 import { useSession } from "next-auth/react";
-import { FiCreditCard, FiInfo, FiShoppingCart } from "react-icons/fi";
 
 type PaymentMethod = "YAPE" | "TRANSFER";
 type ShippingCarrier = "SHALOM" | "OLVA";
-
-const CheckoutSteps = () => {
-  const steps = [
-    { label: "Carro de Compras", icon: FiShoppingCart, active: false },
-    { label: "Información de Envío", icon: FiInfo, active: true },
-    { label: "Pago", icon: FiCreditCard, active: false },
-  ];
-
-  return (
-    <div className="mx-auto max-w-3xl px-3 py-8 md:py-10">
-      <div className="grid grid-cols-3 items-start">
-        {steps.map((step, index) => {
-          const Icon = step.icon;
-          return (
-            <div key={step.label} className="relative flex flex-col items-center text-center">
-              {index > 0 && (
-                <span className="absolute right-1/2 top-8 h-px w-full bg-gray-300" aria-hidden="true" />
-              )}
-              <span
-                className={`relative z-10 flex h-16 w-16 items-center justify-center rounded-full text-3xl text-white ${
-                  step.active ? "bg-orange-600" : "bg-gray-400"
-                }`}
-              >
-                <Icon />
-              </span>
-              <span className="mt-5 text-sm font-medium text-gray-950 md:text-base">{step.label}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
 
 export default function CheckoutPage() {
   const dispatch = useDispatch();
@@ -77,10 +43,15 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [successId, setSuccessId] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
 
   const sessionCustomerEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
   const checkoutEmail = sessionCustomerEmail || guestEmail.trim().toLowerCase();
   const isGuestCheckout = !sessionCustomerEmail;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (storeUser) {
@@ -92,40 +63,13 @@ export default function CheckoutPage() {
   useEffect(() => {
     const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
     if (!sessionEmail || typeof window === "undefined") return;
+    let hasLocalProfile = false;
     try {
       const raw = window.localStorage.getItem(`rr_shipping_profile:${sessionEmail}`);
-      if (!raw) return;
-      const p = JSON.parse(raw);
-      setName(String(p.name || (customerSession?.user as any)?.name || ""));
-      setDni(String(p.dni || ""));
-      setPhone(String(p.phone || ""));
-      setLocationLine(String(p.locationLine || ""));
-      setShippingCarrier(String(p.shippingCarrier || "SHALOM") === "OLVA" ? "OLVA" : "SHALOM");
-      setShalomAgency(String(p.shalomAgency || ""));
-      setOlvaAddress(String(p.olvaAddress || ""));
-      setOlvaReference(String(p.olvaReference || ""));
-      setShowShippingForm(false);
-      setSelectedSavedAddress(true);
-      setShippingConfirmed(false);
-    } catch {
-      // Si el dato local esta corrupto, simplemente dejamos el formulario editable.
-    }
-  }, [customerSession]);
-
-  useEffect(() => {
-    const sessionName = String((customerSession?.user as any)?.name || "").trim();
-    const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
-    if (!sessionName || name || typeof window === "undefined") return;
-    const localProfile = sessionEmail ? window.localStorage.getItem(`rr_shipping_profile:${sessionEmail}`) : "";
-    if (localProfile) return;
-
-    let alive = true;
-    fetch(`/api/orders/customer-profile?query=${encodeURIComponent(sessionName)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!alive || !data?.found) return;
-        const p = data.profile || {};
-        setName(String(p.name || sessionName));
+      if (raw) {
+        const p = JSON.parse(raw);
+        hasLocalProfile = true;
+        setName(String(p.name || (customerSession?.user as any)?.name || ""));
         setDni(String(p.dni || ""));
         setPhone(String(p.phone || ""));
         setLocationLine(String(p.locationLine || ""));
@@ -136,15 +80,37 @@ export default function CheckoutPage() {
         setShowShippingForm(false);
         setSelectedSavedAddress(true);
         setShippingConfirmed(false);
-        if (sessionEmail) {
-          window.localStorage.setItem(`rr_shipping_profile:${sessionEmail}`, JSON.stringify(p));
-        }
+      }
+    } catch {
+      // Si el dato local esta corrupto, simplemente dejamos el formulario editable.
+    }
+    let alive = true;
+    fetch("/api/account/shipping-profile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!alive || !data?.found) return;
+        const p = data.profile || {};
+        setName(String(p.name || (customerSession?.user as any)?.name || ""));
+        setDni(String(p.dni || ""));
+        setPhone(String(p.phone || ""));
+        setLocationLine(String(p.locationLine || ""));
+        setShippingCarrier(String(p.shippingCarrier || "SHALOM") === "OLVA" ? "OLVA" : "SHALOM");
+        setShalomAgency(String(p.shalomAgency || ""));
+        setOlvaAddress(String(p.olvaAddress || ""));
+        setOlvaReference(String(p.olvaReference || ""));
+        setShowShippingForm(false);
+        setSelectedSavedAddress(true);
+        setShippingConfirmed(false);
+        window.localStorage.setItem(`rr_shipping_profile:${sessionEmail}`, JSON.stringify(p));
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!alive || hasLocalProfile) return;
+        setShowShippingForm(true);
+      });
     return () => {
       alive = false;
     };
-  }, [customerSession, name]);
+  }, [customerSession]);
 
   useEffect(() => {
     return () => {
@@ -332,8 +298,11 @@ export default function CheckoutPage() {
       <Head>
         <title>Rossy Resina - Checkout</title>
       </Head>
-      <CheckoutSteps />
-      {productData.length === 0 ? (
+      {!mounted ? (
+        <div className="bg-white rounded-lg p-8 shadow">
+          <p className="text-lg">Cargando checkout...</p>
+        </div>
+      ) : productData.length === 0 ? (
         <div className="bg-white rounded-lg p-8 shadow">
           <p className="text-lg">Tu carrito está vacío.</p>
           <Link
@@ -366,27 +335,14 @@ export default function CheckoutPage() {
 
               {!showShippingForm && name && phone && locationLine ? (
                 <>
-                  <div className="mt-8 text-lg text-gray-950">
-                    <p>¿Se encuentra la dirección que quieres utilizar desplegada a continuación?</p>
-                    <p>
-                      Si es así, haz click en el botón <span className="font-black">&quot;ENVIAR AQUÍ&quot;</span>.
-                    </p>
-                    <p>
-                      O también puedes{" "}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowShippingForm(true);
-                          setSelectedSavedAddress(false);
-                        }}
-                        className="text-orange-600 hover:underline"
-                      >
-                        Ingresar una nueva dirección.
-                      </button>
+                  <div className="mt-8 rounded-lg border border-amazon_blue/20 bg-amazon_blue/5 px-4 py-3 text-sm text-gray-800">
+                    <p className="font-semibold text-gray-950">Usaremos la dirección guardada en tu cuenta.</p>
+                    <p className="mt-1">
+                      Si quieres recibir este pedido en otro lugar, puedes cambiarla solo para esta compra.
                     </p>
                   </div>
 
-                  <div className={`mt-8 rounded-md border p-4 ${selectedSavedAddress ? "border-orange-500 bg-orange-50" : "border-gray-300 bg-white"}`}>
+                  <div className={`mt-4 rounded-md border p-4 ${selectedSavedAddress ? "border-amazon_blue bg-amazon_blue/5" : "border-gray-300 bg-white"}`}>
                     <p className="text-lg font-black text-gray-950">{name}</p>
                     <p className="text-lg text-gray-950">
                       {shippingCarrier === "OLVA" ? olvaAddress : `Agencia Shalom: ${shalomAgency}`}
@@ -403,41 +359,20 @@ export default function CheckoutPage() {
                           setSelectedSavedAddress(true);
                           setShippingConfirmed(true);
                         }}
-                        className="mr-2 rounded bg-orange-600 px-5 py-2 text-sm font-bold text-white hover:bg-orange-700"
+                        className="mr-2 rounded bg-amazon_blue px-5 py-2 text-sm font-bold text-white hover:brightness-95"
                       >
-                        ENVIAR AQUÍ
+                        Usar esta dirección
                       </button>
                       <button
                         type="button"
                         onClick={() => {
-                          const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
-                          if (sessionEmail && typeof window !== "undefined") {
-                            window.localStorage.removeItem(`rr_shipping_profile:${sessionEmail}`);
-                          }
-                          setName("");
-                          setDni("");
-                          setPhone("");
-                          setLocationLine("");
-                          setShalomAgency("");
-                          setOlvaAddress("");
-                          setOlvaReference("");
                           setShowShippingForm(true);
                           setSelectedSavedAddress(false);
                           setShippingConfirmed(false);
                         }}
-                        className="mr-2 rounded border border-gray-300 px-5 py-2 text-sm font-medium text-gray-950 hover:bg-gray-50"
-                      >
-                        Borrar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowShippingForm(true);
-                          setShippingConfirmed(false);
-                        }}
                         className="rounded border border-gray-300 px-5 py-2 text-sm font-medium text-gray-950 hover:bg-gray-50"
                       >
-                        Editar
+                        Deseo usar otra dirección
                       </button>
                     </div>
                   </div>

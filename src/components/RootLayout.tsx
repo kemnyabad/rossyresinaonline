@@ -23,11 +23,15 @@ const RootLayout = ({ children }: Props) => {
     router.pathname.startsWith("/rifa/") ||
     router.pathname.startsWith("/admin/rifa");
   const isProductDetailPage = router.pathname === "/[_id]";
+  const isCartPage = router.pathname === "/cart";
   const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
-  const hideFooter = isRifasPage || isResinyPage;
+  const showHeader = !isRifasPage && !isProductDetailPage && !isCartPage;
+  const showMobileBottomNav = !isResinyPage && !isProductDetailPage && !isCartPage;
+  const hideFooter = isRifasPage || isResinyPage || isCartPage;
   const [isHydrated, setIsHydrated] = useState(false);
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   const [hasActiveRifas, setHasActiveRifas] = useState(false);
+  const showMobilePromoBanner = !isRifasPage && !isResinyPage && !isCartPage && hasActiveRifas;
   const storedCartCount = useSelector((state: any) =>
     Array.isArray(state?.next?.productData) ? state.next.productData.length : 0
   );
@@ -55,7 +59,7 @@ const RootLayout = ({ children }: Props) => {
   }, [mobilePromoSlides.length]);
 
   useEffect(() => {
-    if (isRifasPage || isResinyPage) {
+    if (isRifasPage || isResinyPage || isCartPage) {
       setHasActiveRifas(false);
       return;
     }
@@ -73,7 +77,7 @@ const RootLayout = ({ children }: Props) => {
       });
 
     return () => controller.abort();
-  }, [isRifasPage, isResinyPage]);
+  }, [isRifasPage, isResinyPage, isCartPage]);
 
   const mobileTabs = [
     { href: "/", label: "Inicio", icon: HomeIcon, active: router.pathname === "/" },
@@ -94,7 +98,7 @@ const RootLayout = ({ children }: Props) => {
 
   return (
     <>
-      {!isRifasPage && !isProductDetailPage && (
+      {showHeader && (
         isResinyPage ? (
           <div className="resiny-fixed-header fixed left-0 right-0 top-0 z-[9998] bg-white">
             <style jsx global>{`
@@ -112,7 +116,7 @@ const RootLayout = ({ children }: Props) => {
       )}
 
       {/* Banner Móvil Temático: sorteos activos (Solo visible en móviles y fuera de rifas) */}
-      {!isRifasPage && !isResinyPage && hasActiveRifas && (
+      {showMobilePromoBanner && (
         <div className="md:hidden">
           <Link href="/rifas">
             <div className="relative overflow-hidden border-b border-amazon_light/20 bg-amazon_blue px-4 py-3 shadow-sm">
@@ -161,7 +165,7 @@ const RootLayout = ({ children }: Props) => {
       <div>
         {!hideFooter && <Footer />} {/* Renderiza Footer solo en páginas públicas de tienda */}
       </div>
-      {!isResinyPage && !isProductDetailPage && <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white md:hidden">
+      {showMobileBottomNav && <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-4 px-1.5 py-1.5">
           {mobileTabs.map((tab) => {
             const Icon = tab.icon;

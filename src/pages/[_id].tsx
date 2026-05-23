@@ -13,6 +13,7 @@ import Products from "@/components/Products";
 import { getAllProducts } from "@/lib/repositories/productRepository";
 import { useSession, signIn } from "next-auth/react";
 import { formatProductTitle } from "@/lib/textFormat";
+import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import {
   ArrowLeftIcon,
   ChevronRightIcon,
@@ -28,6 +29,7 @@ import {
 interface Props {
   product: ProductProps | null;
   recs: ProductProps[];
+  allProducts: ProductProps[];
 }
 
 type Review = {
@@ -42,7 +44,7 @@ type Review = {
   updatedAt: string;
 };
 
-const DynamicPage = ({ product, recs }: Props) => {
+const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const [qty, setQty] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [justAdded, setJustAdded] = useState(false);
@@ -160,6 +162,17 @@ const DynamicPage = ({ product, recs }: Props) => {
     if (viewerIndex === null || productImages.length === 0) return;
     setViewerIndex((viewerIndex + 1) % productImages.length);
   };
+
+  const mobileProductSearchResults = useMemo(() => {
+    const q = mobileProductSearchQuery.trim();
+    if (q.length < 2) return [];
+    return filterAndSortProducts(allProducts || [], {
+      query: q,
+      sort: "relevance",
+    })
+      .filter((item) => String(item._id) !== String(product?._id))
+      .slice(0, 6);
+  }, [allProducts, mobileProductSearchQuery, product?._id]);
 
   const submitMobileProductSearch = (event?: React.FormEvent) => {
     event?.preventDefault();
@@ -323,23 +336,29 @@ const DynamicPage = ({ product, recs }: Props) => {
       return;
     }
     let active = true;
-    setLoadingReviews(true);
-    fetch(`/api/reviews?productId=${encodeURIComponent(id)}`)
-      .then((r) => (r.ok ? r.json() : []))
-      .then((rows) => {
-        if (!active) return;
-        setReviews(Array.isArray(rows) ? rows : []);
-      })
-      .catch(() => {
-        if (!active) return;
-        setReviews([]);
-      })
-      .finally(() => {
-        if (!active) return;
-        setLoadingReviews(false);
-      });
+    const loadReviews = (showLoading = false) => {
+      if (showLoading) setLoadingReviews(true);
+      fetch(`/api/reviews?productId=${encodeURIComponent(id)}`)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((rows) => {
+          if (!active) return;
+          setReviews(Array.isArray(rows) ? rows : []);
+        })
+        .catch(() => {
+          if (!active) return;
+          setReviews([]);
+        })
+        .finally(() => {
+          if (!active) return;
+          setLoadingReviews(false);
+        });
+    };
+
+    loadReviews(true);
+    const refreshTimer = window.setInterval(() => loadReviews(false), 15000);
     return () => {
       active = false;
+      window.clearInterval(refreshTimer);
     };
   }, [product?._id]);
 
@@ -465,7 +484,7 @@ const DynamicPage = ({ product, recs }: Props) => {
         </div>
       ) : (
         <>
-          <div className="md:hidden -mx-4 -mt-4 mb-8 bg-white pb-28">
+          <div className="md:hidden -mx-4 -mt-4 mb-4 bg-white pb-4">
             <div className="relative bg-white">
               <button
                 type="button"
@@ -494,7 +513,7 @@ const DynamicPage = ({ product, recs }: Props) => {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="absolute left-3 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/55 text-white backdrop-blur"
+                className="absolute left-3 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-950 shadow-[0_4px_16px_rgba(15,23,42,0.28)] ring-1 ring-black/10 backdrop-blur"
                 aria-label="Volver"
               >
                 <ArrowLeftIcon className="h-6 w-6" />
@@ -502,30 +521,68 @@ const DynamicPage = ({ product, recs }: Props) => {
               <div className="absolute right-3 top-4 flex gap-2">
                 <div className="relative h-11 w-11">
                   {mobileProductSearchOpen ? (
-                    <form
-                      onSubmit={submitMobileProductSearch}
-                      className="absolute right-0 top-0 z-20 flex h-11 w-[min(calc(100vw-112px),270px)] items-center overflow-hidden rounded-full border border-amazon_blue bg-white shadow-[0_8px_22px_rgba(17,24,39,0.16)]"
-                    >
-                      <input
-                        value={mobileProductSearchQuery}
-                        onChange={(event) => setMobileProductSearchQuery(event.target.value)}
-                        autoFocus
-                        className="h-full min-w-0 flex-1 bg-white px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400"
-                        placeholder="Buscar producto..."
-                      />
-                      <button
-                        type="submit"
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amazon_blue text-white"
-                        aria-label="Buscar"
+                    <>
+                      <form
+                        onSubmit={submitMobileProductSearch}
+                        className="absolute right-0 top-0 z-20 flex h-11 w-[min(calc(100vw-112px),270px)] items-center overflow-hidden rounded-full border border-amazon_blue bg-white shadow-[0_8px_22px_rgba(17,24,39,0.16)]"
                       >
-                        <MagnifyingGlassIcon className="h-6 w-6" />
-                      </button>
-                    </form>
+                        <input
+                          value={mobileProductSearchQuery}
+                          onChange={(event) => setMobileProductSearchQuery(event.target.value)}
+                          autoFocus
+                          className="h-full min-w-0 flex-1 bg-white px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400"
+                          placeholder="Buscar producto..."
+                        />
+                        <button
+                          type="submit"
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amazon_blue text-white"
+                          aria-label="Buscar"
+                        >
+                          <MagnifyingGlassIcon className="h-6 w-6" />
+                        </button>
+                      </form>
+                      {mobileProductSearchQuery.trim().length >= 2 ? (
+                        <div className="absolute right-0 top-12 z-20 w-[min(calc(100vw-112px),270px)] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-[0_10px_26px_rgba(17,24,39,0.18)]">
+                          {mobileProductSearchResults.length > 0 ? (
+                            mobileProductSearchResults.map((item) => (
+                              <Link
+                                key={`mobile-search-${item._id}`}
+                                href={`/${item.code || item._id}`}
+                                className="grid grid-cols-[46px_minmax(0,1fr)] gap-2 border-b border-gray-100 p-2 last:border-b-0"
+                                onClick={() => {
+                                  setMobileProductSearchOpen(false);
+                                  setMobileProductSearchQuery("");
+                                }}
+                              >
+                                <div className="relative h-11 w-11 overflow-hidden rounded bg-gray-100">
+                                  <Image
+                                    src={normalizeImage(item.image)}
+                                    alt={item.title || "Producto"}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="truncate text-xs font-semibold text-gray-900">{item.title || "Producto"}</p>
+                                  <p className="mt-0.5 text-xs font-bold text-amazon_blue">
+                                    <FormattedPrice amount={Number(item.price || 0)} />
+                                  </p>
+                                </div>
+                              </Link>
+                            ))
+                          ) : (
+                            <div className="p-3 text-xs font-semibold text-gray-600">
+                              No hay coincidencias.
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+                    </>
                   ) : (
                     <button
                       type="button"
                       onClick={() => setMobileProductSearchOpen(true)}
-                      className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/55 text-white backdrop-blur"
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-950 shadow-[0_4px_16px_rgba(15,23,42,0.28)] ring-1 ring-black/10 backdrop-blur"
                       aria-label="Buscar productos"
                     >
                       <MagnifyingGlassIcon className="h-6 w-6" />
@@ -535,7 +592,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                 <button
                   type="button"
                   onClick={shareProduct}
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/55 text-white backdrop-blur"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-950 shadow-[0_4px_16px_rgba(15,23,42,0.28)] ring-1 ring-black/10 backdrop-blur"
                   aria-label="Compartir producto"
                 >
                   <ShareIcon className="h-6 w-6" />
@@ -573,7 +630,7 @@ const DynamicPage = ({ product, recs }: Props) => {
             <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-amazon_blue">
               <span className="inline-flex items-center gap-1">
                 <TruckIcon className="h-4 w-4" />
-                Envío a Perú
+                Envíos nacionales
               </span>
               <span className="h-4 w-px bg-gray-200" />
               <span className="inline-flex items-center gap-1">
@@ -587,17 +644,21 @@ const DynamicPage = ({ product, recs }: Props) => {
               <h1 className="text-base font-medium leading-6 text-gray-950">{displayProductTitle}</h1>
               <div className="mt-1 flex items-center justify-between gap-3 text-sm text-gray-600">
                 <span>{salesCount > 0 ? `${salesCount} vendidos` : "Rossy Resina"}</span>
-                <span className="flex items-center gap-1">
-                  {reviewCount > 0 ? reviewAverage.toFixed(1) : "5.0"}
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <FaStar
-                      key={i}
-                      className={`h-3.5 w-3.5 ${
-                        i < Math.round(reviewCount > 0 ? reviewAverage : 5) ? "text-amazon_blue" : "text-gray-300"
-                      }`}
-                    />
-                  ))}
-                </span>
+                {reviewCount > 0 ? (
+                  <span className="flex items-center gap-1">
+                    {reviewAverage.toFixed(1)}
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <FaStar
+                        key={i}
+                        className={`h-3.5 w-3.5 ${
+                          i < Math.round(reviewAverage) ? "text-amazon_blue" : "text-gray-300"
+                        }`}
+                      />
+                    ))}
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium text-gray-500">Sin reseñas</span>
+                )}
               </div>
 
               <div className="mt-3 flex flex-wrap items-end gap-2">
@@ -717,18 +778,20 @@ const DynamicPage = ({ product, recs }: Props) => {
                       onClick={() => addProductToCart(qty)}
                       className="flex h-12 flex-1 items-center justify-center rounded-full bg-amazon_blue px-4 text-base font-bold text-white shadow-[0_8px_18px_rgba(203,41,158,0.24)]"
                     >
-                      <span className="flex-1 text-center">
-                        {justAdded ? "Producto añadido" : "¡Agrégalo al carrito!"}
-                      </span>
-                      <span className="relative ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20">
-                        <ShoppingCartIcon className="h-5 w-5" />
-                        {cartCount > 0 ? (
-                          <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-amazon_blue">
-                            {cartCount > 99 ? "99+" : cartCount}
-                          </span>
-                        ) : null}
-                      </span>
+                      {justAdded ? "Producto añadido" : "¡Agrégalo al carrito!"}
                     </button>
+                    <Link
+                      href="/cart"
+                      className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-amazon_blue bg-white text-amazon_blue shadow-[0_8px_18px_rgba(203,41,158,0.16)]"
+                      aria-label="Ver carrito"
+                    >
+                      <ShoppingCartIcon className="h-6 w-6" />
+                      {cartCount > 0 ? (
+                        <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amazon_blue px-1 text-[10px] font-bold text-white">
+                          {cartCount > 99 ? "99+" : cartCount}
+                        </span>
+                      ) : null}
+                    </Link>
                   </div>,
                   document.body
                 )
@@ -1146,7 +1209,7 @@ const DynamicPage = ({ product, recs }: Props) => {
               )
             : null}
 
-          <div className="mt-10">
+          <div className="mt-4 pb-28 md:mt-10 md:pb-0">
             <h2 className="text-xl font-semibold mb-3">Explora tus intereses</h2>
             {recs.length > 0 ? (
               <Products
@@ -1184,6 +1247,6 @@ export const getServerSideProps = async (ctx: any) => {
         return [...sameCategory, ...fallback].slice(0, 25);
       })()
     : [];
-  return { props: { product, recs } };
+  return { props: { product, recs, allProducts: all } };
 };
 

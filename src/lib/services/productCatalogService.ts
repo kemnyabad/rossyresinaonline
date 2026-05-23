@@ -32,6 +32,18 @@ function toCategorySlug(value: any): string {
     .replace(/(^-|-$)/g, "");
 }
 
+function normalizeSearchValue(value: any): string {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function searchTerms(value: string): string[] {
+  return normalizeSearchValue(value).split(/\s+/).filter(Boolean);
+}
+
 export function getVisibleCategories(products: ProductProps[], limit = 10): string[] {
   return Array.from(
     new Set(
@@ -63,7 +75,8 @@ export function filterAndSortProducts(
   products: ProductProps[],
   opts: ProductFilterOptions = {}
 ): ProductProps[] {
-  const query = String(opts.query || "").trim().toLowerCase();
+  const query = normalizeSearchValue(opts.query || "");
+  const terms = searchTerms(query);
   const category = String(opts.category || "").trim().toLowerCase();
   const categorySlug = toCategorySlug(category);
   const minPrice = typeof opts.minPrice === "number" ? opts.minPrice : null;
@@ -72,7 +85,7 @@ export function filterAndSortProducts(
 
   let out = [...(products || [])].filter((p) => {
     const price = Number(p.price || 0);
-    const productCategory = String(p.category || "").trim().toLowerCase();
+    const productCategory = normalizeSearchValue(p.category || "");
     const inCategory =
       !category ||
       productCategory === category ||
@@ -80,10 +93,12 @@ export function filterAndSortProducts(
     const inMin = minPrice === null || price >= minPrice;
     const inMax = maxPrice === null || price <= maxPrice;
     const inQuery =
-      !query ||
-      `${p.title || ""} ${p.category || ""} ${p.brand || ""} ${p.description || ""} ${p.code || ""}`
-        .toLowerCase()
-        .includes(query);
+      terms.length === 0 ||
+      terms.every((term) =>
+        normalizeSearchValue(
+          `${p.title || ""} ${p.category || ""} ${p.brand || ""} ${p.description || ""} ${p.code || ""} ${(p as any).sku || ""} ${(p as any).barcode || ""}`
+        ).includes(term)
+      );
     return inCategory && inMin && inMax && inQuery;
   });
 
@@ -95,8 +110,8 @@ export function filterAndSortProducts(
     out.sort((a, b) => popularityScore(b) - popularityScore(a));
   } else {
     out.sort((a, b) => {
-      const qA = query && String(a.title || "").toLowerCase().includes(query) ? 1 : 0;
-      const qB = query && String(b.title || "").toLowerCase().includes(query) ? 1 : 0;
+      const qA = query && normalizeSearchValue(a.title || "").includes(query) ? 1 : 0;
+      const qB = query && normalizeSearchValue(b.title || "").includes(query) ? 1 : 0;
       if (qA !== qB) return qB - qA;
       return popularityScore(b) - popularityScore(a);
     });

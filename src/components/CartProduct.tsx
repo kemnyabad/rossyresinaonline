@@ -38,10 +38,15 @@ const CartProduct = ({ item }: cartProductsProps) => {
   })();
 
   return (
-    <article className="border-b border-gray-200 bg-white px-4 py-5 last:border-b-0 md:px-5">
-      <div className="grid gap-4 md:grid-cols-[240px_minmax(0,1fr)_180px] lg:grid-cols-[240px_minmax(0,1fr)_180px]">
+    <article className="bg-white md:border-b md:border-gray-200 md:px-5 md:py-5 md:last:border-b-0">
+      <div className="grid grid-cols-[24px_108px_minmax(0,1fr)] gap-3 md:grid-cols-[240px_minmax(0,1fr)_180px] md:gap-4 lg:grid-cols-[240px_minmax(0,1fr)_180px]">
+        <div className="flex items-center md:hidden">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amazon_blue text-xs font-black text-white">
+            ✓
+          </span>
+        </div>
         <div className="flex gap-4">
-          <div className="relative h-32 w-28 shrink-0 overflow-hidden border border-gray-100 bg-white md:h-40 md:w-36">
+          <div className="relative h-[120px] w-[108px] shrink-0 overflow-hidden rounded-lg bg-gray-100 md:h-40 md:w-36 md:rounded-none md:border md:border-gray-100 md:bg-white">
           <Image
             className="object-contain"
             fill
@@ -50,23 +55,20 @@ const CartProduct = ({ item }: cartProductsProps) => {
             sizes="(max-width: 768px) 112px, 144px"
           />
           </div>
-          <div className="md:hidden">
-            <p className="text-xs text-gray-500">Precio</p>
-            <p className="font-semibold text-gray-950">
-              <FormattedPrice amount={item.price} />
-            </p>
-          </div>
         </div>
 
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-black uppercase leading-tight tracking-wide text-gray-950 md:text-xl">
+          <h2 className="line-clamp-2 text-[15px] font-semibold leading-5 text-gray-950 md:text-xl md:font-black md:uppercase md:leading-tight md:tracking-wide">
             {item.title}
           </h2>
-          <p className="mt-1 text-sm text-gray-700 md:text-base">
+          <p className="mt-1.5 line-clamp-1 text-[13px] font-medium text-gray-500 md:text-base md:text-gray-700">
             {item.brand ? `${item.brand} · ` : ""}
             {item.category || "Producto Rossy Resina"}
           </p>
-          <div className="mt-5 space-y-1 text-sm text-gray-800 md:text-base">
+          <p className="mt-1 text-xl font-black text-amazon_blue md:hidden">
+            <FormattedPrice amount={item.price} />
+          </p>
+          <div className="mt-5 hidden space-y-1 text-sm text-gray-800 md:block md:text-base">
             <p>Origen: Perú</p>
             <p>Envío: Envío coordinado por WhatsApp</p>
             <p>
@@ -74,22 +76,22 @@ const CartProduct = ({ item }: cartProductsProps) => {
             </p>
           </div>
 
-          <div className="mt-6 flex items-center gap-3 text-sm">
-            <div className="inline-flex h-9 shrink-0 items-center gap-3 rounded-md border border-gray-300 bg-gray-50 px-3 text-gray-950">
-              <span>Cantidad:</span>
+          <div className="mt-3 flex flex-wrap items-center justify-end gap-3 text-sm md:mt-6 md:justify-start">
+            <div className="inline-flex h-9 shrink-0 items-center overflow-hidden rounded-full border border-gray-200 bg-white text-gray-950 md:h-9 md:gap-3 md:rounded-md md:border-gray-300 md:bg-gray-50 md:px-3">
+              <span className="hidden md:inline">Cantidad:</span>
               <button
                 type="button"
                 onClick={() => dispatch(decreaseQuantity({ _id: item._id }))}
-                className="flex h-6 w-6 items-center justify-center rounded text-gray-700 hover:bg-gray-200"
+                className="flex h-9 w-10 items-center justify-center text-gray-700 hover:bg-gray-100 md:h-6 md:w-6 md:rounded md:hover:bg-gray-200"
                 aria-label="Disminuir cantidad"
               >
                 <LuMinus className="h-4 w-4" />
               </button>
-              <span className="min-w-[18px] text-center font-semibold">{item.quantity}</span>
+              <span className="min-w-[34px] text-center text-base font-semibold md:min-w-[18px] md:text-sm">{item.quantity}</span>
               <button
                 type="button"
                 onClick={() => dispatch(increaseQuantity({ _id: item._id }))}
-                className="flex h-6 w-6 items-center justify-center rounded text-gray-700 hover:bg-gray-200"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-amazon_blue text-white hover:brightness-95 md:h-6 md:w-6 md:rounded md:bg-transparent md:text-gray-700 md:hover:bg-gray-200"
                 aria-label="Aumentar cantidad"
               >
                 <LuPlus className="h-4 w-4" />
@@ -99,7 +101,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
             <button
               type="button"
               onClick={() => dispatch(deleteProduct(item._id))}
-              className="shrink-0 font-medium text-orange-600 hover:text-orange-700 hover:underline"
+              className="hidden shrink-0 font-medium text-orange-600 hover:text-orange-700 hover:underline md:inline"
               aria-label="Eliminar producto"
             >
               Eliminar
@@ -107,7 +109,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
           </div>
         </div>
 
-        <div className="text-left md:text-right">
+        <div className="hidden text-left md:block md:text-right">
           {hasDiscount && (
             <p className="text-sm text-gray-400 line-through">
               <FormattedPrice amount={item.oldPrice} />
