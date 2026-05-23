@@ -37,6 +37,8 @@ const CartPage = () => {
   );
   const shippingAmount = 0;
   const selectedCount = cartItems.length;
+  const originalTotal = cartItems.reduce((sum, item) => sum + Number(item.oldPrice || item.price) * item.quantity, 0);
+  const hasCartDiscount = originalTotal > totals.total;
   const formatPlainPrice = (value: number) => `S/ ${Number(value || 0).toFixed(2)}`;
   const normalizeCartImage = (src?: string) => {
     const raw = String(src || "").replace(/\\/g, "/");
@@ -97,7 +99,7 @@ const CartPage = () => {
       ) : cartItems.length > 0 ? (
         <>
           <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-4 pb-3 pt-4 md:hidden">
-            <div className="grid grid-cols-[74px_minmax(0,1fr)_46px] items-center">
+            <div className="grid grid-cols-[86px_minmax(0,1fr)_46px] items-center">
               <button
                 type="button"
                 onClick={() => router.back()}
@@ -108,9 +110,9 @@ const CartPage = () => {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-sm font-black text-white">
                   ✓
                 </span>
-                <span className="text-lg leading-none">All</span>
+                <span className="text-base leading-none">Todos</span>
               </button>
-              <h1 className="text-center text-xl font-black text-gray-950">Cart ({selectedCount})</h1>
+              <h1 className="text-center text-xl font-black text-gray-950">Carrito ({selectedCount})</h1>
               <button
                 type="button"
                 className="ml-auto flex h-9 w-9 items-center justify-center text-gray-950"
@@ -122,22 +124,54 @@ const CartPage = () => {
           </div>
 
           <div className="md:hidden">
-            <section className="mt-3 bg-white">
+            <div className="space-y-1.5 bg-white px-3 py-2">
+              <div className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2.5">
+                <div className="flex min-w-0 items-center gap-2 text-amazon_blue">
+                  <span className="text-2xl font-black leading-none">✓</span>
+                  <span className="truncate text-sm font-black">Envío gratis especial para ti</span>
+                </div>
+                <span className="shrink-0 text-xs text-gray-500">Oferta exclusiva</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2.5">
+                <span className="text-xl">🎁</span>
+                <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-950">
+                  Agrega más productos y recibe beneficios Rossy
+                </p>
+                <span className="text-xl leading-none text-gray-700">›</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto bg-white px-3 pb-2 pt-1">
+              <span className="rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-950">
+                Todos({cartItems.length})
+              </span>
+              <span className="rounded-full border-2 border-gray-950 bg-white px-3 py-1 text-sm font-medium text-gray-950">
+                Seleccionado({selectedCount})
+              </span>
+            </div>
+
+            <section className="space-y-2 bg-[#f5f5f5] px-2 py-2">
               {cartItems.map((item) => {
                 const itemDiscount = discountLabel(item.oldPrice, item.price);
                 return (
-                  <article key={item._id} className="grid grid-cols-[42px_180px_minmax(0,1fr)] gap-2 border-b border-gray-100 px-3 py-3">
-                    <div className="flex items-center">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-lg font-black text-white">✓</span>
+                  <article
+                    key={item._id}
+                    className="grid grid-cols-[34px_clamp(112px,31vw,135px)_minmax(0,1fr)] gap-2 rounded-lg bg-white px-2.5 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.06)] min-[390px]:grid-cols-[38px_clamp(124px,34vw,145px)_minmax(0,1fr)] min-[390px]:px-3"
+                  >
+                    <div className="flex items-center justify-center">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-base font-black text-white">✓</span>
                     </div>
-                    <Link href={`/${item.code || item._id}`} className="relative h-[180px] overflow-hidden bg-gray-100">
+                    <Link href={`/${item.code || item._id}`} className="relative aspect-square w-full overflow-hidden rounded-md bg-gray-100">
                       <Image src={normalizeCartImage(item.image)} alt={item.title || "Producto"} fill className="object-cover" />
                     </Link>
-                    <div className="min-w-0">
-                      <div className="flex items-start gap-2">
+                    <div className="flex min-w-0 flex-col justify-between rounded-md bg-white">
+                      <div className="rounded-md bg-gray-50 px-2.5 py-2">
+                        <div className="flex items-start gap-2">
                         <Link href={`/${item.code || item._id}`} className="min-w-0 flex-1">
-                          <p className="line-clamp-2 text-base leading-5 text-gray-700">{item.title}</p>
-                          <p className="mt-1 text-base text-gray-700">{item.quantity}pcs</p>
+                          <p className="line-clamp-2 text-[13px] font-semibold leading-5 text-gray-800 min-[390px]:text-[15px]">{item.title}</p>
+                          <p className="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-xs font-medium text-gray-600">
+                            {item.quantity} unidad{item.quantity > 1 ? "es" : ""}
+                          </p>
                         </Link>
                         <button
                           type="button"
@@ -147,33 +181,37 @@ const CartPage = () => {
                         >
                           <TrashIcon className="h-5 w-5" />
                         </button>
+                        </div>
                       </div>
-                      <div className="mt-20 flex items-end justify-between gap-2">
+                      <div className="mt-2 flex flex-col items-stretch gap-2 rounded-md bg-white px-1 min-[390px]:flex-row min-[390px]:items-end min-[390px]:justify-between">
                         <div className="min-w-0">
-                          <p className="flex flex-wrap items-center gap-1 text-xl font-black text-gray-950">
+                          <p className="flex flex-wrap items-center gap-1 text-lg font-black leading-tight text-gray-950 min-[390px]:text-xl">
                             {itemDiscount && (
-                              <span className="rounded border border-amazon_blue px-1 text-sm font-bold leading-5 text-amazon_blue">
+                              <span className="rounded border border-amazon_blue px-1 text-xs font-bold leading-5 text-amazon_blue min-[390px]:text-sm">
                                 {itemDiscount}
                               </span>
                             )}
                             <FormattedPrice amount={item.price} />
                             <span className="text-sm font-semibold text-amazon_blue">c/u</span>
                           </p>
+                          <p className="mt-1 rounded bg-amazon_blue/5 px-2 py-1 text-xs font-semibold text-gray-700">
+                            después de promociones <FormattedPrice amount={item.price * item.quantity} />
+                          </p>
                         </div>
-                        <div className="flex h-9 items-center rounded-md border border-gray-200 bg-white">
+                        <div className="ml-auto flex h-9 shrink-0 items-center overflow-hidden rounded-md border border-gray-200 bg-white">
                           <button
                             type="button"
                             onClick={() => dispatch(decreaseQuantity({ _id: item._id }))}
-                            className="flex h-9 w-9 items-center justify-center text-lg"
+                            className="flex h-9 w-8 items-center justify-center text-lg min-[390px]:w-9"
                             aria-label="Reducir cantidad"
                           >
                             -
                           </button>
-                          <span className="min-w-[34px] text-center text-base">{item.quantity}</span>
+                          <span className="min-w-[30px] text-center text-base min-[390px]:min-w-[34px]">{item.quantity}</span>
                           <button
                             type="button"
                             onClick={() => dispatch(increaseQuantity({ _id: item._id }))}
-                            className="flex h-9 w-9 items-center justify-center text-lg"
+                            className="flex h-9 w-8 items-center justify-center text-lg min-[390px]:w-9"
                             aria-label="Aumentar cantidad"
                           >
                             +
@@ -199,9 +237,9 @@ const CartPage = () => {
                       <div className="mt-1 flex items-center gap-1 text-xs text-gray-900">
                         ★★★★★ <span className="text-gray-500">ventas</span>
                       </div>
-                      <div className="mt-1 flex items-end gap-1">
+                      <div className="mt-1 flex min-w-0 items-end gap-1">
                         {recDiscount && <span className="rounded border border-amazon_blue px-1 text-xs font-bold text-amazon_blue">{recDiscount}</span>}
-                        <span className="text-lg font-black text-amazon_blue">
+                        <span className="min-w-0 flex-1 text-lg font-black text-amazon_blue">
                           <FormattedPrice amount={Number(product.price || 0)} />
                         </span>
                         <button
@@ -310,9 +348,9 @@ const CartPage = () => {
           <aside className="fixed bottom-0 left-0 right-0 z-[80] md:hidden">
             <div className="mx-auto flex w-full max-w-[480px] items-center gap-3 rounded-t-2xl bg-white px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-6px_18px_rgba(17,24,39,0.12)]">
               <div className="min-w-0 flex-1">
-                {cartItems.some((item) => typeof item.oldPrice === "number" && item.oldPrice > item.price) && (
+                {hasCartDiscount && (
                   <p className="text-sm text-gray-500 line-through">
-                    <FormattedPrice amount={cartItems.reduce((sum, item) => sum + Number(item.oldPrice || item.price) * item.quantity, 0)} />
+                    <FormattedPrice amount={originalTotal} />
                   </p>
                 )}
                 <p className="text-2xl font-black leading-none text-amazon_blue">
@@ -321,9 +359,9 @@ const CartPage = () => {
               </div>
               <Link
                 href="/checkout"
-                className="flex h-14 min-w-[230px] items-center justify-center rounded-full bg-amazon_blue px-5 text-lg font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
+                className="flex h-14 min-w-[230px] items-center justify-center rounded-full bg-amazon_blue px-5 text-base font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
               >
-                Comprar ahora
+                Pagar ({selectedCount})
               </Link>
             </div>
           </aside>
