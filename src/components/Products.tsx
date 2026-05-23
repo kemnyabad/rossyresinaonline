@@ -146,6 +146,23 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                         <FormattedPrice amount={oldPrice as number} />
                       </span>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        dispatch(addToCart({ _id, brand, category, description, image: displayImage, isNew, oldPrice, price, title, quantity: 1 }));
+                        trackProductCartAdd(_id, 1);
+                        showAddedFeedback(_id);
+                      }}
+                      className={
+                        "ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full border md:hidden " +
+                        (wasAdded
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                          : "border-amazon_blue bg-white text-amazon_blue")
+                      }
+                      aria-label="Agregar al carrito"
+                    >
+                      {wasAdded ? <CheckIcon className="h-4 w-4" /> : <ShoppingCartIcon className="h-4 w-4" />}
+                    </button>
                   </div>
 
                   {(hasSales || hasReviews) && (
@@ -174,7 +191,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                     showAddedFeedback(_id);
                   }}
                   className={
-                    "mt-3 flex h-9 w-full items-center justify-center gap-1 rounded-full border text-xs font-semibold duration-300 transition-all " +
+                    "mt-3 hidden h-9 w-full items-center justify-center gap-1 rounded-full border text-xs font-semibold duration-300 transition-all md:flex " +
                     (wasAdded
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md"
                       : "border-gray-300 text-gray-800 hover:border-amazon_blue hover:bg-amazon_blue hover:text-white hover:shadow-[0_8px_18px_rgba(203,41,158,0.20)]")
