@@ -15,10 +15,8 @@ import {
   AcademicCapIcon,
   ChatBubbleOvalLeftEllipsisIcon,
   ClockIcon,
-  Cog6ToothIcon,
   GiftIcon,
   MapPinIcon,
-  MegaphoneIcon,
   StarIcon,
   TagIcon,
   TruckIcon,
@@ -121,8 +119,8 @@ export default function AccountPage() {
             <Link href="/messages" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-950" aria-label="Mensajes">
               <ChatBubbleOvalLeftEllipsisIcon className="h-7 w-7 stroke-[2.2]" />
             </Link>
-            <Link href="/account" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-950" aria-label="Configurar cuenta">
-              <Cog6ToothIcon className="h-7 w-7 stroke-[2.2]" />
+            <Link href="/shipping-address" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-950" aria-label="Configurar dirección">
+              <MapPinIcon className="h-7 w-7 stroke-[2.2]" />
             </Link>
           </div>
 
@@ -137,7 +135,7 @@ export default function AccountPage() {
             </div>
           </div>
 
-          <Link href="/productos" className="mt-3 flex items-center gap-3 rounded border border-gray-200 bg-white px-2 py-2 shadow-sm">
+          <Link href="/productos?ofertas=1" className="mt-3 flex items-center gap-3 rounded border border-gray-200 bg-white px-2 py-2 shadow-sm">
             <span className="flex h-9 w-9 items-center justify-center rounded bg-amazon_blue/10 text-amazon_blue">
               <GiftIcon className="h-6 w-6" />
             </span>
@@ -152,20 +150,20 @@ export default function AccountPage() {
         <section className="mt-2 divide-y divide-gray-100 bg-white">
           <MobileAccountRow href="/track-orders" icon={<ClipboardDocumentListIcon className="h-6 w-6" />} label="Tus pedidos" />
           <MobileAccountRow href="/messages" icon={<ChatBubbleOvalLeftEllipsisIcon className="h-6 w-6" />} label="Mensajes" />
-          <MobileAccountRow href="/track-orders" icon={<StarIcon className="h-6 w-6" />} label="Reseñas" />
+          <MobileAccountRow href="/reviews" icon={<StarIcon className="h-6 w-6" />} label="Reseñas" />
         </section>
 
         <section className="mt-2 grid grid-cols-4 bg-white px-2 py-4 text-center">
           <MobileQuickLink href="/track-orders" icon={<ClockIcon className="h-7 w-7" />} label="Historial" />
-          <MobileQuickLink href="/productos" icon={<GiftIcon className="h-7 w-7" />} label="Gana y gratis" />
+          <MobileQuickLink href="/productos?ofertas=1" icon={<GiftIcon className="h-7 w-7" />} label="Ofertas" />
           <MobileQuickLink href="/shipping-address" icon={<MapPinIcon className="h-7 w-7" />} label="Direcciones" />
-          <MobileQuickLink href="/comunidad" icon={<TagIcon className="h-7 w-7" />} label="Siguiendo" />
+          <MobileQuickLink href="/favorite" icon={<TagIcon className="h-7 w-7" />} label="Favoritos" />
         </section>
 
         {cartPreview.length > 0 && (
           <Link href="/cart" className="mt-2 block bg-white px-4 py-3">
             <div className="flex items-center gap-1 text-sm">
-              <span className="font-black uppercase text-amazon_blue">Casi agotados</span>
+              <span className="font-black uppercase text-amazon_blue">En tu carrito</span>
               <span className="text-gray-950">- {cartUnits} artículo{cartUnits !== 1 ? "s" : ""} en el carrito</span>
               <ArrowRightIcon className="h-4 w-4" />
             </div>
@@ -174,7 +172,7 @@ export default function AccountPage() {
                 <div key={item._id} className="relative h-20 w-20 overflow-hidden bg-gray-100">
                   <Image src={normalizeImage(item.image)} alt={item.title || "Producto"} fill className="object-cover" />
                   <span className="absolute bottom-0 left-0 right-0 bg-black/55 px-1 py-0.5 text-[10px] font-semibold text-white">
-                    Casi agotado
+                    En carrito
                   </span>
                 </div>
               ))}
@@ -182,13 +180,12 @@ export default function AccountPage() {
           </Link>
         )}
 
-        <Link href="/shipping-address" className="mt-2 flex items-center gap-3 bg-[#fff1e5] px-4 py-3 text-sm font-black text-green-700">
+        <div className="mt-2 flex items-center gap-3 bg-[#fff1e5] px-4 py-3 text-sm font-black text-green-700">
           <TruckIcon className="h-5 w-5" />
           <span>Envío gratis</span>
           <span className="h-6 w-px bg-green-700/30" />
           <span>S/ 4.00 de crédito por retraso</span>
-          <ArrowRightIcon className="ml-auto h-4 w-4" />
-        </Link>
+        </div>
 
         <section className="grid grid-cols-2 gap-1 bg-white pt-2">
           {mobileProducts.slice(0, 12).map((product: any) => (
