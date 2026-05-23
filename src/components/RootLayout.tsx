@@ -24,14 +24,15 @@ const RootLayout = ({ children }: Props) => {
     router.pathname.startsWith("/admin/rifa");
   const isProductDetailPage = router.pathname === "/[_id]";
   const isCartPage = router.pathname === "/cart";
+  const isCheckoutPage = router.pathname === "/checkout";
   const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
-  const showHeader = !isRifasPage && !isProductDetailPage && !isCartPage;
-  const showMobileBottomNav = !isResinyPage && !isProductDetailPage && !isCartPage;
-  const hideFooter = isRifasPage || isResinyPage || isCartPage;
+  const showHeader = !isRifasPage && !isProductDetailPage && !isCartPage && !isCheckoutPage;
+  const showMobileBottomNav = !isResinyPage && !isProductDetailPage && !isCartPage && !isCheckoutPage;
+  const hideFooter = isRifasPage || isResinyPage || isCartPage || isCheckoutPage;
   const [isHydrated, setIsHydrated] = useState(false);
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   const [hasActiveRifas, setHasActiveRifas] = useState(false);
-  const showMobilePromoBanner = !isRifasPage && !isResinyPage && !isCartPage && hasActiveRifas;
+  const showMobilePromoBanner = !isRifasPage && !isResinyPage && !isCartPage && !isCheckoutPage && hasActiveRifas;
   const storedCartCount = useSelector((state: any) =>
     Array.isArray(state?.next?.productData) ? state.next.productData.length : 0
   );
@@ -59,7 +60,7 @@ const RootLayout = ({ children }: Props) => {
   }, [mobilePromoSlides.length]);
 
   useEffect(() => {
-    if (isRifasPage || isResinyPage || isCartPage) {
+    if (isRifasPage || isResinyPage || isCartPage || isCheckoutPage) {
       setHasActiveRifas(false);
       return;
     }
@@ -77,7 +78,7 @@ const RootLayout = ({ children }: Props) => {
       });
 
     return () => controller.abort();
-  }, [isRifasPage, isResinyPage, isCartPage]);
+  }, [isRifasPage, isResinyPage, isCartPage, isCheckoutPage]);
 
   const mobileTabs = [
     { href: "/", label: "Inicio", icon: HomeIcon, active: router.pathname === "/" },

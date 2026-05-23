@@ -2,17 +2,21 @@ import Head from "next/head";
 import { useSelector, useDispatch } from "react-redux";
 import { StateProps, StoreProduct } from "../../type";
 import { useMemo, useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import FormattedPrice from "@/components/FormattedPrice";
 import { resetCart } from "@/store/nextSlice";
 import { useSession } from "next-auth/react";
+import { Bars3Icon, ChevronLeftIcon } from "@heroicons/react/24/outline";
 
 type PaymentMethod = "YAPE" | "TRANSFER";
 type ShippingCarrier = "SHALOM" | "OLVA";
 
 export default function CheckoutPage() {
   const dispatch = useDispatch();
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const { productData, userInfo } = useSelector((state: StateProps) => state.next);
   const isAdminSession = (session?.user as any)?.role === "ADMIN";
   const customerSession = !isAdminSession ? session : null;
@@ -44,6 +48,7 @@ export default function CheckoutPage() {
   const [successId, setSuccessId] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [mounted, setMounted] = useState(false);
+  const [shippingProfileChecked, setShippingProfileChecked] = useState(false);
 
   const sessionCustomerEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
   const checkoutEmail = sessionCustomerEmail || guestEmail.trim().toLowerCase();
@@ -62,7 +67,11 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
-    if (!sessionEmail || typeof window === "undefined") return;
+    if (!sessionEmail || typeof window === "undefined") {
+      setShippingProfileChecked(true);
+      return;
+    }
+    setShippingProfileChecked(false);
     let hasLocalProfile = false;
     try {
       const raw = window.localStorage.getItem(`rr_shipping_profile:${sessionEmail}`);
@@ -80,6 +89,7 @@ export default function CheckoutPage() {
         setShowShippingForm(false);
         setSelectedSavedAddress(true);
         setShippingConfirmed(false);
+        setShippingProfileChecked(true);
       }
     } catch {
       // Si el dato local esta corrupto, simplemente dejamos el formulario editable.
@@ -88,7 +98,16 @@ export default function CheckoutPage() {
     fetch("/api/account/shipping-profile")
       .then((res) => res.json())
       .then((data) => {
-        if (!alive || !data?.found) return;
+        if (!alive) return;
+        if (!data?.found) {
+          if (!hasLocalProfile) {
+            setShowShippingForm(false);
+            setSelectedSavedAddress(false);
+            setShippingConfirmed(false);
+          }
+          setShippingProfileChecked(true);
+          return;
+        }
         const p = data.profile || {};
         setName(String(p.name || (customerSession?.user as any)?.name || ""));
         setDni(String(p.dni || ""));
@@ -102,10 +121,16 @@ export default function CheckoutPage() {
         setSelectedSavedAddress(true);
         setShippingConfirmed(false);
         window.localStorage.setItem(`rr_shipping_profile:${sessionEmail}`, JSON.stringify(p));
+        setShippingProfileChecked(true);
       })
       .catch(() => {
-        if (!alive || hasLocalProfile) return;
-        setShowShippingForm(true);
+        if (!alive) return;
+        if (!hasLocalProfile) {
+          setShowShippingForm(false);
+          setSelectedSavedAddress(false);
+          setShippingConfirmed(false);
+        }
+        setShippingProfileChecked(true);
       });
     return () => {
       alive = false;
@@ -123,6 +148,10 @@ export default function CheckoutPage() {
     const total = subtotal;
     return { subtotal, total };
   }, [productData]);
+  const totalUnits = useMemo(
+    () => productData.reduce((sum: number, p: StoreProduct) => sum + p.quantity, 0),
+    [productData]
+  );
 
   const normImg = (s?: string) => {
     const t = String(s || "");
@@ -195,6 +224,12 @@ export default function CheckoutPage() {
   };
 
   const isShippingReviewStep = !showShippingForm && !shippingConfirmed && !!name && !!phone && !!locationLine;
+  const hasSavedShippingAddress = Boolean(
+    name &&
+      phone &&
+      locationLine &&
+      (shippingCarrier === "SHALOM" ? shalomAgency : olvaAddress)
+  );
 
   const saveLocalShippingProfile = () => {
     const sessionEmail = String((customerSession?.user as any)?.email || "").trim().toLowerCase();
@@ -294,10 +329,30 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-3 py-5 md:px-6 md:py-6">
+    <div className="mx-auto max-w-screen-2xl px-3 pb-[104px] pt-0 md:px-6 md:py-6">
       <Head>
         <title>Rossy Resina - Checkout</title>
       </Head>
+      <div className="sticky top-0 z-30 -mx-3 mb-3 border-b border-gray-200 bg-white px-4 pb-3 pt-4 md:hidden">
+        <div className="grid grid-cols-[46px_minmax(0,1fr)_46px] items-center">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex h-9 w-9 items-center justify-center text-gray-950"
+            aria-label="Volver"
+          >
+            <ChevronLeftIcon className="h-6 w-6 stroke-[2.5]" />
+          </button>
+          <h1 className="text-center text-xl font-black text-gray-950">Pagar ({totalUnits})</h1>
+          <button
+            type="button"
+            className="ml-auto flex h-9 w-9 items-center justify-center text-gray-950"
+            aria-label="Menú"
+          >
+            <Bars3Icon className="h-7 w-7 stroke-[2.2]" />
+          </button>
+        </div>
+      </div>
       {!mounted ? (
         <div className="bg-white rounded-lg p-8 shadow">
           <p className="text-lg">Cargando checkout...</p>
@@ -311,6 +366,53 @@ export default function CheckoutPage() {
           >
             Ir a comprar
           </Link>
+        </div>
+      ) : status === "loading" || !shippingProfileChecked ? (
+        <div className="bg-white rounded-lg p-8 shadow">
+          <p className="text-lg">Preparando tus datos...</p>
+        </div>
+      ) : !sessionCustomerEmail ? (
+        <div className="mx-auto max-w-xl rounded-lg bg-white p-6 shadow md:p-8">
+          <h2 className="text-2xl font-black text-gray-950">Primero ingresa a tu cuenta</h2>
+          <p className="mt-2 text-sm leading-6 text-gray-600">
+            Para pagar usamos la dirección que guardas al registrarte. Así no llenas el formulario en cada compra.
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <Link
+              href="/register?callbackUrl=/checkout"
+              className="flex h-12 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
+            >
+              Registrarme
+            </Link>
+            <Link
+              href="/sign-in?callbackUrl=/checkout"
+              className="flex h-12 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
+            >
+              Ya tengo cuenta
+            </Link>
+          </div>
+        </div>
+      ) : !hasSavedShippingAddress && !showShippingForm ? (
+        <div className="mx-auto max-w-xl rounded-lg bg-white p-6 shadow md:p-8">
+          <h2 className="text-2xl font-black text-gray-950">Completa tu dirección de envío</h2>
+          <p className="mt-2 text-sm leading-6 text-gray-600">
+            Tu cuenta está activa, pero no encontramos una dirección guardada. Agrégala una vez y luego aparecerá aquí automáticamente.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              href="/shipping-address"
+              className="flex h-12 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
+            >
+              Guardar dirección
+            </Link>
+            <button
+              type="button"
+              onClick={() => setShowShippingForm(true)}
+              className="flex h-12 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
+            >
+              Usar otra dirección
+            </button>
+          </div>
         </div>
       ) : (
         <div className={isShippingReviewStep ? "mx-auto max-w-5xl" : "grid gap-6 lg:grid-cols-3"}>
@@ -574,7 +676,7 @@ export default function CheckoutPage() {
           </section>
 
           {!isShippingReviewStep && (
-          <aside className="h-fit space-y-4 lg:col-span-1 lg:sticky lg:top-24">
+          <aside className="hidden h-fit space-y-4 lg:col-span-1 lg:sticky lg:top-24 lg:block">
             <div className="bg-white rounded-lg p-6 shadow">
               <h2 className="text-xl font-semibold mb-4">Resumen del pedido</h2>
               <ul className="divide-y divide-gray-200">
@@ -608,6 +710,43 @@ export default function CheckoutPage() {
             </div>
           </aside>
           )}
+
+          {mounted
+            ? createPortal(
+                <aside
+                  className="md:hidden"
+                  style={{
+                    position: "fixed",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 9999,
+                    width: "100%",
+                  }}
+                >
+                  <div className="bg-white px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-6px_18px_rgba(17,24,39,0.12)]">
+                    {errorMsg && <p className="mb-1 text-xs font-semibold text-red-600">{errorMsg}</p>}
+                    <div className="flex items-center gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-gray-500">Total</p>
+                        <p className="text-2xl font-black leading-none text-amazon_blue">
+                          <FormattedPrice amount={totals.total} />
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleConfirmOrder}
+                        disabled={submitting}
+                        className="flex h-14 min-w-[220px] items-center justify-center rounded-full bg-amazon_blue px-5 text-base font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)] disabled:opacity-60"
+                      >
+                        {submitting ? "Enviando..." : `Finalizar compra (${totalUnits})`}
+                      </button>
+                    </div>
+                  </div>
+                </aside>,
+                document.body
+              )
+            : null}
         </div>
       )}
     </div>
