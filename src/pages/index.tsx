@@ -9,12 +9,9 @@ import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
 import {
-  ArrowRightIcon,
-  BoltIcon,
   ChatBubbleLeftRightIcon,
   CheckBadgeIcon,
   QuestionMarkCircleIcon,
-  SparklesIcon,
   TruckIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/solid";
@@ -215,10 +212,6 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
     { label: "Accesorios", href: "/categoria/accesorios" },
     { label: "Escuela", href: "/escuela" },
   ];
-  const mobileDiscoveryTabs = [
-    { label: "Todo", href: "/" },
-    { label: "Nuevos", href: "/productos", icon: SparklesIcon },
-  ];
   const lightningProducts = (offerProducts.length > 0 ? offerProducts : allProducts).slice(0, 8);
   const mobileGridProducts = interestProducts.slice(0, 20);
   const getDiscountLabel = (product: ProductProps) => {
@@ -245,7 +238,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
         <meta name="twitter:description" content={pageDesc} />
       </Head>
       <main>
-        {/* Home mobile app-like */}
+        {/* Home mobile storefront */}
         <section className="md:hidden bg-white pb-3">
           <nav className="no-scrollbar flex gap-6 overflow-x-auto border-b border-gray-100 px-4 pt-1 text-[15px] font-medium text-gray-500">
             {mobileCategories.map((item, index) => (
@@ -261,8 +254,8 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
             ))}
           </nav>
 
-          <div className="grid grid-cols-2 border-b border-pink-100 bg-pink-50 px-4 py-2">
-            <Link href="/resiny" className="flex items-start gap-2 border-r border-pink-200 pr-3">
+          <div className="grid grid-cols-2 border-b border-gray-200 bg-white px-4 py-2">
+            <Link href="/resiny" className="flex items-start gap-2 border-r border-gray-200 pr-3">
               <ChatBubbleLeftRightIcon className="mt-0.5 h-5 w-5 shrink-0 text-amazon_blue" />
               <span className="min-w-0">
                 <span className="block text-sm font-bold leading-tight text-amazon_blue">Resiny</span>
@@ -300,10 +293,8 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
 
           <section className="mt-3">
             <div className="mb-2 flex items-center justify-between px-4">
-              <h2 className="flex items-center gap-1 text-base font-bold text-amazon_blue">
-                <BoltIcon className="h-5 w-5 text-amazon_blue" />
-                Ofertas relámpago
-                <ArrowRightIcon className="h-4 w-4" />
+              <h2 className="text-base font-bold text-amazon_blue">
+                Promos Rossy
               </h2>
               <Link href="/productos?ofertas=1" className="text-sm text-gray-700">Por tiempo limitado</Link>
             </div>
@@ -326,24 +317,6 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
               ))}
             </div>
           </section>
-
-          <nav className="no-scrollbar sticky top-[65px] z-20 mt-1 flex gap-5 overflow-x-auto border-y border-gray-100 bg-white px-4 py-2 text-[15px] font-medium text-gray-500">
-            {mobileDiscoveryTabs.map((tab, index) => {
-              const Icon = tab.icon;
-              return (
-                <Link
-                  key={tab.label}
-                  href={tab.href}
-                  className={`flex shrink-0 items-center gap-1 border-b-[3px] pb-1 ${
-                    index === 0 ? "border-amazon_blue font-semibold text-amazon_blue" : "border-transparent"
-                  }`}
-                >
-                  {Icon ? <Icon className="h-4 w-4" /> : null}
-                  {tab.label}
-                </Link>
-              );
-            })}
-          </nav>
 
           <section className="grid grid-cols-2 gap-1.5 bg-gray-100 p-1.5">
             {mobileGridProducts.map((p) => (

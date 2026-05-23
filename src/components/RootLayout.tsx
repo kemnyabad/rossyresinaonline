@@ -188,7 +188,7 @@ const RootLayout = ({ children }: Props) => {
                 </span>
                 <span>{tab.label}</span>
                 {tab.promo ? (
-                  <span className="-mt-0.5 rounded-full bg-pink-100 px-1.5 py-0.5 text-[9px] font-bold leading-none text-amazon_blue">
+                  <span className="-mt-0.5 rounded-full border border-amazon_blue px-1.5 py-0.5 text-[9px] font-bold leading-none text-amazon_blue">
                     Envío rápido
                   </span>
                 ) : null}

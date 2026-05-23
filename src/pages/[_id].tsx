@@ -570,12 +570,12 @@ const DynamicPage = ({ product, recs }: Props) => {
               </div>
             ) : null}
 
-            <div className="flex items-center gap-3 border-b border-pink-100 bg-pink-50 px-4 py-2 text-xs font-semibold text-amazon_blue">
+            <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-amazon_blue">
               <span className="inline-flex items-center gap-1">
                 <TruckIcon className="h-4 w-4" />
                 Envío a Perú
               </span>
-              <span className="h-4 w-px bg-pink-200" />
+              <span className="h-4 w-px bg-gray-200" />
               <span className="inline-flex items-center gap-1">
                 <ShieldCheckIcon className="h-4 w-4" />
                 Compra segura
@@ -610,7 +610,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                   </span>
                 )}
                 {hasActiveDiscount && (
-                  <span className="mb-0.5 rounded border border-amazon_blue/30 bg-pink-50 px-2 py-0.5 text-xs font-bold text-amazon_blue">
+                  <span className="mb-0.5 rounded border border-amazon_blue px-2 py-0.5 text-xs font-bold text-amazon_blue">
                     {Math.round((((activeOldPriceValue || 0) - activePrice) / (activeOldPriceValue || 1)) * 100)}% OFF
                   </span>
                 )}
@@ -627,7 +627,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                         onClick={() => setSelectedVariant(selectedVariant?.id === v.id ? null : v)}
                         className={`rounded-md border px-3 py-2 text-sm font-semibold ${
                           selectedVariant?.id === v.id
-                            ? "border-amazon_blue bg-pink-50 text-amazon_blue"
+                            ? "border-amazon_blue bg-white text-amazon_blue"
                             : "border-gray-300 text-gray-700"
                         }`}
                       >
@@ -884,7 +884,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                         {[0, 1, 2, 3, 4].map((i) => (
                           <FaStar key={i} className={`h-4 w-4 ${i < Number(r.rating || 0) ? "text-amber-500" : "text-gray-300"}`} />
                         ))}
-                        <span className="text-sm text-orange-600 ml-1">
+                        <span className="text-sm text-amazon_blue ml-1">
                           {Number(r.rating || 0) >= 4 ? "Excelente" : Number(r.rating || 0) >= 3 ? "Bueno" : "Regular"}
                         </span>
                       </div>
@@ -901,7 +901,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                   <div className="mb-2 flex h-7 items-center justify-center">
                     <Link
                       href="/productos?ofertas=1"
-                      className={`block w-full text-center text-sm font-extrabold uppercase tracking-wide text-orange-700 transition-all duration-700 hover:scale-[1.02] hover:text-orange-800 animate-pulse ${
+                      className={`block w-full text-center text-sm font-extrabold uppercase tracking-wide text-amazon_blue transition-all duration-700 hover:scale-[1.02] hover:text-amazon_light animate-pulse ${
                         offerCtaVisible ? "opacity-100" : "opacity-0"
                       }`}
                     >
@@ -939,7 +939,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                     </span>
                   )}
                   {hasActiveDiscount && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-pink-50 text-amazon_blue">Descuento</span>
+                    <span className="text-xs px-2 py-1 rounded-full border border-amazon_blue text-amazon_blue">Descuento</span>
                   )}
                 </div>
 
@@ -985,7 +985,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                     </div>
                   ) : null}
                 </div>
-                <div className="mt-3 text-sm text-orange-700">
+                <div className="mt-3 text-sm text-amazon_blue">
                   {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
                 </div>
 
@@ -1035,7 +1035,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                       <span className="font-semibold">{qty}</span>
                       <button onClick={() => setQty((q) => q + 1)} className="text-lg">+</button>
                     </div>
-                    <a href={waHref} target="_blank" rel="noreferrer" className="text-sm px-3 py-2 rounded border border-brand_green text-brand_green hover:bg-brand_green hover:text-white">
+                    <a href={waHref} target="_blank" rel="noreferrer" className="text-sm px-3 py-2 rounded border border-amazon_blue text-amazon_blue hover:bg-amazon_blue hover:text-white">
                       Compartir por WhatsApp
                     </a>
                   </div>

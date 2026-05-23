@@ -266,7 +266,7 @@ const Header = () => {
             onClick={() => setMobileMenuOpen((open) => !open)}
             className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
               mobileMenuOpen
-                ? "border-amazon_blue bg-pink-50 text-amazon_blue"
+                ? "border-amazon_blue bg-white text-amazon_blue"
                 : "border-gray-200 bg-white text-slate-700"
             }`}
             aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
@@ -325,11 +325,11 @@ const Header = () => {
                     href={item.href}
                     className={`flex min-h-[52px] items-center gap-3 rounded-xl border px-3 py-2 text-left transition-colors ${
                       active
-                        ? "border-amazon_blue bg-pink-50 text-amazon_blue"
+                        ? "border-amazon_blue bg-white text-amazon_blue"
                         : "border-gray-100 bg-white text-slate-700 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-50 text-amazon_blue">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amazon_blue text-amazon_blue">
                       <Icon className="h-5 w-5" />
                     </span>
                     <span className="text-sm font-semibold leading-tight">{item.label}</span>
