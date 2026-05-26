@@ -7,17 +7,19 @@ import { getAllProducts } from "@/lib/repositories/productRepository";
 
 interface Props {
   q: string;
+  category: string;
   results: ProductProps[];
 }
 
-export default function SearchPage({ q, results }: Props) {
+export default function SearchPage({ q, category, results }: Props) {
+  const categoryLabel = category ? ` en ${category}` : "";
   return (
     <StoreWithAdsLayout className="py-8">
       <Head>
         <title>Buscar productos | Rossy Resina</title>
         <meta
           name="description"
-          content={`Resultados de b?squeda para ${q || "productos"} en Rossy Resina.`}
+          content={`Resultados de b?squeda para ${q || "productos"}${categoryLabel} en Rossy Resina.`}
         />
       </Head>
 
@@ -44,13 +46,32 @@ export default function SearchPage({ q, results }: Props) {
 
 export async function getServerSideProps(ctx: any) {
   const q = String(ctx.query?.q || "").trim();
+  const category = String(ctx.query?.category || "").trim();
   const allProducts = await getAllProducts();
-  const results = filterAndSortProducts(allProducts, {
+  const categoryTerms: Record<string, string[]> = {
+    moldes: ["molde", "silicona"],
+    resina: ["resina", "epoxi", "epoxica", "uv"],
+    pigmentos: ["pigmento", "mica", "tinte", "colorante"],
+    accesorios: ["accesorio", "dije", "llavero", "arete", "collar", "gancho"],
+    creaciones: ["creacion", "creaciones"],
+  };
+  const filteredByCategory = categoryTerms[category]
+    ? allProducts.filter((product) => {
+        const hay = [product.title, product.category, product.brand, product.code, product.description]
+          .filter(Boolean)
+          .join(" ")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase();
+        return categoryTerms[category].some((term) => hay.includes(term));
+      })
+    : allProducts;
+  const results = filterAndSortProducts(filteredByCategory, {
     query: q,
     sort: "relevance",
   });
 
   return {
-    props: { q, results },
+    props: { q, category, results },
   };
 }

@@ -23,8 +23,8 @@ const ADS: TopBarAd[] = [
     tags: ["Gratis", "Cupos limitados", "Premios reales"],
     cta: "Participar ahora",
     href: "/sorteos-resineros",
-    accent: "bg-white text-[#a81f7f]",
-    bg: "bg-[#a81f7f]",
+    accent: "bg-white text-[#86b817]",
+    bg: "bg-[#86b817]",
   },
   {
     icon: <BoltIcon className="w-4 h-4" />,
@@ -34,8 +34,8 @@ const ADS: TopBarAd[] = [
     tags: ["Stock nuevo", "Envío rápido", "Compra segura"],
     cta: "Ver colección",
     href: "/categoria/moldes-de-silicona",
-    accent: "bg-white text-[#a81f7f]",
-    bg: "bg-[#a81f7f]",
+    accent: "bg-white text-[#10aebb]",
+    bg: "bg-[#10aebb]",
   },
   {
     icon: <TruckIcon className="w-4 h-4" />,
@@ -45,8 +45,8 @@ const ADS: TopBarAd[] = [
     tags: ["Hasta 40% off", "Top vendidos", "Solo hoy"],
     cta: "Ver ofertas",
     href: "/productos?ofertas=1",
-    accent: "bg-white text-[#a81f7f]",
-    bg: "bg-[#a81f7f]",
+    accent: "bg-white text-[#e4147f]",
+    bg: "bg-[#e4147f]",
   },
 ];
 

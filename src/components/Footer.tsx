@@ -1,12 +1,11 @@
 import Link from "next/link";
 import logoImg from '../images/logo.jpg';
-import { FormEvent, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   EnvelopeIcon,
   PhoneIcon,
   MapPinIcon,
   ArrowRightIcon,
-  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { FaFacebook, FaInstagram, FaWhatsapp, FaTiktok } from "react-icons/fa";
 
@@ -51,75 +50,9 @@ const useCurrentYear = () => {
 
 const Footer = () => {
   const year = useCurrentYear();
-  const [email, setEmail] = useState("");
-  const [sending, setSending] = useState(false);
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState("");
-
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!email.trim()) { setError("Ingresa un correo válido."); return; }
-    try {
-      setSending(true);
-      setError("");
-      const res = await fetch("/api/newsletter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data?.error || "No se pudo completar."); return; }
-      setDone(true);
-      setEmail("");
-    } catch {
-      setError("Error de conexión. Intenta nuevamente.");
-    } finally {
-      setSending(false);
-    }
-  };
 
   return (
     <footer className="w-full bg-[#0B0D12] text-white border-t border-white/5">
-
-      {/* Newsletter banner */}
-      <div className="border-b border-white/5 bg-[#111827]">
-        <div className="mx-auto max-w-screen-2xl px-4 py-8 md:px-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-pink-400">Club Rossy Resina</p>
-              <h3 className="mt-1 text-2xl font-black text-white tracking-tighter">Únete para ofertas y nuevos sorteos</h3>
-              <p className="mt-1 text-sm text-white/40 font-medium">Sé el primero en enterarte de los próximos premios.</p>
-            </div>
-            {done ? (
-              <div className="flex items-center gap-2 text-emerald-400 font-semibold">
-                <CheckCircleIcon className="w-5 h-5" />
-                ¡Suscripción completada!
-              </div>
-            ) : (
-              <form onSubmit={onSubmit} className="flex w-full max-w-md gap-3">
-                <div className="relative flex-1 group">
-                  <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tu@correo.com"
-                    className="w-full h-12 rounded-lg bg-white/5 border border-white/10 pl-11 pr-4 text-sm text-white placeholder:text-white/20 outline-none focus:border-amazon_blue/70 transition-all"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={sending}
-                  className="flex h-12 shrink-0 items-center gap-2 rounded-lg bg-amazon_blue px-8 text-xs font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-amazon_light hover:shadow-[0_8px_18px_rgba(203,41,158,0.22)] disabled:opacity-60"
-                >
-                  {sending ? "..." : <><span>Unirme</span><ArrowRightIcon className="w-4 h-4 stroke-[3]" /></>}
-                </button>
-              </form>
-            )}
-            {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
-          </div>
-        </div>
-      </div>
 
       {/* Main footer */}
       <div className="mx-auto max-w-screen-2xl px-4 py-12 md:px-6">

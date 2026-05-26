@@ -1,17 +1,15 @@
 import Link from "next/link";
-import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowRightIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  TagIcon,
-  TruckIcon,
-  ShieldCheckIcon,
   BuildingStorefrontIcon,
+  ChatBubbleLeftRightIcon,
+  AcademicCapIcon,
+  PhotoIcon,
+  CodeBracketIcon,
+  CommandLineIcon,
+  WrenchScrewdriverIcon,
+  RocketLaunchIcon,
 } from "@heroicons/react/24/outline";
 import type { ProductProps } from "../../type";
-import { ResinyInvite } from "./AssistantRossy";
 
 interface Props {
   productData?: ProductProps[];
@@ -21,78 +19,66 @@ interface Props {
   ofertasExpress?: { id: string; nombre: string; imagen: string }[];
 }
 
-const MOLDS_FLYER_IMAGE = "/banners/moldes-buen-precio.png";
-
-const categoryLinks = [
-  { href: "/categoria/moldes-de-silicona", label: "Moldes de silicona" },
-  { href: "/categoria/resina", label: "Resinas" },
-  { href: "/categoria/pigmentos", label: "Pigmentos" },
-  { href: "/categoria/accesorios", label: "Accesorios" },
-  { href: "/productos?ofertas=1", label: "Ofertas" },
-  { href: "/escuela", label: "Escuela" },
+const quickLinks = [
+  {
+    href: "/mayoristas",
+    title: "Distribuidora resinera",
+    text: "Compra y vende insumos",
+    icon: BuildingStorefrontIcon,
+    accent: "text-[#10aebb]",
+    bg: "bg-white border-[#10aebb]",
+  },
+  {
+    href: "/resiny",
+    title: "Resiny",
+    text: "Asistente de Rossy Resina",
+    icon: ChatBubbleLeftRightIcon,
+    accent: "text-[#e4147f]",
+    bg: "bg-white border-[#e4147f]",
+  },
+  {
+    href: "/escuela",
+    title: "Escuela de formación resinera",
+    text: "Aprende y emprende",
+    icon: AcademicCapIcon,
+    accent: "text-[#86b817]",
+    bg: "bg-white border-[#86b817]",
+  },
+  {
+    href: "/categoria/creaciones",
+    title: "Galería recuerdos personalizados",
+    text: "Ideas y creaciones",
+    icon: PhotoIcon,
+    accent: "text-[#10aebb]",
+    bg: "bg-white border-[#10aebb]",
+  },
 ];
 
-const normalizeImage = (src?: string) => {
-  const value = String(src || "").trim().replace(/\\/g, "/");
-  if (!value) return "/favicon-96x96.png";
-  if (/^https?:\/\//i.test(value)) return value;
-  return value.startsWith("/") ? value : `/${value}`;
-};
-
-const productHref = (product?: ProductProps) => `/${product?.code || product?._id || "productos"}`;
-
-const formatPrice = (price?: number) => `S/ ${Number(price || 0).toFixed(2)}`;
-
-function WholesaleMiniCard() {
+function BannerQuickLinks() {
   return (
-    <Link
-      href="/mayoristas"
-      className="group flex min-h-[116px] items-center justify-between gap-5 rounded-lg bg-white p-5 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]"
-    >
-      <div className="flex items-center gap-4">
-        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md bg-pink-50 text-amazon_blue">
-          <BuildingStorefrontIcon className="h-10 w-10" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase text-amazon_blue">Distribuidora resinera</p>
-          <p className="mt-1 text-xl font-bold leading-tight text-gray-950 group-hover:text-amazon_blue">
-            Conviertete en distribuidora resinera
-          </p>
-          <p className="mt-1 text-sm font-medium text-gray-600">
-            Trabaja y emprende con nosotros vendiendo moldes, resina y accesorios para abastecer a mas resineras como tu.
-          </p>
-        </div>
-      </div>
-      <span className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(203,41,158,0.20)]">
-        Ir a tienda mayorista
-      </span>
-    </Link>
+    <div className="-mt-px grid overflow-hidden rounded-b-lg border border-t-0 border-gray-200 bg-white shadow-[0_1px_3px_rgba(17,24,39,0.08)] sm:grid-cols-2 xl:grid-cols-4">
+      {quickLinks.map(({ href, title, text, icon: Icon, accent, bg }) => (
+        <Link
+          key={href}
+          href={href}
+          className="group flex min-h-[86px] items-center gap-3 border-b border-gray-100 px-4 py-4 transition-colors hover:bg-gray-50 sm:border-r xl:border-b-0 xl:last:border-r-0"
+        >
+          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md border ${bg} ${accent}`}>
+            <Icon className="h-6 w-6" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-bold leading-tight text-gray-950 transition-colors group-hover:text-amazon_blue">
+              {title}
+            </span>
+            <span className="mt-1 block truncate text-xs font-medium text-gray-500">
+              {text}
+            </span>
+          </span>
+        </Link>
+      ))}
+    </div>
   );
 }
-
-const normalizeText = (value: any) =>
-  String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-
-const productSearchText = (product: ProductProps) =>
-  normalizeText(`${product.title || ""} ${product.category || ""} ${product.brand || ""} ${product.code || ""}`);
-
-const uniqueProducts = (products: ProductProps[]) => {
-  const seen = new Set<string>();
-  return products.filter((product) => {
-    const key = String(product._id || product.code || product.title || "").trim();
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-};
-
-const pickRotatingProduct = (products: ProductProps[], index: number) => {
-  if (products.length === 0) return undefined;
-  return products[Math.abs(index) % products.length];
-};
 
 export default function HeroCarousel({
   productData = [],
@@ -101,311 +87,82 @@ export default function HeroCarousel({
   moldProducts = [],
   ofertasExpress = [],
 }: Props) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [cycleIndex, setCycleIndex] = useState(0);
+  void productData;
+  void remateProducts;
+  void topVisitedProducts;
+  void moldProducts;
+  void ofertasExpress;
 
-  const productGroups = useMemo(() => {
-    const isMold = (product: ProductProps) => /molde|silicona|dije|llavero|lapicero/.test(productSearchText(product));
-    const isAccessory = (product: ProductProps) =>
-      /accesorio|dije|arete|pendiente|pulsera|collar|llavero|lapicero|gancho|anillo|rosario|porta vela|marcapagina/.test(
-        productSearchText(product)
-      );
-    const isResinOrPigment = (product: ProductProps) =>
-      /resina|epoxi|epoxica|uv|pigmento|tinte|colorante|mica|ecoresina/.test(productSearchText(product));
-    const hasDiscount = (product: ProductProps) => Number(product.oldPrice || 0) > Number(product.price || 0);
-
-    return {
-      molds: uniqueProducts([...moldProducts, ...productData.filter(isMold)]),
-      accessories: uniqueProducts(productData.filter(isAccessory)),
-      resinAndPigments: uniqueProducts(productData.filter(isResinOrPigment)),
-      offers: uniqueProducts([...remateProducts, ...productData.filter(hasDiscount)]),
-      popular: uniqueProducts([...topVisitedProducts, ...productData]),
-    };
-  }, [moldProducts, productData, remateProducts, topVisitedProducts]);
-
-  const sideProducts = useMemo(
-    () =>
-      uniqueProducts([
-        ...productGroups.offers,
-        ...productGroups.molds,
-        ...productGroups.accessories,
-        ...productGroups.resinAndPigments,
-        ...productGroups.popular,
-      ]).slice(cycleIndex % 3, cycleIndex % 3 + 6),
-    [cycleIndex, productGroups]
-  );
-
-  const slides = useMemo(
-    () => {
-      const moldProduct = pickRotatingProduct(productGroups.molds, cycleIndex);
-      const accessoryProduct = pickRotatingProduct(productGroups.accessories, cycleIndex + 1);
-      const resinProduct = pickRotatingProduct(productGroups.resinAndPigments, cycleIndex + 2);
-      const offerProduct = pickRotatingProduct(productGroups.offers, cycleIndex + 3);
-
-      return [
-        {
-          label: "Moldes seleccionados",
-          title: "Moldes para crear detalles únicos",
-          text: "Elige moldes de silicona para personalizar tus proyectos en resina con formas especiales.",
-          href: "/categoria/moldes-de-silicona",
-          cta: "Ver moldes",
-          image: normalizeImage(moldProduct?.image || MOLDS_FLYER_IMAGE),
-          product: moldProduct,
-          tone: "bg-white",
-        },
-        {
-          label: "Accesorios para resina",
-          title: "Detalles que completan tus creaciones",
-          text: "Encuentra dijes, llaveros, lapiceros y complementos para dar acabado a tus piezas.",
-          href: "/categoria/accesorios",
-          cta: "Ver accesorios",
-          image: normalizeImage(accessoryProduct?.image || productGroups.popular[0]?.image || MOLDS_FLYER_IMAGE),
-          product: accessoryProduct,
-          tone: "bg-[#FAFAFA]",
-        },
-        {
-          label: "Color y resina",
-          title: "Materiales para dar vida a tus ideas",
-          text: "Explora resinas, pigmentos y colores para lograr acabados brillantes y personalizados.",
-          href: "/categoria/pigmentos",
-          cta: "Ver pigmentos",
-          image: normalizeImage(resinProduct?.image || productGroups.popular[1]?.image || MOLDS_FLYER_IMAGE),
-          product: resinProduct,
-          tone: "bg-[#F8FAFC]",
-        },
-        {
-          label: "Ofertas activas",
-          title: "Precios especiales para tu próximo pedido",
-          text: "Encuentra descuentos en materiales seleccionados y compra con atención rápida.",
-          href: "/productos?ofertas=1",
-          cta: "Ver ofertas",
-          image: normalizeImage(offerProduct?.image || productGroups.popular[2]?.image || MOLDS_FLYER_IMAGE),
-          product: offerProduct,
-          tone: "bg-white",
-        },
-      ];
-    },
-    [cycleIndex, productGroups]
-  );
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % slides.length);
-      setCycleIndex((current) => current + 1);
-    }, 5200);
-    return () => window.clearInterval(timer);
-  }, [slides.length]);
-
-  const activeSlide = slides[activeIndex] || slides[0];
-  const quickDeals = ofertasExpress.slice(0, 2);
-  const promoVisualPool = quickDeals.map((deal) => ({
-    id: deal.id,
-    title: deal.nombre,
-    image: deal.imagen,
-  }));
-  const promoVisualItems =
-    promoVisualPool.length > 0
-      ? Array.from({ length: Math.min(2, promoVisualPool.length) }, (_, index) => promoVisualPool[(cycleIndex + index) % promoVisualPool.length])
-      : [];
-
-  const goTo = (nextIndex: number) => {
-    const total = slides.length;
-    setActiveIndex((nextIndex + total) % total);
-    setCycleIndex((current) => current + 1);
+  const banner = {
+    title: "Banner en construcción",
+    text: "Pronto disponible. Sigue disfrutando de nuestra web.",
+    href: "/productos",
+    cta: "Ver productos",
   };
 
   return (
     <section className="w-full">
-      <div className="grid min-h-[420px] grid-cols-1 gap-4 xl:grid-cols-[230px_minmax(0,1fr)_320px]">
-        <div className="self-start xl:block">
-          <aside className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-100 px-4 py-3">
-              <p className="text-sm font-semibold text-gray-900">Categorías</p>
-            </div>
-            <nav className="grid py-2">
-              {categoryLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="group flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-600 hover:!text-white"
-                >
-                  <span className="group-hover:!text-white">{item.label}</span>
-                  <ChevronRightIcon className="h-4 w-4 text-gray-400 group-hover:!text-white" />
-                </Link>
-              ))}
-            </nav>
-          </aside>
-          <div className="mt-3 hidden xl:block">
-            <ResinyInvite />
-          </div>
-        </div>
-
+      <div className="grid min-h-[420px] grid-cols-1 gap-4">
         <div className="min-w-0">
-          <div className={`relative min-h-[520px] overflow-hidden rounded-lg border border-gray-200 ${activeSlide.tone} shadow-[0_1px_3px_rgba(17,24,39,0.08)] lg:h-[420px] lg:min-h-0`}>
-            <Link href={activeSlide.href} className="absolute inset-0 z-[1]" aria-label={activeSlide.cta} />
-            <div className="relative z-[2] grid min-h-[520px] grid-cols-1 items-start gap-5 px-5 py-5 sm:px-7 md:grid-cols-[minmax(0,0.95fr)_minmax(300px,1.05fr)] md:px-8 lg:absolute lg:inset-0 lg:min-h-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)] lg:gap-8 lg:px-10 lg:py-5">
-              <div className="flex h-full max-w-[455px] flex-col justify-between pl-0 lg:pl-2">
+          <div className="relative min-h-[420px] overflow-hidden rounded-t-lg border border-gray-200 bg-white shadow-[0_1px_3px_rgba(17,24,39,0.08)] lg:h-[420px] lg:min-h-0">
+            <Link href={banner.href} className="absolute inset-0 z-[1]" aria-label={banner.cta} />
+            <div className="relative z-[2] grid min-h-[420px] items-center gap-8 px-5 py-5 sm:px-7 md:px-8 lg:absolute lg:inset-0 lg:min-h-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(360px,0.8fr)] lg:px-10 lg:py-5">
+              <div className="flex h-full max-w-[620px] flex-col justify-between pl-0 lg:pl-2">
                 <div>
-                  <h1 className="rr-type-display max-w-[430px] text-[30px] md:text-[34px] lg:text-[38px]">
-                    {activeSlide.title}
+                  <div className="mb-5 inline-flex items-center gap-2 rounded-md border border-[#e4147f] bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#e4147f]">
+                    <RocketLaunchIcon className="h-4 w-4" />
+                    Pronto disponible
+                  </div>
+                  <h1 className="rr-type-display max-w-[600px] text-[30px] md:text-[36px] lg:text-[44px]">
+                    {banner.title}
                   </h1>
-                  <p className="rr-type-body mt-4 max-w-[395px] text-[15px] md:text-[16px] lg:mt-5 lg:text-[17px]">
-                    {activeSlide.text}
+                  <p className="rr-type-body mt-4 max-w-[520px] text-[15px] md:text-[17px] lg:mt-5 lg:text-[18px]">
+                    {banner.text}
                   </p>
                   <div className="mt-6 flex flex-wrap items-center gap-4 lg:mt-8 lg:gap-5">
-                    <span className="inline-flex h-12 items-center rounded-lg bg-amazon_blue px-6 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(203,41,158,0.22)]">
-                      {activeSlide.cta}
+                    <span className="inline-flex h-12 items-center rounded-md bg-amazon_blue px-6 text-sm font-semibold text-white">
+                      {banner.cta}
                     </span>
-                    {activeSlide.product ? (
-                      <span className="text-lg font-bold text-gray-950 md:text-xl">
-                        Desde {formatPrice(activeSlide.product.price)}
-                      </span>
-                    ) : null}
                   </div>
                 </div>
+              </div>
 
-                <div className="flex items-center gap-2">
-                  {slides.map((slide, index) => (
-                    <button
-                      key={slide.label}
-                      type="button"
-                      onClick={() => setActiveIndex(index)}
-                      className={`h-2.5 rounded-full transition-all ${
-                        activeIndex === index ? "w-10 bg-amazon_blue" : "w-2.5 bg-white/90"
-                      }`}
-                      aria-label={`Ir a ${slide.label}`}
-                    />
-                  ))}
+              <div className="hidden min-h-[300px] items-center justify-center lg:flex">
+                <div className="relative h-[270px] w-full max-w-[430px]">
+                  <div className="absolute left-8 top-5 h-44 w-72 rounded-md border border-gray-300 bg-white">
+                    <div className="flex h-10 items-center gap-2 border-b border-gray-100 px-4">
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#e4147f]" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#86b817]" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#10aebb]" />
+                    </div>
+                    <div className="space-y-3 p-5">
+                      <div className="h-3 w-36 rounded-full bg-slate-200" />
+                      <div className="h-3 w-52 rounded-full bg-[#e4147f]" />
+                      <div className="h-3 w-44 rounded-full bg-[#10aebb]" />
+                      <div className="mt-5 grid grid-cols-3 gap-3">
+                        <span className="h-12 rounded-md border border-gray-200 bg-white" />
+                        <span className="h-12 rounded-md border border-gray-200 bg-white" />
+                        <span className="h-12 rounded-md border border-gray-200 bg-white" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute right-2 top-16 flex h-20 w-20 items-center justify-center rounded-md bg-[#e4147f] text-white">
+                    <CodeBracketIcon className="h-10 w-10" />
+                  </div>
+                  <div className="absolute bottom-8 left-0 flex h-16 w-16 items-center justify-center rounded-md bg-[#10aebb] text-white">
+                    <CommandLineIcon className="h-8 w-8" />
+                  </div>
+                  <div className="absolute bottom-3 right-20 flex h-14 w-14 items-center justify-center rounded-md bg-[#86b817] text-white">
+                    <WrenchScrewdriverIcon className="h-7 w-7" />
+                  </div>
                 </div>
               </div>
-
-              <div className="relative ml-auto flex h-[280px] w-full max-w-[520px] items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-4 shadow-[0_8px_20px_rgba(17,24,39,0.08)] md:h-[320px] lg:h-[340px]">
-                <Image
-                  src={activeSlide.image}
-                  alt={activeSlide.product?.title || activeSlide.title}
-                  fill
-                  priority={activeIndex === 0}
-                  sizes="(max-width: 1280px) 38vw, 520px"
-                  className="object-contain p-3"
-                />
-              </div>
             </div>
-
-            <button
-              type="button"
-              onClick={() => goTo(activeIndex - 1)}
-              className="absolute bottom-5 right-[68px] z-[3] flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-800 shadow-md ring-1 ring-gray-200 hover:bg-gray-50"
-              aria-label="Slide anterior"
-            >
-              <ChevronLeftIcon className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => goTo(activeIndex + 1)}
-              className="absolute bottom-5 right-5 z-[3] flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-800 shadow-md ring-1 ring-gray-200 hover:bg-gray-50"
-              aria-label="Slide siguiente"
-            >
-              <ChevronRightIcon className="h-5 w-5" />
-            </button>
           </div>
 
-          <div className="mt-4">
-            <WholesaleMiniCard />
-          </div>
+          <BannerQuickLinks />
         </div>
 
-        <aside className="grid gap-4 lg:grid-cols-2 xl:grid-cols-1">
-          <Link
-            href="/productos?ofertas=1"
-            className="group relative overflow-visible rounded-lg border border-gray-200 bg-white p-4 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_10px_24px_rgba(17,24,39,0.10)]"
-          >
-            <div className="absolute -top-4 right-4 z-[3] rounded-md bg-amazon_blue px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-white shadow-[0_8px_18px_rgba(203,41,158,0.22)]">
-              Hasta 30% OFF
-            </div>
-
-            <div className="relative h-40 overflow-visible">
-              {promoVisualItems.length > 0 ? (
-                <>
-                  <div className="absolute bottom-0 left-0 top-0 w-[46%] transition-transform duration-200 group-hover:-translate-y-0.5">
-                    <Image
-                      src={normalizeImage(promoVisualItems[0]?.image || MOLDS_FLYER_IMAGE)}
-                      alt={promoVisualItems[0]?.title || "Producto en promoción"}
-                      fill
-                      sizes="190px"
-                      className="object-contain mix-blend-multiply drop-shadow-[0_12px_18px_rgba(17,24,39,0.18)]"
-                    />
-                  </div>
-                  <div className="absolute bottom-0 right-0 top-2 w-[46%] transition-transform duration-200 group-hover:-translate-y-0.5">
-                    <Image
-                      src={normalizeImage(promoVisualItems[1]?.image || promoVisualItems[0]?.image || MOLDS_FLYER_IMAGE)}
-                      alt={promoVisualItems[1]?.title || "Oferta Rossy Resina"}
-                      fill
-                      sizes="190px"
-                      className="object-contain mix-blend-multiply drop-shadow-[0_12px_18px_rgba(17,24,39,0.18)]"
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="flex h-full items-center justify-center rounded-md bg-pink-50 px-4 text-center text-sm font-semibold text-amazon_blue">
-                  Aún no hay promociones express
-                </div>
-              )}
-            </div>
-
-            <div className="mt-2 text-center">
-              <div className="mx-auto inline-flex items-center gap-2 text-amazon_blue transition-transform duration-200 group-hover:-translate-y-0.5">
-                <TagIcon className="h-4 w-4" />
-                <p className="text-xs font-semibold uppercase tracking-wide">Ofertas resineras</p>
-              </div>
-              <h3 className="rr-type-title mx-auto mt-2 max-w-none whitespace-nowrap text-[25px] transition-colors duration-200 group-hover:text-amazon_blue">
-                Promos de la semana
-              </h3>
-              <p className="rr-type-label mt-2 max-w-none whitespace-nowrap text-left text-[10px] text-amazon_blue/80">
-                Insumos para emprender con resina
-              </p>
-              <span className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-amazon_blue px-5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(203,41,158,0.22)] transition-all duration-200 group-hover:-translate-y-0.5 group-hover:bg-amazon_light group-hover:shadow-[0_14px_28px_rgba(203,41,158,0.24)]">
-                Ver promociones
-                <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </span>
-            </div>
-          </Link>
-
-          {quickDeals.length > 0
-            ? quickDeals.map((deal) => (
-                <div key={deal.id} className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="relative h-28 overflow-hidden rounded-md bg-gray-50">
-                    <Image src={normalizeImage(deal.imagen)} alt={deal.nombre} fill sizes="240px" className="object-cover" />
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-sm font-medium text-gray-900">{deal.nombre}</p>
-                </div>
-              ))
-            : null}
-
-          <Link
-            href="/proceso-envio"
-            className="grid gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]"
-          >
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pink-50 text-amazon_blue">
-                <TruckIcon className="h-6 w-6" />
-              </span>
-              <div>
-                <p className="text-base font-semibold leading-tight text-gray-950">Proceso de envío</p>
-                <p className="mt-1 text-xs leading-5 text-gray-500">Conoce cómo cotizamos y despachamos tu pedido.</p>
-              </div>
-            </div>
-            <div className="h-px bg-gray-100" />
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pink-50 text-amazon_blue">
-                <ShieldCheckIcon className="h-6 w-6" />
-              </span>
-              <div>
-                <p className="text-base font-semibold leading-tight text-gray-950">Pago coordinado y seguro</p>
-                <p className="mt-1 text-xs leading-5 text-gray-500">Yape y BCP autorizados antes del envío.</p>
-              </div>
-            </div>
-          </Link>
-        </aside>
       </div>
     </section>
   );

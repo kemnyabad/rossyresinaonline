@@ -1,8 +1,10 @@
 :root {
-  --rr-primary: #cb299e;
-  --rr-primary-dark: #a81f7f;
-  --rr-accent: #db2777;
-  --rr-link: #a81f7f;
+  --rr-primary: #e4147f;
+  --rr-primary-dark: #c21885;
+  --rr-accent: #10aebb;
+  --rr-link: #c21885;
+  --rr-green: #86b817;
+  --rr-cyan: #10aebb;
   --rr-marquee-speed: 22s;
   --rr-scrollbar-hidden: 1;
 }

@@ -38,7 +38,7 @@ const BottomHeader = () => {
   }, [promoMessages.length]);
 
   return (
-    <div className="w-full min-h-12 border-t border-gray-200 bg-white text-sm text-gray-700">
+    <div className="w-full min-h-12 border-t border-white/20 bg-[#86b817] text-sm text-white">
       <div className="hidden lg:grid lg:grid-cols-[1fr_320px] items-center relative max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 py-2 gap-4">
         <nav className="no-scrollbar flex h-10 items-center justify-center gap-5 overflow-x-auto whitespace-nowrap">
           {menuItems.map((item) => {
@@ -48,7 +48,7 @@ const BottomHeader = () => {
                 key={item.href}
                 href={item.href}
                 className={`inline-flex h-8 items-center justify-center rounded-full px-1 text-[15px] font-medium tracking-normal transition-colors duration-200 ${
-                  active ? "text-[#c21885]" : "text-slate-700 hover:text-[#c21885]"
+                  active ? "text-white" : "text-white/85 hover:text-white"
                 }`}
               >
                 {item.label}
@@ -58,13 +58,13 @@ const BottomHeader = () => {
         </nav>
 
         <div className="flex items-center justify-end" aria-label="Anuncio de descuento">
-          <div className="inline-flex h-10 max-w-full cursor-default select-none items-center gap-2 overflow-hidden whitespace-nowrap px-1 text-[#c21885]">
+          <div className="inline-flex h-10 max-w-full cursor-default select-none items-center gap-2 overflow-hidden whitespace-nowrap px-1 text-white">
             <span className="inline-flex animate-pulse items-center justify-center text-[22px] leading-none font-semibold tracking-normal shrink-0">
               10%
             </span>
             <span className="min-w-0 leading-tight">
               <span className="block truncate font-semibold text-[14px]">Descuento en tu primera compra</span>
-              <span key={promoIndex} className="block truncate animate-[promoFade_3.2s_ease-in-out] text-[11px] text-[#a31370]">
+              <span key={promoIndex} className="block truncate animate-[promoFade_3.2s_ease-in-out] text-[11px] text-white/80">
                 {promoMessages[promoIndex]}
               </span>
             </span>
@@ -81,7 +81,7 @@ const BottomHeader = () => {
                 key={item.href}
                 href={item.href}
                 className={`shrink-0 snap-start border-b-2 pb-2 text-[15px] font-medium leading-tight tracking-normal whitespace-nowrap transition-colors duration-200 ${
-                  active ? "border-[#c21885] text-[#c21885]" : "border-transparent text-slate-600 hover:text-[#c21885]"
+                  active ? "border-white text-white" : "border-transparent text-white/85 hover:text-white"
                 }`}
                 onClick={(e) => {
                   if (active) e.preventDefault();

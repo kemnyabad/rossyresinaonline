@@ -11,6 +11,7 @@ import {
   SparklesIcon,
   GiftIcon,
   BookOpenIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -88,9 +89,12 @@ const Header = () => {
 
   // Search area
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSearchCategory, setSelectedSearchCategory] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchCategoryOpen, setSearchCategoryOpen] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchCategoryRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const deferredQuery = useDeferredValue(searchQuery);
@@ -112,7 +116,16 @@ const Header = () => {
   const submitSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
     const q = searchQuery.trim();
-    router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+    const category = searchCategories.find((item) => item.value === selectedSearchCategory);
+    if (!q && category?.value) {
+      router.push(category.href);
+    } else {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      if (category?.value) params.set("category", category.value);
+      const query = params.toString();
+      router.push(query ? `/search?${query}` : "/search");
+    }
     setMobileSearchOpen(false);
   };
 
@@ -128,6 +141,16 @@ const Header = () => {
     { href: "/track-orders", label: "Mis pedidos", icon: ShoppingCartIcon },
     { href: "/blog", label: "Blog", icon: BookOpenIcon },
   ];
+  const searchCategories = useMemo(() => [
+    { label: "Categorías", value: "", href: "/search", terms: [] as string[] },
+    { label: "Moldes", value: "moldes", href: "/categoria/moldes-de-silicona", terms: ["molde", "silicona"] },
+    { label: "Resina", value: "resina", href: "/categoria/resina", terms: ["resina", "epoxi", "epoxica", "uv"] },
+    { label: "Pigmentos", value: "pigmentos", href: "/categoria/pigmentos", terms: ["pigmento", "mica", "tinte", "colorante"] },
+    { label: "Accesorios", value: "accesorios", href: "/categoria/accesorios", terms: ["accesorio", "dije", "llavero", "arete", "collar", "gancho"] },
+    { label: "Creaciones", value: "creaciones", href: "/categoria/creaciones", terms: ["creacion", "creaciones"] },
+  ], []);
+  const currentSearchCategory =
+    searchCategories.find((category) => category.value === selectedSearchCategory) || searchCategories[0];
 
   const filteredProducts = useMemo(() => {
     const normalizeSearchText = (value: string) =>
@@ -136,7 +159,8 @@ const Header = () => {
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase();
     const q = normalizeSearchText(deferredQuery.trim());
-    if (!q) return [];
+    const category = searchCategories.find((item) => item.value === selectedSearchCategory);
+    if (!q && !category?.value) return [];
     const terms = q.split(/\s+/).filter(Boolean);
     return allData.filter((item: StoreProduct) => {
       const hay = [item.title, item.category, item.brand, item.code, item.description]
@@ -145,9 +169,11 @@ const Header = () => {
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase();
-      return terms.every((term) => hay.includes(term));
+      const matchesQuery = terms.every((term) => hay.includes(term));
+      const matchesCategory = !category?.terms.length || category.terms.some((term) => hay.includes(term));
+      return matchesQuery && matchesCategory;
     });
-  }, [deferredQuery, allData]);
+  }, [deferredQuery, allData, selectedSearchCategory, searchCategories]);
 
   useEffect(() => {
     if (!profileOpen) return;
@@ -160,6 +186,18 @@ const Header = () => {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [profileOpen]);
+
+  useEffect(() => {
+    if (!searchCategoryOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (!searchCategoryRef.current) return;
+      if (!searchCategoryRef.current.contains(e.target as Node)) {
+        setSearchCategoryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [searchCategoryOpen]);
 
   useEffect(() => {
     if (!mobileSearchOpen) return;
@@ -201,17 +239,31 @@ const Header = () => {
   const isAuthenticated = Boolean(sessionUser?.email || storeUser?.email);
 
   return (
-    <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
-      <div className="lg:hidden border-b border-gray-100 bg-white px-3 pb-3 pt-2">
+    <div className="w-full bg-[#86b817] text-white sticky top-0 z-50 border-b border-[#749f14] shadow-sm">
+      <div className="lg:hidden border-b border-white/20 bg-[#86b817] px-3 pb-3 pt-2">
         {isHomePage && !isResinyPage ? (
-          <div className="flex items-center">
+          <div className="flex h-12 items-center overflow-hidden rounded-full border-2 border-white bg-white shadow-sm">
+            <label htmlFor="home-mobile-search-category" className="sr-only">Categoría</label>
+            <select
+              id="home-mobile-search-category"
+              value={selectedSearchCategory}
+              onChange={(e) => setSelectedSearchCategory(e.target.value)}
+              className="h-full w-[112px] shrink-0 border-r border-gray-200 bg-gray-50 pl-4 pr-2 text-xs font-semibold text-gray-700 outline-none"
+              aria-label="Filtrar por categoría"
+            >
+              {searchCategories.map((category) => (
+                <option key={category.value || "all"} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
             <button
               type="button"
               onClick={() => setMobileSearchOpen(true)}
-              className="relative h-12 flex-1 rounded-full border-2 border-amazon_blue bg-white pl-4 pr-20 text-left text-base text-gray-500 shadow-sm"
+              className="relative h-full min-w-0 flex-1 pl-4 pr-20 text-left text-base text-gray-500"
               aria-label="Abrir buscador"
             >
-              <span>{searchQuery || "Buscar productos"}</span>
+              <span className="block truncate">{searchQuery || "Buscar productos"}</span>
               <span className="absolute right-12 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-gray-700">
                 <CameraIcon className="h-5 w-5" />
               </span>
@@ -223,13 +275,18 @@ const Header = () => {
         ) : (
         <>
         <div className="flex items-center justify-between">
-          <Link href={"/"} onClick={handleLogoClick} className="flex items-center gap-2 group">
-            <div className="bg-white rounded-full p-1 shadow ring-1 ring-amazon_blue/20 group-hover:shadow-md transition-shadow duration-300">
-              <Image className="h-9 w-9 object-contain rounded-full" src={logo} alt="Logo Rossy Resina" priority />
+          <Link href={"/"} onClick={handleLogoClick} className="group flex min-w-0 items-center gap-3 rounded-md py-1 pr-2 transition-colors">
+            <div className="shrink-0 overflow-hidden rounded-full bg-white shadow-[0_4px_12px_rgba(17,24,39,0.14)] ring-2 ring-white transition-all duration-200 group-hover:ring-[#e4147f]">
+              <Image className="h-10 w-10 object-contain" src={logo} alt="Logo Rossy Resina" priority />
             </div>
-            <div className="leading-tight">
-              <span className="text-sm font-semibold text-amazon_blue block">Rossy Resina</span>
-              <span className="text-[11px] text-gray-500">Tienda artesana</span>
+            <div className="h-9 w-[3px] shrink-0 rounded-full bg-[#e4147f] shadow-[0_0_0_1px_rgba(255,255,255,0.18)]" />
+            <div className="min-w-0">
+              <span className="block truncate text-[17px] font-bold leading-5 text-[#e4147f] [text-shadow:1.4px_0_0_#fff,-1.4px_0_0_#fff,0_1.4px_0_#fff,0_-1.4px_0_#fff,1px_1px_0_#fff,-1px_1px_0_#fff,1px_-1px_0_#fff,-1px_-1px_0_#fff]">
+                Rossy Resina
+              </span>
+              <span className="block truncate text-[11px] font-medium leading-4 text-white/85">
+                Tienda artesana
+              </span>
             </div>
           </Link>
 
@@ -239,8 +296,8 @@ const Header = () => {
                 <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" priority />
               </span>
               <div className="min-w-0 leading-tight">
-                <p className="truncate text-[15px] font-bold text-slate-950 md:text-base">Resiny</p>
-                <p className="hidden text-xs font-medium text-slate-500 sm:block">Asistente de Rossy Resina</p>
+                <p className="truncate text-[15px] font-bold text-white md:text-base">Resiny</p>
+                <p className="hidden text-xs font-medium text-white/80 sm:block">Asistente de Rossy Resina</p>
               </div>
             </div>
           )}
@@ -248,7 +305,7 @@ const Header = () => {
           {!isResinyPage && (
             <Link
               href="/resiny"
-              className="ml-2 mr-3 flex min-h-[60px] flex-1 max-w-[210px] items-center justify-center gap-0.5 px-1 text-amazon_blue transition-transform duration-300 active:scale-[0.98]"
+              className="ml-2 mr-3 flex min-h-[60px] flex-1 max-w-[210px] items-center justify-center gap-0.5 px-1 text-white transition-transform duration-300 active:scale-[0.98]"
               aria-label="Chatear con Resiny"
             >
               <span className="relative h-14 w-12 shrink-0">
@@ -256,7 +313,7 @@ const Header = () => {
               </span>
               <span className="-ml-2 text-[16px] font-bold leading-tight">
                 Chatea
-                <span className="block text-[15px] font-semibold text-slate-600">con Resiny</span>
+                <span className="block text-[15px] font-semibold text-white/85">con Resiny</span>
               </span>
             </Link>
           )}
@@ -266,8 +323,8 @@ const Header = () => {
             onClick={() => setMobileMenuOpen((open) => !open)}
             className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
               mobileMenuOpen
-                ? "border-amazon_blue bg-white text-amazon_blue"
-                : "border-gray-200 bg-white text-slate-700"
+                ? "border-white bg-white text-[#86b817]"
+                : "border-white/35 bg-white/15 text-white"
             }`}
             aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={mobileMenuOpen}
@@ -278,15 +335,31 @@ const Header = () => {
         </div>
 
         {!isResinyPage && <div className="mt-3">
-          <button
-            type="button"
-            onClick={() => setMobileSearchOpen(true)}
-            className="relative w-full h-11 rounded-xl pl-11 pr-4 text-left text-sm text-gray-500 border border-gray-200 bg-gray-50 hover:border-amazon_blue hover:bg-white transition-colors duration-300"
-            aria-label="Abrir buscador"
-          >
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <span>{searchQuery || "Buscar moldes, resina, pigmentos..."}</span>
-          </button>
+          <div className="flex h-11 overflow-hidden rounded-xl border border-white bg-white shadow-sm">
+            <label htmlFor="mobile-header-search-category" className="sr-only">Categoría</label>
+            <select
+              id="mobile-header-search-category"
+              value={selectedSearchCategory}
+              onChange={(e) => setSelectedSearchCategory(e.target.value)}
+              className="w-[112px] shrink-0 border-r border-gray-200 bg-gray-50 px-3 text-xs font-semibold text-gray-700 outline-none"
+              aria-label="Filtrar por categoría"
+            >
+              {searchCategories.map((category) => (
+                <option key={category.value || "all"} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setMobileSearchOpen(true)}
+              className="relative min-w-0 flex-1 pl-10 pr-3 text-left text-sm text-gray-500 transition-colors"
+              aria-label="Abrir buscador"
+            >
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <span className="block truncate">{searchQuery || "Buscar productos..."}</span>
+            </button>
+          </div>
         </div>}
         </>
         )}
@@ -346,30 +419,32 @@ const Header = () => {
         <Link
           href={"/"}
           onClick={handleLogoClick}
-          className="px-2 cursor-pointer duration-300 flex items-center justify-center"
+          className="group flex cursor-pointer items-center justify-center rounded-md py-1.5 pr-3 transition-colors duration-200"
         >
-          <div className="flex flex-col items-center md:flex-row md:items-center gap-1 md:gap-2">
-            <div className="bg-white rounded-full p-1.5 shadow-md ring-2 ring-amazon_blue/20 group-hover:shadow-lg transition-shadow duration-300">
-              <Image className="h-12 w-12 md:h-14 md:w-14 object-contain rounded-full" src={logo} alt="Logo Rossy Resina" priority />
+          <div className="flex min-w-[250px] items-center gap-3.5">
+            <div className="relative shrink-0 overflow-hidden rounded-full bg-white shadow-[0_6px_18px_rgba(17,24,39,0.16)] ring-2 ring-white transition-all duration-200 group-hover:-translate-y-0.5 group-hover:ring-[#e4147f]">
+              <Image className="h-[58px] w-[58px] object-contain" src={logo} alt="Logo Rossy Resina" priority />
             </div>
-            <span className="md:hidden text-sm leading-tight text-amazon_blue font-semibold">
-              Rossy Resina
-            </span>
-            <div className="hidden md:flex flex-col leading-tight">
-              <span className="text-amazon_blue font-semibold text-base md:text-lg">Rossy Resina</span>
-              <span className="text-xs text-gray-500 hidden md:block">Resina, moldes y pigmentos</span>
+            <div className="h-12 w-[3px] shrink-0 rounded-full bg-[#e4147f] shadow-[0_0_0_1px_rgba(255,255,255,0.18)] transition-all duration-200 group-hover:h-14" />
+            <div className="flex min-w-0 flex-col justify-center">
+              <span className="truncate text-[24px] font-bold leading-7 text-[#e4147f] [text-shadow:1.5px_0_0_#fff,-1.5px_0_0_#fff,0_1.5px_0_#fff,0_-1.5px_0_#fff,1px_1px_0_#fff,-1px_1px_0_#fff,1px_-1px_0_#fff,-1px_-1px_0_#fff]">
+                Rossy Resina
+              </span>
+              <span className="mt-0.5 truncate text-[13px] font-medium leading-5 text-white/85">
+                Resina, moldes y pigmentos
+              </span>
             </div>
           </div>
         </Link>
 
         {isResinyPage && (
-          <div className="flex min-w-0 items-center gap-2 border-l border-gray-200 pl-4">
+          <div className="flex min-w-0 items-center gap-2 border-l border-white/30 pl-4">
             <span className="relative h-16 w-16 shrink-0">
               <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" priority />
             </span>
             <div className="min-w-0 leading-tight">
-              <p className="truncate text-lg font-bold text-slate-950">Resiny</p>
-              <p className="truncate text-xs font-medium text-slate-500">Asistente de Rossy Resina</p>
+              <p className="truncate text-lg font-bold text-white">Resiny</p>
+              <p className="truncate text-xs font-medium text-white/80">Asistente de Rossy Resina</p>
             </div>
           </div>
         )}
@@ -389,18 +464,64 @@ const Header = () => {
 
         {/* searchbar */}
         {!isResinyPage && <div className="hidden lg:flex flex-1 min-w-[220px] items-center justify-center">
-          <form onSubmit={submitSearch} className="w-full max-w-3xl h-11 inline-flex items-center justify-between relative">
+          <form onSubmit={submitSearch} className="w-full max-w-3xl h-11 inline-flex items-center justify-between relative rounded-full border border-white bg-white shadow-sm focus-within:ring-2 focus-within:ring-[#e4147f]/35">
+            <div ref={searchCategoryRef} className="relative h-full w-[168px] shrink-0">
+              <button
+                type="button"
+                onClick={() => setSearchCategoryOpen((open) => !open)}
+                className="flex h-full w-full items-center justify-between gap-2 rounded-l-full border-r border-gray-200 bg-[#f8fafc] pl-5 pr-3 text-left text-sm font-bold text-slate-800 transition-colors hover:bg-white"
+                aria-haspopup="listbox"
+                aria-expanded={searchCategoryOpen}
+                aria-label="Filtrar por categoría"
+              >
+                <span className="truncate">{currentSearchCategory.label}</span>
+                <ChevronDownIcon className={`h-4 w-4 shrink-0 text-slate-600 transition-transform ${searchCategoryOpen ? "rotate-180" : ""}`} />
+              </button>
+              {searchCategoryOpen && (
+                <div
+                  className="absolute left-0 top-[calc(100%+8px)] z-40 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1.5 text-sm text-slate-800 shadow-[0_18px_40px_rgba(15,23,42,0.18)]"
+                  role="listbox"
+                >
+                  {searchCategories.map((category) => {
+                    const active = category.value === selectedSearchCategory;
+                    return (
+                      <button
+                        key={category.value || "all"}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSearchCategory(category.value);
+                          setSearchCategoryOpen(false);
+                          if (category.value) {
+                            router.push(category.href);
+                          }
+                        }}
+                        className={`flex h-10 w-full items-center justify-between px-4 text-left font-semibold transition-colors ${
+                          active
+                            ? "bg-[#fff4f9] text-[#e4147f]"
+                            : "text-slate-700 hover:bg-[#f5fbfc] hover:text-[#10aebb]"
+                        }`}
+                        role="option"
+                        aria-selected={active}
+                      >
+                        <span>{category.label}</span>
+                        {active ? <span className="h-2 w-2 rounded-full bg-[#e4147f]" /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <input
               onChange={handleSearch}
               value={searchQuery}
-              className="w-full h-full rounded-full pl-4 pr-28 placeholder:text-xs text-sm text-black border border-gray-300 outline-none focus-visible:border-amazon_blue focus:shadow-sm transition-all duration-300"
+              className="h-full min-w-0 flex-1 bg-transparent pl-4 pr-28 text-sm text-black outline-none placeholder:text-xs placeholder:text-gray-400"
               type="text"
               placeholder="Buscar productos..."
             />
             <button type="submit" className="absolute right-0 top-0 h-full px-5 rounded-full bg-amazon_blue text-white text-sm font-semibold hover:brightness-95 transition-all duration-300 hover:shadow-md">Buscar</button>
             {/* ========== Searchfield ========== */}
             {searchQuery && (
-              <div className="absolute left-0 top-12 w-full mx-auto max-h-96 bg-gray-100 rounded-lg overflow-y-scroll cursor-pointer text-black border border-gray-200">
+              <div className="absolute left-0 top-12 z-20 w-full mx-auto max-h-96 bg-gray-100 rounded-lg overflow-y-scroll cursor-pointer text-black border border-gray-200">
                 {filteredProducts.length > 0 ? (
                   <>
                     {searchQuery &&
@@ -445,7 +566,7 @@ const Header = () => {
         <div className={`ml-auto flex flex-none items-center justify-end gap-3 lg:gap-4 ${isResinyPage ? "min-w-0" : "min-w-[280px] max-w-[360px] xl:min-w-[330px]"}`}>
           <Link
             href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
-            className="lg:hidden p-2 rounded-full border border-gray-200 text-gray-700 hover:text-amazon_blue hover:border-amazon_blue"
+              className="lg:hidden p-2 rounded-full border border-white/35 text-white hover:border-white"
             aria-label={isAuthenticated ? "Ir a mi perfil" : "Iniciar sesión"}
           >
             <UserIcon className="w-5 h-5" />
@@ -455,16 +576,16 @@ const Header = () => {
             <button
               type="button"
               onClick={() => setProfileOpen((v) => !v)}
-              className="group flex min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm text-gray-700 transition-colors hover:border-amazon_blue hover:bg-amazon_blue hover:text-white"
+              className="group flex min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm text-white transition-colors hover:border-white hover:bg-white hover:text-[#e4147f]"
               aria-haspopup="menu"
               aria-expanded={profileOpen}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-amazon_blue group-hover:ring-white">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-[#e4147f] group-hover:ring-[#e4147f]">
                 <UserIcon className="w-5 h-5" />
               </span>
               <div className="min-w-0 leading-tight text-left">
-                <div className="text-xs font-semibold text-gray-500 transition-colors group-hover:!text-white">Cuenta</div>
-                <div className="whitespace-nowrap text-[15px] font-semibold text-slate-800 transition-colors group-hover:text-white">Mi perfil</div>
+                <div className="text-xs font-semibold text-white/80 transition-colors group-hover:!text-[#e4147f]">Cuenta</div>
+                <div className="whitespace-nowrap text-[15px] font-semibold text-white transition-colors group-hover:text-[#e4147f]">Mi perfil</div>
               </div>
             </button>
 
@@ -553,12 +674,12 @@ const Header = () => {
           {!isResinyPage && (
             <Link
               href="/cart"
-              className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-amazon_blue hover:bg-amazon_blue"
+              className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-white hover:bg-white"
               aria-label="Abrir carrito"
             >
               <span className="flex items-center gap-3 relative">
                 <div className="relative">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-amazon_blue group-hover:ring-white">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-[#e4147f] group-hover:ring-[#e4147f]">
                     <ShoppingCartIcon className="w-6 h-6" />
                   </span>
                   <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center ring-2 ring-white">
@@ -566,8 +687,8 @@ const Header = () => {
                   </span>
                 </div>
                 <div className="hidden md:block min-w-[78px] leading-tight text-left">
-                  <div className="text-xs font-semibold text-gray-500 transition-colors group-hover:!text-white">Tu carrito</div>
-                  <div className="text-[15px] font-semibold text-amazon_blue transition-colors group-hover:text-white"><FormattedPrice amount={cartSubtotal} /></div>
+                  <div className="text-xs font-semibold text-white/80 transition-colors group-hover:!text-[#e4147f]">Tu carrito</div>
+                  <div className="text-[15px] font-semibold text-white transition-colors group-hover:text-[#e4147f]"><FormattedPrice amount={cartSubtotal} /></div>
                 </div>
               </span>
             </Link>
@@ -586,6 +707,20 @@ const Header = () => {
               >
                 Cerrar
               </button>
+              <label htmlFor="mobile-search-category" className="sr-only">Categoría</label>
+              <select
+                id="mobile-search-category"
+                value={selectedSearchCategory}
+                onChange={(e) => setSelectedSearchCategory(e.target.value)}
+                className="h-11 w-[108px] shrink-0 rounded-full border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-700 outline-none"
+                aria-label="Filtrar por categoría"
+              >
+                {searchCategories.map((category) => (
+                  <option key={category.value || "all"} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
               <div className="relative flex-1">
                 <input
                   ref={mobileSearchInputRef}
