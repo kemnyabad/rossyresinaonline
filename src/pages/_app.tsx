@@ -12,6 +12,7 @@ import { SessionProvider, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { DEFAULT_OG_IMAGE, SITE_NAME, absoluteImageUrl, absoluteUrl, getSiteUrl } from "@/lib/seo";
 
 function AppContent({
   Component,
@@ -47,6 +48,37 @@ function AppContent({
   const pageTransitionStyle = { animation: "rrPageEnter 0.22s ease-out both" } as const;
 
   useEffect(() => { setIsClient(true); }, []);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    if (process.env.NODE_ENV !== "production") return;
+    if (!router.isReady) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const launchedAsApp =
+      params.get("source") === "pwa" ||
+      params.get("source") === "playstore" ||
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+
+    if (!launchedAsApp) return;
+
+    try {
+      window.localStorage.setItem("rr_app_mode", "1");
+    } catch {}
+
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        const notifyAppMode = () => {
+          navigator.serviceWorker.controller?.postMessage({ type: "ROSSY_APP_MODE" });
+          registration.active?.postMessage({ type: "ROSSY_APP_MODE" });
+        };
+        notifyAppMode();
+        navigator.serviceWorker.ready.then(notifyAppMode).catch(() => {});
+      })
+      .catch(() => {});
+  }, [router.isReady]);
 
   useEffect(() => {
     const role = (clientSession?.user as any)?.role;
@@ -181,8 +213,20 @@ function AppContent({
   const content = (
     <div className="font-bodyFont">
       <Head>
-        <title>Rossy Resina</title>
+        <title>{SITE_NAME}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Rossy Resina: tienda peruana de resina epóxica, moldes de silicona, pigmentos y accesorios para manualidades con envío a todo Perú." key="description" />
+        <meta name="robots" content={isAdminRoute ? "noindex,nofollow" : "index,follow"} key="robots" />
+        <meta name="author" content={SITE_NAME} />
+        <meta name="theme-color" content="#e4147f" />
+        <meta property="og:site_name" content={SITE_NAME} />
+        <meta property="og:locale" content="es_PE" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={absoluteUrl(router.asPath.split("?")[0] || "/")} />
+        <meta property="og:image" content={absoluteImageUrl(DEFAULT_OG_IMAGE)} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={absoluteImageUrl(DEFAULT_OG_IMAGE)} />
+        <link rel="alternate" hrefLang="es-PE" href={getSiteUrl()} />
       </Head>
       <div
         className={`fixed left-0 top-0 z-[9999] h-1 bg-amazon_blue shadow-sm transition-all duration-300 ${

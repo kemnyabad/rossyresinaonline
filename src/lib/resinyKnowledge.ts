@@ -216,52 +216,17 @@ const getCourseContext = async (message: string) => {
   }
 };
 
-const getBlogContext = async (message: string) => {
-  const words = queryWords(message);
-  if (words.length === 0) return "";
-
-  try {
-    const db = prisma as any;
-    const posts = await db.blogPost.findMany({
-      where: {
-        OR: words.flatMap((word) => [
-          { title: { contains: word } },
-          { excerpt: { contains: word } },
-        ]),
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 3,
-      select: {
-        title: true,
-        slug: true,
-        excerpt: true,
-      },
-    });
-
-    if (!posts?.length) return "";
-
-    return posts
-      .map((p: any) => `- ${sanitize(p.title, 100)} (/blog/${sanitize(p.slug, 80)}): ${sanitize(p.excerpt, 180)}`)
-      .join("\n");
-  } catch (error) {
-    console.warn("resiny.knowledge.blog_failed", String((error as any)?.message || error));
-    return "";
-  }
-};
-
 export async function getResinyKnowledgeContext(message: string) {
-  const [staticKnowledge, productContext, courseContext, blogContext] = await Promise.all([
+  const [staticKnowledge, productContext, courseContext] = await Promise.all([
     Promise.resolve(getStaticKnowledge(message)),
     getProductContext(message),
     getCourseContext(message),
-    getBlogContext(message),
   ]);
 
   const sections = [
     staticKnowledge ? `GUIAS INTERNAS DE ARTESANIA Y RESINA:\n${staticKnowledge}` : "",
     productContext ? `PRODUCTOS REALES DE ROSSY RESINA RELACIONADOS:\n${productContext}` : "",
     courseContext ? `CURSOS/TALLERES REALES RELACIONADOS:\n${courseContext}` : "",
-    blogContext ? `CONTENIDO PROPIO RELACIONADO:\n${blogContext}` : "",
   ].filter(Boolean);
 
   if (sections.length === 0) return "";

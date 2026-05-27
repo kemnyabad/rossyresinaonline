@@ -4,6 +4,8 @@ import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import type { ProductProps } from "../../type";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { getAllProducts } from "@/lib/repositories/productRepository";
+import { absoluteUrl } from "@/lib/seo";
+import { useLiveProducts } from "@/lib/useLiveProducts";
 
 interface Props {
   q: string;
@@ -12,26 +14,51 @@ interface Props {
 }
 
 export default function SearchPage({ q, category, results }: Props) {
+  const { products: liveProducts } = useLiveProducts(results);
   const categoryLabel = category ? ` en ${category}` : "";
+  const categoryTerms: Record<string, string[]> = {
+    moldes: ["molde", "silicona"],
+    resina: ["resina", "epoxi", "epoxica", "uv"],
+    pigmentos: ["pigmento", "mica", "tinte", "colorante"],
+    accesorios: ["accesorio", "dije", "llavero", "arete", "collar", "gancho"],
+    creaciones: ["creacion", "creaciones"],
+  };
+  const visibleResults = filterAndSortProducts(
+    categoryTerms[category]
+      ? liveProducts.filter((product) => {
+          const hay = [product.title, product.category, product.brand, product.code, product.description]
+            .filter(Boolean)
+            .join(" ")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase();
+          return categoryTerms[category].some((term) => hay.includes(term));
+        })
+      : liveProducts,
+    { query: q, sort: "relevance" }
+  );
   return (
     <StoreWithAdsLayout className="py-8">
       <Head>
         <title>Buscar productos | Rossy Resina</title>
         <meta
           name="description"
+          key="description"
           content={`Resultados de b?squeda para ${q || "productos"}${categoryLabel} en Rossy Resina.`}
         />
+        <meta name="robots" content="noindex,follow" key="robots" />
+        <link rel="canonical" href={absoluteUrl("/search")} />
       </Head>
 
       <div className="min-w-0">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h1 className="text-xl font-semibold text-gray-900">Buscar productos</h1>
-          <span className="text-sm text-gray-500">{results.length} resultados</span>
+          <span className="text-sm text-gray-500">{visibleResults.length} resultados</span>
         </div>
 
-        {results.length > 0 ? (
+        {visibleResults.length > 0 ? (
           <Products
-            productData={results}
+            productData={visibleResults}
             gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
           />
         ) : (

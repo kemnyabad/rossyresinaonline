@@ -16,6 +16,8 @@ import Products from "@/components/Products";
 import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import type { ProductProps } from "../../../type";
 import { getAllProducts } from "@/lib/repositories/productRepository";
+import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
+import { useLiveProducts } from "@/lib/useLiveProducts";
 
 const slugToCategory: Record<string, string> = {
   resina: "Resinas",
@@ -42,36 +44,69 @@ interface Props {
 }
 
 export default function CategoryPage({ slug, label, items }: Props) {
+  const { products: liveProducts } = useLiveProducts(items);
   if (slug === "talleres") {
     return <ResinEducationSchool />;
   }
+  const targetSlug = toCategorySlug(label || slug);
+  const visibleItems = label
+    ? liveProducts
+        .filter((p) => toCategorySlug(p.category) === targetSlug)
+        .sort((a, b) => {
+          const ac = (a.code || "").toString();
+          const bc = (b.code || "").toString();
+          if (ac && bc) return ac.localeCompare(bc, undefined, { numeric: true, sensitivity: "base" });
+          if (ac) return -1;
+          if (bc) return 1;
+          return Number(a._id || 0) - Number(b._id || 0);
+        })
+    : [];
+  const title = `${label || "Categoría"} | Rossy Resina`;
+  const description = truncateMeta(
+    label
+      ? `Compra ${label} en Rossy Resina. Encuentra productos para resina, manualidades, moldes, pigmentos y accesorios con envío a todo Perú.`
+      : "Explora categorías de resina, moldes, pigmentos y accesorios en Rossy Resina."
+  );
+  const canonical = absoluteUrl(`/categoria/${encodeURIComponent(slug)}`);
+  const breadcrumbJson = breadcrumbJsonLd([
+    { name: "Inicio", url: "/" },
+    { name: "Categorías", url: "/productos" },
+    { name: label || "Categoría", url: `/categoria/${encodeURIComponent(slug)}` },
+  ]);
+  const collectionJson = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: title,
+    description,
+    url: canonical,
+    numberOfItems: visibleItems.length,
+  };
 
   return (
     <StoreWithAdsLayout className="py-8">
       <Head>
-        <title>Rossy Resina - {label || "Categoría"}</title>
-        <meta
-          name="description"
-          content={
-            label
-              ? `Compra ${label} en Rossy Resina. Resina, moldes, pigmentos y más.`
-              : "Explora nuestras categorías de productos."
-          }
-        />
-        <meta property="og:title" content={`Rossy Resina - ${label || "Categoría"}`} />
-        <meta
-          property="og:description"
-          content={label ? `Compra ${label} en Rossy Resina.` : "Explora nuestras categorías de productos."}
-        />
+        <title>{title}</title>
+        <meta name="description" content={description} key="description" />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:image" content={absoluteImageUrl("/web-app-manifest-512x512.png")} />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbJson, collectionJson]) }}
+        />
       </Head>
 
       <div className="min-w-0">
         {label ? (
           <>
             <h1 className="text-2xl font-semibold mb-4">{label}</h1>
-            {items.length > 0 ? (
-              <Products productData={items} />
+            {visibleItems.length > 0 ? (
+              <Products productData={visibleItems} />
             ) : (
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <p className="text-gray-700">No hay productos en esta categoría por ahora.</p>
@@ -144,14 +179,18 @@ export function ResinEducationSchool() {
         <title>Escuela de formación en resina - Rossy Resina</title>
         <meta
           name="description"
+          key="description"
           content="Escuela de formación para el trabajo en artesanía en resina. Aprende técnicas, seguridad, producción artesanal y emprendimiento."
         />
+        <link rel="canonical" href={absoluteUrl("/escuela")} />
         <meta property="og:title" content="Escuela de formación en resina - Rossy Resina" />
         <meta
           property="og:description"
           content="Formación práctica en artesanía en resina para aprender, crear y emprender."
         />
         <meta property="og:type" content="website" />
+        <meta property="og:url" content={absoluteUrl("/escuela")} />
+        <meta property="og:image" content={absoluteImageUrl("/web-app-manifest-512x512.png")} />
       </Head>
 
       <div className="min-w-0 space-y-10">

@@ -107,10 +107,10 @@ export default function AboutUsPage() {
           </Link>
         </div>
         <div className="rounded-lg p-6 bg-white shadow border border-gray-200">
-          <p className="text-lg font-semibold">Blog</p>
-          <p className="text-sm text-gray-700 mt-1">Tips, novedades y proyectos inspiradores.</p>
-          <Link href="/blog" className="mt-3 inline-block px-4 py-2 rounded bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black text-sm">
-            Explorar blog
+          <p className="text-lg font-semibold">Productos</p>
+          <p className="text-sm text-gray-700 mt-1">Encuentra insumos, moldes y accesorios para tus proyectos.</p>
+          <Link href="/productos" className="mt-3 inline-block px-4 py-2 rounded bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black text-sm">
+            Ver productos
           </Link>
         </div>
         <div className="rounded-lg p-6 bg-white shadow border border-gray-200">

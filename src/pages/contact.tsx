@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { absoluteUrl } from "@/lib/seo";
 
 export default function ContactPage() {
   const shopEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contacto@rossyresina.pe";
@@ -15,6 +16,8 @@ export default function ContactPage() {
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("Consulta");
   const [message, setMessage] = useState("");
+  const title = "Contacto | Rossy Resina";
+  const description = "Contacta a Rossy Resina por WhatsApp o correo para consultas sobre resina epóxica, moldes, pigmentos, accesorios y pedidos en Perú.";
 
   const mailtoHref = useMemo(() => {
     const s = encodeURIComponent(`[${subject}] ${name ? "- " + name : ""}`);
@@ -30,7 +33,12 @@ export default function ContactPage() {
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-6">
       <Head>
-        <title>Rossy Resina  -  Contacto</title>
+        <title>{title}</title>
+        <meta name="description" content={description} key="description" />
+        <link rel="canonical" href={absoluteUrl("/contact")} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={absoluteUrl("/contact")} />
       </Head>
 
       <div className="grid md:grid-cols-3 gap-6">

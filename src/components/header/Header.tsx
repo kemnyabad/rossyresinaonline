@@ -139,7 +139,6 @@ const Header = () => {
     { href: "/productos?ofertas=1", label: "Ofertas", icon: GiftIcon },
     { href: "/rifas", label: "Rifas", icon: GiftIcon },
     { href: "/track-orders", label: "Mis pedidos", icon: ShoppingCartIcon },
-    { href: "/blog", label: "Blog", icon: BookOpenIcon },
   ];
   const searchCategories = useMemo(() => [
     { label: "Categorías", value: "", href: "/search", terms: [] as string[] },

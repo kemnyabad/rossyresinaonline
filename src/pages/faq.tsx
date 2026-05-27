@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useState } from "react";
+import { absoluteUrl } from "@/lib/seo";
 
 const data = [
   {
@@ -31,10 +32,33 @@ const data = [
 
 export default function FAQPage() {
   const [open, setOpen] = useState<number | null>(0);
+  const title = "Preguntas frecuentes | Rossy Resina";
+  const description = "Resuelve dudas sobre pagos, envíos, kits de resina, devoluciones y recojo para compras en Rossy Resina.";
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: data.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    })),
+  };
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-6">
       <Head>
-        <title>Rossy Resina  -  Preguntas frecuentes</title>
+        <title>{title}</title>
+        <meta name="description" content={description} key="description" />
+        <link rel="canonical" href={absoluteUrl("/faq")} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={absoluteUrl("/faq")} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
       </Head>
 
       <h1 className="text-2xl font-semibold mb-4 text-amazon_blue">Preguntas frecuentes</h1>

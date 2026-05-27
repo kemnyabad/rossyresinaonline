@@ -14,6 +14,7 @@ import { getAllProducts } from "@/lib/repositories/productRepository";
 import { useSession, signIn } from "next-auth/react";
 import { formatProductTitle } from "@/lib/textFormat";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
+import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
 import {
   ArrowLeftIcon,
   ChevronRightIcon,
@@ -372,22 +373,26 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
   }, [reviews, reviewCount]);
 
 
-  const pageTitle = product?.title ? `${product.title} | Rossy Resina` : "Producto | Rossy Resina";
-  const pageDesc = product?.description || "Descubre productos de resina, moldes y pigmentos en Rossy Resina.";
+  const pageTitle = product?.title ? `${formatProductTitle(product.title)} | Rossy Resina` : "Producto | Rossy Resina";
+  const pageDesc = truncateMeta(
+    product?.description ||
+      `${displayProductTitle} en Rossy Resina. Compra resina, moldes, pigmentos y accesorios con atención por WhatsApp.`
+  );
   const pageImage = (() => {
     const raw = String(preferredMainImage || product?.image || "").trim();
     if (!raw) return "/favicon-96x96.png";
     if (/^https?:\/\//i.test(raw)) return raw;
     return raw.startsWith("/") ? raw : `/${raw}`;
   })();
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://rossyresinaonlineweb.vercel.app";
+  const productPath = product ? `/${encodeURIComponent(String(product.code || product._id))}` : "/";
+  const canonicalUrl = absoluteUrl(productPath);
+  const absolutePageImage = absoluteImageUrl(pageImage);
   const productJsonLd = product
     ? {
         "@context": "https://schema.org",
         "@type": "Product",
         name: product.title || product.code || "Producto",
-        image: [pageImage.startsWith("http") ? pageImage : `${siteUrl}${pageImage}`],
+        image: [absolutePageImage],
         description: product.description || "",
         sku: String(product.code || product._id || ""),
         category: product.category || "",
@@ -397,7 +402,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
           priceCurrency: "PEN",
           price: Number(product.price || 0).toFixed(2),
           availability: "https://schema.org/InStock",
-          url: `${siteUrl}/${encodeURIComponent(String(product.code || product._id))}`,
+          url: canonicalUrl,
         },
         aggregateRating:
           reviewCount > 0
@@ -408,6 +413,13 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               }
             : undefined,
       }
+    : null;
+  const breadcrumbJson = product
+    ? breadcrumbJsonLd([
+        { name: "Inicio", url: "/" },
+        { name: product.category || "Productos", url: product.category ? `/productos?categoria=${encodeURIComponent(product.category)}` : "/productos" },
+        { name: displayProductTitle, url: productPath },
+      ])
     : null;
 
   const fmtReviewDate = (iso?: string) => {
@@ -462,15 +474,26 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
     <div className="max-w-screen-2xl mx-auto px-4 py-4 md:py-8">
       <Head>
         <title>{pageTitle}</title>
-        <meta name="description" content={pageDesc} />
+        <meta name="description" content={pageDesc} key="description" />
+        <link rel="canonical" href={canonicalUrl} />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDesc} />
         <meta property="og:type" content="product" />
-        <meta property="og:image" content={pageImage} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={absolutePageImage} />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDesc} />
+        <meta name="twitter:image" content={absolutePageImage} />
         {productJsonLd && (
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+          />
+        )}
+        {breadcrumbJson && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJson) }}
           />
         )}
       </Head>

@@ -26,7 +26,6 @@ const BottomHeader = () => {
   const mainNav = [
     { href: "/", label: "Inicio" },
     { href: "/rifas", label: "Rifas" },
-    { href: "/blog", label: "Blog" },
   ];
   const menuItems = [mainNav[0], ...categories, ...mainNav.slice(1)];
 

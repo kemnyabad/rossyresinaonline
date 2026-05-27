@@ -22,6 +22,8 @@ import {
 import { getAllProducts } from "@/lib/repositories/productRepository";
 import { getPurchaseBehaviorSnapshot, type PurchaseBehaviorSnapshot } from "@/lib/repositories/categoryInsightsRepository";
 import { getSmartProductRecommendations, type SmartRecommendation } from "@/lib/smartCatalog";
+import { absoluteImageUrl, absoluteUrl, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
+import { useLiveProducts } from "@/lib/useLiveProducts";
 
 interface Props {
   productData: ProductProps[];
@@ -30,14 +32,14 @@ interface Props {
 }
 
 export default function Home({ productData, behavior, ofertasExpress }: Props) {
-  const SITE_URL = "https://rossyresinaonlineweb.vercel.app";
   const pageTitle = "Rossy Resina | Resina epóxica, moldes y pigmentos en Perú";
   const pageDesc =
     "Compra resina epóxica, moldes de silicona, pigmentos y accesorios. Envío a todo Perú y atención por WhatsApp.";
   const dispatch = useDispatch();
+  const { products: liveProductData } = useLiveProducts(productData);
   const allProducts = useMemo(
-    () => (productData && productData.length > 0 ? productData : []),
-    [productData]
+    () => (liveProductData && liveProductData.length > 0 ? liveProductData : []),
+    [liveProductData]
   );
   const [visibleCount, setVisibleCount] = useState(30);
   
@@ -177,11 +179,11 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
   const interestProducts = diversifiedProducts.slice(0, visibleCount);
   const normalizeImage = (img?: string) => {
     const s = String(img || "");
-    if (!s) return `${SITE_URL}/favicon-96x96.png`;
+    if (!s) return absoluteImageUrl("/favicon-96x96.png");
     const u = s.replace(/\\/g, "/");
     if (/^https?:\/\//i.test(u)) return u;
     const fixed = u.startsWith("/") ? u : `/${u}`;
-    return `${SITE_URL}${fixed}`;
+    return absoluteUrl(fixed);
   };
   const normalizeMobileImage = (img?: string) => {
     const s = String(img || "");
@@ -226,17 +228,21 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
     <>
       <Head>
         <title>{pageTitle}</title>
-        <meta name="description" content={pageDesc} />
+        <meta name="description" content={pageDesc} key="description" />
         <meta name="keywords" content={keywords} />
-        <link rel="canonical" href={SITE_URL} />
+        <link rel="canonical" href={absoluteUrl("/")} />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDesc} />
-        <meta property="og:url" content={SITE_URL} />
+        <meta property="og:url" content={absoluteUrl("/")} />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content={`${SITE_URL}/favicon-96x96.png`} />
-        <meta name="twitter:card" content="summary" />
+        <meta property="og:image" content={absoluteImageUrl("/web-app-manifest-512x512.png")} />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify([organizationJsonLd(), websiteJsonLd()]) }}
+        />
       </Head>
       <main>
         {/* Home mobile storefront */}
@@ -377,9 +383,6 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
             <h2 className="text-xl font-bold text-gray-900">
               Productos más comprados
             </h2>
-            <Link href="/productos" className="text-sm font-semibold text-amazon_blue hover:underline">
-              Ver todos
-            </Link>
           </div>
           {hasBehaviorData && realTopProducts.length > 0 ? (
             <div className="relative">
