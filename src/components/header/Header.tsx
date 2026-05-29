@@ -383,6 +383,36 @@ const Header = () => {
         </div>}
         </>
         )}
+        {!isResinyPage && (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Link
+              href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
+              className="flex min-h-[48px] items-center gap-2 rounded-xl border border-white/25 bg-white/12 px-3 py-2 text-white shadow-sm active:scale-[0.99]"
+              aria-label="Mi cuenta"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#e4147f]">
+                <UserIcon className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 text-left leading-tight">
+                <span className="block truncate text-sm font-bold">Mi cuenta</span>
+                <span className="block truncate text-xs font-semibold text-white/75">Usuario</span>
+              </span>
+            </Link>
+            <Link
+              href="/vende-con-nosotros"
+              className="flex min-h-[48px] items-center gap-2 rounded-xl border border-white/25 bg-white px-3 py-2 text-slate-900 shadow-sm active:scale-[0.99]"
+              aria-label="Vende con nosotros"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff0f7] text-[#e4147f]">
+                <ShoppingBagIcon className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 text-left leading-tight">
+                <span className="block truncate text-sm font-black">Vende con nosotros</span>
+                <span className="block truncate text-xs font-bold text-[#e4147f]">Modo beta</span>
+              </span>
+            </Link>
+          </div>
+        )}
       </div>
 
       {mobileMenuOpen && (
