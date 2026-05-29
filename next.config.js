@@ -34,7 +34,7 @@ const nextConfig = {
     if (process.env.TEMP_REDIRECT_TO_TIENDANUBE === "1") {
       const base = process.env.TIENDANUBE_URL || "https://rossyresina.mitiendanube.com";
       redirects.push({
-        source: "/:path((?!api|_next|favicon.ico|robots.txt|sitemap.xml|site.webmanifest).*)",
+        source: "/:path((?!api|_next|favicon.ico|robots.txt|sitemap.xml|site.webmanifest|googledc520f3f37b4e175.html).*)",
         destination: `${base}/:path`,
         permanent: false,
       });

@@ -12,6 +12,7 @@ const BYPASS_PATHS = [
   "/robots.txt",
   "/sitemap.xml",
   "/site.webmanifest",
+  "/googledc520f3f37b4e175.html",
 ];
 
 const isLocalHost = (req: NextRequest): boolean => {
@@ -71,5 +72,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico|robots.txt|sitemap.xml|site.webmanifest).*)" ],
+  matcher: ["/((?!_next|favicon.ico|robots.txt|sitemap.xml|site.webmanifest|googledc520f3f37b4e175.html).*)" ],
 };
