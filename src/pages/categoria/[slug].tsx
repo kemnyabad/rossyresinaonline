@@ -13,9 +13,11 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import Products from "@/components/Products";
+import MarketplaceProductGrid from "@/components/MarketplaceProductGrid";
 import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import type { ProductProps } from "../../../type";
 import { getAllProducts } from "@/lib/repositories/productRepository";
+import { getPublishedMarketplaceProducts } from "@/lib/marketplaceDb";
 import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
 import { useLiveProducts } from "@/lib/useLiveProducts";
 
@@ -41,9 +43,10 @@ interface Props {
   slug: string;
   label: string | null;
   items: ProductProps[];
+  marketplaceProducts: any[];
 }
 
-export default function CategoryPage({ slug, label, items }: Props) {
+export default function CategoryPage({ slug, label, items, marketplaceProducts }: Props) {
   const { products: liveProducts } = useLiveProducts(items);
   if (slug === "talleres") {
     return <ResinEducationSchool />;
@@ -61,6 +64,10 @@ export default function CategoryPage({ slug, label, items }: Props) {
           return Number(a._id || 0) - Number(b._id || 0);
         })
     : [];
+  const marketplaceItems = (marketplaceProducts || []).filter((product: any) => {
+    if (slug === "creaciones") return true;
+    return toCategorySlug(product.category) === targetSlug;
+  });
   const title = `${label || "Categoría"} | Rossy Resina`;
   const description = truncateMeta(
     label
@@ -105,13 +112,22 @@ export default function CategoryPage({ slug, label, items }: Props) {
         {label ? (
           <>
             <h1 className="text-2xl font-semibold mb-4">{label}</h1>
-            {visibleItems.length > 0 ? (
-              <Products productData={visibleItems} />
-            ) : (
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <p className="text-gray-700">No hay productos en esta categoría por ahora.</p>
-              </div>
-            )}
+            <div className="space-y-8">
+              {visibleItems.length > 0 ? (
+                <Products productData={visibleItems} />
+              ) : slug !== "creaciones" ? (
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <p className="text-gray-700">No hay productos en esta categoría por ahora.</p>
+                </div>
+              ) : null}
+              {(slug === "creaciones" || marketplaceItems.length > 0) && (
+                <MarketplaceProductGrid
+                  products={marketplaceItems}
+                  title={slug === "creaciones" ? "Creaciones de emprendedoras" : "Creaciones publicadas por vendedoras"}
+                  emptyText="Aun no hay productos publicados por vendedoras en esta categoría."
+                />
+              )}
+            </div>
           </>
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -398,7 +414,10 @@ export const getServerSideProps = async (ctx: any) => {
   }
 
   try {
-    const all: ProductProps[] = await getAllProducts();
+    const [all, marketplaceProducts]: [ProductProps[], any[]] = await Promise.all([
+      getAllProducts(),
+      getPublishedMarketplaceProducts(),
+    ]);
     const categories = Array.from(
       new Set(
         all
@@ -425,8 +444,8 @@ export const getServerSideProps = async (ctx: any) => {
       return Number(a._id || 0) - Number(b._id || 0);
     });
 
-    return { props: { slug, label, items } };
+    return { props: { slug, label, items, marketplaceProducts: JSON.parse(JSON.stringify(marketplaceProducts)) } };
   } catch (e) {
-    return { props: { slug, label: null, items: [] } };
+    return { props: { slug, label: null, items: [], marketplaceProducts: [] } };
   }
 };

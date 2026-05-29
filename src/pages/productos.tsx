@@ -1,19 +1,22 @@
 import Head from "next/head";
 import Products from "@/components/Products";
+import MarketplaceProductGrid from "@/components/MarketplaceProductGrid";
 import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import type { ProductProps } from "../../type";
 import { useMemo } from "react";
 import { useRouter } from "next/router";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { getAllProducts } from "@/lib/repositories/productRepository";
+import { getPublishedMarketplaceProducts } from "@/lib/marketplaceDb";
 import { absoluteImageUrl, absoluteUrl, truncateMeta } from "@/lib/seo";
 import { useLiveProducts } from "@/lib/useLiveProducts";
 
 interface Props {
   allProducts: ProductProps[];
+  marketplaceProducts: any[];
 }
 
-export default function ProductosPage({ allProducts }: Props) {
+export default function ProductosPage({ allProducts, marketplaceProducts }: Props) {
   const router = useRouter();
   const { products: liveProducts } = useLiveProducts(allProducts);
   const categoryFromQuery = String(router.query?.categoria || "").trim();
@@ -34,6 +37,14 @@ export default function ProductosPage({ allProducts }: Props) {
     if (!onlyOffers) return base;
     return base.filter((p) => Number(p.oldPrice || 0) > Number(p.price || 0));
   }, [liveProducts, categoryFromQuery, onlyOffers]);
+  const filteredMarketplaceProducts = useMemo(() => {
+    if (onlyOffers) return [];
+    const target = categoryFromQuery.toLowerCase();
+    return (marketplaceProducts || []).filter((product: any) => {
+      if (!target) return true;
+      return String(product.category || "").toLowerCase() === target || target === "creaciones";
+    });
+  }, [marketplaceProducts, categoryFromQuery, onlyOffers]);
 
   return (
     <StoreWithAdsLayout className="py-8">
@@ -57,6 +68,7 @@ export default function ProductosPage({ allProducts }: Props) {
           </h1>
         </div>
 
+        <div className="space-y-8">
         {filteredProducts.length === 0 ? (
           <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
             No se encontraron productos.
@@ -67,11 +79,23 @@ export default function ProductosPage({ allProducts }: Props) {
             gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
           />
         )}
+          {!onlyOffers && (
+            <MarketplaceProductGrid
+              products={filteredMarketplaceProducts}
+              title={categoryFromQuery ? "Creaciones publicadas por vendedoras" : "Creaciones de emprendedoras"}
+              emptyText="Aun no hay productos publicados por vendedoras."
+            />
+          )}
+        </div>
       </div>
     </StoreWithAdsLayout>
   );
 }
 
 export async function getServerSideProps() {
-  return { props: { allProducts: await getAllProducts() } };
+  const [allProducts, marketplaceProducts] = await Promise.all([
+    getAllProducts(),
+    getPublishedMarketplaceProducts(),
+  ]);
+  return { props: { allProducts, marketplaceProducts: JSON.parse(JSON.stringify(marketplaceProducts)) } };
 }

@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { slugify, type MarketplaceProductStatus } from "@/lib/marketplaceStore";
+import { readMarketplace, slugify, type MarketplaceProductStatus } from "@/lib/marketplaceStore";
 
 export const DB_APPLICATION_PREFIX = "db_";
 export const DB_PRODUCT_PREFIX = "dbprod_";
@@ -126,6 +126,21 @@ export async function getDbMarketplaceData() {
   const products = productRows.map(mapDbProduct);
 
   return { applications, shops, products };
+}
+
+export async function getPublishedMarketplaceProducts() {
+  const local = readMarketplace();
+  const dbData = await getDbMarketplaceData();
+  const shops = [...dbData.shops, ...local.shops];
+  const products = [...dbData.products, ...local.products]
+    .filter((item: any) => item.status === "PUBLISHED")
+    .map((product: any) => ({
+      ...product,
+      shop: shops.find((shop: any) => shop.id === product.shopId) || null,
+    }))
+    .filter((product: any) => product.shop);
+
+  return products;
 }
 
 export async function moderateDbProduct(id: string, decision: "PUBLISHED" | "REJECTED", note = "") {

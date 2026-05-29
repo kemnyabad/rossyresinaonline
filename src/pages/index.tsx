@@ -1,5 +1,6 @@
 import HeroCarousel from "@/components/HeroCarousel";
 import Products from "@/components/Products";
+import MarketplaceProductGrid from "@/components/MarketplaceProductGrid";
 import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import { ProductProps } from "../../type";
 import { useDispatch } from "react-redux";
@@ -20,6 +21,7 @@ import {
   getOfferProducts,
 } from "@/lib/services/productCatalogService";
 import { getAllProducts } from "@/lib/repositories/productRepository";
+import { getPublishedMarketplaceProducts } from "@/lib/marketplaceDb";
 import { getPurchaseBehaviorSnapshot, type PurchaseBehaviorSnapshot } from "@/lib/repositories/categoryInsightsRepository";
 import { absoluteImageUrl, absoluteUrl, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { useLiveProducts } from "@/lib/useLiveProducts";
@@ -28,9 +30,10 @@ interface Props {
   productData: ProductProps[];
   behavior: PurchaseBehaviorSnapshot;
   ofertasExpress: { id: string; nombre: string; imagen: string }[];
+  marketplaceProducts: any[];
 }
 
-export default function Home({ productData, behavior, ofertasExpress }: Props) {
+export default function Home({ productData, behavior, ofertasExpress, marketplaceProducts }: Props) {
   const pageTitle = "Rossy Resina | Resina epóxica, moldes y pigmentos en Perú";
   const pageDesc =
     "Compra resina epóxica, moldes de silicona, pigmentos y accesorios. Envío a todo Perú y atención por WhatsApp.";
@@ -435,6 +438,15 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
         </section>
         )}
 
+        {marketplaceProducts.length > 0 && (
+          <section className="px-4 md:px-6">
+            <MarketplaceProductGrid
+              products={marketplaceProducts.slice(0, 10)}
+              title="Creaciones de emprendedoras"
+            />
+          </section>
+        )}
+
             </div>
           </StoreWithAdsLayout>
 
@@ -475,14 +487,24 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
 export const getServerSideProps = async () => {
   try {
     const productData = await getAllProducts();
-    const behavior = await getPurchaseBehaviorSnapshot(8, 12, 180);
+    const [behavior, marketplaceProducts] = await Promise.all([
+      getPurchaseBehaviorSnapshot(8, 12, 180),
+      getPublishedMarketplaceProducts(),
+    ]);
     const prisma = (await import("@/lib/prisma")).default as any;
     const ofertasExpress = await prisma.ofertaExpress.findMany({
       where: { activo: true },
       orderBy: [{ orden: "asc" }, { createdAt: "desc" }],
       select: { id: true, nombre: true, imagen: true },
     });
-    return { props: { productData, behavior, ofertasExpress: JSON.parse(JSON.stringify(ofertasExpress)) } };
+    return {
+      props: {
+        productData,
+        behavior,
+        ofertasExpress: JSON.parse(JSON.stringify(ofertasExpress)),
+        marketplaceProducts: JSON.parse(JSON.stringify(marketplaceProducts)),
+      },
+    };
   } catch (e) {
     return {
       props: {
@@ -494,6 +516,7 @@ export const getServerSideProps = async () => {
           topOfferProductKeys: [],
         } as PurchaseBehaviorSnapshot,
         ofertasExpress: [],
+        marketplaceProducts: [],
       },
     };
   }
