@@ -123,8 +123,8 @@ export default function CategoryPage({ slug, label, items, marketplaceProducts }
               {(slug === "creaciones" || marketplaceItems.length > 0) && (
                 <MarketplaceProductGrid
                   products={marketplaceItems}
-                  title={slug === "creaciones" ? "Creaciones de emprendedoras" : "Creaciones publicadas por vendedoras"}
-                  emptyText="Aun no hay productos publicados por vendedoras en esta categoría."
+                  title={slug === "creaciones" ? "Productos del marketplace" : "Productos publicados"}
+                  emptyText="Aun no hay productos publicados en esta categoría."
                 />
               )}
             </div>

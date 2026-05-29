@@ -82,8 +82,8 @@ export default function ProductosPage({ allProducts, marketplaceProducts }: Prop
           {!onlyOffers && (
             <MarketplaceProductGrid
               products={filteredMarketplaceProducts}
-              title={categoryFromQuery ? "Creaciones publicadas por vendedoras" : "Creaciones de emprendedoras"}
-              emptyText="Aun no hay productos publicados por vendedoras."
+              title={categoryFromQuery ? "Productos publicados" : "Productos del marketplace"}
+              emptyText="Aun no hay productos publicados en el marketplace."
             />
           )}
         </div>

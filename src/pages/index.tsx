@@ -442,7 +442,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
           <section className="px-4 md:px-6">
             <MarketplaceProductGrid
               products={marketplaceProducts.slice(0, 10)}
-              title="Creaciones de emprendedoras"
+              title="Productos del marketplace"
             />
           </section>
         )}

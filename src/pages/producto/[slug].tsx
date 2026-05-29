@@ -31,13 +31,6 @@ export default function MarketplaceProductPage({ product, shop }: any) {
             <h1 className="mt-3 text-4xl font-black leading-tight text-slate-950">{product.name}</h1>
             <p className="mt-4 text-3xl font-black text-[#e4147f]">S/ {Number(product.price || 0).toFixed(2)}</p>
             <p className="mt-5 text-base leading-8 text-slate-700">{product.description}</p>
-            {shop && (
-              <Link href={`/tienda/${shop.slug}`} className="mt-6 block rounded-xl border border-pink-100 bg-[#fff8fb] p-4">
-                <span className="text-sm text-slate-500">Vendedora</span>
-                <span className="mt-1 block text-lg font-black text-slate-950">{shop.commercialName}</span>
-                <span className="text-sm text-slate-600">{shop.city}</span>
-              </Link>
-            )}
             {whatsapp && (
               <a
                 href={`https://wa.me/${whatsapp}?text=${message}`}
@@ -46,6 +39,18 @@ export default function MarketplaceProductPage({ product, shop }: any) {
               >
                 Consultar por WhatsApp
               </a>
+            )}
+            {shop && (
+              <div className="mt-6 rounded-xl border border-pink-100 bg-[#fff8fb] p-5">
+                <p className="text-sm font-semibold text-slate-500">Vendido por</p>
+                <Link href={`/tienda/${shop.slug}`} className="mt-1 inline-flex text-lg font-black text-slate-950 hover:text-[#e4147f]">
+                  {shop.commercialName}
+                </Link>
+                {shop.city && <p className="mt-1 text-sm text-slate-600">{shop.city}</p>}
+                <Link href={`/tienda/${shop.slug}`} className="mt-4 inline-flex h-10 items-center justify-center rounded-lg border border-pink-200 bg-white px-4 text-sm font-bold text-[#e4147f]">
+                  Ver tienda
+                </Link>
+              </div>
             )}
           </div>
         </section>

@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { MagnifyingGlassIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 const fallbackImage = "/favicon-96x96.png";
 
@@ -32,18 +32,14 @@ export default function MercadoCreativoPage() {
     <>
       <Head>
         <title>Mercado Creativo Rossy Resina</title>
-        <meta name="description" content="Descubre productos artesanales de emprendedoras dentro del marketplace Rossy Resina." />
+        <meta name="description" content="Descubre productos artesanales dentro del marketplace Rossy Resina." />
       </Head>
       <main className="bg-white text-slate-950">
         <section className="border-b border-pink-100 bg-[#fff4f9]">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-[#e4147f]">
-              <SparklesIcon className="h-5 w-5" />
-              Marketplace de emprendedoras
-            </span>
             <h1 className="mt-5 max-w-3xl text-4xl font-black leading-tight sm:text-5xl">Mercado Creativo Rossy Resina</h1>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-700">
-              Productos personalizados, piezas artesanales y creaciones únicas de nuestra comunidad.
+              Productos personalizados, piezas artesanales y creaciones únicas reunidas en un solo marketplace.
             </p>
           </div>
         </section>
@@ -63,7 +59,7 @@ export default function MercadoCreativoPage() {
             <ProductSection title="Productos destacados" products={data.featured} />
           )}
           <ProductSection title="Productos recientes" products={data.recent || []} />
-          <ProductSection title="Todos los productos aprobados" products={filtered} />
+          <ProductSection title="Todos los productos" products={filtered} />
         </section>
       </main>
     </>
@@ -78,18 +74,35 @@ function ProductSection({ title, products }: { title: string; products: any[] })
         <div className="rounded-xl border border-dashed border-pink-200 p-8 text-sm text-slate-500">Aun no hay productos publicados en esta sección.</div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
-            <Link key={product.id} href={`/producto/${product.slug}`} className="group overflow-hidden rounded-xl border border-pink-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-              <div className="relative aspect-square bg-slate-100">
-                <img src={product.images?.[0] || fallbackImage} alt={product.name} className="h-full w-full object-cover" />
-              </div>
-              <div className="p-4">
-                <p className="line-clamp-1 text-base font-black text-slate-950">{product.name}</p>
-                <p className="mt-1 text-sm text-slate-500">{product.shop?.commercialName || "Rossy Resina Marketplace"}</p>
-                <p className="mt-3 text-lg font-black text-[#e4147f]">S/ {Number(product.price || 0).toFixed(2)}</p>
-              </div>
-            </Link>
-          ))}
+          {products.map((product) => {
+            const whatsapp = String(product.shop?.whatsapp || "").replace(/\D/g, "");
+            const message = encodeURIComponent(`Hola, quiero consultar por el producto ${product.name} en Rossy Resina.`);
+            return (
+              <article key={product.id} className="group overflow-hidden rounded-xl border border-pink-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                <Link href={`/producto/${product.slug}`} className="block">
+                  <div className="relative aspect-square bg-slate-100">
+                    <img src={product.images?.[0] || fallbackImage} alt={product.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  </div>
+                </Link>
+                <div className="p-4">
+                  <Link href={`/producto/${product.slug}`} className="block">
+                    <p className="line-clamp-2 min-h-[44px] text-base font-black text-slate-950 group-hover:text-[#e4147f]">{product.name}</p>
+                  </Link>
+                  <p className="mt-1 line-clamp-1 text-sm text-slate-500">{product.shop?.commercialName || "Tienda Rossy Resina"}</p>
+                  <p className="mt-3 text-lg font-black text-[#e4147f]">S/ {Number(product.price || 0).toFixed(2)}</p>
+                  {whatsapp && (
+                    <a
+                      href={`https://wa.me/${whatsapp}?text=${message}`}
+                      onClick={() => fetch("/api/marketplace/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "WHATSAPP_CLICK", shopId: product.shop?.id, productId: product.id }) })}
+                      className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#e4147f] px-4 text-sm font-bold text-white"
+                    >
+                      Contactar
+                    </a>
+                  )}
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
     </section>
