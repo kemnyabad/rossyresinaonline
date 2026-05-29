@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CheckCircleIcon,
@@ -30,6 +30,34 @@ const VendeConNosotrosPage = () => {
   const [sending, setSending] = useState(false);
   const [logoData, setLogoData] = useState("");
   const [logoNotice, setLogoNotice] = useState("");
+  const [marketplaceContext, setMarketplaceContext] = useState<any>(null);
+  const [contextLoading, setContextLoading] = useState(true);
+
+  const loadMarketplaceContext = async () => {
+    setContextLoading(true);
+    try {
+      const res = await fetch("/api/marketplace/me", { cache: "no-store" });
+      const data = await res.json().catch(() => null);
+      if (res.ok) setMarketplaceContext(data);
+      else setMarketplaceContext(null);
+    } catch {
+      setMarketplaceContext(null);
+    } finally {
+      setContextLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMarketplaceContext();
+  }, []);
+
+  const application = marketplaceContext?.application || null;
+  const shop = marketplaceContext?.shop || null;
+  const applicationStatus = String(application?.status || "");
+  const isApproved = marketplaceContext?.role === "SELLER" || applicationStatus === "APPROVED";
+  const isPending = applicationStatus === "PENDING";
+  const isRejected = applicationStatus === "REJECTED";
+  const shouldShowForm = !application || isRejected;
 
   const handleLogoFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -78,6 +106,12 @@ const VendeConNosotrosPage = () => {
         return;
       }
       setSubmitted(true);
+      setMarketplaceContext((current: any) => ({
+        ...(current || {}),
+        role: "CUSTOMER",
+        application: body.application,
+      }));
+      await loadMarketplaceContext();
       form.reset();
     } catch {
       setError("Error de conexion. Intenta nuevamente.");
@@ -111,10 +145,10 @@ const VendeConNosotrosPage = () => {
                 Forma parte de nuestra comunidad de emprendedoras y muestra tus productos personalizados a más clientes.
               </p>
               <a
-                href="#registro"
+                href={isApproved ? "/mi-tienda" : "#registro"}
                 className="mt-8 inline-flex h-12 w-fit items-center justify-center rounded-lg bg-[#e4147f] px-6 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#c21885]"
               >
-                Quiero registrarme
+                {isApproved ? "Ir a Mi Tienda" : application ? "Ver mi solicitud" : "Quiero registrarme"}
               </a>
             </div>
 
@@ -175,8 +209,26 @@ const VendeConNosotrosPage = () => {
           <div className="rounded-2xl border border-pink-100 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:p-8">
             <div className="mb-8">
               <p className="text-sm font-bold uppercase tracking-wide text-[#e4147f]">Formulario de registro</p>
-              <h2 className="mt-2 text-2xl font-black text-slate-950">Cuéntanos sobre tu emprendimiento</h2>
+              <h2 className="mt-2 text-2xl font-black text-slate-950">
+                {application ? "Estado de tu solicitud" : "Cuéntanos sobre tu emprendimiento"}
+              </h2>
             </div>
+
+            {contextLoading && (
+              <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
+                Consultando tu información de vendedora...
+              </div>
+            )}
+
+            {application && (
+              <ApplicationStatusPanel
+                application={application}
+                shop={shop}
+                isApproved={isApproved}
+                isPending={isPending}
+                isRejected={isRejected}
+              />
+            )}
 
             {submitted && (
               <div className="mb-6 flex gap-3 rounded-xl border border-pink-200 bg-[#fff0f7] p-4 text-sm font-semibold text-slate-800">
@@ -195,38 +247,44 @@ const VendeConNosotrosPage = () => {
               </div>
             )}
 
+            {shouldShowForm && (
             <form onSubmit={handleSubmit} className="grid gap-5 md:grid-cols-2">
+              {isRejected && (
+                <div className="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+                  Tu solicitud fue rechazada. Puedes corregir la información y enviarla nuevamente.
+                </div>
+              )}
               <label className="grid gap-2 text-sm font-bold text-slate-800">
                 Nombre completo
-                <input required name="nombre" className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
+                <input required name="nombre" defaultValue={application?.fullName || ""} className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-slate-800">
                 Nombre del emprendimiento
-                <input required name="emprendimiento" className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
+                <input required name="emprendimiento" defaultValue={application?.businessName || ""} className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-slate-800">
                 Ciudad
-                <input required name="ciudad" className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
+                <input required name="ciudad" defaultValue={application?.city || ""} className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-slate-800">
                 WhatsApp
-                <input required name="whatsapp" type="tel" className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
+                <input required name="whatsapp" type="tel" defaultValue={application?.whatsapp || ""} className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-slate-800 md:col-span-2">
                 Tipo de productos que vende
-                <input required name="productos" className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
+                <input required name="productos" defaultValue={application?.productType || ""} className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-slate-800 md:col-span-2">
                 Breve descripción del emprendimiento
-                <textarea required name="descripcion" rows={4} className="rounded-lg border border-slate-200 px-4 py-3 font-medium outline-none focus:border-[#e4147f]" />
+                <textarea required name="descripcion" rows={4} defaultValue={application?.description || ""} className="rounded-lg border border-slate-200 px-4 py-3 font-medium outline-none focus:border-[#e4147f]" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-slate-800">
                 Link de redes sociales
-                <input name="redes" type="url" placeholder="https://instagram.com/..." className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
+                <input name="redes" type="url" defaultValue={application?.socialUrl || ""} placeholder="https://instagram.com/..." className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-slate-800">
                 Link de foto o logo del emprendimiento
-                <input name="logoUrl" type="url" placeholder="https://..." className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
+                <input name="logoUrl" type="url" defaultValue={application?.logoUrl || ""} placeholder="https://..." className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]" />
               </label>
               <label className="grid gap-2 text-sm font-bold text-slate-800 md:col-span-2">
                 Subir foto o logo del emprendimiento
@@ -239,11 +297,117 @@ const VendeConNosotrosPage = () => {
                 </button>
               </div>
             </form>
+            )}
           </div>
         </section>
       </main>
     </>
   );
 };
+
+function ApplicationStatusPanel({
+  application,
+  shop,
+  isApproved,
+  isPending,
+  isRejected,
+}: {
+  application: any;
+  shop: any;
+  isApproved: boolean;
+  isPending: boolean;
+  isRejected: boolean;
+}) {
+  const statusLabel = isApproved ? "Aprobada" : isRejected ? "Rechazada" : "Pendiente";
+  const statusClass = isApproved
+    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+    : isRejected
+      ? "border-red-200 bg-red-50 text-red-800"
+      : "border-amber-200 bg-amber-50 text-amber-800";
+
+  return (
+    <div className="mb-8 overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm">
+      <div className="border-b border-pink-100 bg-[#fff8fb] p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-wide text-[#e4147f]">Tu información de vendedora</p>
+            <h3 className="mt-1 text-xl font-black text-slate-950">{application.businessName || "Emprendimiento sin nombre"}</h3>
+          </div>
+          <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-sm font-black ${statusClass}`}>
+            {statusLabel}
+          </span>
+        </div>
+        {isPending && (
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Estos son los datos que recibimos. Cuando el administrador apruebe tu solicitud, esta información se usará para crear tu tienda.
+          </p>
+        )}
+        {isApproved && (
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Tu solicitud está aprobada. Ya puedes entrar a Mi Tienda para publicar productos y gestionar tu emprendimiento.
+          </p>
+        )}
+        {isRejected && (
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Revisa la observación del equipo y vuelve a enviar tu información corregida.
+          </p>
+        )}
+      </div>
+
+      <div className="grid gap-4 p-5 md:grid-cols-[180px_1fr]">
+        <div className="flex flex-col items-start gap-3">
+          <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-pink-100 bg-[#fff0f7] text-[#e4147f]">
+            {application.logoUrl ? (
+              <img src={application.logoUrl} alt={application.businessName || "Logo del emprendimiento"} className="h-full w-full object-cover" />
+            ) : (
+              <ShoppingBagIcon className="h-10 w-10" />
+            )}
+          </div>
+          {shop?.slug && (
+            <Link href={`/tienda/${shop.slug}`} className="text-sm font-bold text-[#e4147f] hover:underline">
+              Ver tienda pública
+            </Link>
+          )}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <InfoItem label="Nombre completo" value={application.fullName} />
+          <InfoItem label="Nombre comercial" value={application.businessName} />
+          <InfoItem label="Ciudad" value={application.city} />
+          <InfoItem label="WhatsApp" value={application.whatsapp} />
+          <InfoItem label="Tipo de productos" value={application.productType} />
+          <InfoItem label="Redes sociales" value={application.socialUrl} />
+          <div className="sm:col-span-2">
+            <InfoItem label="Descripción que aparecerá en tu tienda" value={application.description} />
+          </div>
+          {application.note && (
+            <div className="sm:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Observación del administrador</p>
+              <p className="mt-1 text-sm font-semibold text-amber-900">{application.note}</p>
+            </div>
+          )}
+          {isApproved && (
+            <div className="sm:col-span-2">
+              <Link href="/mi-tienda" className="inline-flex h-11 items-center justify-center rounded-lg bg-[#e4147f] px-5 text-sm font-bold text-white">
+                Entrar a Mi Tienda
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoItem({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold text-slate-900">
+        {String(value || "").trim() || "No registrado"}
+      </p>
+    </div>
+  );
+}
 
 export default VendeConNosotrosPage;

@@ -40,6 +40,39 @@ function mapDbApplication(row: any) {
   };
 }
 
+function mapDbProduct(row: any) {
+  const meta = safeParseMessage(row?.mensaje);
+  const estado = String(row?.estado || "PENDIENTE").toUpperCase();
+  const status = estado === "PUBLICADO" || estado === "PUBLISHED"
+    ? "PUBLISHED"
+    : estado === "PAUSADO" || estado === "PAUSED"
+      ? "PAUSED"
+      : estado === "RECHAZADO" || estado === "REJECTED"
+        ? "REJECTED"
+        : "PENDING";
+
+  return {
+    id: `dbprod_${row.id}`,
+    sellerEmail: String(row.email || ""),
+    shopId: `dbshop_${row.email || ""}`,
+    slug: String(meta.slug || meta.nombre || row.id || "producto")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, ""),
+    name: String(meta.nombre || ""),
+    category: String(meta.categoria || ""),
+    price: Number(meta.precio || 0),
+    description: String(meta.descripcion || ""),
+    images: Array.isArray(meta.imagenes) ? meta.imagenes.map(String).filter(Boolean) : [],
+    status,
+    featured: Boolean(meta.destacado),
+    rejectionReason: String(row.notaAdmin || ""),
+    createdAt: row.createdAt?.toISOString?.() || String(row.createdAt || ""),
+    updatedAt: row.updatedAt?.toISOString?.() || String(row.updatedAt || ""),
+    storage: "database",
+  };
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
   const email = String(session?.user?.email || "").trim().toLowerCase();
@@ -73,18 +106,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       : null;
     const shop = context.shop || syntheticShop;
-    const products = context.shop ? data.products.filter((item) => item.shopId === context.shop?.id) : [];
+    const localProducts = context.shop ? data.products.filter((item) => item.shopId === context.shop?.id) : [];
+    const dbProductRows = await (prisma as any).capacitacionInscripcion.findMany({
+      where: { email, curso: "MARKETPLACE_PRODUCT" },
+      orderBy: { createdAt: "desc" },
+    });
+    const dbProducts = dbProductRows.map(mapDbProduct);
+    const products = [...dbProducts, ...localProducts];
+    const stats = {
+      ...getSellerStats(context.shop?.id),
+      published: products.filter((item: any) => item.status === "PUBLISHED").length,
+      pending: products.filter((item: any) => item.status === "PENDING").length,
+    };
     return res.status(200).json({
       role,
       application,
       shop,
       products,
-      stats: getSellerStats(context.shop?.id),
+      stats,
     });
   }
 
   if (req.method === "PUT") {
-    const shop = updateSellerShop(email, req.body || {});
+    const body = req.body || {};
+    if (String(body.storage || "") === "database" || String(body.id || "").startsWith("dbshop_")) {
+      const row = await (prisma as any).capacitacionInscripcion.findFirst({
+        where: { email, curso: "VENDE_CON_NOSOTROS" },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!row) return res.status(403).json({ error: "Tu tienda aun no esta activa." });
+      const current = safeParseMessage(row.mensaje);
+      const next = {
+        ...current,
+        emprendimiento: String(body.commercialName ?? current.emprendimiento ?? ""),
+        ciudad: String(body.city ?? current.ciudad ?? ""),
+        descripcion: String(body.description ?? current.descripcion ?? ""),
+        whatsapp: String(body.whatsapp ?? current.whatsapp ?? ""),
+        redes: String(body.instagram ?? current.redes ?? ""),
+        facebook: String(body.facebook ?? current.facebook ?? ""),
+        tiktok: String(body.tiktok ?? current.tiktok ?? ""),
+        logo: String(body.logoUrl ?? current.logo ?? ""),
+      };
+      await (prisma as any).capacitacionInscripcion.update({
+        where: { id: row.id },
+        data: {
+          nombre: String(body.commercialName || row.nombre),
+          telefono: String(body.whatsapp || row.telefono || ""),
+          mensaje: JSON.stringify(next),
+        },
+      });
+      return res.status(200).json({ shop: { ...body, storage: "database" } });
+    }
+
+    const shop = updateSellerShop(email, body);
     if (!shop) return res.status(403).json({ error: "Tu tienda aun no esta activa." });
     return res.status(200).json({ shop });
   }

@@ -56,6 +56,7 @@ export default function MiTiendaPage() {
   }, []);
 
   const shop = context?.shop;
+  const application = context?.application;
   const products = Array.isArray(context?.products) ? context.products : [];
   const stats = context?.stats || {};
 
@@ -167,6 +168,38 @@ export default function MiTiendaPage() {
 
           {notice && <div className="mb-5 rounded-xl border border-pink-200 bg-white p-4 text-sm font-semibold text-slate-800">{notice}</div>}
 
+          <section className="mb-6 rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-5 md:flex-row md:items-start">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-pink-100 bg-[#fff0f7] text-[#e4147f]">
+                {shop.logoUrl ? (
+                  <img src={shop.logoUrl} alt={shop.commercialName || "Logo del emprendimiento"} className="h-full w-full object-cover" />
+                ) : (
+                  <ShoppingBagIcon className="h-10 w-10" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-wide text-[#e4147f]">Información real de tu tienda</p>
+                    <h2 className="mt-1 text-2xl font-black text-slate-950">{shop.commercialName || application?.businessName || "Mi emprendimiento"}</h2>
+                    <p className="mt-1 text-sm font-semibold text-slate-500">{shop.city || application?.city || "Ciudad no registrada"}</p>
+                  </div>
+                  <span className="inline-flex w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+                    Tienda aprobada
+                  </span>
+                </div>
+                <p className="mt-4 max-w-4xl whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                  {shop.description || application?.description || "Aun no hay descripción registrada."}
+                </p>
+                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+                  <InfoItem label="WhatsApp" value={shop.whatsapp || application?.whatsapp} />
+                  <InfoItem label="Instagram / redes" value={shop.instagram || application?.socialUrl} />
+                  <InfoItem label="Tipo de productos" value={application?.productType} />
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {statCards.map(([label, value]) => (
               <article key={label} className="rounded-xl border border-pink-100 bg-white p-4 shadow-sm">
@@ -274,5 +307,14 @@ function Input(props: any) {
         className="h-12 rounded-lg border border-slate-200 px-4 font-medium outline-none focus:border-[#e4147f]"
       />
     </label>
+  );
+}
+
+function InfoItem({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-1 break-words font-semibold text-slate-900">{String(value || "").trim() || "No registrado"}</p>
+    </div>
   );
 }
