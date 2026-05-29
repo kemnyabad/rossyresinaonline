@@ -21,6 +21,7 @@ const BottomHeader = () => {
     { href: "/categoria/accesorios", label: "Accesorios" },
     { href: "/categoria/resina", label: "Resina" },
     { href: "/categoria/creaciones", label: "Creaciones" },
+    { href: "/mercado-creativo", label: "Mercado Creativo" },
     { href: "/escuela", label: "Escuela" },
   ];
   const mainNav = [

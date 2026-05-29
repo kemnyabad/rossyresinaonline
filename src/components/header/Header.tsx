@@ -5,6 +5,7 @@ import {
   CameraIcon,
   UserIcon,
   ShoppingCartIcon,
+  ShoppingBagIcon,
   Bars3Icon,
   XMarkIcon,
   TagIcon,
@@ -97,6 +98,7 @@ const Header = () => {
   const searchCategoryRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [sellerContext, setSellerContext] = useState<any>(null);
   const deferredQuery = useDeferredValue(searchQuery);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,9 +111,7 @@ const Header = () => {
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
-      return;
     }
-    router.push("/");
   };
   const submitSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -135,6 +135,7 @@ const Header = () => {
     { href: "/categoria/accesorios", label: "Accesorios", icon: TagIcon },
     { href: "/categoria/resina", label: "Resina", icon: SparklesIcon },
     { href: "/categoria/creaciones", label: "Creaciones", icon: SparklesIcon },
+    { href: "/mercado-creativo", label: "Mercado Creativo", icon: ShoppingBagIcon },
     { href: "/escuela", label: "Escuela", icon: BookOpenIcon },
     { href: "/productos?ofertas=1", label: "Ofertas", icon: GiftIcon },
     { href: "/rifas", label: "Rifas", icon: GiftIcon },
@@ -236,6 +237,26 @@ const Header = () => {
     : 0;
   const cartCount = isHydrated && productData ? productData.length : 0;
   const isAuthenticated = Boolean(sessionUser?.email || storeUser?.email);
+  const isSeller = sellerContext?.role === "SELLER";
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSellerContext(null);
+      return;
+    }
+    let alive = true;
+    fetch("/api/marketplace/me", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (alive) setSellerContext(data);
+      })
+      .catch(() => {
+        if (alive) setSellerContext(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [isAuthenticated]);
 
   return (
     <div className="w-full bg-[#86b817] text-white sticky top-0 z-50 border-b border-[#749f14] shadow-sm">
@@ -387,6 +408,32 @@ const Header = () => {
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
+            <div className="grid gap-2 border-b border-gray-100 bg-[#fff7fb] p-3">
+              <p className="px-1 text-xs font-bold uppercase tracking-wide text-slate-500">Usuario</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
+                  className="flex min-h-[50px] items-center gap-3 rounded-xl border border-pink-100 bg-white px-3 py-2 text-left text-sm font-semibold text-slate-800"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff0f7] text-[#e4147f]">
+                    <UserIcon className="h-5 w-5" />
+                  </span>
+                  Mi cuenta
+                </Link>
+                <Link
+                  href="/vende-con-nosotros"
+                  className="flex min-h-[50px] items-center gap-3 rounded-xl border border-pink-100 bg-white px-3 py-2 text-left text-sm font-semibold text-slate-800"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff0f7] text-[#e4147f]">
+                    <ShoppingBagIcon className="h-5 w-5" />
+                  </span>
+                  <span className="leading-tight">
+                    <span className="block">Vende con nosotros</span>
+                    <span className="block text-xs font-semibold text-slate-500">Modo beta</span>
+                  </span>
+                </Link>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-2 p-3">
               {mobileMenuItems.map((item) => {
                 const Icon = item.icon;
@@ -430,7 +477,7 @@ const Header = () => {
                 Rossy Resina
               </span>
               <span className="mt-0.5 truncate text-[13px] font-medium leading-5 text-white/85">
-                Resina, moldes y pigmentos
+                Tienda de Artesania
               </span>
             </div>
           </div>
@@ -562,13 +609,27 @@ const Header = () => {
         </div>}
 
         {/* actions */}
-        <div className={`ml-auto flex flex-none items-center justify-end gap-3 lg:gap-4 ${isResinyPage ? "min-w-0" : "min-w-[280px] max-w-[360px] xl:min-w-[330px]"}`}>
+        <div className={`ml-auto flex flex-none items-center justify-end gap-3 lg:gap-4 ${isResinyPage ? "min-w-0" : "min-w-[360px] lgl:min-w-[500px] lgl:max-w-[560px]"}`}>
           <Link
             href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
               className="lg:hidden p-2 rounded-full border border-white/35 text-white hover:border-white"
             aria-label={isAuthenticated ? "Ir a mi perfil" : "Iniciar sesión"}
           >
             <UserIcon className="w-5 h-5" />
+          </Link>
+
+          <Link
+            href="/vende-con-nosotros"
+            className="group hidden min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-sm text-white transition-colors hover:border-white hover:bg-white hover:text-[#e4147f] md:flex lgl:px-3"
+            aria-label="Vende con nosotros"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-[#e4147f] group-hover:ring-[#e4147f]">
+              <ShoppingBagIcon className="h-5 w-5" />
+            </span>
+            <div className="hidden min-w-0 leading-tight text-left lgl:block">
+              <div className="whitespace-nowrap text-[15px] font-semibold text-white transition-colors group-hover:text-[#e4147f]">Vende con nosotros</div>
+              <div className="mt-0.5 text-xs font-semibold text-white/75 transition-colors group-hover:text-[#e4147f]/75">Modo beta</div>
+            </div>
           </Link>
 
           <div className="relative hidden md:block" ref={profileRef}>
@@ -657,6 +718,16 @@ const Header = () => {
                   <div className="py-2">
                     <Link href="/account" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                       Mi Cuenta
+                    </Link>
+                    {isSeller && (
+                      <Link href="/mi-tienda" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                        <ShoppingBagIcon className="h-4 w-4 text-[#e4147f]" />
+                        Mi Tienda
+                      </Link>
+                    )}
+                    <Link href="/vende-con-nosotros" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                      <ShoppingBagIcon className="h-4 w-4 text-[#e4147f]" />
+                      Vende con nosotros
                     </Link>
                     <Link href="/track-orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                       Mis pedidos

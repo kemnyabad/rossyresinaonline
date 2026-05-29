@@ -20,6 +20,7 @@ import {
   StarIcon,
   TagIcon,
   TruckIcon,
+  ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
 
 export default function AccountPage() {
@@ -27,6 +28,7 @@ export default function AccountPage() {
   const { userInfo, productData } = useSelector((state: StateProps) => state.next);
   const dispatch = useDispatch();
   const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
+  const [sellerContext, setSellerContext] = useState<any>(null);
   const isAdminSession = (session?.user as any)?.role === "ADMIN";
   const storeUser = isAdminSession ? null : (userInfo as any);
   const sessionUser = !isAdminSession ? session?.user : null;
@@ -66,6 +68,24 @@ export default function AccountPage() {
       alive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let alive = true;
+    fetch("/api/marketplace/me", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (alive) setSellerContext(data);
+      })
+      .catch(() => {
+        if (alive) setSellerContext(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [isAuthenticated]);
+
+  const isSeller = sellerContext?.role === "SELLER";
 
   const mobileProducts = useMemo(() => {
     if (recommendedProducts.length > 0) return recommendedProducts;
@@ -149,6 +169,8 @@ export default function AccountPage() {
 
         <section className="mt-2 divide-y divide-gray-100 bg-white">
           <MobileAccountRow href="/track-orders" icon={<ClipboardDocumentListIcon className="h-6 w-6" />} label="Tus pedidos" />
+          <MobileAccountRow href="/shipping-address" icon={<HomeIcon className="h-6 w-6" />} label="Mis datos" />
+          {isSeller && <MobileAccountRow href="/mi-tienda" icon={<ShoppingBagIcon className="h-6 w-6" />} label="Mi Tienda" />}
           <MobileAccountRow href="/messages" icon={<ChatBubbleOvalLeftEllipsisIcon className="h-6 w-6" />} label="Mensajes" />
           <MobileAccountRow href="/reviews" icon={<StarIcon className="h-6 w-6" />} label="Reseñas" />
         </section>
@@ -234,7 +256,7 @@ export default function AccountPage() {
             </div>
           </div>
 
-          <div className="grid gap-0 md:grid-cols-4">
+          <div className="grid gap-0 md:grid-cols-5">
             <AccountAction
               href="/track-orders"
               icon={<ClipboardDocumentListIcon className="h-6 w-6" />}
@@ -244,9 +266,17 @@ export default function AccountPage() {
             <AccountAction
               href="/shipping-address"
               icon={<HomeIcon className="h-6 w-6" />}
-              title="Dirección de envío"
-              description="Guarda tus datos para completar pedidos más rápido."
+              title="Mis datos"
+              description="Mantén actualizados tus datos personales y dirección."
             />
+            {isSeller && (
+              <AccountAction
+                href="/mi-tienda"
+                icon={<ShoppingBagIcon className="h-6 w-6" />}
+                title="Mi Tienda"
+                description="Gestiona perfil, productos, moderación y estadísticas."
+              />
+            )}
             <AccountAction
               href="/messages"
               icon={<UserCircleIcon className="h-6 w-6" />}

@@ -2,7 +2,7 @@
 const bcrypt = require("bcryptjs");
 import prisma from "./prisma";
 
-export type UserRole = "ADMIN" | "EDITOR" | "CUSTOMER";
+export type UserRole = "ADMIN" | "EDITOR" | "SELLER" | "CUSTOMER";
 
 export interface AppUser {
   id: string;
