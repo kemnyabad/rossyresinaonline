@@ -10,8 +10,7 @@ import {
   updateSellerProduct,
 } from "@/lib/marketplaceStore";
 import prisma from "@/lib/prisma";
-
-const DB_PREFIX = "dbprod_";
+import { DB_PRODUCT_PREFIX, mapDbProduct, safeParseMarketplaceMessage } from "@/lib/marketplaceDb";
 
 const slugify = (value: string) =>
   String(value || "producto")
@@ -21,44 +20,6 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80) || "producto";
-
-function safeParse(value: string) {
-  try {
-    return JSON.parse(String(value || "{}"));
-  } catch {
-    return {};
-  }
-}
-
-function mapDbProduct(row: any) {
-  const meta = safeParse(row.mensaje);
-  const estado = String(row.estado || "PENDIENTE").toUpperCase();
-  const status = estado === "PUBLICADO" || estado === "PUBLISHED"
-    ? "PUBLISHED"
-    : estado === "PAUSADO" || estado === "PAUSED"
-      ? "PAUSED"
-      : estado === "RECHAZADO" || estado === "REJECTED"
-        ? "REJECTED"
-        : "PENDING";
-
-  return {
-    id: `${DB_PREFIX}${row.id}`,
-    sellerEmail: String(row.email || ""),
-    shopId: `dbshop_${row.email || ""}`,
-    slug: String(meta.slug || slugify(meta.nombre || row.id)),
-    name: String(meta.nombre || ""),
-    category: String(meta.categoria || ""),
-    price: Number(meta.precio || 0),
-    description: String(meta.descripcion || ""),
-    images: Array.isArray(meta.imagenes) ? meta.imagenes.map(String).filter(Boolean) : [],
-    status,
-    featured: Boolean(meta.destacado),
-    rejectionReason: String(row.notaAdmin || ""),
-    createdAt: row.createdAt?.toISOString?.() || String(row.createdAt || ""),
-    updatedAt: row.updatedAt?.toISOString?.() || String(row.updatedAt || ""),
-    storage: "database",
-  };
-}
 
 async function createDbProduct(email: string, body: any) {
   const payload = {
@@ -130,11 +91,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const body = req.body || {};
     const id = String(body.id || "");
     if (!id) return res.status(400).json({ error: "Producto no identificado." });
-    if (id.startsWith(DB_PREFIX)) {
-      const dbId = id.slice(DB_PREFIX.length);
+    if (id.startsWith(DB_PRODUCT_PREFIX)) {
+      const dbId = id.slice(DB_PRODUCT_PREFIX.length);
       const row = await (prisma as any).capacitacionInscripcion.findUnique({ where: { id: dbId } });
       if (!row || String(row.email || "").toLowerCase() !== email) return res.status(404).json({ error: "Producto no encontrado." });
-      const meta = safeParse(row.mensaje);
+      const meta = safeParseMarketplaceMessage(row.mensaje);
       if (body.action === "pause" || body.action === "reactivate") {
         const estado = body.action === "pause" ? "PAUSADO" : "PENDIENTE";
         const updated = await (prisma as any).capacitacionInscripcion.update({ where: { id: dbId }, data: { estado } });
@@ -170,8 +131,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "DELETE") {
     const id = String(req.query.id || "");
     if (!id) return res.status(400).json({ error: "Producto no identificado." });
-    if (id.startsWith(DB_PREFIX)) {
-      const dbId = id.slice(DB_PREFIX.length);
+    if (id.startsWith(DB_PRODUCT_PREFIX)) {
+      const dbId = id.slice(DB_PRODUCT_PREFIX.length);
       const row = await (prisma as any).capacitacionInscripcion.findUnique({ where: { id: dbId } });
       if (!row || String(row.email || "").toLowerCase() !== email) return res.status(404).json({ error: "Producto no encontrado." });
       await (prisma as any).capacitacionInscripcion.delete({ where: { id: dbId } });

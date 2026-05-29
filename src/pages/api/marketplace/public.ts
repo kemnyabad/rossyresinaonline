@@ -1,16 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readMarketplace } from "@/lib/marketplaceStore";
+import { getDbMarketplaceData } from "@/lib/marketplaceDb";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Metodo no permitido" });
 
   const data = readMarketplace();
+  const dbData = await getDbMarketplaceData();
+  const shops = [...dbData.shops, ...data.shops];
+  const productsSource = [...dbData.products, ...data.products];
   const shopSlug = String(req.query.shop || "");
   const productSlug = String(req.query.product || "");
-  const published = data.products.filter((item) => item.status === "PUBLISHED");
+  const published = productsSource.filter((item) => item.status === "PUBLISHED");
 
   if (shopSlug) {
-    const shop = data.shops.find((item) => item.slug === shopSlug && item.status === "ACTIVE");
+    const shop = shops.find((item) => item.slug === shopSlug && item.status === "ACTIVE");
     if (!shop) return res.status(404).json({ error: "Tienda no encontrada" });
     return res.status(200).json({
       shop,
@@ -21,14 +25,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (productSlug) {
     const product = published.find((item) => item.slug === productSlug);
     if (!product) return res.status(404).json({ error: "Producto no encontrado" });
-    const shop = data.shops.find((item) => item.id === product.shopId) || null;
+    const shop = shops.find((item) => item.id === product.shopId) || null;
     return res.status(200).json({ product, shop });
   }
 
   const categories = Array.from(new Set(published.map((item) => item.category).filter(Boolean))).sort();
   const products = published.map((product) => ({
     ...product,
-    shop: data.shops.find((shop) => shop.id === product.shopId) || null,
+    shop: shops.find((shop) => shop.id === product.shopId) || null,
   }));
   return res.status(200).json({
     products,

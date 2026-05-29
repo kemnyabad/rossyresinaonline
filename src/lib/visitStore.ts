@@ -26,7 +26,16 @@ type VisitStore = {
   paths: Record<string, number>;
   visitors: Record<string, VisitorAgg>;
   users: Record<string, UserAgg>;
-  recent: Array<{ at: string; path: string; country: string; city: string; userEmail: string; visitorId: string }>;
+  recent: Array<{
+    at: string;
+    path: string;
+    country: string;
+    city: string;
+    userEmail: string;
+    visitorId: string;
+    appMode?: boolean;
+    appEvent?: string;
+  }>;
 };
 
 const runtimePath = path.join(process.cwd(), "data", "visits.json");
@@ -143,6 +152,8 @@ export function recordVisit(input: {
   visitorId: string;
   userEmail?: string;
   userName?: string;
+  appMode?: boolean;
+  appEvent?: string;
   at?: string;
 }) {
   const store = readVisitStore();
@@ -153,6 +164,8 @@ export function recordVisit(input: {
   const visitorId = String(input.visitorId || "anon").trim() || "anon";
   const userEmail = String(input.userEmail || "").trim().toLowerCase();
   const userName = String(input.userName || "").trim();
+  const appMode = Boolean(input.appMode);
+  const appEvent = String(input.appEvent || "").trim().toLowerCase();
 
   store.totalVisits += 1;
   store.countries[country] = Number(store.countries[country] || 0) + 1;
@@ -193,7 +206,7 @@ export function recordVisit(input: {
     };
   }
 
-  store.recent.unshift({ at, path: route, country, city, userEmail, visitorId });
+  store.recent.unshift({ at, path: route, country, city, userEmail, visitorId, appMode, appEvent });
   if (store.recent.length > 200) store.recent = store.recent.slice(0, 200);
 
   writeVisitStore(store);

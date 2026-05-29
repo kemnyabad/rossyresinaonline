@@ -2,61 +2,30 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { isAdminApiRequest } from "@/lib/adminAuth";
 import { decideSellerApplication, moderateProduct, readMarketplace } from "@/lib/marketplaceStore";
-
-const DB_APPLICATION_PREFIX = "db_";
-
-function safeParseMessage(value: string) {
-  try {
-    return JSON.parse(String(value || "{}"));
-  } catch {
-    return {};
-  }
-}
-
-function mapDbApplication(row: any) {
-  const meta = safeParseMessage(row.mensaje);
-  const estado = String(row.estado || "PENDIENTE").toUpperCase();
-  const status = estado === "APROBADO" || estado === "APPROVED"
-    ? "APPROVED"
-    : estado === "RECHAZADO" || estado === "REJECTED"
-      ? "REJECTED"
-      : "PENDING";
-
-  return {
-    id: `${DB_APPLICATION_PREFIX}${row.id}`,
-    userEmail: String(row.email || ""),
-    fullName: String(row.nombre || ""),
-    businessName: String(meta.emprendimiento || row.nombre || ""),
-    city: String(meta.ciudad || ""),
-    whatsapp: String(meta.whatsapp || row.telefono || ""),
-    productType: String(meta.productos || ""),
-    description: String(meta.descripcion || ""),
-    socialUrl: String(meta.redes || ""),
-    logoUrl: String(meta.logo || ""),
-    status,
-    note: String(row.notaAdmin || ""),
-    createdAt: row.createdAt?.toISOString?.() || String(row.createdAt || ""),
-    updatedAt: row.updatedAt?.toISOString?.() || String(row.updatedAt || ""),
-    storage: "database",
-  };
-}
+import { DB_APPLICATION_PREFIX, DB_PRODUCT_PREFIX, getDbMarketplaceData, mapDbApplication, moderateDbProduct } from "@/lib/marketplaceDb";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (!isAdminApiRequest(req)) return res.status(401).json({ error: "No autorizado" });
 
   if (req.method === "GET") {
     const data = readMarketplace();
-    const dbRows = await (prisma as any).capacitacionInscripcion.findMany({
-      where: { curso: "VENDE_CON_NOSOTROS" },
-      orderBy: { createdAt: "desc" },
-    });
-    const dbApplications = dbRows.map(mapDbApplication);
+    const dbData = await getDbMarketplaceData();
     const existingIds = new Set(data.applications.map((item) => item.id));
+    const existingShopIds = new Set(data.shops.map((item) => item.id));
+    const existingProductIds = new Set(data.products.map((item) => item.id));
     const applications = [
-      ...dbApplications.filter((item: any) => !existingIds.has(item.id)),
+      ...dbData.applications.filter((item: any) => !existingIds.has(item.id)),
       ...data.applications,
     ];
-    return res.status(200).json({ ...data, applications });
+    const shops = [
+      ...dbData.shops.filter((item: any) => !existingShopIds.has(item.id)),
+      ...data.shops,
+    ];
+    const products = [
+      ...dbData.products.filter((item: any) => !existingProductIds.has(item.id)),
+      ...data.products,
+    ];
+    return res.status(200).json({ ...data, applications, shops, products });
   }
 
   if (req.method === "PUT") {
@@ -102,6 +71,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (body.type === "product") {
+      if (String(body.id || "").startsWith(DB_PRODUCT_PREFIX)) {
+        const product = await moderateDbProduct(String(body.id || ""), body.decision === "PUBLISHED" ? "PUBLISHED" : "REJECTED", body.note);
+        if (!product) return res.status(404).json({ error: "Producto no encontrado" });
+        return res.status(200).json({ product });
+      }
+
       const product = moderateProduct(String(body.id || ""), body.decision === "PUBLISHED" ? "PUBLISHED" : "REJECTED", body.note);
       if (!product) return res.status(404).json({ error: "Producto no encontrado" });
       return res.status(200).json({ product });

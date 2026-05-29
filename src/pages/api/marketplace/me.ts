@@ -3,75 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getSellerContext, getSellerStats, readMarketplace, updateSellerShop } from "@/lib/marketplaceStore";
 import prisma from "@/lib/prisma";
-
-function safeParseMessage(value: string) {
-  try {
-    return JSON.parse(String(value || "{}"));
-  } catch {
-    return {};
-  }
-}
-
-function mapDbApplication(row: any) {
-  const meta = safeParseMessage(row?.mensaje);
-  const estado = String(row?.estado || "PENDIENTE").toUpperCase();
-  const status = estado === "APROBADO" || estado === "APPROVED"
-    ? "APPROVED"
-    : estado === "RECHAZADO" || estado === "REJECTED"
-      ? "REJECTED"
-      : "PENDING";
-
-  return {
-    id: `db_${row.id}`,
-    userEmail: String(row.email || ""),
-    fullName: String(row.nombre || ""),
-    businessName: String(meta.emprendimiento || row.nombre || ""),
-    city: String(meta.ciudad || ""),
-    whatsapp: String(meta.whatsapp || row.telefono || ""),
-    productType: String(meta.productos || ""),
-    description: String(meta.descripcion || ""),
-    socialUrl: String(meta.redes || ""),
-    logoUrl: String(meta.logo || ""),
-    status,
-    note: String(row.notaAdmin || ""),
-    createdAt: row.createdAt?.toISOString?.() || String(row.createdAt || ""),
-    updatedAt: row.updatedAt?.toISOString?.() || String(row.updatedAt || ""),
-    storage: "database",
-  };
-}
-
-function mapDbProduct(row: any) {
-  const meta = safeParseMessage(row?.mensaje);
-  const estado = String(row?.estado || "PENDIENTE").toUpperCase();
-  const status = estado === "PUBLICADO" || estado === "PUBLISHED"
-    ? "PUBLISHED"
-    : estado === "PAUSADO" || estado === "PAUSED"
-      ? "PAUSED"
-      : estado === "RECHAZADO" || estado === "REJECTED"
-        ? "REJECTED"
-        : "PENDING";
-
-  return {
-    id: `dbprod_${row.id}`,
-    sellerEmail: String(row.email || ""),
-    shopId: `dbshop_${row.email || ""}`,
-    slug: String(meta.slug || meta.nombre || row.id || "producto")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, ""),
-    name: String(meta.nombre || ""),
-    category: String(meta.categoria || ""),
-    price: Number(meta.precio || 0),
-    description: String(meta.descripcion || ""),
-    images: Array.isArray(meta.imagenes) ? meta.imagenes.map(String).filter(Boolean) : [],
-    status,
-    featured: Boolean(meta.destacado),
-    rejectionReason: String(row.notaAdmin || ""),
-    createdAt: row.createdAt?.toISOString?.() || String(row.createdAt || ""),
-    updatedAt: row.updatedAt?.toISOString?.() || String(row.updatedAt || ""),
-    storage: "database",
-  };
-}
+import { mapDbApplication, mapDbProduct, mapDbShopFromApplication, safeParseMarketplaceMessage } from "@/lib/marketplaceDb";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
@@ -88,23 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const dbApplication = dbApplicationRow ? mapDbApplication(dbApplicationRow) : null;
     const application = context.application || dbApplication;
     const role = context.role === "SELLER" || application?.status === "APPROVED" ? "SELLER" : "CUSTOMER";
-    const syntheticShop = application?.status === "APPROVED"
-      ? {
-          id: `dbshop_${application.id}`,
-          userEmail: email,
-          slug: String(application.businessName || "mi-tienda").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
-          logoUrl: application.logoUrl || "",
-          commercialName: application.businessName || "Mi emprendimiento",
-          city: application.city || "",
-          description: application.description || "",
-          whatsapp: application.whatsapp || "",
-          facebook: "",
-          instagram: application.socialUrl || "",
-          tiktok: "",
-          status: "ACTIVE",
-          storage: "database",
-        }
-      : null;
+    const syntheticShop = application?.status === "APPROVED" ? mapDbShopFromApplication(application) : null;
     const shop = context.shop || syntheticShop;
     const localProducts = context.shop ? data.products.filter((item) => item.shopId === context.shop?.id) : [];
     const dbProductRows = await (prisma as any).capacitacionInscripcion.findMany({
@@ -135,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         orderBy: { createdAt: "desc" },
       });
       if (!row) return res.status(403).json({ error: "Tu tienda aun no esta activa." });
-      const current = safeParseMessage(row.mensaje);
+      const current = safeParseMarketplaceMessage(row.mensaje);
       const next = {
         ...current,
         emprendimiento: String(body.commercialName ?? current.emprendimiento ?? ""),
