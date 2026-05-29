@@ -86,6 +86,27 @@ export default function AccountPage() {
   }, [isAuthenticated]);
 
   const isSeller = sellerContext?.role === "SELLER";
+  const sellerApplicationStatus = String(sellerContext?.application?.status || "");
+  const marketplaceAction = isSeller
+    ? {
+        href: "/mi-tienda",
+        title: "Mi Tienda",
+        description: "Gestiona tu perfil, productos y estadísticas de vendedora.",
+        mobileLabel: "Mi Tienda",
+      }
+    : sellerApplicationStatus === "PENDING"
+      ? {
+          href: "/vende-con-nosotros",
+          title: "Solicitud pendiente",
+          description: "Tu solicitud para vender está en revisión por el equipo Rossy Resina.",
+          mobileLabel: "Solicitud pendiente",
+        }
+      : {
+          href: "/vende-con-nosotros",
+          title: "Vende con nosotros",
+          description: "Crea tu tienda dentro de Rossy Resina y muestra tus productos.",
+          mobileLabel: "Vende con nosotros",
+        };
 
   const mobileProducts = useMemo(() => {
     if (recommendedProducts.length > 0) return recommendedProducts;
@@ -170,7 +191,7 @@ export default function AccountPage() {
         <section className="mt-2 divide-y divide-gray-100 bg-white">
           <MobileAccountRow href="/track-orders" icon={<ClipboardDocumentListIcon className="h-6 w-6" />} label="Tus pedidos" />
           <MobileAccountRow href="/shipping-address" icon={<HomeIcon className="h-6 w-6" />} label="Mis datos" />
-          {isSeller && <MobileAccountRow href="/mi-tienda" icon={<ShoppingBagIcon className="h-6 w-6" />} label="Mi Tienda" />}
+          <MobileAccountRow href={marketplaceAction.href} icon={<ShoppingBagIcon className="h-6 w-6" />} label={marketplaceAction.mobileLabel} />
           <MobileAccountRow href="/messages" icon={<ChatBubbleOvalLeftEllipsisIcon className="h-6 w-6" />} label="Mensajes" />
           <MobileAccountRow href="/reviews" icon={<StarIcon className="h-6 w-6" />} label="Reseñas" />
         </section>
@@ -269,14 +290,12 @@ export default function AccountPage() {
               title="Mis datos"
               description="Mantén actualizados tus datos personales y dirección."
             />
-            {isSeller && (
-              <AccountAction
-                href="/mi-tienda"
-                icon={<ShoppingBagIcon className="h-6 w-6" />}
-                title="Mi Tienda"
-                description="Gestiona perfil, productos, moderación y estadísticas."
-              />
-            )}
+            <AccountAction
+              href={marketplaceAction.href}
+              icon={<ShoppingBagIcon className="h-6 w-6" />}
+              title={marketplaceAction.title}
+              description={marketplaceAction.description}
+            />
             <AccountAction
               href="/messages"
               icon={<UserCircleIcon className="h-6 w-6" />}

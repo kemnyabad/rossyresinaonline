@@ -204,9 +204,9 @@ export default function MiTiendaPage() {
                 )}
               </div>
               <form onSubmit={submitProduct} className="mt-5 grid gap-4">
-                <Input label="Nombre" value={productForm.name} onChange={(value) => setProductForm((p) => ({ ...p, name: value }))} required />
-                <Input label="Categoria" value={productForm.category} onChange={(value) => setProductForm((p) => ({ ...p, category: value }))} required />
-                <Input label="Precio" type="number" value={productForm.price} onChange={(value) => setProductForm((p) => ({ ...p, price: value }))} required />
+                <Input label="Nombre" value={productForm.name} onChange={(value: string) => setProductForm((p) => ({ ...p, name: value }))} required />
+                <Input label="Categoria" value={productForm.category} onChange={(value: string) => setProductForm((p) => ({ ...p, category: value }))} required />
+                <Input label="Precio" type="number" value={productForm.price} onChange={(value: string) => setProductForm((p) => ({ ...p, price: value }))} required />
                 <label className="grid gap-2 text-sm font-bold text-slate-800">
                   Descripcion
                   <textarea value={productForm.description} onChange={(e) => setProductForm((p) => ({ ...p, description: e.target.value }))} rows={4} className="rounded-lg border border-slate-200 px-4 py-3 font-medium outline-none focus:border-[#e4147f]" />
