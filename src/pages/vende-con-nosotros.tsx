@@ -29,10 +29,18 @@ const VendeConNosotrosPage = () => {
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [logoData, setLogoData] = useState("");
+  const [logoNotice, setLogoNotice] = useState("");
 
   const handleLogoFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    setLogoNotice("");
+    if (file.size > 700 * 1024) {
+      setLogoData("");
+      setLogoNotice("El logo es muy pesado para enviarlo desde el formulario. Puedes pegar un link del logo o enviarlo luego por WhatsApp.");
+      event.target.value = "";
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => setLogoData(String(reader.result || ""));
     reader.readAsDataURL(file);
@@ -60,9 +68,13 @@ const VendeConNosotrosPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const body = await res.json().catch(() => ({}));
+      const body = await res.json().catch(async () => {
+        const text = await res.text().catch(() => "");
+        return { error: text };
+      });
       if (!res.ok) {
-        setError(String(body?.error || "No se pudo enviar la solicitud."));
+        const message = String(body?.error || "No se pudo enviar la solicitud.");
+        setError(message.includes("<!DOCTYPE") ? "No se pudo enviar la solicitud. Intenta sin subir imagen o inicia sesión nuevamente." : message);
         return;
       }
       setSubmitted(true);
@@ -219,6 +231,7 @@ const VendeConNosotrosPage = () => {
               <label className="grid gap-2 text-sm font-bold text-slate-800 md:col-span-2">
                 Subir foto o logo del emprendimiento
                 <input onChange={handleLogoFile} type="file" accept="image/*" className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium file:mr-4 file:rounded-md file:border-0 file:bg-[#fff0f7] file:px-3 file:py-2 file:font-bold file:text-[#e4147f]" />
+                {logoNotice && <span className="text-xs font-semibold text-amber-700">{logoNotice}</span>}
               </label>
               <div className="md:col-span-2">
                 <button type="submit" disabled={sending} className="h-12 rounded-lg bg-slate-950 px-6 text-base font-bold text-white transition-colors hover:bg-[#e4147f] disabled:opacity-60">
