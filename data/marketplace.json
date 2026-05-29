@@ -1,5 +1,22 @@
 {
-  "applications": [],
+  "applications": [
+    {
+      "id": "app_mpr9xjle_ryq9qk",
+      "userEmail": "kemeny@gmail.com",
+      "fullName": "kemeny",
+      "businessName": "Tienda de kemeny",
+      "city": "Lima - Lima - Lima",
+      "whatsapp": "Por coordinar",
+      "productType": "Productos artesanales",
+      "description": "Solicitud de vendedor registrada desde el formulario simplificado.",
+      "socialUrl": "",
+      "logoUrl": "",
+      "status": "PENDING",
+      "note": "",
+      "createdAt": "2026-05-29T18:47:16.850Z",
+      "updatedAt": "2026-05-29T18:47:16.850Z"
+    }
+  ],
   "shops": [],
   "products": [],
   "events": []

@@ -30,6 +30,7 @@ function AppContent({
   const { data: clientSession, status } = useSession();
 
   const isAdminRoute = router.pathname.startsWith("/admin");
+  const isSellerCenterRoute = router.pathname === "/vende-con-nosotros";
   const isWholesaleRoute = router.pathname === "/mayoristas" || router.pathname === "/mayorista";
   const isRifasRoute = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/rifa/");
   const isCapacitaciones =
@@ -290,7 +291,7 @@ function AppContent({
             <Component {...pageProps} />
           </div>
         </AdminLayout>
-      ) : isWholesaleRoute ? (
+      ) : isWholesaleRoute || isSellerCenterRoute ? (
         <div key={router.asPath} className="min-h-screen bg-white" style={pageTransitionStyle}>
           <Component {...pageProps} />
         </div>

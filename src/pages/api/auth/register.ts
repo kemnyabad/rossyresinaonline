@@ -48,7 +48,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       password: pass,
       role: "CUSTOMER",
     });
-    await ensureSubscriberProfile({ userId: user.id, name: user.name, email: user.email });
     const profile = {
       dni,
       name: user.name,
@@ -59,7 +58,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       olvaAddress,
       olvaReference,
     };
-    await upsertCustomer(profile);
+    try {
+      await ensureSubscriberProfile({ userId: user.id, name: user.name, email: user.email });
+    } catch {
+      // The account is already valid even if the community profile cannot be created.
+    }
+    try {
+      await upsertCustomer(profile);
+    } catch {
+      // Customer shipping data can be completed later from the account area.
+    }
     return res.status(201).json({ id: user.id, email: user.email, name: user.name, profile });
   } catch (e: any) {
     if (e?.message === "EMAIL_EXISTS") {
