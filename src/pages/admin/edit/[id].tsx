@@ -44,6 +44,49 @@ const sanitizePriceInput = (value: any): string => {
 
 const sanitizeStockInput = (value: any): string => String(value ?? "").replace(/\D/g, "");
 
+const readUploadError = async (res: Response, fallback: string) => {
+  const text = await res.text().catch(() => "");
+  if (!text) return fallback;
+
+  try {
+    const json = JSON.parse(text);
+    return String(json?.error || json?.message || fallback);
+  } catch {
+    if (res.status === 413 || text.includes("Request Entity Too Large")) {
+      return "Una o más imágenes son demasiado grandes. Comprime las imágenes o súbelas en grupos más pequeños.";
+    }
+    return text.slice(0, 180);
+  }
+};
+
+const uploadProductImage = async (file: File): Promise<string> => {
+  const signRes = await fetch("/api/admin/rifas/cloudinary-sign?folder=products");
+  if (!signRes.ok) {
+    throw new Error(await readUploadError(signRes, "No se pudo preparar la subida de imagen."));
+  }
+
+  const signData = await signRes.json();
+  const body = new FormData();
+  body.append("file", file);
+  body.append("api_key", signData.apiKey);
+  body.append("timestamp", String(signData.timestamp));
+  body.append("folder", "products");
+  body.append("signature", signData.signature);
+
+  const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${signData.cloudName}/image/upload`, {
+    method: "POST",
+    body,
+  });
+  if (!uploadRes.ok) {
+    throw new Error(await readUploadError(uploadRes, "No se pudo subir la imagen a Cloudinary."));
+  }
+
+  const json = await uploadRes.json();
+  const url = String(json.secure_url || "").trim();
+  if (!url) throw new Error("Cloudinary no devolvió la URL de la imagen.");
+  return url;
+};
+
 export default function EditProduct() {
   const router = useRouter();
   const { id } = router.query as { id?: string };
@@ -180,26 +223,10 @@ const mainImagePreview = useMemo(() => {
     setUploadError("");
     setUploading(true);
 
-    const toDataUrl = (f: File) =>
-      new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(String(r.result));
-        r.onerror = reject;
-        r.readAsDataURL(f);
-      });
-
     try {
       const uploadedUrls: string[] = [];
       for (const file of files) {
-        const dataUrl = await toDataUrl(file);
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: file.name, data: dataUrl }),
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(String(json?.error || "No se pudo subir la imagen"));
-        const url = String(json.url || "").trim();
+        const url = await uploadProductImage(file);
         if (url) uploadedUrls.push(url);
       }
 
