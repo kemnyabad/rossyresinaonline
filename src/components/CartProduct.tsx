@@ -18,6 +18,8 @@ interface Item {
   price: number;
   title: string;
   _id: number | string;
+  cartKey?: string;
+  variantLabel?: string;
   quantity: number;
 }
 interface cartProductsProps {
@@ -74,6 +76,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
             <p>
               Estado: <span className="font-bold">Nuevo</span>
             </p>
+            {item.variantLabel && <p>Presentación: <span className="font-bold">{item.variantLabel}</span></p>}
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-end gap-3 text-sm md:mt-5 md:justify-start">
@@ -81,7 +84,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
               <span className="hidden md:inline">Cantidad:</span>
               <button
                 type="button"
-                onClick={() => dispatch(decreaseQuantity({ _id: item._id }))}
+                onClick={() => dispatch(decreaseQuantity({ _id: item._id, cartKey: item.cartKey }))}
                 className="flex h-9 w-10 items-center justify-center text-gray-700 hover:bg-gray-100 md:h-6 md:w-6 md:rounded md:hover:bg-gray-200"
                 aria-label="Disminuir cantidad"
               >
@@ -90,7 +93,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
               <span className="min-w-[34px] text-center text-base font-semibold md:min-w-[18px] md:text-sm">{item.quantity}</span>
               <button
                 type="button"
-                onClick={() => dispatch(increaseQuantity({ _id: item._id }))}
+                onClick={() => dispatch(increaseQuantity({ _id: item._id, cartKey: item.cartKey }))}
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-amazon_blue text-white hover:brightness-95 md:h-6 md:w-6 md:rounded md:bg-transparent md:text-gray-700 md:hover:bg-gray-200"
                 aria-label="Aumentar cantidad"
               >
@@ -100,7 +103,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
             <span className="hidden h-6 w-px bg-gray-200 sm:block" />
             <button
               type="button"
-              onClick={() => dispatch(deleteProduct(item._id))}
+              onClick={() => dispatch(deleteProduct({ _id: item._id, cartKey: item.cartKey }))}
               className="hidden shrink-0 font-medium text-orange-600 hover:text-orange-700 hover:underline md:inline"
               aria-label="Eliminar producto"
             >

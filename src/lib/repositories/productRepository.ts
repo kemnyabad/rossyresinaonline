@@ -14,6 +14,16 @@ const productBaseSelect = {
   oldPrice: true,
   isNew: true,
   stock: true,
+  variants: {
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      label: true,
+      price: true,
+      oldPrice: true,
+      stock: true,
+    },
+  },
 };
 const normalizeImages = (images: any): string[] => {
   if (Array.isArray(images)) return images.map((x) => String(x || "").trim()).filter(Boolean);
@@ -62,6 +72,15 @@ const toLegacyFromDb = (p: any): ProductProps => ({
   isNew: Boolean(p?.isNew),
   oldPrice: p?.oldPrice != null ? Number(p.oldPrice) : undefined,
   price: Number(p?.price || 0),
+  variants: Array.isArray(p?.variants)
+    ? p.variants.map((v: any) => ({
+        id: v.id,
+        label: v.label,
+        price: Number(v.price || 0),
+        oldPrice: v.oldPrice != null ? Number(v.oldPrice) : null,
+        stock: Number(v.stock || 0),
+      }))
+    : [],
 });
 
 const toSerializable = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;

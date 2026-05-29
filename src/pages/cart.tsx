@@ -126,24 +126,27 @@ const CartPage = () => {
                 const itemDiscount = discountLabel(item.oldPrice, item.price);
                 return (
                   <article
-                    key={item._id}
+                    key={item.cartKey || item._id}
                     className="grid grid-cols-[clamp(112px,31vw,135px)_minmax(0,1fr)] gap-3 rounded-lg bg-white px-2.5 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.06)] min-[390px]:grid-cols-[clamp(124px,34vw,145px)_minmax(0,1fr)] min-[390px]:px-3"
                   >
-                    <Link href={`/${item.code || item._id}`} className="relative aspect-square w-full overflow-hidden rounded-md bg-gray-100">
+                    <Link href={`/${item.code || item.productId || item._id}`} className="relative aspect-square w-full overflow-hidden rounded-md bg-gray-100">
                       <Image src={normalizeCartImage(item.image)} alt={item.title || "Producto"} fill className="object-cover" />
                     </Link>
                     <div className="flex min-w-0 flex-col rounded-md bg-white">
                       <div className="rounded-md bg-gray-50 px-2.5 py-2">
                         <div className="flex items-start gap-2">
-                        <Link href={`/${item.code || item._id}`} className="min-w-0 flex-1">
+                        <Link href={`/${item.code || item.productId || item._id}`} className="min-w-0 flex-1">
                           <p className="line-clamp-2 text-[13px] font-semibold leading-5 text-gray-800 min-[390px]:text-[15px]">{item.title}</p>
+                          {item.variantLabel ? (
+                            <p className="mt-1 text-xs font-semibold text-amazon_blue">{item.variantLabel}</p>
+                          ) : null}
                           <p className="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-xs font-medium text-gray-600">
                             {item.quantity} unidad{item.quantity > 1 ? "es" : ""}
                           </p>
                         </Link>
                         <button
                           type="button"
-                          onClick={() => dispatch(deleteProduct(item._id))}
+                          onClick={() => dispatch(deleteProduct({ _id: item._id, cartKey: item.cartKey }))}
                           className="shrink-0 text-gray-500"
                           aria-label="Eliminar producto"
                         >
@@ -166,7 +169,7 @@ const CartPage = () => {
                         <div className="ml-auto flex h-9 shrink-0 items-center overflow-hidden rounded-md border border-gray-200 bg-white">
                           <button
                             type="button"
-                            onClick={() => dispatch(decreaseQuantity({ _id: item._id }))}
+                            onClick={() => dispatch(decreaseQuantity({ _id: item._id, cartKey: item.cartKey }))}
                             className="flex h-9 w-8 items-center justify-center text-lg min-[390px]:w-9"
                             aria-label="Reducir cantidad"
                           >
@@ -175,7 +178,7 @@ const CartPage = () => {
                           <span className="min-w-[30px] text-center text-base min-[390px]:min-w-[34px]">{item.quantity}</span>
                           <button
                             type="button"
-                            onClick={() => dispatch(increaseQuantity({ _id: item._id }))}
+                            onClick={() => dispatch(increaseQuantity({ _id: item._id, cartKey: item.cartKey }))}
                             className="flex h-9 w-8 items-center justify-center text-lg min-[390px]:w-9"
                             aria-label="Aumentar cantidad"
                           >
@@ -246,7 +249,7 @@ const CartPage = () => {
 
               <div className="space-y-4 md:space-y-0">
                 {cartItems.map((item: StoreProduct) => (
-                  <CartProduct key={item._id} item={item} />
+                  <CartProduct key={item.cartKey || item._id} item={item} />
                 ))}
               </div>
 

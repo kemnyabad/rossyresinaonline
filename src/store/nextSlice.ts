@@ -15,13 +15,22 @@ const initialState: NextState = {
   userInfo: null,
 };
 
+const cartItemKey = (item: any) =>
+  String(item?.cartKey ?? `${item?._id ?? ""}:${item?.variantId ?? ""}`);
+
+const payloadKey = (payload: any) =>
+  typeof payload === "object" && payload !== null
+    ? String(payload.cartKey ?? `${payload._id ?? ""}:${payload.variantId ?? ""}`)
+    : String(payload);
+
 export const nextSlice = createSlice({
   name: "next",
   initialState,
   reducers: {
     addToCart: (state, action) => {
+      const nextKey = payloadKey(action.payload);
       const existingProduct = state.productData.find(
-        (item: StoreProduct) => item._id === action.payload._id
+        (item: StoreProduct) => cartItemKey(item) === nextKey
       );
       if (existingProduct) {
         existingProduct.quantity += action.payload.quantity;
@@ -40,14 +49,16 @@ export const nextSlice = createSlice({
       }
     },
     increaseQuantity: (state, action) => {
+      const key = payloadKey(action.payload);
       const existingProduct = state.productData.find(
-        (item: StoreProduct) => item._id === action.payload._id
+        (item: StoreProduct) => cartItemKey(item) === key
       );
       existingProduct && existingProduct.quantity++;
     },
     decreaseQuantity: (state, action) => {
+      const key = payloadKey(action.payload);
       const existingProduct = state.productData.find(
-        (item: StoreProduct) => item._id === action.payload._id
+        (item: StoreProduct) => cartItemKey(item) === key
       );
       if (existingProduct?.quantity === 1) {
         existingProduct.quantity = 1;
@@ -56,8 +67,9 @@ export const nextSlice = createSlice({
       }
     },
     setQuantity: (state, action) => {
+      const key = payloadKey(action.payload);
       const existingProduct = state.productData.find(
-        (item: StoreProduct) => item._id === action.payload._id
+        (item: StoreProduct) => cartItemKey(item) === key
       );
       if (existingProduct) {
         const quantity = Number(action.payload.quantity);
@@ -67,8 +79,9 @@ export const nextSlice = createSlice({
       }
     },
     deleteProduct: (state, action) => {
+      const key = payloadKey(action.payload);
       state.productData = state.productData.filter(
-        (item) => item._id !== action.payload
+        (item) => cartItemKey(item) !== key
       );
     },
     deleteFavorite: (state, action) => {

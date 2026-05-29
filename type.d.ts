@@ -16,8 +16,19 @@ export interface ProductProps {
   price: number;
   title: string;
   _id: number | string;
+  variants?: Array<{
+    id: string;
+    label: string;
+    price: number;
+    oldPrice?: number | null;
+    stock?: number;
+  }>;
 }
 export interface StoreProduct {
+  cartKey?: string;
+  productId?: number | string;
+  variantId?: string;
+  variantLabel?: string;
   code?: string;
   barcode?: string;
   sku?: string;

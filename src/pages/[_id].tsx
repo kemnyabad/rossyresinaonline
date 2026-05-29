@@ -233,17 +233,24 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
 
   const addProductToCart = (quantity: number) => {
     if (!product) return;
+    const variantId = selectedVariant?.id ? String(selectedVariant.id) : "";
+    const variantLabel = selectedVariant?.label ? String(selectedVariant.label) : "";
+    const cartKey = variantId ? `${product._id}:${variantId}` : String(product._id);
     dispatch(
       addToCart({
+        cartKey,
         _id: product._id,
+        productId: product._id,
+        variantId: variantId || undefined,
+        variantLabel: variantLabel || undefined,
         brand: product.brand,
         category: product.category,
         description: product.description,
         image: mainImage,
         isNew: product.isNew,
-        oldPrice: product.oldPrice,
-        price: product.price,
-        title: product.title,
+        oldPrice: activeOldPriceValue ?? undefined,
+        price: activePrice,
+        title: variantLabel ? `${product.title} - ${variantLabel}` : product.title,
         quantity,
       })
     );

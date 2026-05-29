@@ -44,6 +44,14 @@ const sanitizePriceInput = (value: any): string => {
 
 const sanitizeStockInput = (value: any): string => String(value ?? "").replace(/\D/g, "");
 
+const isResinCategory = (value: any): boolean =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .includes("resina");
+
 const readUploadError = async (res: Response, fallback: string) => {
   const text = await res.text().catch(() => "");
   if (!text) return fallback;
@@ -401,7 +409,7 @@ const mainImagePreview = useMemo(() => {
             </label>
           </div>
 
-          {form?.category === "Resinas" && (
+          {isResinCategory(form?.category) && (
             <ProductVariants productId={productDbId} variants={variants} onChange={setVariants} />
           )}
 
