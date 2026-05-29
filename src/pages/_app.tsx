@@ -135,9 +135,60 @@ function AppContent({
         visitorId,
         userEmail: String((session as any)?.user?.email || ""),
         userName: String((session as any)?.user?.name || ""),
+        appMode:
+          window.matchMedia("(display-mode: standalone)").matches ||
+          (window.navigator as any).standalone === true ||
+          new URLSearchParams(window.location.search).get("source") === "pwa" ||
+          new URLSearchParams(window.location.search).get("source") === "playstore" ||
+          (() => {
+            try {
+              return window.localStorage.getItem("rr_app_mode") === "1";
+            } catch {
+              return false;
+            }
+          })(),
+        appEvent: "",
       }),
       keepalive: true,
     }).catch(() => {});
+  }, [isClient, isAdminRoute, router.asPath, session]);
+
+  useEffect(() => {
+    if (!isClient) return;
+    if (isAdminRoute) return;
+
+    const onInstalled = () => {
+      const key = "rr_visitor_id";
+      let visitorId = "";
+      try {
+        visitorId = String(localStorage.getItem(key) || "").trim();
+        if (!visitorId) {
+          const rnd = Math.random().toString(36).slice(2, 10);
+          visitorId = `v-${Date.now()}-${rnd}`;
+          localStorage.setItem(key, visitorId);
+        }
+        localStorage.setItem("rr_app_mode", "1");
+      } catch {
+        visitorId = `v-${Date.now()}`;
+      }
+
+      fetch("/api/analytics/visit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          path: String(router.asPath || "/"),
+          visitorId,
+          userEmail: String((session as any)?.user?.email || ""),
+          userName: String((session as any)?.user?.name || ""),
+          appMode: true,
+          appEvent: "installed",
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    };
+
+    window.addEventListener("appinstalled", onInstalled);
+    return () => window.removeEventListener("appinstalled", onInstalled);
   }, [isClient, isAdminRoute, router.asPath, session]);
 
   useEffect(() => {

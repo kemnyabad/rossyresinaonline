@@ -152,6 +152,7 @@ export default function CheckoutPage() {
     () => productData.reduce((sum: number, p: StoreProduct) => sum + p.quantity, 0),
     [productData]
   );
+  const hydratedTotalUnits = mounted ? totalUnits : 0;
 
   const normImg = (s?: string) => {
     const t = String(s || "");
@@ -343,7 +344,7 @@ export default function CheckoutPage() {
           >
             <ChevronLeftIcon className="h-6 w-6 stroke-[2.5]" />
           </button>
-          <h1 className="text-center text-xl font-black text-gray-950">Pagar ({totalUnits})</h1>
+          <h1 className="text-center text-xl font-black text-gray-950">Pagar ({hydratedTotalUnits})</h1>
           <button
             type="button"
             className="ml-auto flex h-9 w-9 items-center justify-center text-gray-950"

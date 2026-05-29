@@ -38,21 +38,21 @@ const CartProduct = ({ item }: cartProductsProps) => {
   })();
 
   return (
-    <article className="bg-white md:border-b md:border-gray-200 md:px-5 md:py-5 md:last:border-b-0">
-      <div className="grid grid-cols-[24px_108px_minmax(0,1fr)] gap-3 md:grid-cols-[240px_minmax(0,1fr)_180px] md:gap-4 lg:grid-cols-[240px_minmax(0,1fr)_180px]">
+    <article className="bg-white md:border-b md:border-gray-200 md:px-4 md:py-4 md:last:border-b-0">
+      <div className="grid grid-cols-[24px_108px_minmax(0,1fr)] gap-3 md:grid-cols-[220px_minmax(0,1fr)_150px] md:gap-3 lg:grid-cols-[220px_minmax(0,1fr)_150px]">
         <div className="flex items-center md:hidden">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amazon_blue text-xs font-black text-white">
             ✓
           </span>
         </div>
         <div className="flex gap-4">
-          <div className="relative h-[120px] w-[108px] shrink-0 overflow-hidden rounded-lg bg-gray-100 md:h-40 md:w-36 md:rounded-none md:border md:border-gray-100 md:bg-white">
+          <div className="relative h-[120px] w-[108px] shrink-0 overflow-hidden rounded-lg bg-gray-100 md:h-48 md:w-48 md:rounded-none md:border md:border-gray-100 md:bg-white">
           <Image
             className="object-contain"
             fill
             src={imageSrc}
             alt={item.title || "Producto"}
-            sizes="(max-width: 768px) 112px, 144px"
+            sizes="(max-width: 768px) 112px, 192px"
           />
           </div>
         </div>
@@ -68,7 +68,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
           <p className="mt-1 text-xl font-black text-amazon_blue md:hidden">
             <FormattedPrice amount={item.price} />
           </p>
-          <div className="mt-5 hidden space-y-1 text-sm text-gray-800 md:block md:text-base">
+          <div className="mt-4 hidden space-y-0.5 text-sm text-gray-800 md:block md:text-[15px]">
             <p>Origen: Perú</p>
             <p>Envío: Envío coordinado por WhatsApp</p>
             <p>
@@ -76,7 +76,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
             </p>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-end gap-3 text-sm md:mt-6 md:justify-start">
+          <div className="mt-3 flex flex-wrap items-center justify-end gap-3 text-sm md:mt-5 md:justify-start">
             <div className="inline-flex h-9 shrink-0 items-center overflow-hidden rounded-full border border-gray-200 bg-white text-gray-950 md:h-9 md:gap-3 md:rounded-md md:border-gray-300 md:bg-gray-50 md:px-3">
               <span className="hidden md:inline">Cantidad:</span>
               <button

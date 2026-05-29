@@ -237,11 +237,11 @@ const CartPage = () => {
             </section>
           </div>
 
-          <div className="mx-auto hidden w-full max-w-[480px] grid-cols-1 gap-2 px-2.5 pt-2.5 md:grid md:max-w-6xl md:px-0 md:pt-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="mx-auto hidden w-full max-w-[480px] grid-cols-1 gap-2 px-2.5 pt-2.5 md:grid md:max-w-6xl md:px-0 md:pt-0 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-3">
             <section className="bg-white p-4 md:rounded-none md:p-0">
-              <div className="hidden items-center justify-between border-b border-gray-300 px-4 py-4 md:flex md:px-5">
+              <div className="hidden items-center justify-between border-b border-gray-300 px-4 py-3 md:flex">
                 <h1 className="text-2xl font-black text-gray-950 md:text-3xl">Carro de Compras</h1>
-                <span className="hidden pr-20 text-lg text-gray-950 md:block">Precio</span>
+                <span className="hidden pr-14 text-lg text-gray-950 md:block">Precio</span>
               </div>
 
               <div className="space-y-4 md:space-y-0">
@@ -250,7 +250,7 @@ const CartPage = () => {
                 ))}
               </div>
 
-              <div className="mt-5 hidden flex-col gap-3 border-t border-gray-200 px-4 py-5 sm:flex-row sm:items-center sm:justify-between md:flex md:px-5">
+              <div className="mt-4 hidden flex-col gap-3 border-t border-gray-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:flex">
                 <div className="flex flex-wrap items-center gap-3 text-sm">
                   <ResetCart />
                   <span className="hidden h-5 w-px bg-gray-200 sm:block" />

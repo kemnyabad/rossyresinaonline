@@ -25,10 +25,49 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [accountExists, setAccountExists] = useState(false);
   const callbackUrl = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/checkout";
+  const signInUrl = `/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}&email=${encodeURIComponent(email.trim().toLowerCase())}`;
 
   const steps: RegisterStep[] = ["email", "name", "dni", "phone", "shipping", "password"];
   const currentStepIndex = steps.indexOf(step);
+  const stepMeta: Record<RegisterStep, { label: string; title: string; helper: string }> = {
+    method: {
+      label: "Inicio",
+      title: "Elige cómo crear tu cuenta",
+      helper: "Puedes registrarte con Google o continuar con tu correo.",
+    },
+    email: {
+      label: "Correo",
+      title: "Correo electrónico",
+      helper: "Usaremos este correo para tu cuenta y seguimiento de pedidos.",
+    },
+    name: {
+      label: "Nombre",
+      title: "Nombres",
+      helper: "Escribe tu nombre completo para identificar tus pedidos.",
+    },
+    dni: {
+      label: "DNI",
+      title: "DNI",
+      helper: "Lo usamos para registrar correctamente la entrega.",
+    },
+    phone: {
+      label: "Teléfono",
+      title: "Teléfono o WhatsApp",
+      helper: "Te contactaremos por este número para coordinar tu pedido.",
+    },
+    shipping: {
+      label: "Envío",
+      title: "Dirección de envío",
+      helper: "Guarda la zona y el método de entrega que prefieres.",
+    },
+    password: {
+      label: "Clave",
+      title: "Contraseña",
+      helper: "Crea una contraseña para entrar luego a tu cuenta.",
+    },
+  };
 
   const validateStep = () => {
     setError(null);
@@ -81,8 +120,187 @@ export default function RegisterPage() {
     if (next) setStep(next);
   };
 
+  const handleBack = () => {
+    setError(null);
+    const prev = steps[currentStepIndex - 1];
+    if (prev) setStep(prev);
+    else setStep("method");
+  };
+
+  const renderStepContent = (inputClass: string, textareaClass: string) => (
+    <>
+      {step === "method" && (
+        <div className="grid gap-3">
+          <button
+            type="button"
+            onClick={() => signIn("google", { callbackUrl })}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 text-sm font-black text-gray-900 hover:bg-gray-50"
+          >
+            <FcGoogle className="h-5 w-5" />
+            Registrarme con Google
+          </button>
+          <button
+            type="button"
+            onClick={() => setStep("email")}
+            className="flex h-12 w-full items-center justify-center rounded-full bg-amazon_blue px-4 text-sm font-black text-white hover:brightness-95"
+          >
+            Registrarme con correo
+          </button>
+        </div>
+      )}
+
+      {step === "email" && (
+        <StepPanel title="Correo electrónico">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setAccountExists(false);
+              setError(null);
+            }}
+            placeholder="correo@ejemplo.com"
+            className={inputClass}
+          />
+        </StepPanel>
+      )}
+
+      {step === "name" && (
+        <StepPanel title="Nombres">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nombre completo"
+            className={inputClass}
+          />
+        </StepPanel>
+      )}
+
+      {step === "dni" && (
+        <StepPanel title="DNI">
+          <input
+            value={dni}
+            onChange={(e) => setDni(e.target.value.replace(/\D/g, ""))}
+            placeholder="DNI"
+            inputMode="numeric"
+            className={inputClass}
+          />
+        </StepPanel>
+      )}
+
+      {step === "phone" && (
+        <StepPanel title="Teléfono o WhatsApp">
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Ej: 961770723"
+            inputMode="tel"
+            className={inputClass}
+          />
+        </StepPanel>
+      )}
+
+      {step === "shipping" && (
+        <StepPanel title="Dirección de envío">
+          <div className="grid gap-3">
+            <input
+              value={locationLine}
+              onChange={(e) => setLocationLine(e.target.value)}
+              placeholder="Departamento - Provincia - Distrito"
+              className={inputClass}
+            />
+            <select
+              value={shippingCarrier}
+              onChange={(e) => setShippingCarrier(e.target.value === "OLVA" ? "OLVA" : "SHALOM")}
+              className={inputClass}
+            >
+              <option value="SHALOM">Recoger en agencia Shalom</option>
+              <option value="OLVA">Entrega a domicilio por Olva</option>
+            </select>
+            {shippingCarrier === "SHALOM" ? (
+              <input
+                value={shalomAgency}
+                onChange={(e) => setShalomAgency(e.target.value)}
+                placeholder="Agencia Shalom donde recogerás"
+                className={inputClass}
+              />
+            ) : (
+              <>
+                <input
+                  value={olvaAddress}
+                  onChange={(e) => setOlvaAddress(e.target.value)}
+                  placeholder="Dirección exacta"
+                  className={inputClass}
+                />
+                <textarea
+                  value={olvaReference}
+                  onChange={(e) => setOlvaReference(e.target.value)}
+                  placeholder="Referencia del domicilio"
+                  className={textareaClass}
+                />
+              </>
+            )}
+          </div>
+        </StepPanel>
+      )}
+
+      {step === "password" && (
+        <StepPanel title="Contraseña">
+          <div className="grid gap-3">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Contraseña"
+              className={inputClass}
+            />
+            <input
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Confirmar contraseña"
+              className={inputClass}
+            />
+          </div>
+        </StepPanel>
+      )}
+    </>
+  );
+
+  const renderStepActions = () =>
+    step !== "method" ? (
+      <div className="mt-5 flex gap-3">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="h-12 flex-1 rounded-full border border-gray-300 bg-white px-4 text-sm font-black text-gray-900 hover:bg-gray-50"
+        >
+          Atrás
+        </button>
+        {step === "password" ? (
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="h-12 flex-[1.4] rounded-full bg-amazon_blue px-4 text-sm font-black text-white hover:brightness-95 disabled:opacity-60"
+          >
+            {loading ? "Registrando..." : "Crear cuenta"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleContinue}
+            className="h-12 flex-[1.4] rounded-full bg-amazon_blue px-4 text-sm font-black text-white hover:brightness-95"
+          >
+            Continuar
+          </button>
+        )}
+      </div>
+    ) : null;
+
   const handleSubmit = async () => {
     setError(null);
+    setAccountExists(false);
     if (!name || !email || !dni || !phone || !locationLine || !password) {
       setError("Completa todos los campos");
       return;
@@ -120,6 +338,11 @@ export default function RegisterPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          setAccountExists(true);
+          setError("Este correo ya está registrado. Inicia sesión para continuar.");
+          return;
+        }
         setError(data.error || "No se pudo registrar");
         return;
       }
@@ -148,174 +371,20 @@ export default function RegisterPage() {
         </div>
 
         <div className="mt-6">
-          {step === "method" && (
-            <div className="grid gap-3">
-              <button
-                type="button"
-                onClick={() => signIn("google", { callbackUrl })}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 text-sm font-black text-gray-900 hover:bg-gray-50"
-              >
-                <FcGoogle className="h-5 w-5" />
-                Registrarme con Google
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep("email")}
-                className="flex h-12 w-full items-center justify-center rounded-full bg-amazon_blue px-4 text-sm font-black text-white hover:brightness-95"
-              >
-                Registrarme con correo
-              </button>
-            </div>
+          {renderStepContent(
+            "h-12 w-full rounded-md border border-gray-300 bg-white px-3",
+            "h-24 w-full rounded-md border border-gray-300 px-3 py-2"
           )}
-
-          {step === "email" && (
-            <StepPanel title="Correo electrónico">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="correo@ejemplo.com"
-                className="h-12 w-full rounded-md border border-gray-300 px-3"
-              />
-            </StepPanel>
-          )}
-
-          {step === "name" && (
-            <StepPanel title="Nombres">
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Nombre completo"
-                className="h-12 w-full rounded-md border border-gray-300 px-3"
-              />
-            </StepPanel>
-          )}
-
-          {step === "dni" && (
-            <StepPanel title="DNI">
-              <input
-                value={dni}
-                onChange={(e) => setDni(e.target.value.replace(/\D/g, ""))}
-                placeholder="DNI"
-                inputMode="numeric"
-                className="h-12 w-full rounded-md border border-gray-300 px-3"
-              />
-            </StepPanel>
-          )}
-
-          {step === "phone" && (
-            <StepPanel title="Teléfono o WhatsApp">
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Ej: 961770723"
-                inputMode="tel"
-                className="h-12 w-full rounded-md border border-gray-300 px-3"
-              />
-            </StepPanel>
-          )}
-
-          {step === "shipping" && (
-            <StepPanel title="Dirección de envío">
-              <div className="grid gap-3">
-                <input
-                  value={locationLine}
-                  onChange={(e) => setLocationLine(e.target.value)}
-                  placeholder="Departamento - Provincia - Distrito"
-                  className="h-12 w-full rounded-md border border-gray-300 px-3"
-                />
-                <select
-                  value={shippingCarrier}
-                  onChange={(e) => setShippingCarrier(e.target.value === "OLVA" ? "OLVA" : "SHALOM")}
-                  className="h-12 w-full rounded-md border border-gray-300 bg-white px-3"
-                >
-                  <option value="SHALOM">Recoger en agencia Shalom</option>
-                  <option value="OLVA">Entrega a domicilio por Olva</option>
-                </select>
-                {shippingCarrier === "SHALOM" ? (
-                  <input
-                    value={shalomAgency}
-                    onChange={(e) => setShalomAgency(e.target.value)}
-                    placeholder="Agencia Shalom donde recogerás"
-                    className="h-12 w-full rounded-md border border-gray-300 px-3"
-                  />
-                ) : (
-                  <>
-                    <input
-                      value={olvaAddress}
-                      onChange={(e) => setOlvaAddress(e.target.value)}
-                      placeholder="Dirección exacta"
-                      className="h-12 w-full rounded-md border border-gray-300 px-3"
-                    />
-                    <textarea
-                      value={olvaReference}
-                      onChange={(e) => setOlvaReference(e.target.value)}
-                      placeholder="Referencia del domicilio"
-                      className="h-24 w-full rounded-md border border-gray-300 px-3 py-2"
-                    />
-                  </>
-                )}
-              </div>
-            </StepPanel>
-          )}
-
-          {step === "password" && (
-            <StepPanel title="Contraseña">
-              <div className="grid gap-3">
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Contraseña"
-                  className="h-12 w-full rounded-md border border-gray-300 px-3"
-                />
-                <input
-                  type="password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  placeholder="Confirmar contraseña"
-                  className="h-12 w-full rounded-md border border-gray-300 px-3"
-                />
-              </div>
-            </StepPanel>
-          )}
-
           {error && <div className="mt-4 text-sm font-semibold text-red-600">{error}</div>}
-
-          {step !== "method" && (
-            <div className="mt-5 flex gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setError(null);
-                  const prev = steps[currentStepIndex - 1];
-                  if (prev) setStep(prev);
-                  else setStep("method");
-                }}
-                className="h-12 flex-1 rounded-full border border-gray-300 bg-white px-4 text-sm font-black text-gray-900 hover:bg-gray-50"
-              >
-                Atrás
-              </button>
-              {step === "password" ? (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="h-12 flex-[1.4] rounded-full bg-amazon_blue px-4 text-sm font-black text-white hover:brightness-95 disabled:opacity-60"
-                >
-                  {loading ? "Registrando..." : "Crear cuenta"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleContinue}
-                  className="h-12 flex-[1.4] rounded-full bg-amazon_blue px-4 text-sm font-black text-white hover:brightness-95"
-                >
-                  Continuar
-                </button>
-              )}
-            </div>
+          {accountExists && (
+            <Link
+              href={signInUrl}
+              className="mt-3 flex h-11 w-full items-center justify-center rounded-full border border-amazon_blue bg-white px-4 text-sm font-black text-amazon_blue hover:bg-amazon_blue hover:text-white"
+            >
+              Iniciar sesión con este correo
+            </Link>
           )}
+          {renderStepActions()}
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-600">
@@ -326,107 +395,72 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <div className="hidden w-full max-w-2xl rounded-lg border border-gray-200 bg-white p-8 shadow md:block">
-        <div className="flex flex-col items-center">
-          <div className="rounded-full bg-white p-1 shadow-md ring-2 ring-white/60">
+      <div className="hidden w-full max-w-4xl overflow-hidden rounded-lg border border-gray-200 bg-white shadow md:grid md:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="border-r border-gray-100 bg-gray-50 p-8">
+          <div className="rounded-full bg-white p-1 shadow-md ring-2 ring-white/60 w-fit">
             <Image src={require("@/images/logo.jpg")} alt="Logo Rossy Resina" width={64} height={64} className="rounded-full object-contain" />
           </div>
-          <h1 className="mt-4 text-2xl font-semibold text-amazon_blue">Crear cuenta</h1>
-          <p className="mt-2 text-center text-sm text-gray-600">Registra tu cuenta y la direccion donde recibiras tus paquetes.</p>
-        </div>
+          <h1 className="mt-5 text-2xl font-semibold text-amazon_blue">Crear cuenta</h1>
+          <p className="mt-2 text-sm leading-6 text-gray-600">Registra tu cuenta y la dirección donde recibirás tus paquetes.</p>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-2">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Nombre completo"
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
-          />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Correo"
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
-          />
-          <input
-            value={dni}
-            onChange={(e) => setDni(e.target.value.replace(/\D/g, ""))}
-            placeholder="DNI"
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
-          />
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Telefono"
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
-          />
-          <input
-            value={locationLine}
-            onChange={(e) => setLocationLine(e.target.value)}
-            placeholder="Departamento - Provincia - Distrito"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 md:col-span-2"
-          />
-          <select
-            value={shippingCarrier}
-            onChange={(e) => setShippingCarrier(e.target.value === "OLVA" ? "OLVA" : "SHALOM")}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 md:col-span-2"
-          >
-            <option value="SHALOM">Recoger en agencia Shalom</option>
-            <option value="OLVA">Entrega a domicilio por Olva</option>
-          </select>
-          {shippingCarrier === "SHALOM" ? (
-            <input
-              value={shalomAgency}
-              onChange={(e) => setShalomAgency(e.target.value)}
-              placeholder="Agencia Shalom donde recogerás"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 md:col-span-2"
-            />
-          ) : (
-            <>
-              <input
-                value={olvaAddress}
-                onChange={(e) => setOlvaAddress(e.target.value)}
-                placeholder="Direccion exacta"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 md:col-span-2"
-              />
-              <textarea
-                value={olvaReference}
-                onChange={(e) => setOlvaReference(e.target.value)}
-                placeholder="Referencia del domicilio"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 md:col-span-2"
-              />
-            </>
-          )}
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contrasena"
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
-          />
-          <input
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Confirmar contrasena"
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
-          />
-          {error && <div className="text-sm text-red-600 md:col-span-2">{error}</div>}
-          <button
-            onClick={handleSubmit}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-amazon_blue px-4 py-2 text-white hover:bg-amazon_yellow hover:text-black md:col-span-2"
-          >
-            {loading ? "Registrando..." : "Crear cuenta"}
-          </button>
-        </div>
+          <div className="mt-8 space-y-2">
+            {steps.map((item, index) => {
+              const active = item === step;
+              const done = currentStepIndex > index || step === "password";
+              return (
+                <div
+                  key={item}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
+                    active ? "bg-white text-gray-950 shadow-sm" : "text-gray-500"
+                  }`}
+                >
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
+                      active || done ? "bg-amazon_blue text-white" : "bg-white text-gray-500"
+                    }`}
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="font-semibold">{stepMeta[item].label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </aside>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
+        <section className="p-8">
+          <div>
+            <p className="rr-type-label text-amazon_blue">
+              {step === "method" ? "Inicio" : `Paso ${currentStepIndex + 1} de ${steps.length}`}
+            </p>
+            <h2 className="mt-2 text-3xl font-black text-gray-950">{stepMeta[step].title}</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">{stepMeta[step].helper}</p>
+          </div>
+
+          <div className="mt-7 max-w-xl">
+            {renderStepContent(
+              "h-12 w-full rounded-md border border-gray-300 bg-white px-4 text-base",
+              "h-28 w-full rounded-md border border-gray-300 px-4 py-3 text-base"
+            )}
+            {error && <div className="mt-4 text-sm font-semibold text-red-600">{error}</div>}
+            {accountExists && (
+              <Link
+                href={signInUrl}
+                className="mt-3 flex h-11 w-full items-center justify-center rounded-full border border-amazon_blue bg-white px-4 text-sm font-black text-amazon_blue hover:bg-amazon_blue hover:text-white"
+              >
+                Iniciar sesión con este correo
+              </Link>
+            )}
+            {renderStepActions()}
+          </div>
+
+        <div className="mt-8 text-sm text-gray-600">
           <span>Ya tienes cuenta?</span>{" "}
-          <Link href="/sign-in" className="text-amazon_blue hover:underline">
+          <Link href={`/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`} className="text-amazon_blue hover:underline">
             Inicia sesión
           </Link>
         </div>
+        </section>
       </div>
     </div>
   );

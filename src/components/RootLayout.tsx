@@ -27,7 +27,7 @@ const RootLayout = ({ children }: Props) => {
   const isCheckoutPage = router.pathname === "/checkout";
   const isAccountPage = router.pathname === "/account";
   const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
-  const showHeader = !isRifasPage && !isProductDetailPage && !isCartPage && !isCheckoutPage;
+  const showHeader = !isRifasPage;
   const showMobileBottomNav = !isResinyPage && !isProductDetailPage && !isCartPage && !isCheckoutPage;
   const hideFooter = isRifasPage || isResinyPage || isCartPage || isCheckoutPage;
   const [isHydrated, setIsHydrated] = useState(false);
@@ -110,6 +110,10 @@ const RootLayout = ({ children }: Props) => {
                 box-shadow: none !important;
               }
             `}</style>
+            <Header />
+          </div>
+        ) : isProductDetailPage || isCartPage || isCheckoutPage ? (
+          <div className="hidden lg:block">
             <Header />
           </div>
         ) : isAccountPage ? (

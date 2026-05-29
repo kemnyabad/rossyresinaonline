@@ -149,6 +149,8 @@ model WebVisitEvent {
   visitorId String
   userEmail String?
   userName  String?
+  appMode   Boolean  @default(false)
+  appEvent  String?
 
   visitor WebVisitorProfile? @relation(fields: [visitorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -158,6 +160,8 @@ model WebVisitEvent {
   @@index([city])
   @@index([visitorId])
   @@index([userEmail])
+  @@index([appMode])
+  @@index([appEvent])
 }
 
 model Category {
@@ -178,6 +182,10 @@ model WebVisitorProfile {
   country    String   @default("DESCONOCIDO")
   city       String   @default("DESCONOCIDA")
   lastPath   String?
+  appFirstSeenAt DateTime?
+  appLastSeenAt  DateTime?
+  appOpenCount   Int      @default(0)
+  appInstalledAt DateTime?
 
   events WebVisitEvent[]
 
@@ -186,6 +194,8 @@ model WebVisitorProfile {
   @@index([country])
   @@index([city])
   @@index([userEmail])
+  @@index([appLastSeenAt])
+  @@index([appInstalledAt])
 }
 
 model VisitExcludedIp {

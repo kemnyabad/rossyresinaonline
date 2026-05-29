@@ -27,10 +27,20 @@ export default function SignInPage() {
       return raw.startsWith("/sign-in") ? "/" : raw || "/";
     }
   };
+  const safeCallbackUrl = getSafeCallbackUrl();
 
   useEffect(() => {
     // Evita redireccionar automáticamente para que el usuario pueda ver el formulario.
   }, []);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const emailFromQuery = typeof router.query.email === "string" ? router.query.email : "";
+    if (emailFromQuery) {
+      setMode("login");
+      setEmail(emailFromQuery);
+    }
+  }, [router.isReady, router.query.email]);
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-6 py-12 bg-gradient-to-b from-gray-100 to-transparent">
@@ -73,7 +83,7 @@ export default function SignInPage() {
             {mode === "register" && (
               <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-center text-sm text-gray-700">
                 Para registrarte con correo necesitamos tus datos de envío.
-                <Link href="/register" className="mt-3 inline-flex rounded-md bg-amazon_blue px-4 py-2 font-semibold text-white hover:brightness-95">
+                <Link href={`/register?callbackUrl=${encodeURIComponent(safeCallbackUrl)}`} className="mt-3 inline-flex rounded-md bg-amazon_blue px-4 py-2 font-semibold text-white hover:brightness-95">
                   Crear cuenta con correo
                 </Link>
               </div>
@@ -100,8 +110,7 @@ export default function SignInPage() {
                     setError(null);
                     setLoading(true);
                     try {
-                    const cb = getSafeCallbackUrl();
-                    await signIn("credentials", { email, password, callbackUrl: cb });
+                    await signIn("credentials", { email, password, callbackUrl: safeCallbackUrl });
                     } finally {
                       setLoading(false);
                     }
@@ -114,7 +123,7 @@ export default function SignInPage() {
             )}
           </div>
           <button
-            onClick={() => signIn("google", { callbackUrl: getSafeCallbackUrl() })}
+            onClick={() => signIn("google", { callbackUrl: safeCallbackUrl })}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-gray-300 text-gray-900 hover:bg-gray-50"
           >
             <FcGoogle className="h-5 w-5" />

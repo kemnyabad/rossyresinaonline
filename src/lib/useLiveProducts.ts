@@ -7,6 +7,7 @@ const sameProductSnapshot = (a: ProductProps[], b: ProductProps[]) =>
   JSON.stringify(a || []) === JSON.stringify(b || []);
 
 export function useLiveProducts(initialProducts: ProductProps[] = [], refreshMs = PRODUCTS_REFRESH_MS) {
+  const hasInitialProducts = Array.isArray(initialProducts) && initialProducts.length > 0;
   const [products, setProducts] = useState<ProductProps[]>(() =>
     Array.isArray(initialProducts) ? initialProducts : []
   );
@@ -52,7 +53,9 @@ export function useLiveProducts(initialProducts: ProductProps[] = [], refreshMs 
       if (document.visibilityState === "visible") refresh();
     };
 
-    refresh();
+    if (!hasInitialProducts) {
+      refresh();
+    }
     schedule();
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", onVisible);
@@ -63,7 +66,7 @@ export function useLiveProducts(initialProducts: ProductProps[] = [], refreshMs 
       window.removeEventListener("focus", refresh);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [refreshMs]);
+  }, [refreshMs, hasInitialProducts]);
 
   return useMemo(() => ({ products, updatedAt }), [products, updatedAt]);
 }

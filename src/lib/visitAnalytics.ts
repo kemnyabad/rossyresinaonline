@@ -63,6 +63,8 @@ export async function recordVisitDb(input: {
   visitorId: string;
   userEmail?: string;
   userName?: string;
+  appMode?: boolean;
+  appEvent?: string;
 }) {
   const now = new Date();
   const visitorId = cleanText(input.visitorId, "anon");
@@ -71,6 +73,16 @@ export async function recordVisitDb(input: {
   const city = cleanText(input.city, "DESCONOCIDA").toUpperCase();
   const userEmail = String(input.userEmail || "").trim().toLowerCase() || null;
   const userName = String(input.userName || "").trim() || null;
+  const appMode = Boolean(input.appMode);
+  const appEvent = String(input.appEvent || "").trim().toLowerCase() || null;
+  const appUpdate =
+    appMode || appEvent
+      ? {
+          appLastSeenAt: appMode ? now : undefined,
+          appOpenCount: appMode ? { increment: 1 } : undefined,
+          appInstalledAt: appEvent === "installed" ? now : undefined,
+        }
+      : {};
 
   try {
     await db.$transaction([
@@ -86,6 +98,10 @@ export async function recordVisitDb(input: {
           country,
           city,
           lastPath: path,
+          appFirstSeenAt: appMode ? now : undefined,
+          appLastSeenAt: appMode ? now : undefined,
+          appOpenCount: appMode ? 1 : 0,
+          appInstalledAt: appEvent === "installed" ? now : undefined,
         },
         update: {
           lastSeenAt: now,
@@ -95,6 +111,7 @@ export async function recordVisitDb(input: {
           country,
           city,
           lastPath: path,
+          ...appUpdate,
         },
       }),
       db.webVisitEvent.create({
@@ -106,6 +123,8 @@ export async function recordVisitDb(input: {
           visitorId,
           userEmail,
           userName,
+          appMode,
+          appEvent,
         },
       }),
     ]);
@@ -118,6 +137,8 @@ export async function recordVisitDb(input: {
       visitorId,
       userEmail: userEmail || undefined,
       userName: userName || undefined,
+      appMode,
+      appEvent: appEvent || undefined,
       at: now.toISOString(),
     });
   }
@@ -127,7 +148,18 @@ export async function getVisitStatsDb(preset: VisitWindowPreset) {
   const { start, end, label } = resolveWindowDates(preset);
   const where = start ? { visitedAt: { gte: start, lte: end } } : {};
   try {
-    const [totalVisits, uniqueVisitorsRows, registeredUserVisits, countryRows, cityRows, pageRows, topUserRows, topVisitorRows] =
+    const [
+      totalVisits,
+      uniqueVisitorsRows,
+      registeredUserVisits,
+      appOpenRows,
+      appInstalledRows,
+      countryRows,
+      cityRows,
+      pageRows,
+      topUserRows,
+      topVisitorRows,
+    ] =
       await Promise.all([
         db.webVisitEvent.count({ where }),
         db.webVisitEvent.groupBy({
@@ -139,6 +171,22 @@ export async function getVisitStatsDb(preset: VisitWindowPreset) {
             ...where,
             userEmail: { not: null },
           },
+        }),
+        db.webVisitEvent.groupBy({
+          by: ["visitorId"],
+          where: {
+            ...where,
+            appMode: true,
+          },
+          _count: { _all: true },
+        }),
+        db.webVisitEvent.groupBy({
+          by: ["visitorId"],
+          where: {
+            ...where,
+            appEvent: "installed",
+          },
+          _max: { visitedAt: true },
         }),
         db.webVisitEvent.groupBy({
           by: ["country"],
@@ -183,6 +231,11 @@ export async function getVisitStatsDb(preset: VisitWindowPreset) {
       ]);
 
     const uniqueVisitors = Array.isArray(uniqueVisitorsRows) ? uniqueVisitorsRows.length : 0;
+    const appUniqueVisitors = Array.isArray(appOpenRows) ? appOpenRows.length : 0;
+    const appOpens = Array.isArray(appOpenRows)
+      ? appOpenRows.reduce((sum: number, row: any) => sum + Number(row?._count?._all || 0), 0)
+      : 0;
+    const appInstalls = Array.isArray(appInstalledRows) ? appInstalledRows.length : 0;
     const avgVisitsPerVisitor = uniqueVisitors > 0 ? Number((totalVisits / uniqueVisitors).toFixed(2)) : 0;
 
     const userEmails = topUserRows
@@ -270,6 +323,9 @@ export async function getVisitStatsDb(preset: VisitWindowPreset) {
         uniqueVisitors,
         registeredUserVisits,
         avgVisitsPerVisitor,
+        appOpens,
+        appUniqueVisitors,
+        appInstalls,
       },
       byCountry: (countryRows || []).map((row: any) => ({
         country: row.country || "DESCONOCIDO",
@@ -320,6 +376,11 @@ export async function getVisitStatsDb(preset: VisitWindowPreset) {
     const totalVisits = start ? scopedRows.length : Number(legacy?.totalVisits || 0);
     const uniqueVisitors = new Set(scopedRows.map((r: any) => String(r?.visitorId || "")).filter(Boolean)).size;
     const registeredUserVisits = scopedRows.filter((r: any) => String(r?.userEmail || "").trim()).length;
+    const appRows = scopedRows.filter((r: any) => Boolean(r?.appMode));
+    const installRows = scopedRows.filter((r: any) => String(r?.appEvent || "").trim().toLowerCase() === "installed");
+    const appOpens = appRows.length;
+    const appUniqueVisitors = new Set(appRows.map((r: any) => String(r?.visitorId || "")).filter(Boolean)).size;
+    const appInstalls = new Set(installRows.map((r: any) => String(r?.visitorId || "")).filter(Boolean)).size;
     const avgVisitsPerVisitor = uniqueVisitors > 0 ? Number((totalVisits / uniqueVisitors).toFixed(2)) : 0;
 
     const mapCount = (rows: any[], keyGetter: (row: any) => string) => {
@@ -380,6 +441,9 @@ export async function getVisitStatsDb(preset: VisitWindowPreset) {
         uniqueVisitors,
         registeredUserVisits,
         avgVisitsPerVisitor,
+        appOpens,
+        appUniqueVisitors,
+        appInstalls,
       },
       byCountry: byCountryRaw.map((r) => ({ country: r.key, visits: r.visits })),
       byCity: byCityRaw.map((r) => ({ city: r.key, visits: r.visits })),

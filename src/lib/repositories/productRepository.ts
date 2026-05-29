@@ -66,13 +66,23 @@ const toLegacyFromDb = (p: any): ProductProps => ({
 
 const toSerializable = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
+const PRODUCT_CACHE_TTL_MS = 10000;
+let productCache: { expiresAt: number; products: ProductProps[] } | null = null;
+
 export async function getAllProducts(): Promise<ProductProps[]> {
   try {
+    const now = Date.now();
+    if (productCache && productCache.expiresAt > now) {
+      return productCache.products;
+    }
+
     const dbRows = await (prisma as any).product.findMany({
       orderBy: { createdAt: "desc" },
       select: { ...productBaseSelect, images: true },
     });
-    return toSerializable((dbRows || []).map(toLegacyFromDb));
+    const products = toSerializable((dbRows || []).map(toLegacyFromDb));
+    productCache = { expiresAt: now + PRODUCT_CACHE_TTL_MS, products };
+    return products;
   } catch {
     return [];
   }
