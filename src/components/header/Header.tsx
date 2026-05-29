@@ -745,24 +745,30 @@ const Header = () => {
                   </div>
                 )}
                 {isAuthenticated && (
-                  <div className="py-2">
-                    <Link href="/account" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                  <div className="grid gap-1 p-2 text-slate-800">
+                    <Link href="/account" className="flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-[#fff4f9] hover:text-[#e4147f]">
+                      <UserIcon className="h-4 w-4 text-[#e4147f]" />
                       Mi Cuenta
                     </Link>
                     {isSeller && (
-                      <Link href="/mi-tienda" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                      <Link href="/mi-tienda" className="flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-[#fff4f9] hover:text-[#e4147f]">
                         <ShoppingBagIcon className="h-4 w-4 text-[#e4147f]" />
                         Mi Tienda
                       </Link>
                     )}
-                    <Link href="/vende-con-nosotros" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                    <Link href="/vende-con-nosotros" className="flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-[#fff4f9] hover:text-[#e4147f]">
                       <ShoppingBagIcon className="h-4 w-4 text-[#e4147f]" />
-                      Vende con nosotros
+                      <span className="leading-tight">
+                        <span className="block">Vende con nosotros</span>
+                        <span className="block text-xs font-semibold text-slate-500">Modo beta</span>
+                      </span>
                     </Link>
-                    <Link href="/track-orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                    <Link href="/track-orders" className="flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-[#fff4f9] hover:text-[#e4147f]">
+                      <ShoppingCartIcon className="h-4 w-4 text-[#e4147f]" />
                       Mis pedidos
                     </Link>
-                    <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                    <Link href="/messages" className="flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-[#fff4f9] hover:text-[#e4147f]">
+                      <MdOutlineEmail className="h-4 w-4 text-[#e4147f]" />
                       Centro de mensajes
                     </Link>
                   </div>
