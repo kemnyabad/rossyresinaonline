@@ -10,6 +10,7 @@ import {
   ShoppingBagIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import SellerLayout from "@/components/seller/SellerLayout";
 
 const emptyProduct = {
   id: "",
@@ -152,13 +153,12 @@ export default function MiTiendaPage() {
   return (
     <>
       <Head><title>Mi Tienda | Rossy Resina</title></Head>
-      <main className="bg-[#fff8fb]">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <SellerLayout shop={shop}>
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-wide text-[#e4147f]">Panel de vendedora</p>
-              <h1 className="mt-2 text-3xl font-black text-slate-950">Mi Tienda</h1>
-              <p className="mt-2 text-sm text-slate-600">Gestiona tu perfil, productos y rendimiento dentro de Rossy Resina.</p>
+              <p className="text-sm font-bold uppercase tracking-wide text-[#e4147f]">Panel privado</p>
+              <h2 className="mt-2 text-3xl font-black text-slate-950">Mi Tienda</h2>
+              <p className="mt-2 text-sm text-slate-600">Gestiona los productos que apareceran dentro de la tienda Rossy Resina.</p>
             </div>
             <Link href={`/tienda/${shop.slug}`} className="inline-flex h-11 items-center gap-2 rounded-lg border border-pink-200 bg-white px-4 text-sm font-bold text-slate-900">
               <EyeIcon className="h-5 w-5 text-[#e4147f]" />
@@ -168,7 +168,7 @@ export default function MiTiendaPage() {
 
           {notice && <div className="mb-5 rounded-xl border border-pink-200 bg-white p-4 text-sm font-semibold text-slate-800">{notice}</div>}
 
-          <section className="mb-6 rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
+          <section id="resumen" className="mb-6 scroll-mt-24 rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-5 md:flex-row md:items-start">
               <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-pink-100 bg-[#fff0f7] text-[#e4147f]">
                 {shop.logoUrl ? (
@@ -200,7 +200,7 @@ export default function MiTiendaPage() {
             </div>
           </section>
 
-          <section className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <section id="estadisticas" className="mb-6 grid scroll-mt-24 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {statCards.map(([label, value]) => (
               <article key={label} className="rounded-xl border border-pink-100 bg-white p-4 shadow-sm">
                 <ChartBarIcon className="h-5 w-5 text-[#e4147f]" />
@@ -211,7 +211,7 @@ export default function MiTiendaPage() {
           </section>
 
           <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <section className="rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
+            <section id="perfil" className="scroll-mt-24 rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
               <h2 className="text-xl font-black text-slate-950">Perfil del emprendimiento</h2>
               <form onSubmit={submitProfile} className="mt-5 grid gap-4">
                 <Input name="logoUrl" label="Logo" defaultValue={shop.logoUrl} />
@@ -229,7 +229,7 @@ export default function MiTiendaPage() {
               </form>
             </section>
 
-            <section className="rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
+            <section id="producto" className="scroll-mt-24 rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xl font-black text-slate-950">{productForm.id ? "Editar producto" : "Crear producto"}</h2>
                 {productForm.id && (
@@ -256,7 +256,7 @@ export default function MiTiendaPage() {
             </section>
           </div>
 
-          <section className="mt-6 rounded-2xl border border-pink-100 bg-white shadow-sm">
+          <section id="productos" className="mt-6 scroll-mt-24 rounded-2xl border border-pink-100 bg-white shadow-sm">
             <div className="border-b border-pink-100 p-5">
               <h2 className="text-xl font-black text-slate-950">Mis Productos</h2>
             </div>
@@ -290,8 +290,7 @@ export default function MiTiendaPage() {
               )}
             </div>
           </section>
-        </div>
-      </main>
+      </SellerLayout>
     </>
   );
 }
