@@ -124,22 +124,49 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
     }
   };
 
+  const readApiError = async (res: Response, fallback: string) => {
+    const text = await res.text().catch(() => '');
+    if (!text) return fallback;
+
+    try {
+      const json = JSON.parse(text);
+      return json?.error || json?.message || fallback;
+    } catch {
+      if (res.status === 413 || text.includes('Request Entity Too Large')) {
+        return 'El archivo es demasiado grande para subirlo. Reduce el tamaño o comprime la imagen.';
+      }
+      return text.slice(0, 180);
+    }
+  };
+
   const uploadFile = async (f: File): Promise<string> => {
-    const toDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve(String(r.result));
-      r.onerror = reject;
-      r.readAsDataURL(file);
+    const signRes = await fetch('/api/admin/rifas/cloudinary-sign?folder=rifas', {
+      method: 'GET',
     });
-    const dataUrl = await toDataUrl(f);
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: f.name, data: dataUrl }),
+    if (!signRes.ok) {
+      throw new Error(await readApiError(signRes, 'No se pudo preparar la subida de imagen'));
+    }
+
+    const signData = await signRes.json();
+    const form = new FormData();
+    form.append('file', f);
+    form.append('api_key', signData.apiKey);
+    form.append('timestamp', String(signData.timestamp));
+    form.append('folder', 'rifas');
+    form.append('signature', signData.signature);
+
+    const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${signData.cloudName}/image/upload`, {
+      method: 'POST',
+      body: form,
     });
-    if (!res.ok) throw new Error("Error al subir archivo");
-    const json = await res.json();
-    return json.url;
+    if (!uploadRes.ok) {
+      throw new Error(await readApiError(uploadRes, 'Error al subir imagen a Cloudinary'));
+    }
+
+    const json = await uploadRes.json();
+    const url = String(json.secure_url || '').trim();
+    if (!url) throw new Error('Cloudinary no devolvió URL de la imagen');
+    return url;
   };
 
   const uploadVideoFile = async (f: File): Promise<string> => {
