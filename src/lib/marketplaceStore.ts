@@ -10,6 +10,7 @@ export type SellerApplication = {
   id: string;
   userEmail: string;
   fullName: string;
+  sellerDni?: string;
   businessName: string;
   city: string;
   whatsapp: string;
@@ -17,6 +18,9 @@ export type SellerApplication = {
   description: string;
   socialUrl: string;
   logoUrl: string;
+  dniFrontUrl?: string;
+  dniBackUrl?: string;
+  businessPhotoUrl?: string;
   status: ApplicationStatus;
   note: string;
   createdAt: string;
@@ -146,6 +150,7 @@ export function createSellerApplication(input: Partial<SellerApplication> & { us
   if (existingPending) {
     Object.assign(existingPending, {
       fullName: String(input.fullName || existingPending.fullName || "").trim(),
+      sellerDni: String(input.sellerDni || existingPending.sellerDni || "").trim(),
       businessName: String(input.businessName || existingPending.businessName || "").trim(),
       city: String(input.city || existingPending.city || "").trim(),
       whatsapp: String(input.whatsapp || existingPending.whatsapp || "").trim(),
@@ -153,6 +158,9 @@ export function createSellerApplication(input: Partial<SellerApplication> & { us
       description: String(input.description || existingPending.description || "").trim(),
       socialUrl: String(input.socialUrl || existingPending.socialUrl || "").trim(),
       logoUrl: String(input.logoUrl || existingPending.logoUrl || "").trim(),
+      dniFrontUrl: String(input.dniFrontUrl || existingPending.dniFrontUrl || "").trim(),
+      dniBackUrl: String(input.dniBackUrl || existingPending.dniBackUrl || "").trim(),
+      businessPhotoUrl: String(input.businessPhotoUrl || existingPending.businessPhotoUrl || "").trim(),
       updatedAt: timestamp,
     });
     writeMarketplace(data);
@@ -163,6 +171,7 @@ export function createSellerApplication(input: Partial<SellerApplication> & { us
     id: makeId("app"),
     userEmail: email,
     fullName: String(input.fullName || "").trim(),
+    sellerDni: String(input.sellerDni || "").trim(),
     businessName: String(input.businessName || "").trim(),
     city: String(input.city || "").trim(),
     whatsapp: String(input.whatsapp || "").trim(),
@@ -170,6 +179,9 @@ export function createSellerApplication(input: Partial<SellerApplication> & { us
     description: String(input.description || "").trim(),
     socialUrl: String(input.socialUrl || "").trim(),
     logoUrl: String(input.logoUrl || "").trim(),
+    dniFrontUrl: String(input.dniFrontUrl || "").trim(),
+    dniBackUrl: String(input.dniBackUrl || "").trim(),
+    businessPhotoUrl: String(input.businessPhotoUrl || "").trim(),
     status: "PENDING",
     note: "",
     createdAt: timestamp,

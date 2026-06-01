@@ -156,9 +156,8 @@ export default function MiTiendaPage() {
       <SellerLayout shop={shop}>
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-wide text-[#e4147f]">Panel privado</p>
               <h2 className="mt-2 text-3xl font-black text-slate-950">Mi Tienda</h2>
-              <p className="mt-2 text-sm text-slate-600">Gestiona los productos que apareceran dentro de la tienda Rossy Resina.</p>
+              <p className="mt-2 text-sm text-slate-600">Gestiona los productos que apareceran dentro de tu tienda.</p>
             </div>
             <Link href={`/tienda/${shop.slug}`} className="inline-flex h-11 items-center gap-2 rounded-lg border border-pink-200 bg-white px-4 text-sm font-bold text-slate-900">
               <EyeIcon className="h-5 w-5 text-[#e4147f]" />

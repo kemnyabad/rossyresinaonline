@@ -43,7 +43,7 @@ export default function SellerLayout({ children, shop }: SellerLayoutProps) {
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-black">{shop?.commercialName || "Mi tienda"}</p>
-                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">Panel vendedor</p>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">Mi tienda</p>
               </div>
             </div>
           </div>
@@ -86,8 +86,8 @@ export default function SellerLayout({ children, shop }: SellerLayoutProps) {
           <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-xs font-black uppercase tracking-wide text-[#e4147f]">Rossy Resina Marketplace</p>
-                <h1 className="mt-1 truncate text-xl font-black text-slate-950 sm:text-2xl">Panel de vendedor</h1>
+                <h1 className="truncate text-xl font-black text-slate-950 sm:text-2xl">Mi tienda</h1>
+                <p className="mt-1 text-sm font-medium text-slate-600">Gestiona los productos que apareceran dentro de tu tienda.</p>
               </div>
               {shop?.slug && (
                 <Link href={`/tienda/${shop.slug}`} className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg border border-pink-200 bg-white px-3 text-sm font-bold text-slate-900">

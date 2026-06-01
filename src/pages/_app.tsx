@@ -31,6 +31,8 @@ function AppContent({
 
   const isAdminRoute = router.pathname.startsWith("/admin");
   const isSellerCenterRoute = router.pathname === "/vende-con-nosotros";
+  const isPublicSellerShopRoute = router.pathname.startsWith("/tienda/");
+  const isSellerDashboardRoute = router.pathname === "/mi-tienda";
   const isWholesaleRoute = router.pathname === "/mayoristas" || router.pathname === "/mayorista";
   const isRifasRoute = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/rifa/");
   const isCapacitaciones =
@@ -291,7 +293,7 @@ function AppContent({
             <Component {...pageProps} />
           </div>
         </AdminLayout>
-      ) : isWholesaleRoute || isSellerCenterRoute ? (
+      ) : isWholesaleRoute || isSellerCenterRoute || isPublicSellerShopRoute || isSellerDashboardRoute ? (
         <div key={router.asPath} className="min-h-screen bg-white" style={pageTransitionStyle}>
           <Component {...pageProps} />
         </div>

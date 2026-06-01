@@ -69,8 +69,18 @@ export default function AdminMarketplacePage() {
                 <div>
                   <p className="text-lg font-black text-gray-950">{app.businessName}</p>
                   <p className="text-sm text-gray-500">{app.fullName} · {app.city} · {app.userEmail}</p>
+                  <div className="mt-3 grid gap-2 text-sm text-gray-700 sm:grid-cols-2">
+                    <InfoLine label="DNI" value={app.sellerDni} />
+                    <InfoLine label="WhatsApp" value={app.whatsapp} />
+                    <InfoLine label="Redes" value={app.socialUrl} />
+                    <InfoLine label="Productos" value={app.productType} />
+                  </div>
                   <p className="mt-3 text-sm leading-6 text-gray-700">{app.description}</p>
-                  <p className="mt-2 text-sm font-semibold text-gray-800">Productos: {app.productType}</p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <VerificationImage label="DNI frente" src={app.dniFrontUrl} />
+                    <VerificationImage label="DNI reverso" src={app.dniBackUrl} />
+                    <VerificationImage label="Emprendimiento" src={app.businessPhotoUrl || app.logoUrl} />
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2">
                   <button onClick={() => decide({ type: "application", id: app.id, decision: "APPROVED" })} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white">
@@ -129,6 +139,30 @@ function Stat({ label, value }: { label: string; value: number }) {
       <p className="text-3xl font-black text-gray-950">{value}</p>
       <p className="mt-1 text-sm font-semibold text-gray-500">{label}</p>
     </article>
+  );
+}
+
+function InfoLine({ label, value }: { label: string; value?: string }) {
+  return (
+    <p>
+      <span className="font-black text-gray-900">{label}:</span>{" "}
+      <span className="break-words text-gray-600">{String(value || "No registrado")}</span>
+    </p>
+  );
+}
+
+function VerificationImage({ label, src }: { label: string; src?: string }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+      <div className="border-b border-gray-200 px-3 py-2 text-xs font-black uppercase tracking-wide text-gray-500">{label}</div>
+      {src ? (
+        <a href={src} target="_blank" rel="noreferrer" className="block">
+          <img src={src} alt={label} className="h-36 w-full object-cover" />
+        </a>
+      ) : (
+        <div className="flex h-36 items-center justify-center px-3 text-center text-xs font-semibold text-gray-400">Sin imagen</div>
+      )}
+    </div>
   );
 }
 

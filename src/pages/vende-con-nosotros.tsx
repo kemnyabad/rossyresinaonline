@@ -1,6 +1,7 @@
 import Head from "next/head";
+import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import {
   BanknotesIcon,
@@ -11,6 +12,7 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { getDepartment, peruDepartments } from "@/lib/peruLocations";
+import logo from "@/images/logo.jpg";
 
 const sellerBenefits = [
   { label: "Vende dentro de Rossy Resina", icon: ShoppingBagIcon },
@@ -35,14 +37,17 @@ const emptyForm = {
   description: "",
   socialUrl: "",
   logoUrl: "",
+  dniFrontUrl: "",
+  dniBackUrl: "",
+  businessPhotoUrl: "",
 };
 
 export default function VendeConNosotrosPage() {
   const { data: session } = useSession();
   const [form, setForm] = useState(emptyForm);
-  const [companyType, setCompanyType] = useState("Persona natural");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [onboardingError, setOnboardingError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [marketplaceContext, setMarketplaceContext] = useState<any>(null);
 
@@ -50,6 +55,7 @@ export default function VendeConNosotrosPage() {
   const application = marketplaceContext?.application || null;
   const shop = marketplaceContext?.shop || null;
   const isApproved = marketplaceContext?.role === "SELLER" || application?.status === "APPROVED";
+  const isPendingReview = !isApproved && application?.status === "PENDING";
   const showSellerOnboarding = !isApproved && (submitted || application?.status === "PENDING");
 
   const loadMarketplaceContext = async () => {
@@ -105,16 +111,28 @@ export default function VendeConNosotrosPage() {
       setError("Las contraseñas no coinciden.");
       return false;
     }
+    if (!form.fullName.trim()) {
+      setError("Ingresa tu nombre completo.");
+      return false;
+    }
+    if (form.dni.replace(/\D/g, "").length < 8) {
+      setError("Ingresa un DNI válido de 8 dígitos.");
+      return false;
+    }
+    if (!form.whatsapp.trim()) {
+      setError("Ingresa tu WhatsApp de contacto.");
+      return false;
+    }
 
     const registerRes = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: email.split("@")[0],
+        name: form.fullName || email.split("@")[0],
         email,
         password: form.password,
-        dni: getSellerAutoDni(email),
-        phone: "Por coordinar",
+        dni: form.dni.replace(/\D/g, "") || getSellerAutoDni(email),
+        phone: form.whatsapp || "Por coordinar",
         locationLine: getSellerLocation(form),
         shippingCarrier: "SHALOM",
         shalomAgency: "Por coordinar",
@@ -160,21 +178,62 @@ export default function VendeConNosotrosPage() {
         setError("Completa la ciudad, provincia y distrito desde donde vendes.");
         return;
       }
+      if (!form.fullName.trim() || form.dni.replace(/\D/g, "").length < 8 || !form.whatsapp.trim()) {
+        setError("Completa tu nombre, DNI y WhatsApp antes de continuar.");
+        return;
+      }
 
       const accountReady = await ensureAccountSession();
       if (!accountReady) return;
-      const sellerEmail = sessionEmail || form.email.trim().toLowerCase();
-      const sellerName = sellerEmail.split("@")[0] || "Vendedora";
+      setSubmitted(true);
+    } catch {
+      setError("Error de conexión. Intenta nuevamente.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleApplicationSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setOnboardingError("");
+    setSending(true);
+
+    try {
+      const sellerLocation = getSellerLocation(form);
+      const required = [
+        form.fullName,
+        form.dni,
+        form.businessName,
+        sellerLocation,
+        form.whatsapp,
+        form.productType,
+        form.description,
+        form.dniFrontUrl,
+        form.dniBackUrl,
+        form.businessPhotoUrl,
+      ];
+      if (required.some((value) => !String(value || "").trim())) {
+        setOnboardingError("Completa los datos del vendedor, negocio, fotos del DNI y foto del emprendimiento.");
+        return;
+      }
+      if (form.dni.replace(/\D/g, "").length < 8) {
+        setOnboardingError("Ingresa un DNI válido de 8 dígitos.");
+        return;
+      }
 
       const payload = {
-        fullName: sellerName,
-        businessName: `Tienda de ${sellerName}`,
+        fullName: form.fullName.trim(),
+        sellerDni: form.dni.replace(/\D/g, ""),
+        businessName: form.businessName.trim(),
         city: sellerLocation,
-        whatsapp: "Por coordinar",
-        productType: "Productos artesanales",
-        description: "Solicitud de vendedor registrada desde el formulario simplificado.",
-        socialUrl: "",
-        logoUrl: "",
+        whatsapp: form.whatsapp.trim(),
+        productType: form.productType.trim(),
+        description: form.description.trim(),
+        socialUrl: form.socialUrl.trim(),
+        logoUrl: form.logoUrl.trim(),
+        dniFrontUrl: form.dniFrontUrl,
+        dniBackUrl: form.dniBackUrl,
+        businessPhotoUrl: form.businessPhotoUrl,
       };
 
       const res = await fetch("/api/marketplace/applications", {
@@ -184,17 +243,77 @@ export default function VendeConNosotrosPage() {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(String(body?.error || "No se pudo enviar tu solicitud."));
+        setOnboardingError(String(body?.error || "No se pudo enviar tu solicitud."));
         return;
       }
 
       setSubmitted(true);
+      setMarketplaceContext((current: any) => ({
+        ...(current || {}),
+        role: "CUSTOMER",
+        application: body.application,
+      }));
       await loadMarketplaceContext();
     } catch {
       setError("Error de conexión. Intenta nuevamente.");
     } finally {
       setSending(false);
     }
+  };
+
+  const handleImageFile = async (key: "dniFrontUrl" | "dniBackUrl" | "businessPhotoUrl" | "logoUrl", file?: File | null) => {
+    if (!file) return;
+    setOnboardingError("");
+    if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
+      setOnboardingError("Sube imágenes en formato JPG, PNG o WEBP.");
+      return;
+    }
+    if (file.size > 1200 * 1024) {
+      setOnboardingError("Cada imagen debe pesar máximo 1.2MB.");
+      return;
+    }
+    setSending(true);
+    try {
+      const data = await readFileAsDataUrl(file);
+      const res = await fetch("/api/marketplace/upload-document", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, kind: key, data }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setOnboardingError(String(body?.error || "No se pudo subir la imagen."));
+        return;
+      }
+      update(key, String(body.url || ""));
+    } catch {
+      setOnboardingError("No se pudo subir la imagen. Intenta nuevamente.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const fillSellerTestData = () => {
+    const stamp = Date.now().toString().slice(-6);
+    setError("");
+    setOnboardingError("");
+    setForm((current) => ({
+      ...current,
+      email: current.email || `vendedora.prueba${stamp}@rossyresina.test`,
+      password: current.password || "Prueba123",
+      confirmPassword: current.confirmPassword || "Prueba123",
+      fullName: "María Prueba Vendedora",
+      dni: `70${stamp}`.slice(0, 8).padEnd(8, "1"),
+      businessName: "Creaciones Prueba Rossy",
+      whatsapp: "51999999999",
+      productType: "Llaveros, dijes, lapiceros personalizados y piezas en resina",
+      description: "Emprendimiento de prueba para validar el flujo de alta de vendedores en Rossy Resina.",
+      socialUrl: "https://instagram.com/creaciones_prueba_rossy",
+      logoUrl: "/favicon-96x96.png",
+      dniFrontUrl: "/web-app-manifest-512x512.png",
+      dniBackUrl: "/web-app-manifest-192x192.png",
+      businessPhotoUrl: "/creations/1773682497648_Catalogo_Express_Rossy_Resina__2_.png",
+    }));
   };
 
   return (
@@ -206,11 +325,18 @@ export default function VendeConNosotrosPage() {
 
       <main className="min-h-screen bg-white text-slate-950">
         <SellerTopbar />
-        {showSellerOnboarding ? (
+        {isPendingReview ? (
+          <SellerPendingReview application={application} />
+        ) : showSellerOnboarding ? (
           <SellerOnboarding
-            companyType={companyType}
+            form={form}
+            error={onboardingError}
+            sending={sending}
             location={application?.city || getSellerLocation(form)}
-            onCompanyTypeChange={setCompanyType}
+            onUpdate={update}
+            onImageFile={handleImageFile}
+            onFillTestData={fillSellerTestData}
+            onSubmit={handleApplicationSubmit}
           />
         ) : (
           <>
@@ -239,7 +365,7 @@ export default function VendeConNosotrosPage() {
                   </div>
                 </section>
 
-                <aside className="hidden self-start rounded-2xl border border-white/20 bg-white/95 p-6 shadow-2xl lg:block">
+                <aside id="registro-vendedor" className="hidden self-start rounded-2xl border border-white/20 bg-white/95 p-6 shadow-2xl lg:block">
                   <SellerRegisterForm
                     form={form}
                     sessionEmail={sessionEmail}
@@ -249,6 +375,7 @@ export default function VendeConNosotrosPage() {
                     isApproved={isApproved}
                     shop={shop}
                     onUpdate={update}
+                    onFillTestData={fillSellerTestData}
                     onSubmit={handleSubmit}
                   />
                 </aside>
@@ -272,94 +399,170 @@ export default function VendeConNosotrosPage() {
 
 function SellerTopbar() {
   return (
-    <header className="flex h-14 items-center justify-between border-b border-slate-900 bg-black px-4 text-white sm:px-8 lg:px-12">
-      <Link href="/" className="flex items-center gap-3">
-        <div>
-          <p className="text-base font-black leading-tight">Rossy Resina</p>
-          <p className="text-[11px] font-semibold text-white/45">Seller Center</p>
-        </div>
-      </Link>
-      <nav className="flex items-center gap-5 text-sm font-bold">
-        <span className="hidden text-white/55 sm:inline">Perú</span>
-        <Link href="/sign-in?callbackUrl=/vende-con-nosotros" className="text-white hover:text-[#ff8ac4]">
-          Iniciar sesión
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b0b0b] text-white">
+      <div className="mx-auto flex h-20 max-w-[1720px] items-center justify-between px-4 sm:px-8 lg:px-12">
+        <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="Rossy Resina Seller Center">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#ff6a00] p-1.5 shadow-[0_0_0_1px_rgba(255,255,255,0.14)]">
+            <Image src={logo} alt="Rossy Resina" className="h-full w-full rounded-lg object-cover" priority />
+          </span>
+          <span className="min-w-0 leading-tight">
+            <span className="block truncate text-xl font-black tracking-wide text-white sm:text-2xl">ROSSY RESINA</span>
+            <span className="block truncate text-base font-bold text-white/62 sm:text-lg">Seller Center</span>
+          </span>
         </Link>
-      </nav>
+
+        <nav className="flex items-center gap-4 text-sm font-bold sm:gap-7">
+          <span className="hidden items-center gap-2 text-white sm:flex">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#d91023] text-[12px] ring-1 ring-white/20">PE</span>
+            <span>Perú</span>
+          </span>
+          <span className="hidden text-white sm:inline">ES</span>
+          <Link href="/sign-in?callbackUrl=/vende-con-nosotros" className="whitespace-nowrap text-white transition hover:text-[#ff7a1a]">
+            Iniciar sesión
+          </Link>
+          <Link
+            href="#registro-vendedor"
+            className="inline-flex h-12 items-center justify-center rounded-lg bg-[#ff6a00] px-5 text-sm font-black text-white shadow-[0_10px_22px_rgba(255,106,0,0.22)] transition hover:bg-[#ff7a1a] sm:px-6"
+          >
+            Registrarse
+          </Link>
+        </nav>
+      </div>
     </header>
   );
 }
 
-const companyTypes = [
-  {
-    label: "Persona natural",
-    text: "Vendes con tu propio nombre y luego podrás completar los datos de tu tienda.",
-  },
-  {
-    label: "Emprendimiento registrado",
-    text: "Tu marca ya tiene nombre comercial y datos listos para revisión.",
-  },
-  {
-    label: "Empresa privada",
-    text: "Tu negocio está constituido y venderá productos desde una razón social.",
-  },
-  {
-    label: "Distribuidora",
-    text: "Comprarás o publicarás productos para abastecer a otras resineras.",
-  },
-];
+function SellerPendingReview({ application }: { application: any }) {
+  return (
+    <section className="min-h-[calc(100vh-80px)] bg-white px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-3xl rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-sm sm:p-8">
+        <CheckCircleIcon className="mx-auto h-16 w-16 text-emerald-600" />
+        <h1 className="mt-5 text-3xl font-black text-slate-950">Solicitud enviada para revisión</h1>
+        <p className="mt-3 text-base font-medium leading-7 text-slate-700">
+          Recibimos la información de tu emprendimiento. Rossy Resina revisará tus datos y documentos antes de activar tu tienda.
+        </p>
+
+        <div className="mt-7 grid gap-3 rounded-xl border border-emerald-200 bg-white p-4 text-left text-sm sm:grid-cols-2">
+          <InfoReview label="Emprendimiento" value={application?.businessName} />
+          <InfoReview label="Vendedora" value={application?.fullName} />
+          <InfoReview label="Ubicación" value={application?.city} />
+          <InfoReview label="Estado" value="Pendiente de revisión" />
+        </div>
+
+        <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <Link href="/" className="inline-flex h-12 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 text-sm font-black text-slate-900">
+            Volver a la tienda
+          </Link>
+          <Link href="/account" className="inline-flex h-12 items-center justify-center rounded-lg bg-[#e4147f] px-5 text-sm font-black text-white">
+            Ver mi cuenta
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function InfoReview({ label, value }: { label: string; value?: string }) {
+  return (
+    <p>
+      <span className="block text-xs font-black uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="mt-1 block break-words font-bold text-slate-900">{String(value || "Registrado")}</span>
+    </p>
+  );
+}
 
 function SellerOnboarding({
-  companyType,
+  form,
+  error,
+  sending,
   location,
-  onCompanyTypeChange,
+  onUpdate,
+  onImageFile,
+  onFillTestData,
+  onSubmit,
 }: {
-  companyType: string;
+  form: typeof emptyForm;
+  error: string;
+  sending: boolean;
   location: string;
-  onCompanyTypeChange: (value: string) => void;
+  onUpdate: (key: keyof typeof emptyForm, value: string) => void;
+  onImageFile: (key: "dniFrontUrl" | "dniBackUrl" | "businessPhotoUrl" | "logoUrl", file?: File | null) => void;
+  onFillTestData: () => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
     <section className="min-h-[calc(100vh-56px)] bg-white">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <div>
-          <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">Información comercial</h1>
-          <p className="mt-2 text-base font-medium leading-7 text-slate-600">Te damos la bienvenida. Completa los datos comerciales para preparar tu tienda.</p>
+        <form onSubmit={onSubmit}>
+          <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">Información del vendedor y negocio</h1>
+          <p className="mt-2 text-base font-medium leading-7 text-slate-600">Completa tus datos de verificación para preparar tu tienda y proteger a la comunidad.</p>
+          {process.env.NODE_ENV !== "production" && (
+            <button
+              type="button"
+              onClick={onFillTestData}
+              className="mt-4 inline-flex h-10 items-center justify-center rounded-lg border border-pink-200 bg-[#fff7fb] px-4 text-sm font-black text-[#e4147f] transition hover:bg-[#fff0f7]"
+            >
+              Rellenar datos de prueba
+            </button>
+          )}
 
           <div className="mt-7 grid gap-5">
+            {error && <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div>}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Nombre completo del vendedor">
+                <input value={form.fullName} onChange={(e) => onUpdate("fullName", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="DNI del vendedor">
+                <input value={form.dni} onChange={(e) => onUpdate("dni", e.target.value.replace(/\D/g, ""))} className={inputClass} inputMode="numeric" maxLength={8} />
+              </Field>
+            </div>
+
             <Field label="Ubicación comercial">
               <input value={location || "Perú"} readOnly className={inputClass} />
             </Field>
 
-            <div>
-              <p className="text-base font-black text-slate-800">Tipo de empresa</p>
-              <p className="mt-1 text-base font-medium leading-7 text-slate-500">Selecciona cómo venderás dentro de Rossy Resina.</p>
-              <div className="mt-3 grid gap-3">
-                {companyTypes.map((item) => {
-                  const selected = companyType === item.label;
-                  return (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={() => onCompanyTypeChange(item.label)}
-                      className={`flex min-h-[74px] items-start gap-3 rounded-lg border px-4 py-3 text-left transition ${
-                        selected ? "border-[#e4147f] bg-[#fff4f9]" : "border-slate-200 bg-white hover:border-pink-200"
-                      }`}
-                    >
-                      <span className={`mt-1 h-5 w-5 rounded-full border ${selected ? "border-[#e4147f] bg-[#e4147f] shadow-[inset_0_0_0_4px_#fff]" : "border-slate-300"}`} />
-                      <span>
-                        <span className="block text-base font-black text-slate-950">{item.label}</span>
-                        <span className="mt-1 block text-base leading-6 text-slate-500">{item.text}</span>
-                      </span>
-                    </button>
-                  );
-                })}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Nombre del emprendimiento">
+                <input value={form.businessName} onChange={(e) => onUpdate("businessName", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="WhatsApp de contacto">
+                <input value={form.whatsapp} onChange={(e) => onUpdate("whatsapp", e.target.value)} className={inputClass} inputMode="tel" />
+              </Field>
+            </div>
+
+            <Field label="Tipo de productos que venderás">
+              <input value={form.productType} onChange={(e) => onUpdate("productType", e.target.value)} className={inputClass} placeholder="Ej: llaveros, joyería, piezas personalizadas" />
+            </Field>
+
+            <Field label="Descripción breve del negocio">
+              <textarea value={form.description} onChange={(e) => onUpdate("description", e.target.value)} className={`${inputClass} h-28 py-3`} />
+            </Field>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Instagram, Facebook o TikTok">
+                <input value={form.socialUrl} onChange={(e) => onUpdate("socialUrl", e.target.value)} className={inputClass} placeholder="https://instagram.com/..." />
+              </Field>
+              <Field label="Logo o foto principal">
+                <input onChange={(e: ChangeEvent<HTMLInputElement>) => onImageFile("logoUrl", e.target.files?.[0])} type="file" accept="image/png,image/jpeg,image/webp" className={fileInputClass} />
+              </Field>
+            </div>
+
+            <div className="rounded-xl border border-pink-100 bg-[#fff7fb] p-4">
+              <p className="text-base font-black text-slate-900">Verificación de seguridad</p>
+              <p className="mt-1 text-sm font-medium leading-6 text-slate-600">Solicitamos estas imágenes para validar identidad y reducir riesgos de fraude antes de aprobar una tienda.</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                <UploadField label="DNI - frente" value={form.dniFrontUrl} onChange={(file) => onImageFile("dniFrontUrl", file)} />
+                <UploadField label="DNI - reverso" value={form.dniBackUrl} onChange={(file) => onImageFile("dniBackUrl", file)} />
+                <UploadField label="Foto del emprendimiento" value={form.businessPhotoUrl} onChange={(file) => onImageFile("businessPhotoUrl", file)} />
               </div>
             </div>
 
-            <button type="button" className="mt-3 h-12 w-full max-w-sm rounded-lg bg-[#e4147f] px-5 text-sm font-black text-white transition hover:bg-[#c91473]">
-              Siguiente
+            <button type="submit" disabled={sending} className="mt-3 h-12 w-full max-w-sm rounded-lg bg-[#e4147f] px-5 text-sm font-black text-white transition hover:bg-[#c91473] disabled:opacity-60">
+              {sending ? "Enviando verificación..." : "Enviar solicitud para revisión"}
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </section>
   );
@@ -374,6 +577,7 @@ function SellerRegisterForm({
   isApproved,
   shop,
   onUpdate,
+  onFillTestData,
   onSubmit,
   compact = false,
 }: any) {
@@ -418,6 +622,16 @@ function SellerRegisterForm({
         </div>
       </div>
 
+      {process.env.NODE_ENV !== "production" && (
+        <button
+          type="button"
+          onClick={onFillTestData}
+          className="mt-5 h-11 w-full rounded-lg border border-pink-200 bg-[#fff7fb] px-4 text-sm font-black text-[#e4147f] transition hover:bg-[#fff0f7]"
+        >
+          Rellenar datos de prueba
+        </button>
+      )}
+
       {submitted && (
         <div className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-800">
           Gracias por registrarte. Revisaremos tu solicitud y te contactaremos por WhatsApp.
@@ -455,6 +669,18 @@ function SellerRegisterForm({
           <input value={form.customLocation} onChange={(e) => onUpdate("customLocation", e.target.value)} className={inputClass} placeholder="Ej: Departamento - Provincia - Distrito" />
         </Field>
 
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Nombre completo">
+            <input value={form.fullName} onChange={(e) => onUpdate("fullName", e.target.value)} className={inputClass} />
+          </Field>
+          <Field label="DNI">
+            <input value={form.dni} onChange={(e) => onUpdate("dni", e.target.value.replace(/\D/g, ""))} className={inputClass} inputMode="numeric" maxLength={8} />
+          </Field>
+          <Field label="WhatsApp">
+            <input value={form.whatsapp} onChange={(e) => onUpdate("whatsapp", e.target.value)} className={inputClass} inputMode="tel" />
+          </Field>
+        </div>
+
         {!sessionEmail && (
           <>
             <Field label="Email o número de teléfono">
@@ -488,6 +714,7 @@ function SellerRegisterForm({
 }
 
 const inputClass = "h-14 w-full rounded-lg border border-slate-300 bg-white px-4 text-base outline-none transition focus:border-[#e4147f] focus:ring-2 focus:ring-pink-100";
+const fileInputClass = "w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm font-semibold text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-[#fff0f7] file:px-3 file:py-2 file:font-bold file:text-[#e4147f]";
 
 function getSellerLocation(form: typeof emptyForm) {
   const custom = String(form.customLocation || "").trim();
@@ -503,11 +730,34 @@ function getSellerAutoDni(email: string) {
   return String(hash % 100000000).padStart(8, "0");
 }
 
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block text-sm font-black text-slate-800">
       {label}
       <div className="mt-2">{children}</div>
+    </label>
+  );
+}
+
+function UploadField({ label, value, onChange }: { label: string; value: string; onChange: (file?: File | null) => void }) {
+  return (
+    <label className="block text-sm font-black text-slate-800">
+      {label}
+      <input onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.files?.[0])} type="file" accept="image/png,image/jpeg,image/webp" className={`${fileInputClass} mt-2`} />
+      {value && (
+        <span className="mt-2 block overflow-hidden rounded-lg border border-pink-100 bg-white">
+          <img src={value} alt={label} className="h-28 w-full object-cover" />
+        </span>
+      )}
     </label>
   );
 }

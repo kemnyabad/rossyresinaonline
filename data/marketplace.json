@@ -3,21 +3,57 @@
     {
       "id": "app_mpr9xjle_ryq9qk",
       "userEmail": "kemeny@gmail.com",
-      "fullName": "kemeny",
-      "businessName": "Tienda de kemeny",
+      "fullName": "María Prueba Vendedora",
+      "businessName": "Creaciones Prueba Rossy",
       "city": "Lima - Lima - Lima",
-      "whatsapp": "Por coordinar",
-      "productType": "Productos artesanales",
-      "description": "Solicitud de vendedor registrada desde el formulario simplificado.",
-      "socialUrl": "",
-      "logoUrl": "",
-      "status": "PENDING",
+      "whatsapp": "51999999999",
+      "productType": "Llaveros, dijes, lapiceros personalizados y piezas en resina",
+      "description": "Emprendimiento de prueba para validar el flujo de alta de vendedores en Rossy Resina.",
+      "socialUrl": "https://instagram.com/creaciones_prueba_rossy",
+      "logoUrl": "/favicon-96x96.png",
+      "status": "APPROVED",
       "note": "",
       "createdAt": "2026-05-29T18:47:16.850Z",
-      "updatedAt": "2026-05-29T18:47:16.850Z"
+      "updatedAt": "2026-05-30T00:30:00.000Z",
+      "sellerDni": "70233778",
+      "dniFrontUrl": "/web-app-manifest-512x512.png",
+      "dniBackUrl": "/web-app-manifest-192x192.png",
+      "businessPhotoUrl": "/creations/1773682497648_Catalogo_Express_Rossy_Resina__2_.png"
     }
   ],
-  "shops": [],
+  "shops": [
+    {
+      "id": "shop_test_creaciones_prueba",
+      "userEmail": "kemeny@gmail.com",
+      "applicationId": "app_mpr9xjle_ryq9qk",
+      "slug": "creaciones-prueba-rossy",
+      "logoUrl": "/favicon-96x96.png",
+      "commercialName": "Creaciones Prueba Rossy",
+      "city": "Lima - Lima - Lima",
+      "description": "Emprendimiento de prueba para validar el flujo de alta de vendedores en Rossy Resina.",
+      "whatsapp": "51999999999",
+      "facebook": "",
+      "instagram": "https://instagram.com/creaciones_prueba_rossy",
+      "tiktok": "",
+      "status": "ACTIVE",
+      "featured": false,
+      "createdAt": "2026-05-30T00:30:00.000Z",
+      "updatedAt": "2026-05-30T00:30:00.000Z"
+    }
+  ],
   "products": [],
-  "events": []
+  "events": [
+    {
+      "id": "evt_mprmo4ps_xpyoee",
+      "createdAt": "2026-05-30T00:43:52.672Z",
+      "type": "SHOP_VIEW",
+      "shopId": "shop_test_creaciones_prueba"
+    },
+    {
+      "id": "evt_mprmnbpz_5ad3d6",
+      "createdAt": "2026-05-30T00:43:15.095Z",
+      "type": "SHOP_VIEW",
+      "shopId": "shop_test_creaciones_prueba"
+    }
+  ]
 }
