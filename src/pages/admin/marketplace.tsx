@@ -26,12 +26,14 @@ export default function AdminMarketplacePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    setNotice(res.ok ? "Accion aplicada correctamente." : "No se pudo aplicar la accion.");
+    const body = await res.json().catch(() => ({}));
+    setNotice(res.ok ? "Accion aplicada correctamente." : String(body?.error || "No se pudo aplicar la accion."));
     await load();
   };
 
   const pendingApplications = useMemo(() => data.applications.filter((item: any) => item.status === "PENDING"), [data.applications]);
   const pendingProducts = useMemo(() => data.products.filter((item: any) => item.status === "PENDING"), [data.products]);
+  const activeShops = useMemo(() => data.shops.filter((item: any) => item.status === "ACTIVE"), [data.shops]);
 
   return (
     <div className="space-y-6">
@@ -51,7 +53,7 @@ export default function AdminMarketplacePage() {
 
       <section className="grid gap-4 md:grid-cols-4">
         <Stat label="Solicitudes pendientes" value={pendingApplications.length} />
-        <Stat label="Tiendas activas" value={data.shops.filter((item: any) => item.status === "ACTIVE").length} />
+        <Stat label="Tiendas activas" value={activeShops.length} />
         <Stat label="Productos pendientes" value={pendingProducts.length} />
         <Stat label="Productos publicados" value={data.products.filter((item: any) => item.status === "PUBLISHED").length} />
       </section>
@@ -90,6 +92,56 @@ export default function AdminMarketplacePage() {
                   <button onClick={() => decide({ type: "application", id: app.id, decision: "REJECTED", note: "No aprobada por moderacion." })} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 text-sm font-bold text-white">
                     <XCircleIcon className="h-5 w-5" />
                     Rechazar
+                  </button>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-gray-200 bg-white">
+        <div className="border-b border-gray-100 p-5">
+          <h3 className="text-lg font-black text-gray-950">Tiendas activas</h3>
+        </div>
+        <div className="divide-y divide-gray-100">
+          {activeShops.length === 0 ? (
+            <p className="p-5 text-sm text-gray-500">No hay tiendas activas.</p>
+          ) : (
+            activeShops.map((shop: any) => (
+              <article key={shop.id} className="grid gap-4 p-5 lg:grid-cols-[1fr_240px]">
+                <div className="flex gap-4">
+                  {shop.logoUrl ? (
+                    <img src={shop.logoUrl} alt={shop.commercialName} className="h-16 w-16 rounded-xl border border-gray-200 object-cover" />
+                  ) : (
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-xs font-black text-gray-400">Sin logo</div>
+                  )}
+                  <div>
+                    <p className="text-lg font-black text-gray-950">{shop.commercialName}</p>
+                    <p className="text-sm text-gray-500">{shop.city || "Sin ciudad"} · {shop.userEmail}</p>
+                    <p className="mt-2 text-sm leading-6 text-gray-700">{shop.description || "Sin descripcion registrada."}</p>
+                    <div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-gray-500">
+                      {shop.whatsapp && <span>WhatsApp: {shop.whatsapp}</span>}
+                      {shop.slug && <span>Slug: {shop.slug}</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {shop.slug && (
+                    <a href={`/tienda/${shop.slug}`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center rounded-lg border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700">
+                      Ver tienda
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (window.confirm("¿Desactivar esta tienda? Dejara de aparecer como tienda activa.")) {
+                        decide({ type: "shop", id: shop.id, userEmail: shop.userEmail, note: "Tienda desactivada desde marketplace admin." });
+                      }
+                    }}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 text-sm font-bold text-white"
+                  >
+                    <XCircleIcon className="h-5 w-5" />
+                    Desactivar
                   </button>
                 </div>
               </article>

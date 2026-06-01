@@ -35,14 +35,20 @@
       "facebook": "",
       "instagram": "https://instagram.com/creaciones_prueba_rossy",
       "tiktok": "",
-      "status": "ACTIVE",
+      "status": "PAUSED",
       "featured": false,
       "createdAt": "2026-05-30T00:30:00.000Z",
-      "updatedAt": "2026-05-30T00:30:00.000Z"
+      "updatedAt": "2026-06-01T19:16:45.218Z"
     }
   ],
   "products": [],
   "events": [
+    {
+      "id": "evt_mpvlamcp_qkq49s",
+      "createdAt": "2026-06-01T19:16:27.433Z",
+      "type": "SHOP_VIEW",
+      "shopId": "dbshop_kemenyabad2504@gmail.com"
+    },
     {
       "id": "evt_mprmo4ps_xpyoee",
       "createdAt": "2026-05-30T00:43:52.672Z",

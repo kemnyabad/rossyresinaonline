@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { isAdminApiRequest } from "@/lib/adminAuth";
-import { decideSellerApplication, moderateProduct, readMarketplace } from "@/lib/marketplaceStore";
+import { decideSellerApplication, moderateProduct, readMarketplace, setSellerShopStatus } from "@/lib/marketplaceStore";
 import { DB_APPLICATION_PREFIX, DB_PRODUCT_PREFIX, getDbMarketplaceData, mapDbApplication, moderateDbProduct } from "@/lib/marketplaceDb";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -80,6 +80,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const product = moderateProduct(String(body.id || ""), body.decision === "PUBLISHED" ? "PUBLISHED" : "REJECTED", body.note);
       if (!product) return res.status(404).json({ error: "Producto no encontrado" });
       return res.status(200).json({ product });
+    }
+
+    if (body.type === "shop") {
+      const id = String(body.id || "");
+      const email = String(body.userEmail || "").trim().toLowerCase();
+
+      if (id.startsWith("dbshop_")) {
+        const application = await (prisma as any).capacitacionInscripcion.findFirst({
+          where: {
+            curso: "VENDE_CON_NOSOTROS",
+            email,
+            estado: { in: ["APROBADO", "APPROVED"] },
+          },
+          orderBy: { updatedAt: "desc" },
+        });
+        if (!application) return res.status(404).json({ error: "Tienda no encontrada" });
+
+        const updated = await (prisma as any).capacitacionInscripcion.update({
+          where: { id: application.id },
+          data: {
+            estado: "RECHAZADO",
+            notaAdmin: String(body.note || "Tienda desactivada desde marketplace admin."),
+          },
+        });
+        try {
+          await (prisma as any).user.update({
+            where: { email },
+            data: { role: "CUSTOMER" },
+          });
+        } catch {
+          // La tienda queda desactivada aunque el usuario ya no exista o no pueda actualizarse.
+        }
+        return res.status(200).json({ application: mapDbApplication(updated) });
+      }
+
+      const shop = setSellerShopStatus(id, "PAUSED");
+      if (!shop) return res.status(404).json({ error: "Tienda no encontrada" });
+      try {
+        await (prisma as any).user.update({
+          where: { email: shop.userEmail },
+          data: { role: "CUSTOMER" },
+        });
+      } catch {
+        // La tienda local queda pausada aunque el usuario no este en la base.
+      }
+      return res.status(200).json({ shop });
     }
 
     return res.status(400).json({ error: "Accion invalida" });

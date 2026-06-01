@@ -247,6 +247,16 @@ export function updateSellerShop(email: string, input: Partial<SellerShop>) {
   return shop;
 }
 
+export function setSellerShopStatus(id: string, status: "ACTIVE" | "PAUSED") {
+  const data = readMarketplace();
+  const shop = data.shops.find((item) => item.id === id);
+  if (!shop) return null;
+  shop.status = status;
+  shop.updatedAt = now();
+  writeMarketplace(data);
+  return shop;
+}
+
 export function createSellerProduct(email: string, input: Partial<SellerProduct>) {
   const data = readMarketplace();
   const shop = data.shops.find((item) => item.userEmail === String(email || "").trim().toLowerCase() && item.status === "ACTIVE");
