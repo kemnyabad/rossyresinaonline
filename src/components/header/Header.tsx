@@ -294,67 +294,7 @@ const Header = () => {
           </div>
         ) : (
         <>
-        <div className="flex items-center justify-between">
-          <Link href={"/"} onClick={handleLogoClick} className="group flex min-w-0 items-center gap-3 rounded-md py-1 pr-2 transition-colors">
-            <div className="shrink-0 overflow-hidden rounded-full bg-white shadow-[0_4px_12px_rgba(17,24,39,0.14)] ring-2 ring-white transition-all duration-200 group-hover:ring-[#e4147f]">
-              <Image className="h-10 w-10 object-contain" src={logo} alt="Logo Rossy Resina" priority />
-            </div>
-            <div className="h-9 w-[3px] shrink-0 rounded-full bg-[#e4147f] shadow-[0_0_0_1px_rgba(255,255,255,0.18)]" />
-            <div className="min-w-0">
-              <span className="block truncate text-[17px] font-bold leading-5 text-[#e4147f] [text-shadow:1.4px_0_0_#fff,-1.4px_0_0_#fff,0_1.4px_0_#fff,0_-1.4px_0_#fff,1px_1px_0_#fff,-1px_1px_0_#fff,1px_-1px_0_#fff,-1px_-1px_0_#fff]">
-                Rossy Resina
-              </span>
-              <span className="block truncate text-[11px] font-medium leading-4 text-white/85">
-                Tienda artesana
-              </span>
-            </div>
-          </Link>
-
-          {isResinyPage && (
-            <div className="ml-1 flex min-w-0 items-center gap-1.5">
-              <span className="relative h-14 w-14 shrink-0 md:h-16 md:w-16">
-                <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" priority />
-              </span>
-              <div className="min-w-0 leading-tight">
-                <p className="truncate text-[15px] font-bold text-white md:text-base">Resiny</p>
-                <p className="hidden text-xs font-medium text-white/80 sm:block">Asistente de Rossy Resina</p>
-              </div>
-            </div>
-          )}
-
-          {!isResinyPage && (
-            <Link
-              href="/resiny"
-              className="ml-2 mr-3 flex min-h-[60px] flex-1 max-w-[210px] items-center justify-center gap-0.5 px-1 text-white transition-transform duration-300 active:scale-[0.98]"
-              aria-label="Chatear con Resiny"
-            >
-              <span className="relative h-14 w-12 shrink-0">
-                <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" />
-              </span>
-              <span className="-ml-2 text-[16px] font-bold leading-tight">
-                Chatea
-                <span className="block text-[15px] font-semibold text-white/85">con Resiny</span>
-              </span>
-            </Link>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen((open) => !open)}
-            className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
-              mobileMenuOpen
-                ? "border-white bg-white text-[#86b817]"
-                : "border-white/35 bg-white/15 text-white"
-            }`}
-            aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-store-menu"
-          >
-            {mobileMenuOpen ? <XMarkIcon className="h-5 w-5" /> : <Bars3Icon className="h-5 w-5" />}
-          </button>
-        </div>
-
-        {!isResinyPage && <div className="mt-3">
+        {!isResinyPage && <div>
           <div className="flex h-11 overflow-hidden rounded-xl border border-white bg-white shadow-sm">
             <label htmlFor="mobile-header-search-category" className="sr-only">Categoría</label>
             <select
@@ -382,36 +322,6 @@ const Header = () => {
           </div>
         </div>}
         </>
-        )}
-        {!isResinyPage && (
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <Link
-              href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
-              className="flex min-h-[48px] items-center gap-2 rounded-xl border border-white/25 bg-white/12 px-3 py-2 text-white shadow-sm active:scale-[0.99]"
-              aria-label="Mi cuenta"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#e4147f]">
-                <UserIcon className="h-5 w-5" />
-              </span>
-              <span className="min-w-0 text-left leading-tight">
-                <span className="block truncate text-sm font-bold">Mi cuenta</span>
-                <span className="block truncate text-xs font-semibold text-white/75">Usuario</span>
-              </span>
-            </Link>
-            <Link
-              href="/vende-con-nosotros"
-              className="flex min-h-[48px] items-center gap-2 rounded-xl border border-white/25 bg-white px-3 py-2 text-slate-900 shadow-sm active:scale-[0.99]"
-              aria-label="Vende con nosotros"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff0f7] text-[#e4147f]">
-                <ShoppingBagIcon className="h-5 w-5" />
-              </span>
-              <span className="min-w-0 text-left leading-tight">
-                <span className="block truncate text-sm font-black">Vende con nosotros</span>
-                <span className="block truncate text-xs font-bold text-[#e4147f]">Modo beta</span>
-              </span>
-            </Link>
-          </div>
         )}
       </div>
 

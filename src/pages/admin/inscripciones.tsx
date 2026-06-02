@@ -28,10 +28,11 @@ type Inscripcion = {
   createdAt: string;
 };
 
-const ESTADOS = ["PENDIENTE", "CONTACTADO", "PROGRAMADO", "COMPLETADO", "CANCELADO"];
+const ESTADOS = ["PENDIENTE", "ACTIVO", "CONTACTADO", "PROGRAMADO", "COMPLETADO", "CANCELADO"];
 
 const estadoBadge: Record<string, string> = {
   PENDIENTE:   "bg-amber-50 text-amber-700 border-amber-200",
+  ACTIVO:      "bg-emerald-50 text-emerald-700 border-emerald-200",
   CONTACTADO:  "bg-blue-50 text-blue-700 border-blue-200",
   PROGRAMADO:  "bg-violet-50 text-violet-700 border-violet-200",
   COMPLETADO:  "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -40,6 +41,7 @@ const estadoBadge: Record<string, string> = {
 
 const estadoIcon: Record<string, React.ReactNode> = {
   PENDIENTE:   <ClockIcon className="w-3.5 h-3.5" />,
+  ACTIVO:      <CheckCircleIcon className="w-3.5 h-3.5" />,
   CONTACTADO:  <EnvelopeIcon className="w-3.5 h-3.5" />,
   PROGRAMADO:  <CalendarDaysIcon className="w-3.5 h-3.5" />,
   COMPLETADO:  <CheckCircleIcon className="w-3.5 h-3.5" />,

@@ -4,10 +4,6 @@ import { FormEvent, useState } from "react";
 import {
   ArrowRightIcon,
   CheckCircleIcon,
-  ChartBarIcon,
-  DevicePhoneMobileIcon,
-  MegaphoneIcon,
-  UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import { FaHandPointer } from "react-icons/fa";
 
@@ -99,12 +95,11 @@ export default function CursoRedesSocialesPage() {
         />
       </Head>
 
-      <main className="course-landing min-h-screen bg-gradient-to-br from-[#ffd7ea] via-[#fff6fb] to-[#f7c8e2]">
-        <section className="relative min-h-screen overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(228,20,127,0.14),transparent_24%),radial-gradient(circle_at_82%_28%,rgba(255,255,255,0.7),transparent_26%)]" />
-          <div className="relative mx-auto grid min-h-[calc(100vh-120px)] max-w-screen-2xl gap-8 px-4 pb-8 pt-4 md:grid-cols-[1fr_440px] md:px-8 md:pb-12 md:pt-6 lg:grid-cols-[1fr_500px]">
-            <div className="flex min-w-0 flex-col justify-start">
-              <div className="relative mx-auto aspect-[1962/331] w-full overflow-hidden rounded-lg bg-white/40 shadow-[0_20px_60px_rgba(228,20,127,0.14)] md:mx-0">
+      <main className="course-landing min-h-screen bg-gradient-to-br from-[#ffe0ee] via-[#fff8fb] to-[#f8cfe5]">
+        <section className="relative overflow-hidden">
+          <div className="relative mx-auto grid max-w-screen-2xl gap-6 px-4 py-5 sm:px-6 md:py-8 lg:grid-cols-[minmax(0,1fr)_440px] lg:items-start lg:gap-8 lg:px-8 xl:grid-cols-[minmax(0,1fr)_500px]">
+            <div className="min-w-0">
+              <div className="relative aspect-[1962/331] w-full overflow-hidden rounded-lg bg-white/50 shadow-[0_16px_44px_rgba(228,20,127,0.13)] ring-1 ring-white/80">
                 <Image
                   src="/banners/curso-redes-sociales-web.png"
                   alt="Curso online vende por redes sociales"
@@ -115,15 +110,30 @@ export default function CursoRedesSocialesPage() {
                 />
               </div>
 
-              <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                <Benefit icon={<ChartBarIcon className="h-6 w-6" />} title="Más ventas" text="Aprende a convertir seguidores en clientes." />
-                <Benefit icon={<MegaphoneIcon className="h-6 w-6" />} title="Contenido claro" text="Publicaciones que explican, atraen y venden." />
-                <Benefit icon={<DevicePhoneMobileIcon className="h-6 w-6" />} title="Redes ordenadas" text="Facebook, Instagram y TikTok con estrategia." />
+              <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3 lg:mt-6">
+                <Benefit
+                  icon={<Image src="/icons/incremento-de-ventas.png" alt="" width={96} height={96} className="h-16 w-16 object-contain sm:h-20 sm:w-20 md:h-24 md:w-24" />}
+                  title="Más ventas"
+                  text="Aprende a convertir seguidores en clientes."
+                  plainIcon
+                />
+                <Benefit
+                  icon={<Image src="/icons/bocina.png" alt="" width={96} height={96} className="h-16 w-16 object-contain sm:h-20 sm:w-20 md:h-24 md:w-24" />}
+                  title="Contenido claro"
+                  text="Publicaciones que explican, atraen y venden."
+                  plainIcon
+                />
+                <Benefit
+                  icon={<Image src="/icons/clasificacion.png" alt="" width={96} height={96} className="h-16 w-16 object-contain sm:h-20 sm:w-20 md:h-24 md:w-24" />}
+                  title="Redes ordenadas"
+                  text="Facebook, Instagram y TikTok con estrategia."
+                  plainIcon
+                />
               </div>
 
-              <div className="mt-8 rounded-xl border border-[#f5a4cd] bg-white/90 p-5 shadow-[0_18px_45px_rgba(228,20,127,0.14)] ring-1 ring-white/70">
-                <p className="inline-flex rounded-full bg-[#e4147f] px-4 py-1.5 text-sm font-black uppercase tracking-wide text-white">Qué aprenderás</p>
-                <div className="mt-4 grid gap-3 text-base font-semibold leading-7 text-slate-800 sm:grid-cols-2">
+              <div className="mt-5 rounded-xl border border-[#f3b6d5] bg-white/95 p-4 shadow-[0_14px_34px_rgba(228,20,127,0.11)] ring-1 ring-white/80 sm:p-5 lg:mt-6">
+                <p className="text-sm font-black uppercase tracking-wide text-[#e4147f]">Qué aprenderás</p>
+                <div className="mt-4 grid grid-cols-1 gap-3 text-sm font-semibold leading-6 text-slate-800 md:grid-cols-2 md:text-base">
                   <InfoItem text="Cómo presentar tus artesanías para vender mejor." />
                   <InfoItem text="Ideas de contenido para productos personalizados." />
                   <InfoItem text="Cómo responder mensajes y cerrar pedidos." />
@@ -132,10 +142,10 @@ export default function CursoRedesSocialesPage() {
               </div>
             </div>
 
-            <aside className="relative self-center rounded-xl bg-white p-5 pt-10 shadow-[0_24px_70px_rgba(28,7,48,0.16)] md:p-7 md:pt-12">
+            <aside className="relative rounded-xl bg-white p-4 shadow-[0_18px_52px_rgba(28,7,48,0.14)] ring-1 ring-slate-200/70 sm:p-5 md:p-6 lg:sticky lg:top-24 lg:pt-12">
               {sent ? (
-                <div className="flex min-h-[520px] flex-col justify-center text-center">
-                  <CheckCircleIcon className="mx-auto h-16 w-16 text-emerald-500" />
+                <div className="flex min-h-[440px] flex-col justify-center text-center">
+                  <CheckCircleIcon className="mx-auto h-14 w-14 text-emerald-500" />
                   <h1 className="mt-4 text-2xl font-black text-slate-950">Registro recibido</h1>
                   <p className="mt-3 text-sm leading-6 text-slate-600">
                     Te contactaremos para confirmar tu acceso al curso. También puedes entrar al grupo para recibir indicaciones.
@@ -152,19 +162,19 @@ export default function CursoRedesSocialesPage() {
               ) : (
                 <>
                   <div>
-                    <div className="rr-cta-pulse absolute -top-3 left-1/2 inline-flex h-12 -translate-x-1/2 items-center gap-3 rounded-full border-[6px] border-white bg-[#ffd21f] pl-6 pr-2 text-base font-black uppercase tracking-wide text-black shadow-[0_12px_26px_rgba(17,24,39,0.14)]">
+                    <div className="rr-cta-pulse mx-auto inline-flex h-11 items-center gap-3 rounded-full border-[5px] border-white bg-[#ffd21f] pl-5 pr-2 text-sm font-black uppercase tracking-wide text-black shadow-[0_12px_26px_rgba(17,24,39,0.14)] sm:h-12 sm:text-base lg:absolute lg:-top-3 lg:left-1/2 lg:-translate-x-1/2">
                       Inscríbete aquí
                       <span className="rr-icon-pop flex h-8 w-8 items-center justify-center rounded-full bg-white text-black">
                         <FaHandPointer className="h-4 w-4 -rotate-12" />
                       </span>
                     </div>
-                    <h1 className="mt-1 text-2xl font-black leading-tight text-slate-950">Deja tus datos y separa tu cupo</h1>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <h1 className="mt-4 text-2xl font-black leading-tight text-slate-950 sm:text-3xl">Deja tus datos y separa tu cupo</h1>
+                    <p className="mt-3 inline-flex rounded-full bg-[#fff4f9] px-4 py-2 text-sm font-black leading-6 text-[#e4147f] ring-1 ring-[#f5b8d8] sm:text-base">
                       Curso online, viernes 5 de Junio, 6 PM. Inversión: S/20.
                     </p>
                   </div>
 
-                  <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+                  <form onSubmit={handleSubmit} className="mt-5 space-y-4">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Field label="Nombres">
                         <input value={form.nombres} onChange={(e) => update("nombres", e.target.value)} placeholder="Nombres" className="field" />
@@ -203,7 +213,7 @@ export default function CursoRedesSocialesPage() {
                       </Field>
                     </div>
 
-                    <label className="flex gap-3 rounded-lg bg-pink-50 p-3 text-xs leading-5 text-slate-700">
+                    <label className="flex gap-3 rounded-lg border border-pink-100 bg-pink-50 p-3 text-xs leading-5 text-slate-700">
                       <input
                         type="checkbox"
                         checked={form.acepta}
@@ -218,7 +228,7 @@ export default function CursoRedesSocialesPage() {
                     <button
                       type="submit"
                       disabled={sending}
-                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#e4147f] px-6 text-sm font-black uppercase tracking-wide text-white shadow-[0_14px_32px_rgba(228,20,127,0.28)] transition hover:brightness-105 disabled:opacity-60"
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#e4147f] px-6 text-sm font-black uppercase tracking-wide text-white shadow-[0_14px_32px_rgba(228,20,127,0.24)] transition hover:brightness-105 disabled:opacity-60"
                     >
                       {sending ? "Registrando..." : "Enviar registro"}
                       <ArrowRightIcon className="h-4 w-4 stroke-[3]" />
@@ -234,7 +244,7 @@ export default function CursoRedesSocialesPage() {
       <style jsx>{`
         .field {
           width: 100%;
-          height: 44px;
+          height: 46px;
           border-radius: 8px;
           border: 1px solid #d1d5db;
           padding: 0 12px;
@@ -264,13 +274,19 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Benefit({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
+function Benefit({ icon, title, text, plainIcon = false }: { icon: React.ReactNode; title: string; text: string; plainIcon?: boolean }) {
   return (
-    <article className="relative overflow-hidden rounded-xl border border-[#f5a4cd] bg-white/95 p-5 shadow-[0_16px_38px_rgba(228,20,127,0.13)] ring-1 ring-white/70">
+    <article className="relative overflow-hidden rounded-xl border border-[#f3b6d5] bg-white/95 p-4 shadow-[0_12px_30px_rgba(228,20,127,0.10)] ring-1 ring-white/70 sm:p-5">
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#e4147f] via-[#ff5ca8] to-[#f7b4d6]" />
-      <div className="rr-icon-float flex h-12 w-12 items-center justify-center rounded-full bg-[#e4147f] text-white shadow-[0_10px_22px_rgba(228,20,127,0.28)]">{icon}</div>
-      <p className="mt-4 text-lg font-black text-slate-950">{title}</p>
-      <p className="mt-1 text-base leading-6 text-slate-700">{text}</p>
+      <div className="flex items-center gap-4">
+        <div className={`rr-icon-float flex shrink-0 items-center justify-center ${plainIcon ? "h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24" : "h-11 w-11 rounded-full bg-[#e4147f] text-white shadow-[0_10px_22px_rgba(228,20,127,0.22)] sm:h-12 sm:w-12"}`}>
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <p className="text-base font-black text-slate-950 md:text-lg">{title}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-700 md:text-base">{text}</p>
+        </div>
+      </div>
     </article>
   );
 }
