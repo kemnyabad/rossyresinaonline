@@ -26,10 +26,11 @@ const RootLayout = ({ children }: Props) => {
   const isCartPage = router.pathname === "/cart";
   const isCheckoutPage = router.pathname === "/checkout";
   const isAccountPage = router.pathname === "/account";
+  const isCursoRedesSocialesPage = router.pathname === "/curso-redes-sociales";
   const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
   const showHeader = !isRifasPage;
-  const showMobileBottomNav = !isResinyPage && !isProductDetailPage && !isCartPage && !isCheckoutPage;
-  const hideFooter = isRifasPage || isResinyPage || isCartPage || isCheckoutPage;
+  const showMobileBottomNav = !isResinyPage && !isProductDetailPage && !isCartPage && !isCheckoutPage && !isCursoRedesSocialesPage;
+  const hideFooter = isRifasPage || isResinyPage || isCartPage || isCheckoutPage || isCursoRedesSocialesPage;
   const [isHydrated, setIsHydrated] = useState(false);
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   const [hasActiveRifas, setHasActiveRifas] = useState(false);
@@ -171,7 +172,7 @@ const RootLayout = ({ children }: Props) => {
         </div>
       )}
 
-      <div className={`pb-20 md:pb-0 ${isResinyPage ? "bg-white pt-[72px] md:pt-[76px]" : ""}`}>{children}</div>
+      <div className={`${showMobileBottomNav ? "pb-20 md:pb-0" : ""} ${isResinyPage ? "bg-white pt-[72px] md:pt-[76px]" : ""}`}>{children}</div>
       <div>
         {!hideFooter && <Footer />} {/* Renderiza Footer solo en páginas públicas de tienda */}
       </div>

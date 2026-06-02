@@ -59,8 +59,8 @@ function BannerQuickLinks() {
           href={href}
           className="group flex min-h-[86px] items-center gap-3 border-b border-gray-100 px-4 py-4 transition-colors hover:bg-gray-50 sm:border-r xl:border-b-0 xl:last:border-r-0"
         >
-          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md border ${bg} ${accent}`}>
-            <Icon className="h-6 w-6" />
+          <span className={`rr-icon-float flex h-11 w-11 shrink-0 items-center justify-center rounded-md border ${bg} ${accent}`}>
+            <Icon className="h-6 w-6 transition-transform duration-300 group-hover:scale-110" />
           </span>
           <span className="min-w-0">
             <span className="block text-sm font-bold leading-tight text-gray-950 transition-colors group-hover:text-amazon_blue">

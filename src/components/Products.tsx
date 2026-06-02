@@ -161,7 +161,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                       }
                       aria-label="Agregar al carrito"
                     >
-                      {wasAdded ? <CheckIcon className="h-4 w-4" /> : <ShoppingCartIcon className="h-4 w-4" />}
+                      {wasAdded ? <CheckIcon className="h-4 w-4" /> : <ShoppingCartIcon className="rr-cart-wiggle h-4 w-4" />}
                     </button>
                   </div>
 
@@ -198,7 +198,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                   }
                   aria-label="Agregar al carrito"
                 >
-                  {wasAdded ? <CheckIcon className="h-4 w-4" /> : <ShoppingCartIcon className="h-4 w-4" />}
+                  {wasAdded ? <CheckIcon className="h-4 w-4" /> : <ShoppingCartIcon className="rr-cart-wiggle h-4 w-4" />}
                   {wasAdded ? "Producto añadido" : "Agregar"}
                 </button>
               </div>

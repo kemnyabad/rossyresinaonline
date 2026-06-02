@@ -10,6 +10,7 @@ import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
 import {
+  ArrowRightIcon,
   ChatBubbleLeftRightIcon,
   CheckBadgeIcon,
   QuestionMarkCircleIcon,
@@ -253,7 +254,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
 
           <div className="grid grid-cols-2 border-b border-gray-200 bg-white px-4 py-2">
             <Link href="/resiny" className="flex items-start gap-2 border-r border-gray-200 pr-3">
-              <ChatBubbleLeftRightIcon className="mt-0.5 h-5 w-5 shrink-0 text-amazon_blue" />
+              <ChatBubbleLeftRightIcon className="rr-icon-float mt-0.5 h-5 w-5 shrink-0 text-amazon_blue" />
               <span className="min-w-0">
                 <span className="block text-sm font-bold leading-tight text-amazon_blue">Resiny</span>
                 <span className="block truncate text-xs text-gray-600">Asistente IA</span>
@@ -265,7 +266,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
               rel="noreferrer"
               className="flex items-start gap-2 pl-3"
             >
-              <UserGroupIcon className="mt-0.5 h-5 w-5 shrink-0 text-amazon_light" />
+              <UserGroupIcon className="rr-icon-float mt-0.5 h-5 w-5 shrink-0 text-amazon_light" />
               <span className="min-w-0">
                 <span className="block text-sm font-bold leading-tight text-gray-900">Comunidad</span>
                 <span className="block truncate text-xs text-gray-600">Grupo WhatsApp</span>
@@ -275,10 +276,10 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
 
           <Link
             href="/proceso-envio"
-            className="mx-4 mt-2 flex h-11 items-center gap-3 overflow-hidden rounded-md bg-amazon_blue px-3 text-white"
+            className="rr-shine mx-4 mt-2 flex h-11 items-center gap-3 overflow-hidden rounded-md bg-amazon_blue px-3 text-white"
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
-              <TruckIcon className="h-5 w-5" />
+              <TruckIcon className="rr-icon-pop h-5 w-5" />
             </span>
             <span className="min-w-0 flex-1 truncate text-sm font-bold">
               Entrega rápida
@@ -415,11 +416,13 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
           )}
         </section>
 
+        <HomeAdBanner />
+
         {/* Ofertas Express */}
         {ofertasExpress.length > 0 && (
         <section className="px-4 md:px-6">
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-xl">⚡</span>
+            <span className="rr-icon-pop text-xl">⚡</span>
             <h2 className="text-xl font-bold text-amazon_blue">Ofertas Express</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
@@ -481,6 +484,34 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
         </section>
       </main>
     </>
+  );
+}
+
+function HomeAdBanner() {
+  return (
+      <section className="relative left-1/2 w-screen -translate-x-1/2 py-2 md:py-3">
+        <Link
+          href="/curso-redes-sociales"
+          aria-label="Inscribirme al curso vende por redes sociales"
+          className="rr-shine group relative block h-[180px] w-full overflow-hidden bg-white sm:h-[230px] lg:h-[300px]"
+      >
+        <Image
+          src="/banners/curso-redes-sociales-web.png"
+          alt="Curso online vende por redes sociales"
+          fill
+          className="object-contain object-center"
+          sizes="(min-width: 1536px) 1536px, 100vw"
+        />
+        <div className="absolute inset-0">
+            <span className="rr-cta-pulse absolute bottom-7 left-[clamp(96px,14vw,235px)] inline-flex h-8 w-[150px] items-center justify-between rounded-full bg-gradient-to-r from-[#f0268a] to-[#e4147f] pl-3.5 pr-1 text-[9px] font-black uppercase tracking-wide text-white shadow-[0_12px_26px_rgba(228,20,127,0.30)] transition group-hover:scale-[1.03] sm:bottom-10 sm:h-9 sm:w-[170px] sm:pl-4 sm:text-[10px] lg:bottom-12 lg:w-[190px] lg:text-[11px]">
+              Inscribirme ahora
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#e4147f] lg:h-7 lg:w-7">
+                <ArrowRightIcon className="h-3.5 w-3.5 stroke-[3]" />
+              </span>
+            </span>
+        </div>
+      </Link>
+    </section>
   );
 }
 
