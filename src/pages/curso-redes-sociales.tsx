@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Image from "next/image";
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import {
   ArrowRightIcon,
@@ -97,8 +98,13 @@ export default function CursoRedesSocialesPage() {
 
       <main className="course-landing min-h-screen bg-gradient-to-br from-[#ffe0ee] via-[#fff8fb] to-[#f8cfe5]">
         <section className="relative overflow-hidden">
-          <div className="relative mx-auto grid max-w-screen-2xl gap-6 px-4 py-5 sm:px-6 md:py-8 lg:grid-cols-[minmax(0,1fr)_440px] lg:items-start lg:gap-8 lg:px-8 xl:grid-cols-[minmax(0,1fr)_500px]">
+          <div className="relative mx-auto grid max-w-screen-2xl gap-6 px-4 pb-5 pt-1 sm:px-6 md:py-8 lg:grid-cols-[minmax(0,1fr)_440px] lg:items-start lg:gap-8 lg:px-8 xl:grid-cols-[minmax(0,1fr)_500px]">
             <div className="min-w-0">
+              <div className="mb-1 lg:hidden">
+                <Link href="/" className="text-xs font-semibold text-white/90 underline underline-offset-2">
+                  Ir a Tienda
+                </Link>
+              </div>
               <div className="relative aspect-[1962/331] w-full overflow-hidden rounded-lg bg-white/50 shadow-[0_16px_44px_rgba(228,20,127,0.13)] ring-1 ring-white/80">
                 <Image
                   src="/banners/curso-redes-sociales-web.png"
