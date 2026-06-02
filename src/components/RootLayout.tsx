@@ -8,7 +8,6 @@ import {
   ShoppingCartIcon, 
   UserIcon,
   ArrowRightIcon,
-  Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
 
@@ -29,7 +28,7 @@ const RootLayout = ({ children }: Props) => {
   const isCursoRedesSocialesPage = router.pathname === "/curso-redes-sociales";
   const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
   const showHeader = !isRifasPage;
-  const showMobileBottomNav = !isResinyPage && !isProductDetailPage && !isCartPage && !isCheckoutPage && !isCursoRedesSocialesPage;
+  const showMobileBottomNav = !isProductDetailPage && !isCartPage && !isCheckoutPage;
   const hideFooter = isRifasPage || isResinyPage || isCartPage || isCheckoutPage || isCursoRedesSocialesPage;
   const [isHydrated, setIsHydrated] = useState(false);
   const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
@@ -84,12 +83,6 @@ const RootLayout = ({ children }: Props) => {
 
   const mobileTabs = [
     { href: "/", label: "Inicio", icon: HomeIcon, active: router.pathname === "/" },
-    {
-      href: "/productos",
-      label: "Categorías",
-      icon: Squares2X2Icon,
-      active: router.pathname.startsWith("/productos") || router.pathname.startsWith("/categoria"),
-    },
     {
       href: "/account",
       label: "Cuenta",
@@ -177,7 +170,7 @@ const RootLayout = ({ children }: Props) => {
         {!hideFooter && <Footer />} {/* Renderiza Footer solo en páginas públicas de tienda */}
       </div>
       {showMobileBottomNav && <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-4 px-1.5 py-1.5">
+        <div className="mx-auto grid max-w-md grid-cols-3 px-1.5 py-1.5">
           {mobileTabs.map((tab) => {
             const Icon = tab.icon;
             return (

@@ -4,7 +4,7 @@ import MarketplaceProductGrid from "@/components/MarketplaceProductGrid";
 import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import { ProductProps } from "../../type";
 import { useDispatch } from "react-redux";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ElementType, useEffect, useMemo, useRef, useState } from "react";
 import { setAllProducts } from "@/store/nextSlice";
 import Link from "next/link";
 import Head from "next/head";
@@ -45,6 +45,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
     [liveProductData]
   );
   const [visibleCount, setVisibleCount] = useState(30);
+  const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   
   // Carousel refs
   const visitedCarouselRef = useRef<HTMLDivElement>(null);
@@ -208,6 +209,31 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
   ];
   const lightningProducts = (offerProducts.length > 0 ? offerProducts : allProducts).slice(0, 8);
   const mobileGridProducts = interestProducts.slice(0, 20);
+  const mobilePromoSlides = useMemo(
+    () => [
+      {
+        href: "/proceso-envio",
+        title: "Entrega rápida",
+        text: "Soporte ante inconvenientes",
+        icon: TruckIcon,
+        endIcon: CheckBadgeIcon,
+      },
+      {
+        href: "/curso-redes-sociales",
+        title: "Curso redes sociales",
+        text: "Inscríbete y vende más",
+        icon: UserGroupIcon,
+        endIcon: ArrowRightIcon,
+      },
+    ],
+    []
+  );
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setMobilePromoIndex((prev) => (prev + 1) % mobilePromoSlides.length);
+    }, 4200);
+    return () => window.clearInterval(timer);
+  }, [mobilePromoSlides.length]);
   const getDiscountLabel = (product: ProductProps) => {
     const oldPrice = Number(product.oldPrice || 0);
     const price = Number(product.price || 0);
@@ -274,20 +300,11 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
             </a>
           </div>
 
-          <Link
-            href="/proceso-envio"
-            className="rr-shine mx-4 mt-2 flex h-11 items-center gap-3 overflow-hidden rounded-md bg-amazon_blue px-3 text-white"
-          >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
-              <TruckIcon className="rr-icon-pop h-5 w-5" />
-            </span>
-            <span className="min-w-0 flex-1 truncate text-sm font-bold">
-              Entrega rápida
-              <span className="ml-2 font-semibold text-white/90">Soporte ante inconvenientes</span>
-            </span>
-            <CheckBadgeIcon className="h-6 w-6 shrink-0 text-white/85" />
-            <QuestionMarkCircleIcon className="h-5 w-5 shrink-0 text-white/75" />
-          </Link>
+          <MobilePromoSlider
+            slides={mobilePromoSlides}
+            activeIndex={mobilePromoIndex}
+            onSelect={setMobilePromoIndex}
+          />
 
           <section className="mt-3">
             <div className="mb-2 flex items-center justify-between px-4">
@@ -512,6 +529,58 @@ function HomeAdBanner() {
         </div>
       </Link>
     </section>
+  );
+}
+
+type MobilePromoSlide = {
+  href: string;
+  title: string;
+  text: string;
+  icon: ElementType;
+  endIcon: ElementType;
+};
+
+function MobilePromoSlider({
+  slides,
+  activeIndex,
+  onSelect,
+}: {
+  slides: MobilePromoSlide[];
+  activeIndex: number;
+  onSelect: (index: number) => void;
+}) {
+  const current = slides[activeIndex] || slides[0];
+  const Icon = current.icon;
+  const EndIcon = current.endIcon;
+
+  return (
+    <div className="mx-4 mt-2">
+      <Link
+        href={current.href}
+        className="rr-shine flex h-11 items-center gap-3 overflow-hidden rounded-md bg-amazon_blue px-3 text-white"
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
+          <Icon className="rr-icon-pop h-5 w-5" />
+        </span>
+        <span key={current.href} className="min-w-0 flex-1 truncate text-sm font-bold animate-[rrFadeIn_.28s_ease-out]">
+          {current.title}
+          <span className="ml-2 font-semibold text-white/90">{current.text}</span>
+        </span>
+        <EndIcon className="h-6 w-6 shrink-0 text-white/85" />
+        <QuestionMarkCircleIcon className="h-5 w-5 shrink-0 text-white/75" />
+      </Link>
+      <div className="mt-1.5 flex justify-center gap-1.5">
+        {slides.map((slide, index) => (
+          <button
+            key={slide.href}
+            type="button"
+            onClick={() => onSelect(index)}
+            className={`h-1.5 rounded-full transition-all ${index === activeIndex ? "w-4 bg-amazon_blue" : "w-1.5 bg-gray-300"}`}
+            aria-label={`Ver mensaje ${index + 1}`}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
