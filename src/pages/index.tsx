@@ -510,22 +510,22 @@ function HomeAdBanner() {
         <Link
           href="/curso-redes-sociales"
           aria-label="Inscribirme al curso vende por redes sociales"
-          className="rr-shine group relative block h-[180px] w-full overflow-hidden bg-white sm:h-[230px] lg:h-[300px]"
+          className="rr-shine group relative mx-auto block aspect-[1962/331] w-full max-w-[1962px] overflow-hidden bg-white"
       >
         <Image
           src="/banners/curso-redes-sociales-web.png"
           alt="Curso online vende por redes sociales"
           fill
-          className="object-contain object-center"
+          className="object-cover object-center"
           sizes="(min-width: 1536px) 1536px, 100vw"
         />
         <div className="absolute inset-0">
-            <span className="rr-cta-pulse absolute bottom-7 left-[clamp(96px,14vw,235px)] inline-flex h-8 w-[150px] items-center justify-between rounded-full bg-gradient-to-r from-[#f0268a] to-[#e4147f] pl-3.5 pr-1 text-[9px] font-black uppercase tracking-wide text-white shadow-[0_12px_26px_rgba(228,20,127,0.30)] transition group-hover:scale-[1.03] sm:bottom-10 sm:h-9 sm:w-[170px] sm:pl-4 sm:text-[10px] lg:bottom-12 lg:w-[190px] lg:text-[11px]">
-              Inscribirme ahora
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#e4147f] lg:h-7 lg:w-7">
-                <ArrowRightIcon className="h-3.5 w-3.5 stroke-[3]" />
-              </span>
+          <span className="rr-cta-pulse absolute bottom-[16.5%] left-[13.2%] inline-flex h-[clamp(30px,2.35vw,38px)] w-[clamp(148px,10.8vw,190px)] items-center justify-between rounded-full bg-gradient-to-r from-[#f0268a] to-[#e4147f] pl-[clamp(12px,1vw,16px)] pr-1 text-[clamp(9px,0.62vw,11px)] font-black uppercase tracking-wide text-white shadow-[0_12px_26px_rgba(228,20,127,0.30)] transition group-hover:scale-[1.03]">
+            Inscribirme ahora
+            <span className="flex h-[clamp(24px,1.7vw,28px)] w-[clamp(24px,1.7vw,28px)] items-center justify-center rounded-full bg-white text-[#e4147f]">
+              <ArrowRightIcon className="h-3.5 w-3.5 stroke-[3]" />
             </span>
+          </span>
         </div>
       </Link>
     </section>
