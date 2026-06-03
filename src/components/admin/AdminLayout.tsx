@@ -9,6 +9,7 @@ import {
   TagIcon,
   AcademicCapIcon,
   ShoppingBagIcon,
+  GiftIcon,
   ChartBarIcon,
   UsersIcon,
   UserGroupIcon,
@@ -58,6 +59,7 @@ const navGroups = [
     label: "Comercio",
     items: [
       { href: "/admin/orders", label: "Pedidos", icon: ShoppingBagIcon },
+      { href: "/admin/promociones", label: "Promociones", icon: GiftIcon },
       { href: "/admin/marketplace", label: "Marketplace", icon: UserGroupIcon },
       { href: "/admin/rifas", label: "Rifas", icon: TicketIcon },
       { href: "/admin/customers", label: "Clientes", icon: UsersIcon },
@@ -80,6 +82,7 @@ const sectionTitleByPath = (pathname: string): { title: string; breadcrumb: stri
   if (pathname.startsWith("/admin/capacitaciones")) return { title: "Capacitaciones", breadcrumb: ["Contenido", "Capacitaciones"] };
   if (pathname.startsWith("/admin/inscripciones")) return { title: "Inscripciones", breadcrumb: ["Contenido", "Inscripciones"] };
   if (pathname.startsWith("/admin/orders")) return { title: "Pedidos", breadcrumb: ["Comercio", "Pedidos"] };
+  if (pathname.startsWith("/admin/promociones")) return { title: "Promociones", breadcrumb: ["Comercio", "Promociones"] };
   if (pathname.startsWith("/admin/marketplace")) return { title: "Marketplace", breadcrumb: ["Comercio", "Marketplace"] };
   if (pathname.startsWith("/admin/customers")) return { title: "Clientes", breadcrumb: ["Comercio", "Clientes"] };
   if (pathname.startsWith("/admin/rifas")) return { title: "Rifas", breadcrumb: ["Comercio", "Rifas"] };

@@ -15,6 +15,7 @@ import {
   paymentMethodLabel,
   shippingCarrierLabel,
 } from "@/lib/orderMeta";
+import { normalizePromoCode, validatePromoWeb20 } from "@/lib/promoWeb20";
 
 type DbOrderStatus = "PENDING" | "PAID" | "SHIPPED";
 const db = prisma as any;
@@ -38,6 +39,11 @@ type IncomingItem = {
   productId?: string | number;
   code?: string;
   quantity?: number;
+  title?: string;
+  category?: string;
+  description?: string;
+  brand?: string;
+  sku?: string;
 };
 
 const toLegacyStatus = (status: DbOrderStatus): string => {
@@ -107,6 +113,9 @@ const serializeOrder = (order: any) => {
     shalomPickupCode: meta.shalomPickupCode || "",
     olvaTrackingImage: meta.olvaTrackingImage || "",
     paymentImage: order.paymentImage || "",
+    couponCode: meta.couponCode,
+    couponDiscount: Number(meta.couponDiscount || 0),
+    couponSubtotal: Number(meta.couponSubtotal || 0),
   };
 };
 
@@ -266,6 +275,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           legacyId: true,
           code: true,
           title: true,
+          category: true,
+          description: true,
+          brand: true,
+          sku: true,
           price: true,
         },
       });
@@ -278,6 +291,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         legacyId: string | null;
         code: string | null;
         title: string;
+        category: string;
+        description: string;
+        brand: string;
+        sku: string | null;
         quantity: number;
         price: number;
       }> = [];
@@ -305,6 +322,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           legacyId: product.legacyId || null,
           code: product.code || null,
           title: product.title,
+          category: product.category || "",
+          description: product.description || "",
+          brand: product.brand || "",
+          sku: product.sku || null,
           quantity: qty,
           price,
         });
@@ -317,12 +338,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         : email
         ? await db.user.findUnique({ where: { email } })
         : null;
+      const promoCode = normalizePromoCode((body as any).promoCode);
+      let couponDiscount = 0;
+      if (promoCode) {
+        const validation = await validatePromoWeb20({
+          code: promoCode,
+          subtotal: computedTotal,
+          email: sessionEmail || email,
+          items: normalizedItems,
+        });
+        if (!validation.ok) return res.status(400).json({ error: validation.message });
+        couponDiscount = validation.discount;
+      }
+      const finalTotal = Math.max(0, Number((computedTotal - couponDiscount).toFixed(2)));
 
       const created = await db.order.create({
         data: {
           userId: user?.id || null,
           status: "PENDING",
-          total: computedTotal,
+          total: finalTotal,
           items: normalizedItems as any,
           customerName: name,
           customerEmail: email,
@@ -347,6 +381,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             shalomPickupCode: "",
             olvaTrackingImage: "",
             notes,
+            couponCode: couponDiscount > 0 ? "WEB20" : "",
+            couponDiscount,
+            couponSubtotal: computedTotal,
           }),
           paymentImage: finalPaymentImage,
         },

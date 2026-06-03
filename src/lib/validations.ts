@@ -60,6 +60,7 @@ export const CreateOrderSchema = z.object({
   olvaReference: z.string().optional(),
   paymentMethod: z.string().optional(),
   paymentImage: nonEmptyString("Debes adjuntar comprobante de pago"),
+  promoCode: z.string().optional(),
 });
 
 export const AdminUserCreateSchema = z.object({

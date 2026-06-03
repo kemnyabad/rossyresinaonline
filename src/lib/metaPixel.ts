@@ -1,12 +1,17 @@
 export type MetaPixelCurrency = "PEN";
 
 type MetaPixelEvent = "PageView" | "ViewContent" | "AddToCart" | "InitiateCheckout" | "Purchase";
+type MetaPixelCustomEvent = "PromoWEB20Viewed" | "PromoWEB20Applied" | "PromoWEB20Purchase";
 
 type MetaPixelPayload = Record<string, string | number | boolean | Array<string | number> | Array<Record<string, unknown>> | undefined>;
 
 declare global {
   interface Window {
-    fbq?: (method: "track", event: MetaPixelEvent, payload?: MetaPixelPayload) => void;
+    fbq?: (
+      method: "track" | "trackCustom",
+      event: MetaPixelEvent | MetaPixelCustomEvent,
+      payload?: MetaPixelPayload
+    ) => void;
   }
 }
 
@@ -27,6 +32,12 @@ const canTrack = () => typeof window !== "undefined" && typeof window.fbq === "f
 const track = (event: MetaPixelEvent, payload?: MetaPixelPayload) => {
   if (!canTrack()) return false;
   window.fbq!("track", event, payload);
+  return true;
+};
+
+const trackCustom = (event: MetaPixelCustomEvent, payload?: MetaPixelPayload) => {
+  if (!canTrack()) return false;
+  window.fbq!("trackCustom", event, payload);
   return true;
 };
 
@@ -102,3 +113,27 @@ export const trackPurchase = (params: {
     content_ids: contentIds,
   });
 };
+
+export const trackPromoWEB20Viewed = () =>
+  trackCustom("PromoWEB20Viewed", {
+    promotion_name: "WEB20",
+    currency: CURRENCY,
+    value: 20,
+  });
+
+export const trackPromoWEB20Applied = (params: { discount: number; subtotal: number }) =>
+  trackCustom("PromoWEB20Applied", {
+    promotion_name: "WEB20",
+    currency: CURRENCY,
+    discount: cleanNumber(params.discount),
+    value: cleanNumber(params.subtotal),
+  });
+
+export const trackPromoWEB20Purchase = (params: { transactionId: string | number; discount: number; value: number }) =>
+  trackCustom("PromoWEB20Purchase", {
+    promotion_name: "WEB20",
+    transaction_id: cleanString(params.transactionId),
+    currency: CURRENCY,
+    discount: cleanNumber(params.discount),
+    value: cleanNumber(params.value),
+  });

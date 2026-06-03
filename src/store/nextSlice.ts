@@ -6,6 +6,11 @@ interface NextState {
   favoriteData: StoreProduct[];
   allProducts: StoreProduct[];
   userInfo: null | string;
+  promoCoupon: null | {
+    code: string;
+    discount: number;
+    message: string;
+  };
 }
 
 const initialState: NextState = {
@@ -13,6 +18,7 @@ const initialState: NextState = {
   favoriteData: [],
   allProducts: [],
   userInfo: null,
+  promoCoupon: null,
 };
 
 const cartItemKey = (item: any) =>
@@ -92,6 +98,17 @@ export const nextSlice = createSlice({
 
     resetCart: (state) => {
       state.productData = [];
+      state.promoCoupon = null;
+    },
+    applyPromoCoupon: (state, action) => {
+      state.promoCoupon = {
+        code: String(action.payload?.code || "").toUpperCase(),
+        discount: Number(action.payload?.discount || 0),
+        message: String(action.payload?.message || ""),
+      };
+    },
+    clearPromoCoupon: (state) => {
+      state.promoCoupon = null;
     },
     resetFavoriteData: (state) => {
       state.favoriteData = [];
@@ -117,6 +134,8 @@ export const {
   deleteProduct,
   resetCart,
   setQuantity,
+  applyPromoCoupon,
+  clearPromoCoupon,
   addUser,
   removeUser,
   setAllProducts,

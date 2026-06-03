@@ -2,6 +2,7 @@ import HeroCarousel from "@/components/HeroCarousel";
 import Products from "@/components/Products";
 import MarketplaceProductGrid from "@/components/MarketplaceProductGrid";
 import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
+import { PromoWeb20HomeBanner } from "@/components/PromoWeb20";
 import { ProductProps } from "../../type";
 import { useDispatch } from "react-redux";
 import { type ElementType, useEffect, useMemo, useRef, useState } from "react";
@@ -434,6 +435,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
         </section>
 
         <HomeAdBanner />
+        <PromoWeb20HomeBanner />
 
         {/* Ofertas Express */}
         {ofertasExpress.length > 0 && (
