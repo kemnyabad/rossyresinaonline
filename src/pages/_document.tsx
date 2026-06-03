@@ -1,6 +1,8 @@
 import { Html, Head, Main, NextScript } from 'next/document'
 
 export default function Document() {
+  const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
+
   return (
     <Html lang="es">
       <Head>
@@ -15,6 +17,17 @@ export default function Document() {
         <meta name="theme-color" content="#e4147f" />
       </Head>
       <body>
+        {metaPixelId ? (
+          <noscript>
+            <img
+              height="1"
+              width="1"
+              style={{ display: "none" }}
+              src={`https://www.facebook.com/tr?id=${metaPixelId}&ev=PageView&noscript=1`}
+              alt=""
+            />
+          </noscript>
+        ) : null}
         <Main />
         <NextScript />
       </body>

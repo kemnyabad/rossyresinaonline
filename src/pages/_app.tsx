@@ -5,6 +5,7 @@ import MaintenancePage from "@/components/MaintenancePage";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
+import Script from "next/script";
 import { Provider } from "react-redux";
 import { persistor, store } from "@/store/store";
 import { PersistGate } from "redux-persist/integration/react";
@@ -49,6 +50,7 @@ function AppContent({
   const pageShellClass = "rr-page min-h-screen";
   const fixedHeaderPageShellClass = "min-h-screen";
   const pageTransitionStyle = { animation: "rrPageEnter 0.22s ease-out both" } as const;
+  const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
 
   useEffect(() => { setIsClient(true); }, []);
 
@@ -196,6 +198,41 @@ function AppContent({
 
   useEffect(() => {
     if (!isClient) return;
+    if (!metaPixelId) return;
+    if (isAdminRoute) return;
+
+    let retryTimer: number | undefined;
+    let attempts = 0;
+
+    const trackPageView = () => {
+      const fbq = (window as any).fbq;
+      if (typeof fbq === "function") {
+        fbq("track", "PageView");
+        return;
+      }
+
+      if (attempts < 20) {
+        attempts += 1;
+        retryTimer = window.setTimeout(trackPageView, 250);
+      }
+    };
+
+    const handleRouteChangeComplete = () => {
+      attempts = 0;
+      trackPageView();
+    };
+
+    trackPageView();
+    router.events.on("routeChangeComplete", handleRouteChangeComplete);
+
+    return () => {
+      if (retryTimer) window.clearTimeout(retryTimer);
+      router.events.off("routeChangeComplete", handleRouteChangeComplete);
+    };
+  }, [isClient, isAdminRoute, metaPixelId, router.events]);
+
+  useEffect(() => {
+    if (!isClient) return;
 
     const rules: Array<[RegExp, string]> = [
       [/Env[?]os/gi, "Envíos"],
@@ -282,6 +319,25 @@ function AppContent({
         <meta name="twitter:image" content={absoluteImageUrl(DEFAULT_OG_IMAGE)} />
         <link rel="alternate" hrefLang="es-PE" href={getSiteUrl()} />
       </Head>
+      {metaPixelId && !isAdminRoute ? (
+        <Script
+          id="meta-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '${metaPixelId}');
+      `,
+    }}
+  />
+      ) : null}
       <div
         className={`fixed left-0 top-0 z-[9999] h-1 bg-amazon_blue shadow-sm transition-all duration-300 ${
           routeLoading ? "w-2/3 opacity-100" : "w-full opacity-0"
