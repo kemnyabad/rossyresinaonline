@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import FormattedPrice from "@/components/FormattedPrice";
+import { trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { resetCart } from "@/store/nextSlice";
 import { useSession } from "next-auth/react";
 import { Bars3Icon, ChevronLeftIcon } from "@heroicons/react/24/outline";
@@ -23,6 +24,7 @@ export default function CheckoutPage() {
   const storeUser = isAdminSession ? null : (userInfo as any);
   const autofillTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAutofillKey = useRef("");
+  const trackedCheckoutKey = useRef("");
 
   const [name, setName] = useState("");
   const [dni, setDni] = useState("");
@@ -153,6 +155,20 @@ export default function CheckoutPage() {
     [productData]
   );
   const hydratedTotalUnits = mounted ? totalUnits : 0;
+
+  useEffect(() => {
+    if (!mounted || productData.length === 0 || totalUnits <= 0) return;
+    const key = productData
+      .map((item: StoreProduct) => `${item.productId || item._id}:${item.variantId || ""}:${item.quantity}`)
+      .join("|");
+    if (!key || trackedCheckoutKey.current === key) return;
+    trackedCheckoutKey.current = key;
+    trackInitiateCheckout({
+      numItems: totalUnits,
+      value: totals.total,
+      contentIds: productData.map((item: StoreProduct) => item.productId || item._id),
+    });
+  }, [mounted, productData, totalUnits, totals.total]);
 
   const normImg = (s?: string) => {
     const t = String(s || "");
@@ -288,8 +304,14 @@ export default function CheckoutPage() {
       }
 
       const saved = await res.json();
+      const orderCode = saved?.orderCode || saved?.id || "";
+      trackPurchase({
+        transactionId: orderCode,
+        value: totals.total,
+        contentIds: productData.map((item: StoreProduct) => item.productId || item._id),
+      });
       saveLocalShippingProfile();
-      setSuccessId(saved?.orderCode || saved?.id || "");
+      setSuccessId(orderCode);
       dispatch(resetCart());
     } catch (e: any) {
       setErrorMsg(e?.message || "Error inesperado");

@@ -13,6 +13,7 @@ import Products from "@/components/Products";
 import { getAllProducts } from "@/lib/repositories/productRepository";
 import { useSession, signIn } from "next-auth/react";
 import { formatProductTitle } from "@/lib/textFormat";
+import { trackViewContent } from "@/lib/metaPixel";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
 import {
@@ -50,6 +51,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [justAdded, setJustAdded] = useState(false);
   const addNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trackedViewContentId = useRef("");
   const mobileImageTouchStart = useRef<{ x: number; y: number } | null>(null);
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -144,6 +146,17 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const activeOldPriceValue = getOptionalPrice(selectedVariant ? selectedVariant.oldPrice : product?.oldPrice);
   const hasActiveDiscount = activeOldPriceValue !== null && activeOldPriceValue > activePrice;
   const displayProductTitle = formatProductTitle(product?.title || product?.code || "Producto");
+
+  useEffect(() => {
+    const productId = String(product?._id || "").trim();
+    if (!productId || trackedViewContentId.current === productId) return;
+    trackedViewContentId.current = productId;
+    trackViewContent({
+      contentName: product?.title || displayProductTitle,
+      contentId: productId,
+      value: activePrice,
+    });
+  }, [activePrice, displayProductTitle, product?._id, product?.title]);
 
   const openImageViewer = (img: string) => {
     const idx = productImages.findIndex((item) => item === img);

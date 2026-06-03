@@ -14,6 +14,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { DEFAULT_OG_IMAGE, SITE_NAME, absoluteImageUrl, absoluteUrl, getSiteUrl } from "@/lib/seo";
+import { trackPageView } from "@/lib/metaPixel";
 
 function AppContent({
   Component,
@@ -204,25 +205,23 @@ function AppContent({
     let retryTimer: number | undefined;
     let attempts = 0;
 
-    const trackPageView = () => {
-      const fbq = (window as any).fbq;
-      if (typeof fbq === "function") {
-        fbq("track", "PageView");
+    const sendPageView = () => {
+      if (trackPageView()) {
         return;
       }
 
       if (attempts < 20) {
         attempts += 1;
-        retryTimer = window.setTimeout(trackPageView, 250);
+        retryTimer = window.setTimeout(sendPageView, 250);
       }
     };
 
     const handleRouteChangeComplete = () => {
       attempts = 0;
-      trackPageView();
+      sendPageView();
     };
 
-    trackPageView();
+    sendPageView();
     router.events.on("routeChangeComplete", handleRouteChangeComplete);
 
     return () => {
