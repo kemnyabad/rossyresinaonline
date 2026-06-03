@@ -819,8 +819,11 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     <button
                       type="button"
                       onClick={() => addProductToCart(qty)}
-                      className="flex h-12 flex-1 items-center justify-center rounded-full bg-amazon_blue px-4 text-base font-bold text-white shadow-[0_8px_18px_rgba(203,41,158,0.24)]"
+                      className={`group rr-shine flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-amazon_blue px-4 text-base font-bold text-white shadow-[0_8px_18px_rgba(203,41,158,0.24)] transition-transform active:scale-[0.98] ${
+                        justAdded ? "rr-add-to-cart-hit" : ""
+                      }`}
                     >
+                      <ShoppingCartIcon className="rr-cart-wiggle h-5 w-5 shrink-0" />
                       {justAdded ? "Producto añadido" : "¡Agrégalo al carrito!"}
                     </button>
                     <Link
@@ -1150,8 +1153,11 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                 <div className="mt-5 grid gap-2">
                   <button
                     onClick={() => addProductToCart(qty)}
-                    className="w-full h-12 rounded-full text-base font-semibold bg-amazon_blue text-white hover:brightness-95"
+                    className={`group rr-shine flex h-12 w-full items-center justify-center gap-2 rounded-full bg-amazon_blue text-base font-semibold text-white transition-transform hover:brightness-95 active:scale-[0.98] ${
+                      justAdded ? "rr-add-to-cart-hit" : ""
+                    }`}
                   >
+                    <ShoppingCartIcon className="rr-cart-wiggle h-5 w-5 shrink-0" />
                     Agregar al carrito
                   </button>
                   {justAdded && (
