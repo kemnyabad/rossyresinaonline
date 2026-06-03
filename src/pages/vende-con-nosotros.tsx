@@ -6,7 +6,6 @@ import { signIn, useSession } from "next-auth/react";
 import {
   BanknotesIcon,
   CheckCircleIcon,
-  ClockIcon,
   MegaphoneIcon,
   PhotoIcon,
   ShoppingBagIcon,
