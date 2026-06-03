@@ -341,9 +341,9 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
             </div>
           </section>
 
-          <section className="grid grid-cols-2 gap-1.5 bg-gray-100 p-1.5">
+          <section className="columns-2 gap-1.5 bg-gray-100 p-1.5">
             {mobileGridProducts.map((p) => (
-              <Link key={`mobile-grid-${p._id}`} href={`/${p.code || p._id}`} className="min-w-0 bg-white">
+              <Link key={`mobile-grid-${p._id}`} href={`/${p.code || p._id}`} className="mb-1.5 inline-block w-full min-w-0 break-inside-avoid bg-white align-top">
                 <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
                   <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover" />
                   {typeof p.oldPrice === "number" && p.oldPrice > p.price ? (
@@ -353,7 +353,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
                   ) : null}
                 </div>
                 <div className="p-2">
-                  <p className="line-clamp-2 min-h-[32px] text-xs font-medium leading-4 text-gray-900">{p.title || "Producto"}</p>
+                  <p className="line-clamp-2 text-xs font-medium leading-4 text-gray-900">{p.title || "Producto"}</p>
                   <div className="mt-1 flex items-end gap-1">
                     <p className="text-lg font-bold leading-none text-amazon_blue">S/ {Number(p.price || 0).toFixed(2)}</p>
                     <span className="pb-0.5 text-[10px] text-gray-500">c/u</span>

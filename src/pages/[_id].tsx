@@ -1024,8 +1024,10 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     </Link>
                   </div>
                 ) : null}
-                <p className="text-xs text-gray-500">Inicio / {product.category || "Categoría"}</p>
-                <h1 className="text-xl md:text-2xl font-semibold mt-2">{displayProductTitle}</h1>
+                <div className="mb-2">
+                  <ProductCouponBadge prominent className="w-full max-w-[430px]" />
+                </div>
+                <h1 className="text-xl md:text-2xl font-semibold">{displayProductTitle}</h1>
                 <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
                   {salesCount > 0 && (
                     <>
@@ -1057,10 +1059,6 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     <span className="text-xs px-2 py-1 rounded-full border border-amazon_blue text-amazon_blue">Descuento</span>
                   )}
                 </div>
-                <div className="mt-2">
-                  <ProductCouponBadge />
-                </div>
-
                 {productVariants.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm font-semibold text-gray-700 mb-2">Presentación:</p>
@@ -1082,26 +1080,8 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     </div>
                   </div>
                 )}
-                <div className="mt-3 text-sm text-emerald-700">
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setShowShippingProcess((v) => !v);
-                    }}
-                    className="font-semibold underline underline-offset-2 hover:text-emerald-900"
-                  >
-                    {"Envíos Gratuitos"}
-                  </a>
-                  <span>{" | Sin mínimo ni máximo de pedidos enviados"}</span>
-                  {showShippingProcess ? (
-                    <div className="mt-2 rounded-md border border-emerald-200 bg-white px-3 py-3 text-xs text-gray-700">
-                      <p className="font-semibold text-emerald-700">Proceso de envío gratuito</p>
-                      <p className="mt-1">1. Agrega tus productos al carrito.</p>
-                      <p className="mt-1">2. En checkout valida tus datos de envío.</p>
-                      <p className="mt-1">3. Si el pedido califica, el envío se aplica sin costo automáticamente.</p>
-                    </div>
-                  ) : null}
+                <div className="mt-3 text-base font-bold text-emerald-700 md:text-lg">
+                  {"Sin mínimo ni máximo de pedidos enviados"}
                 </div>
                 <div className="mt-3 text-sm text-amazon_blue">
                   {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
