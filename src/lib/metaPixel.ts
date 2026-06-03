@@ -1,7 +1,7 @@
 export type MetaPixelCurrency = "PEN";
 
 type MetaPixelEvent = "PageView" | "ViewContent" | "AddToCart" | "InitiateCheckout" | "Purchase";
-type MetaPixelCustomEvent = "PromoWEB20Viewed" | "PromoWEB20Applied" | "PromoWEB20Purchase";
+type MetaPixelCustomEvent = "PromoWEB20Viewed" | "PromoWEB20Applied" | "PromoWEB20Purchase" | "SellerApplicationSubmitted";
 
 type MetaPixelPayload = Record<string, string | number | boolean | Array<string | number> | Array<Record<string, unknown>> | undefined>;
 
@@ -136,4 +136,15 @@ export const trackPromoWEB20Purchase = (params: { transactionId: string | number
     currency: CURRENCY,
     discount: cleanNumber(params.discount),
     value: cleanNumber(params.value),
+  });
+
+export const trackSellerApplicationSubmitted = (params: {
+  businessName: string;
+  city: string;
+  productType: string;
+}) =>
+  trackCustom("SellerApplicationSubmitted", {
+    business_name: cleanString(params.businessName),
+    city: cleanString(params.city),
+    product_type: cleanString(params.productType),
   });

@@ -5,20 +5,25 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import {
   BanknotesIcon,
-  ChatBubbleLeftRightIcon,
   CheckCircleIcon,
   ClockIcon,
+  MegaphoneIcon,
+  PhotoIcon,
   ShoppingBagIcon,
   SparklesIcon,
+  StarIcon,
+  UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import { getDepartment, peruDepartments } from "@/lib/peruLocations";
+import { trackSellerApplicationSubmitted } from "@/lib/metaPixel";
 import logo from "@/images/logo.jpg";
 
 const sellerBenefits = [
-  { label: "Vende dentro de Rossy Resina", icon: ShoppingBagIcon },
-  { label: "Publica productos como en una tienda profesional", icon: SparklesIcon },
-  { label: "Recibe consultas por WhatsApp", icon: ChatBubbleLeftRightIcon },
-  { label: "Gestiona tu propia tienda", icon: BanknotesIcon },
+  { label: "Publicación gratuita", icon: ShoppingBagIcon },
+  { label: "Perfil destacado", icon: StarIcon },
+  { label: "Difusión en redes", icon: MegaphoneIcon },
+  { label: "0% comisión inicial", icon: BanknotesIcon },
+  { label: "Solo 10 cupos disponibles", icon: UserGroupIcon },
 ];
 
 const emptyForm = {
@@ -42,6 +47,11 @@ const emptyForm = {
   businessPhotoUrl: "",
 };
 
+const isLocalhostBrowser = () => {
+  if (typeof window === "undefined") return false;
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+};
+
 export default function VendeConNosotrosPage() {
   const { data: session } = useSession();
   const [form, setForm] = useState(emptyForm);
@@ -50,6 +60,7 @@ export default function VendeConNosotrosPage() {
   const [onboardingError, setOnboardingError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [marketplaceContext, setMarketplaceContext] = useState<any>(null);
+  const [showTestDataButton, setShowTestDataButton] = useState(false);
 
   const sessionEmail = String(session?.user?.email || "").trim().toLowerCase();
   const application = marketplaceContext?.application || null;
@@ -70,6 +81,7 @@ export default function VendeConNosotrosPage() {
 
   useEffect(() => {
     loadMarketplaceContext();
+    setShowTestDataButton(isLocalhostBrowser());
   }, []);
 
   useEffect(() => {
@@ -247,6 +259,12 @@ export default function VendeConNosotrosPage() {
         return;
       }
 
+      trackSellerApplicationSubmitted({
+        businessName: payload.businessName,
+        city: payload.city,
+        productType: payload.productType,
+      });
+
       setSubmitted(true);
       setMarketplaceContext((current: any) => ({
         ...(current || {}),
@@ -319,8 +337,8 @@ export default function VendeConNosotrosPage() {
   return (
     <>
       <Head>
-        <title>Rossy Resina Seller Center | Vende con nosotros</title>
-        <meta name="description" content="Regístrate para vender tus productos dentro del marketplace Rossy Resina." />
+        <title>Vende tus creaciones en Rossy Resina | Fundadoras</title>
+        <meta name="description" content="Postula como emprendedora fundadora para vender tus creaciones dentro de Rossy Resina." />
       </Head>
 
       <main className="min-h-screen bg-white text-slate-950">
@@ -336,36 +354,53 @@ export default function VendeConNosotrosPage() {
             onUpdate={update}
             onImageFile={handleImageFile}
             onFillTestData={fillSellerTestData}
+            showTestDataButton={showTestDataButton}
             onSubmit={handleApplicationSubmit}
           />
         ) : (
           <>
-            <section className="relative min-h-[calc(100vh-80px)] overflow-hidden bg-slate-950">
+            <section className="relative overflow-hidden bg-slate-950">
               <div className="absolute inset-0 bg-[url('/seller-center-bg.jpg')] bg-cover bg-center opacity-100" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(228,20,127,0.16),transparent_34%),linear-gradient(90deg,rgba(2,6,23,0.78),rgba(2,6,23,0.46),rgba(2,6,23,0.14))]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_74%_18%,rgba(228,20,127,0.22),transparent_34%),linear-gradient(90deg,rgba(2,6,23,0.88),rgba(2,6,23,0.58),rgba(2,6,23,0.22))]" />
 
-              <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-4 sm:px-6 lg:grid-cols-[1fr_460px] lg:px-8 lg:py-5">
-                <section className="flex min-h-[520px] flex-col justify-start pt-8 text-white lg:pt-12">
-                  <h1 className="max-w-3xl text-5xl font-black leading-tight text-white sm:text-6xl">
-                    Empieza a vender tus productos en Rossy Resina
+              <div className="relative mx-auto grid max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:min-h-[560px] lg:grid-cols-[minmax(0,1fr)_460px] lg:items-start lg:px-8 lg:py-6">
+                <section className="flex flex-col justify-start pt-3 text-white lg:pt-5">
+                  <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/18 bg-white/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-pink-100 backdrop-blur">
+                    <SparklesIcon className="h-4 w-4" />
+                    Primeras emprendedoras fundadoras
+                  </div>
+                  <h1 className="mt-4 max-w-3xl text-4xl font-black leading-tight text-white sm:text-5xl lg:text-6xl">
+                    Vende tus creaciones en Rossy Resina
                   </h1>
-                  <p className="mt-6 max-w-2xl text-lg leading-8 text-white/72">
-                    Crea tu tienda, publica tus productos y llega a clientes que ya buscan resina, artesanía y productos personalizados.
+                  <p className="mt-3 max-w-2xl text-xl font-black leading-8 text-white sm:text-2xl">
+                    Buscamos a las primeras emprendedoras fundadoras
                   </p>
-                  <div className="mt-10 grid max-w-xl gap-5">
+                  <p className="mt-3 max-w-2xl text-base leading-7 text-white/75 sm:text-lg">
+                    Postula tu emprendimiento y forma parte del primer grupo de tiendas creadoras dentro del marketplace de Rossy Resina.
+                  </p>
+                  <div className="mt-7 grid max-w-2xl gap-3 sm:grid-cols-2">
                     {sellerBenefits.map((benefit) => {
                       const Icon = benefit.icon;
                       return (
-                        <div key={benefit.label} className="flex items-center gap-4 text-lg font-bold text-white/78">
-                          <Icon className="h-6 w-6 text-[#ff8ac4]" />
-                          {benefit.label}
+                        <div key={benefit.label} className="flex min-h-[52px] items-center gap-3 rounded-lg border border-white bg-white px-3 py-2 text-sm font-black text-slate-950 shadow-[0_10px_24px_rgba(15,23,42,0.16)]">
+                          <Icon className="h-5 w-5 shrink-0 text-[#ff8ac4]" />
+                          <span>{benefit.label}</span>
                         </div>
                       );
                     })}
                   </div>
+                  <p className="mt-6 max-w-xl rounded-lg border border-white bg-white px-4 py-3 text-sm font-bold leading-6 text-slate-950 shadow-[0_10px_24px_rgba(15,23,42,0.16)]">
+                    Rossy Resina trabajará para llevar clientes a tu tienda.
+                  </p>
+                  <Link
+                    href="#postulacion-fundadora"
+                    className="mt-6 inline-flex h-12 w-full max-w-xs items-center justify-center rounded-lg bg-[#e4147f] px-6 text-base font-black text-white shadow-[0_14px_30px_rgba(228,20,127,0.28)] transition hover:bg-[#c91473] sm:w-fit"
+                  >
+                    Quiero ser fundadora
+                  </Link>
                 </section>
 
-                <aside id="registro-vendedor" className="hidden self-start rounded-2xl border border-white/20 bg-white/95 p-6 shadow-2xl lg:block">
+                <aside id="postulacion-fundadora" className="hidden self-start rounded-2xl border border-white/20 bg-white/95 p-6 shadow-2xl lg:block">
                   <SellerRegisterForm
                     form={form}
                     sessionEmail={sessionEmail}
@@ -376,9 +411,29 @@ export default function VendeConNosotrosPage() {
                     shop={shop}
                     onUpdate={update}
                     onFillTestData={fillSellerTestData}
+                    showTestDataButton={showTestDataButton}
                     onSubmit={handleSubmit}
                   />
                 </aside>
+              </div>
+            </section>
+
+            <section className="bg-[#fff7fb] px-4 py-5 sm:px-6 lg:hidden">
+              <div className="mx-auto max-w-xl rounded-2xl border border-pink-100 bg-white p-4 shadow-sm">
+                <SellerRegisterForm
+                  form={form}
+                  sessionEmail={sessionEmail}
+                  error={error}
+                  sending={sending}
+                  submitted={submitted}
+                  isApproved={isApproved}
+                  shop={shop}
+                  onUpdate={update}
+                  onFillTestData={fillSellerTestData}
+                  showTestDataButton={showTestDataButton}
+                  onSubmit={handleSubmit}
+                  compact
+                />
               </div>
             </section>
 
@@ -399,15 +454,18 @@ export default function VendeConNosotrosPage() {
 
 function SellerTopbar() {
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b0b0b] text-white">
+    <header className="sticky top-0 z-50 border-b border-[#749f14] bg-[#86b817] text-white shadow-sm">
       <div className="mx-auto flex h-20 max-w-[1720px] items-center justify-between px-4 sm:px-8 lg:px-12">
         <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="Rossy Resina Seller Center">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#ff6a00] p-1.5 shadow-[0_0_0_1px_rgba(255,255,255,0.14)]">
-            <Image src={logo} alt="Rossy Resina" className="h-full w-full rounded-lg object-cover" priority />
+          <span className="relative flex h-[58px] w-[58px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_6px_18px_rgba(17,24,39,0.16)] ring-2 ring-white">
+            <Image src={logo} alt="Rossy Resina" className="h-full w-full object-contain" priority />
           </span>
+          <span className="h-12 w-[3px] shrink-0 rounded-full bg-[#e4147f] shadow-[0_0_0_1px_rgba(255,255,255,0.18)]" />
           <span className="min-w-0 leading-tight">
-            <span className="block truncate text-xl font-black tracking-wide text-white sm:text-2xl">ROSSY RESINA</span>
-            <span className="block truncate text-base font-bold text-white/62 sm:text-lg">Seller Center</span>
+            <span className="block truncate text-[24px] font-bold leading-7 text-[#e4147f] [text-shadow:1.5px_0_0_#fff,-1.5px_0_0_#fff,0_1.5px_0_#fff,0_-1.5px_0_#fff,1px_1px_0_#fff,-1px_1px_0_#fff,1px_-1px_0_#fff,-1px_-1px_0_#fff]">
+              Rossy Resina
+            </span>
+            <span className="mt-0.5 block truncate text-[13px] font-medium leading-5 text-white/90">Seller Center</span>
           </span>
         </Link>
 
@@ -417,14 +475,14 @@ function SellerTopbar() {
             <span>Perú</span>
           </span>
           <span className="hidden text-white sm:inline">ES</span>
-          <Link href="/sign-in?callbackUrl=/vende-con-nosotros" className="whitespace-nowrap text-white transition hover:text-[#ff7a1a]">
+          <Link href="/sign-in?callbackUrl=/vende-con-nosotros" className="whitespace-nowrap text-white transition hover:text-[#e4147f]">
             Iniciar sesión
           </Link>
           <Link
-            href="#registro-vendedor"
-            className="inline-flex h-12 items-center justify-center rounded-lg bg-[#ff6a00] px-5 text-sm font-black text-white shadow-[0_10px_22px_rgba(255,106,0,0.22)] transition hover:bg-[#ff7a1a] sm:px-6"
+            href="#postulacion-fundadora"
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-[#e4147f] px-4 text-sm font-black text-white shadow-[0_10px_22px_rgba(228,20,127,0.22)] transition hover:bg-[#c91473] sm:px-5"
           >
-            Registrarse
+            Quiero ser fundadora
           </Link>
         </nav>
       </div>
@@ -479,6 +537,7 @@ function SellerOnboarding({
   onUpdate,
   onImageFile,
   onFillTestData,
+  showTestDataButton,
   onSubmit,
 }: {
   form: typeof emptyForm;
@@ -488,15 +547,16 @@ function SellerOnboarding({
   onUpdate: (key: keyof typeof emptyForm, value: string) => void;
   onImageFile: (key: "dniFrontUrl" | "dniBackUrl" | "businessPhotoUrl" | "logoUrl", file?: File | null) => void;
   onFillTestData: () => void;
+  showTestDataButton: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
     <section className="min-h-[calc(100vh-56px)] bg-white">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <form onSubmit={onSubmit}>
-          <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">Información del vendedor y negocio</h1>
-          <p className="mt-2 text-base font-medium leading-7 text-slate-600">Completa tus datos de verificación para preparar tu tienda y proteger a la comunidad.</p>
-          {process.env.NODE_ENV !== "production" && (
+          <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">Postulación de fundadora</h1>
+          <p className="mt-2 text-base font-medium leading-7 text-slate-600">Completa un formulario corto para que podamos conocer tu emprendimiento y revisar tus productos.</p>
+          {showTestDataButton && (
             <button
               type="button"
               onClick={onFillTestData}
@@ -510,7 +570,7 @@ function SellerOnboarding({
             {error && <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div>}
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Nombre completo del vendedor">
+              <Field label="Nombre completo">
                 <input value={form.fullName} onChange={(e) => onUpdate("fullName", e.target.value)} className={inputClass} />
               </Field>
               <Field label="DNI del vendedor">
@@ -526,12 +586,12 @@ function SellerOnboarding({
               <Field label="Nombre del emprendimiento">
                 <input value={form.businessName} onChange={(e) => onUpdate("businessName", e.target.value)} className={inputClass} />
               </Field>
-              <Field label="WhatsApp de contacto">
+              <Field label="WhatsApp">
                 <input value={form.whatsapp} onChange={(e) => onUpdate("whatsapp", e.target.value)} className={inputClass} inputMode="tel" />
               </Field>
             </div>
 
-            <Field label="Tipo de productos que venderás">
+            <Field label="¿Qué productos vendes?">
               <input value={form.productType} onChange={(e) => onUpdate("productType", e.target.value)} className={inputClass} placeholder="Ej: llaveros, joyería, piezas personalizadas" />
             </Field>
 
@@ -549,17 +609,20 @@ function SellerOnboarding({
             </div>
 
             <div className="rounded-xl border border-pink-100 bg-[#fff7fb] p-4">
-              <p className="text-base font-black text-slate-900">Verificación de seguridad</p>
-              <p className="mt-1 text-sm font-medium leading-6 text-slate-600">Solicitamos estas imágenes para validar identidad y reducir riesgos de fraude antes de aprobar una tienda.</p>
+              <p className="flex items-center gap-2 text-base font-black text-slate-900">
+                <PhotoIcon className="h-5 w-5 text-[#e4147f]" />
+                Fotos de productos y verificación
+              </p>
+              <p className="mt-1 text-sm font-medium leading-6 text-slate-600">Las fotos de tus productos nos ayudan a evaluar tu tienda. También pedimos DNI para validar identidad antes de aprobar una vendedora.</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-3">
                 <UploadField label="DNI - frente" value={form.dniFrontUrl} onChange={(file) => onImageFile("dniFrontUrl", file)} />
                 <UploadField label="DNI - reverso" value={form.dniBackUrl} onChange={(file) => onImageFile("dniBackUrl", file)} />
-                <UploadField label="Foto del emprendimiento" value={form.businessPhotoUrl} onChange={(file) => onImageFile("businessPhotoUrl", file)} />
+                <UploadField label="Fotos de productos" value={form.businessPhotoUrl} onChange={(file) => onImageFile("businessPhotoUrl", file)} />
               </div>
             </div>
 
             <button type="submit" disabled={sending} className="mt-3 h-12 w-full max-w-sm rounded-lg bg-[#e4147f] px-5 text-sm font-black text-white transition hover:bg-[#c91473] disabled:opacity-60">
-              {sending ? "Enviando verificación..." : "Enviar solicitud para revisión"}
+              {sending ? "Enviando postulación..." : "Quiero ser fundadora"}
             </button>
           </div>
         </form>
@@ -578,6 +641,7 @@ function SellerRegisterForm({
   shop,
   onUpdate,
   onFillTestData,
+  showTestDataButton,
   onSubmit,
   compact = false,
 }: any) {
@@ -608,21 +672,11 @@ function SellerRegisterForm({
     <form onSubmit={onSubmit}>
       <div className="text-center">
         <h2 className="text-2xl font-black text-slate-950">
-          Regístrate para <span className="text-[#e4147f]">vender en Rossy Resina</span>
+          Postula para ser <span className="text-[#e4147f]">fundadora</span>
         </h2>
-        <div className="mt-6 grid grid-cols-2 gap-4 border-b border-slate-200 pb-5 text-left">
-          <div className="flex items-center gap-2">
-            <span className="text-4xl font-black text-[#e4147f]">1</span>
-            <span className="text-sm font-black leading-tight text-[#e4147f]">Minuto<br />registro rápido</span>
-          </div>
-          <div className="flex items-center gap-2 border-l border-pink-200 pl-5">
-            <ClockIcon className="h-9 w-9 text-[#e4147f]" />
-            <span className="text-sm font-black leading-tight text-[#e4147f]">Revisión<br />por Rossy</span>
-          </div>
-        </div>
       </div>
 
-      {process.env.NODE_ENV !== "production" && (
+      {showTestDataButton && (
         <button
           type="button"
           onClick={onFillTestData}
@@ -697,7 +751,7 @@ function SellerRegisterForm({
       </div>
 
       <button type="submit" disabled={sending} className="mt-5 h-14 w-full rounded-lg bg-[#e4147f] px-5 text-lg font-black text-white transition hover:bg-[#c91473] disabled:opacity-60">
-        {sending ? "Enviando solicitud..." : "Regístrate como vendedor"}
+        {sending ? "Enviando solicitud..." : "Quiero ser fundadora"}
       </button>
 
       <p className="mt-4 text-center text-sm leading-6 text-slate-500">
