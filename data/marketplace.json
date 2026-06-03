@@ -1,6 +1,26 @@
 {
   "applications": [
     {
+      "id": "app_mpxocos5_megq9d",
+      "userEmail": "kemenyabad2504@gmail.com",
+      "fullName": "María Prueba Vendedora",
+      "sellerDni": "70450987",
+      "businessName": "Creaciones Prueba Rossy",
+      "city": "Lima - Lima - Lima",
+      "whatsapp": "51999999999",
+      "productType": "Llaveros, dijes, lapiceros personalizados y piezas en resina",
+      "description": "Emprendimiento de prueba para validar el flujo de alta de vendedores en Rossy Resina.",
+      "socialUrl": "https://instagram.com/creaciones_prueba_rossy",
+      "logoUrl": "/favicon-96x96.png",
+      "dniFrontUrl": "/web-app-manifest-512x512.png",
+      "dniBackUrl": "/web-app-manifest-192x192.png",
+      "businessPhotoUrl": "/creations/1773682497648_Catalogo_Express_Rossy_Resina__2_.png",
+      "status": "PENDING",
+      "note": "",
+      "createdAt": "2026-06-03T06:17:35.093Z",
+      "updatedAt": "2026-06-03T06:17:35.093Z"
+    },
+    {
       "id": "app_mpr9xjle_ryq9qk",
       "userEmail": "kemeny@gmail.com",
       "fullName": "María Prueba Vendedora",

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readMarketplace } from "@/lib/marketplaceStore";
-import { getDbMarketplaceData } from "@/lib/marketplaceDb";
+import { getDbMarketplaceData, publicMarketplaceProduct, publicMarketplaceShop } from "@/lib/marketplaceDb";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Metodo no permitido" });
@@ -17,8 +17,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const shop = shops.find((item) => item.slug === shopSlug && item.status === "ACTIVE");
     if (!shop) return res.status(404).json({ error: "Tienda no encontrada" });
     return res.status(200).json({
-      shop,
-      products: published.filter((item) => item.shopId === shop.id),
+      shop: publicMarketplaceShop(shop),
+      products: published
+        .filter((item) => item.shopId === shop.id)
+        .map(publicMarketplaceProduct),
     });
   }
 
@@ -26,13 +28,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const product = published.find((item) => item.slug === productSlug);
     if (!product) return res.status(404).json({ error: "Producto no encontrado" });
     const shop = shops.find((item) => item.id === product.shopId) || null;
-    return res.status(200).json({ product, shop });
+    return res.status(200).json({
+      product: publicMarketplaceProduct(product),
+      shop: publicMarketplaceShop(shop),
+    });
   }
 
   const categories = Array.from(new Set(published.map((item) => item.category).filter(Boolean))).sort();
   const products = published.map((product) => ({
-    ...product,
-    shop: shops.find((shop) => shop.id === product.shopId) || null,
+    ...publicMarketplaceProduct(product),
+    shop: publicMarketplaceShop(shops.find((shop) => shop.id === product.shopId) || null),
   }));
   return res.status(200).json({
     products,

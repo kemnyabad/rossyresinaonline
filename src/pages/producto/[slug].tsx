@@ -2,7 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { GetServerSideProps } from "next";
 import { readMarketplace, recordMarketplaceEvent } from "@/lib/marketplaceStore";
-import { getDbMarketplaceData } from "@/lib/marketplaceDb";
+import { getDbMarketplaceData, publicMarketplaceProduct, publicMarketplaceShop } from "@/lib/marketplaceDb";
 
 export default function MarketplaceProductPage({ product, shop }: any) {
   const whatsapp = String(shop?.whatsapp || "").replace(/\D/g, "");
@@ -68,5 +68,10 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   if (!product) return { notFound: true };
   const shop = shops.find((item) => item.id === product.shopId) || null;
   recordMarketplaceEvent({ type: "PRODUCT_VIEW", shopId: shop?.id, productId: product.id });
-  return { props: { product, shop } };
+  return {
+    props: {
+      product: publicMarketplaceProduct(product),
+      shop: publicMarketplaceShop(shop),
+    },
+  };
 };

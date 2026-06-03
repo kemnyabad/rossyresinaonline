@@ -79,6 +79,24 @@ export function mapDbShopFromApplication(application: any) {
   };
 }
 
+export function publicMarketplaceShop(shop: any) {
+  if (!shop) return null;
+  return {
+    id: String(shop.id || ""),
+    slug: String(shop.slug || ""),
+    logoUrl: String(shop.logoUrl || ""),
+    commercialName: String(shop.commercialName || ""),
+    city: String(shop.city || ""),
+    description: String(shop.description || ""),
+    whatsapp: String(shop.whatsapp || ""),
+    facebook: String(shop.facebook || ""),
+    instagram: String(shop.instagram || ""),
+    tiktok: String(shop.tiktok || ""),
+    status: String(shop.status || ""),
+    featured: Boolean(shop.featured),
+  };
+}
+
 export function mapDbProduct(row: any) {
   const meta = safeParseMarketplaceMessage(row?.mensaje);
   const estado = String(row?.estado || "PENDIENTE").toUpperCase();
@@ -111,6 +129,22 @@ export function mapDbProduct(row: any) {
   };
 }
 
+export function publicMarketplaceProduct(product: any) {
+  if (!product) return null;
+  return {
+    id: String(product.id || ""),
+    shopId: String(product.shopId || ""),
+    slug: String(product.slug || ""),
+    name: String(product.name || ""),
+    category: String(product.category || ""),
+    price: Number(product.price || 0),
+    description: String(product.description || ""),
+    images: Array.isArray(product.images) ? product.images.map(String).filter(Boolean) : [],
+    status: String(product.status || ""),
+    featured: Boolean(product.featured),
+  };
+}
+
 export async function getDbMarketplaceData() {
   const [applicationRows, productRows] = await Promise.all([
     (prisma as any).capacitacionInscripcion.findMany({
@@ -138,10 +172,13 @@ export async function getPublishedMarketplaceProducts() {
   const shops = [...dbData.shops, ...local.shops];
   const products = [...dbData.products, ...local.products]
     .filter((item: any) => item.status === "PUBLISHED")
-    .map((product: any) => ({
-      ...product,
-      shop: shops.find((shop: any) => shop.id === product.shopId) || null,
-    }))
+    .map((product: any) => {
+      const publicProduct = publicMarketplaceProduct(product);
+      return {
+        ...publicProduct,
+        shop: publicMarketplaceShop(shops.find((shop: any) => shop.id === product.shopId) || null),
+      };
+    })
     .filter((product: any) => product.shop);
 
   return products;

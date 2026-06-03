@@ -12,6 +12,7 @@ import {
   SparklesIcon,
   StarIcon,
   UserGroupIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
 import { getDepartment, peruDepartments } from "@/lib/peruLocations";
 import { trackSellerApplicationSubmitted } from "@/lib/metaPixel";
@@ -468,20 +469,43 @@ function SellerTopbar() {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-4 text-sm font-bold sm:gap-7">
-          <span className="hidden items-center gap-2 text-white sm:flex">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#d91023] text-[12px] ring-1 ring-white/20">PE</span>
-            <span>Perú</span>
+        <nav className="flex items-center gap-3 text-white sm:gap-5">
+          <span className="hidden min-h-[48px] items-center gap-2 rounded-lg px-2 py-1 sm:flex">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e4147f] text-xs font-black text-white ring-2 ring-white">
+              PE
+            </span>
+            <span className="text-[15px] font-bold leading-tight">Perú</span>
           </span>
-          <span className="hidden text-white sm:inline">ES</span>
-          <Link href="/sign-in?callbackUrl=/vende-con-nosotros" className="whitespace-nowrap text-white transition hover:text-[#e4147f]">
-            Iniciar sesión
+          <span className="hidden min-h-[48px] items-center px-2 text-[15px] font-bold leading-tight text-white sm:flex">
+            ES
+          </span>
+          <Link
+            href="/sign-in?callbackUrl=/vende-con-nosotros"
+            className="group hidden min-h-[58px] items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white hover:text-[#e4147f] md:flex"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-[#e4147f] group-hover:ring-[#e4147f]">
+              <UserIcon className="h-6 w-6" />
+            </span>
+            <span className="min-w-0 leading-tight text-left">
+              <span className="block text-sm font-bold text-white transition-colors group-hover:text-[#e4147f]">Cuenta</span>
+              <span className="block whitespace-nowrap text-xl font-black leading-5 text-white transition-colors group-hover:text-[#e4147f]">
+                Mi perfil
+              </span>
+            </span>
           </Link>
           <Link
             href="#postulacion-fundadora"
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-[#e4147f] px-4 text-sm font-black text-white shadow-[0_10px_22px_rgba(228,20,127,0.22)] transition hover:bg-[#c91473] sm:px-5"
+            className="group inline-flex min-h-[58px] items-center gap-3 rounded-lg bg-[#e4147f] px-4 py-2 text-white shadow-[0_10px_22px_rgba(228,20,127,0.22)] transition hover:bg-[#c91473] sm:px-5"
           >
-            Quiero ser fundadora
+            <span className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#e4147f] sm:flex">
+              <ShoppingBagIcon className="h-6 w-6" />
+            </span>
+            <span className="min-w-0 leading-tight text-left">
+              <span className="hidden text-sm font-bold text-white sm:block">Postulación</span>
+              <span className="block whitespace-nowrap text-base font-black leading-5 text-white sm:text-lg">
+                Quiero ser fundadora
+              </span>
+            </span>
           </Link>
         </nav>
       </div>

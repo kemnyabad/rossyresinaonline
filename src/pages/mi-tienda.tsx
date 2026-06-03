@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowPathIcon,
   ChartBarIcon,
@@ -11,6 +11,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import SellerLayout from "@/components/seller/SellerLayout";
+import { useSession } from "next-auth/react";
 
 const emptyProduct = {
   id: "",
@@ -36,12 +37,17 @@ const statusClass: Record<string, string> = {
 };
 
 export default function MiTiendaPage() {
+  const { status } = useSession();
   const [loading, setLoading] = useState(true);
   const [context, setContext] = useState<any>(null);
   const [notice, setNotice] = useState("");
   const [productForm, setProductForm] = useState(emptyProduct);
 
-  const load = async () => {
+  const load = useCallback(async () => {
+    if (status !== "authenticated") {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/marketplace/me", { cache: "no-store" });
@@ -50,11 +56,11 @@ export default function MiTiendaPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [status]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const shop = context?.shop;
   const application = context?.application;
@@ -130,7 +136,25 @@ export default function MiTiendaPage() {
     [stats]
   );
 
-  if (loading) return <div className="mx-auto max-w-6xl px-4 py-12 text-sm text-slate-600">Cargando Mi Tienda...</div>;
+  if (status === "loading" || loading) return <div className="mx-auto max-w-6xl px-4 py-12 text-sm text-slate-600">Cargando Mi Tienda...</div>;
+
+  if (status !== "authenticated") {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-12">
+        <Head><title>Mi Tienda | Rossy Resina</title></Head>
+        <div className="rounded-2xl border border-pink-100 bg-white p-8 text-center shadow-sm">
+          <ShoppingBagIcon className="mx-auto h-12 w-12 text-[#e4147f]" />
+          <h1 className="mt-4 text-2xl font-black text-slate-950">Acceso privado</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Inicia sesión con la cuenta dueña de la tienda para administrar productos, perfil y estadísticas.
+          </p>
+          <Link href="/sign-in?callbackUrl=/mi-tienda" className="mt-6 inline-flex h-11 items-center rounded-lg bg-[#e4147f] px-5 text-sm font-bold text-white">
+            Iniciar sesión
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!shop) {
     return (

@@ -17,6 +17,7 @@ type Customer = {
   updatedAt: string;
   totalOrders?: number;
   totalSpent?: number;
+  lastOrderAt?: string;
 };
 
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }) : "—";
@@ -121,7 +122,7 @@ export default function AdminCustomersPage() {
                     <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">
                       {c.totalSpent != null ? `S/ ${fmt(c.totalSpent)}` : "—"}
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(c.updatedAt)}</td>
+                    <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{c.lastOrderAt ? fmtDate(c.lastOrderAt) : "—"}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => setDetail(c)}
@@ -169,7 +170,7 @@ export default function AdminCustomersPage() {
                   : ["Dirección Olva", detail.olvaAddress],
                 detail.shippingCarrier !== "SHALOM" ? ["Referencia Olva", detail.olvaReference] : ["", ""],
                 ["Primer contacto", fmtDate(detail.createdAt)],
-                ["Última compra",   fmtDate(detail.updatedAt)],
+                ["Última compra",   detail.lastOrderAt ? fmtDate(detail.lastOrderAt) : "—"],
               ].filter(([l]) => l).map(([label, value]) => (
                 <div key={label} className="bg-gray-50 rounded-xl p-3">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</p>
