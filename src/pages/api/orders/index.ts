@@ -16,6 +16,7 @@ import {
   shippingCarrierLabel,
 } from "@/lib/orderMeta";
 import { normalizePromoCode, validatePromoWeb20 } from "@/lib/promoWeb20";
+import { getPromoWeb20EligibleSubtotal } from "@/lib/promoWeb20Rules";
 import { getPresentationTotalPrice } from "@/lib/productPricing";
 
 type DbOrderStatus = "PENDING" | "PAID" | "SHIPPED";
@@ -360,7 +361,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         : null;
       const promoCode = normalizePromoCode((body as any).promoCode);
       let couponDiscount = 0;
+      let couponSubtotal = 0;
       if (promoCode) {
+        couponSubtotal = getPromoWeb20EligibleSubtotal(normalizedItems);
         const validation = await validatePromoWeb20({
           code: promoCode,
           subtotal: computedTotal,
@@ -403,7 +406,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             notes,
             couponCode: couponDiscount > 0 ? "WEB20" : "",
             couponDiscount,
-            couponSubtotal: computedTotal,
+            couponSubtotal,
           }),
           paymentImage: finalPaymentImage,
         },

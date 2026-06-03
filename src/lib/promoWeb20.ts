@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import prisma from "@/lib/prisma";
 import { parseOrderMeta } from "@/lib/orderMeta";
-import { hasPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
+import { getPromoWeb20EligibleSubtotal } from "@/lib/promoWeb20Rules";
 
 export type PromoWeb20Config = {
   code: "WEB20";
@@ -44,6 +44,8 @@ export type PromoProductLike = {
   brand?: unknown;
   code?: unknown;
   sku?: unknown;
+  price?: unknown;
+  quantity?: unknown;
 };
 
 const cleanMoney = (value: unknown) => {
@@ -159,22 +161,14 @@ export const validatePromoWeb20 = async ({
 }): Promise<PromoWeb20Validation> => {
   const config = await getPromoWeb20Config();
   const normalizedCode = normalizePromoCode(code);
-  const currentSubtotal = cleanMoney(subtotal);
+  const eligibleSubtotal = items.length > 0 ? getPromoWeb20EligibleSubtotal(items) : subtotal;
+  const currentSubtotal = cleanMoney(eligibleSubtotal);
 
   if (normalizedCode !== "WEB20") {
     return { ok: false, code: "WEB20", discount: 0, message: "Cupón inválido.", config };
   }
   if (!isPromoWeb20Available(config)) {
     return { ok: false, code: "WEB20", discount: 0, message: "El cupón WEB20 ya no está disponible.", config };
-  }
-  if (hasPromoWeb20ExcludedProduct(items)) {
-    return {
-      ok: false,
-      code: "WEB20",
-      discount: 0,
-      message: "El cupón WEB20 no aplica para resina epóxica.",
-      config,
-    };
   }
   if (currentSubtotal < config.minimumSubtotal) {
     const missingAmount = Number((config.minimumSubtotal - currentSubtotal).toFixed(2));

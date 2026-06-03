@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import FormattedPrice from "@/components/FormattedPrice";
 import { trackInitiateCheckout, trackPromoWEB20Purchase, trackPurchase } from "@/lib/metaPixel";
-import { hasPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
+import { getPromoWeb20EligibleSubtotal } from "@/lib/promoWeb20Rules";
 import { resetCart } from "@/store/nextSlice";
 import { useSession } from "next-auth/react";
 import { Bars3Icon, ChevronLeftIcon } from "@heroicons/react/24/outline";
@@ -149,10 +149,12 @@ export default function CheckoutPage() {
 
   const totals = useMemo(() => {
     const subtotal = productData.reduce((sum: number, p: StoreProduct) => sum + p.price * p.quantity, 0);
-    const hasExcludedProduct = hasPromoWeb20ExcludedProduct(productData);
-    const discount = promoCoupon?.code === "WEB20" && subtotal >= 100 && !hasExcludedProduct ? Math.min(Number(promoCoupon.discount || 0), subtotal) : 0;
+    const eligibleWeb20Subtotal = getPromoWeb20EligibleSubtotal(productData);
+    const discount = promoCoupon?.code === "WEB20" && eligibleWeb20Subtotal >= 100
+      ? Math.min(Number(promoCoupon.discount || 0), eligibleWeb20Subtotal)
+      : 0;
     const total = Math.max(0, subtotal - discount);
-    return { subtotal, discount, total, hasExcludedProduct };
+    return { subtotal, discount, total, eligibleWeb20Subtotal };
   }, [productData, promoCoupon]);
   const totalUnits = useMemo(
     () => productData.reduce((sum: number, p: StoreProduct) => sum + p.quantity, 0),

@@ -10,7 +10,7 @@ import Image from "next/image";
 import FormattedPrice from "@/components/FormattedPrice";
 import Products from "@/components/Products";
 import { trackPromoWEB20Applied } from "@/lib/metaPixel";
-import { hasPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
+import { getPromoWeb20EligibleSubtotal, hasPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
 import {
   Bars3Icon,
   ChevronLeftIcon,
@@ -32,16 +32,19 @@ const CartPage = () => {
   const [couponMessage, setCouponMessage] = useState("");
   const [couponError, setCouponError] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const eligibleWeb20Subtotal = useMemo(() => getPromoWeb20EligibleSubtotal(cartItems), [cartItems]);
 
   const totals = useMemo(() => {
     const subtotal = cartItems.reduce(
       (sum: number, p: StoreProduct) => sum + p.price * p.quantity,
       0
     );
-    const discount = promoCoupon?.code === "WEB20" ? Math.min(Number(promoCoupon.discount || 0), subtotal) : 0;
+    const discount = promoCoupon?.code === "WEB20" && eligibleWeb20Subtotal >= 100
+      ? Math.min(Number(promoCoupon.discount || 0), eligibleWeb20Subtotal)
+      : 0;
     const total = Math.max(0, subtotal - discount);
     return { subtotal, discount, total };
-  }, [cartItems, promoCoupon]);
+  }, [cartItems, eligibleWeb20Subtotal, promoCoupon]);
   const totalUnits = useMemo(
     () => cartItems.reduce((sum: number, p: StoreProduct) => sum + p.quantity, 0),
     [cartItems]
@@ -68,18 +71,13 @@ const CartPage = () => {
   }, []);
 
   useEffect(() => {
-    if (promoCoupon?.code === "WEB20" && totals.subtotal < 100) {
+    if (promoCoupon?.code === "WEB20" && eligibleWeb20Subtotal < 100) {
       dispatch(clearPromoCoupon());
-      const missing = Math.max(0, 100 - totals.subtotal);
+      const missing = Math.max(0, 100 - eligibleWeb20Subtotal);
       setCouponMessage("");
       setCouponError(`Te faltan S/${missing.toFixed(2)} para utilizar el cupón WEB20.`);
     }
-    if (promoCoupon?.code === "WEB20" && hasWeb20ExcludedProduct) {
-      dispatch(clearPromoCoupon());
-      setCouponMessage("");
-      setCouponError("El cupón WEB20 no aplica para resina epóxica.");
-    }
-  }, [dispatch, hasWeb20ExcludedProduct, promoCoupon?.code, totals.subtotal]);
+  }, [dispatch, eligibleWeb20Subtotal, promoCoupon?.code]);
 
   useEffect(() => {
     let alive = true;
@@ -124,11 +122,6 @@ const CartPage = () => {
       setCouponError("Ingresa un código promocional.");
       return;
     }
-    if (hasWeb20ExcludedProduct) {
-      dispatch(clearPromoCoupon());
-      setCouponError("El cupón WEB20 no aplica para resina epóxica.");
-      return;
-    }
     try {
       setApplyingCoupon(true);
       const res = await fetch("/api/promo/web20", {
@@ -136,7 +129,7 @@ const CartPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code,
-          subtotal: totals.subtotal,
+          subtotal: eligibleWeb20Subtotal,
           email: String((session?.user as any)?.email || ""),
           items: cartItems,
         }),
@@ -145,7 +138,7 @@ const CartPage = () => {
       if (!res.ok) throw new Error(data?.error || "No se pudo aplicar el cupón.");
       dispatch(applyPromoCoupon({ code: data.code, discount: data.discount, message: data.message }));
       setCouponMessage(data.message || "🎉 Cupón WEB20 aplicado correctamente. Ahorraste S/20.");
-      trackPromoWEB20Applied({ discount: Number(data.discount || 0), subtotal: totals.subtotal });
+      trackPromoWEB20Applied({ discount: Number(data.discount || 0), subtotal: eligibleWeb20Subtotal });
     } catch (error: any) {
       dispatch(clearPromoCoupon());
       setCouponError(error?.message || "No se pudo aplicar el cupón.");
@@ -185,8 +178,10 @@ const CartPage = () => {
         <p className="mt-2 text-sm font-semibold text-emerald-700">{couponMessage || promoCoupon.message}</p>
       ) : null}
       {couponError ? <p className="mt-2 text-sm font-semibold text-red-600">{couponError}</p> : null}
-      {hasWeb20ExcludedProduct && !couponError ? (
-        <p className="mt-2 text-sm font-semibold text-red-600">El cupón WEB20 no aplica para resina epóxica.</p>
+      {hasWeb20ExcludedProduct ? (
+        <p className="mt-2 text-xs font-semibold text-gray-600">
+          La resina epóxica no cuenta para WEB20. Subtotal compatible: S/{eligibleWeb20Subtotal.toFixed(2)}.
+        </p>
       ) : null}
       {totals.discount > 0 ? (
         <p className="mt-2 text-xs font-semibold text-gray-600">Contador de ahorro: S/{totals.discount.toFixed(2)}</p>
