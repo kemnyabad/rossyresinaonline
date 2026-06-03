@@ -15,6 +15,7 @@ export default function Document() {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#e4147f" />
+        <meta name="facebook-domain-verification" content="jw1yv4g85tapmk99ztmoh67hz5qjzg" />
       </Head>
       <body>
         {metaPixelId ? (
