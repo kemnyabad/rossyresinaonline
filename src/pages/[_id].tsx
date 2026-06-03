@@ -18,6 +18,7 @@ import { trackViewContent } from "@/lib/metaPixel";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
 import { getPresentationTotalPrice } from "@/lib/productPricing";
+import { isPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
 import {
   ArrowLeftIcon,
   ChevronRightIcon,
@@ -152,6 +153,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
     : getOptionalPrice(product?.oldPrice);
   const hasActiveDiscount = activeOldPriceValue !== null && activeOldPriceValue > activePrice;
   const displayProductTitle = formatProductTitle(product?.title || product?.code || "Producto");
+  const showPromoWeb20 = product ? !isPromoWeb20ExcludedProduct(product) : false;
 
   useEffect(() => {
     const productId = String(product?._id || "").trim();
@@ -1024,9 +1026,11 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     </Link>
                   </div>
                 ) : null}
-                <div className="mb-2">
-                  <ProductCouponBadge prominent className="w-full max-w-[430px]" />
-                </div>
+                {showPromoWeb20 && (
+                  <div className="mb-2">
+                    <ProductCouponBadge prominent className="w-full max-w-[430px]" />
+                  </div>
+                )}
                 <h1 className="text-xl md:text-2xl font-semibold">{displayProductTitle}</h1>
                 <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
                   {salesCount > 0 && (

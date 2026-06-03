@@ -180,7 +180,7 @@ const CartPage = () => {
       {couponError ? <p className="mt-2 text-sm font-semibold text-red-600">{couponError}</p> : null}
       {hasWeb20ExcludedProduct ? (
         <p className="mt-2 text-xs font-semibold text-gray-600">
-          La resina epóxica no cuenta para WEB20. Subtotal compatible: S/{eligibleWeb20Subtotal.toFixed(2)}.
+          Las resinas no cuentan para WEB20. Subtotal compatible: S/{eligibleWeb20Subtotal.toFixed(2)}.
         </p>
       ) : null}
       {totals.discount > 0 ? (

@@ -3,7 +3,6 @@ import Products from "@/components/Products";
 import MarketplaceProductGrid from "@/components/MarketplaceProductGrid";
 import ProductCouponBadge from "@/components/ProductCouponBadge";
 import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
-import { PromoWeb20HomeBanner } from "@/components/PromoWeb20";
 import { ProductProps } from "../../type";
 import { useDispatch } from "react-redux";
 import { type ElementType, useEffect, useMemo, useRef, useState } from "react";
@@ -28,6 +27,7 @@ import { getPublishedMarketplaceProducts } from "@/lib/marketplaceDb";
 import { getPurchaseBehaviorSnapshot, type PurchaseBehaviorSnapshot } from "@/lib/repositories/categoryInsightsRepository";
 import { absoluteImageUrl, absoluteUrl, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { useLiveProducts } from "@/lib/useLiveProducts";
+import { isPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
 
 interface Props {
   productData: ProductProps[];
@@ -326,7 +326,9 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
                     <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover" />
                   </div>
                   <p className="mt-1 line-clamp-1 text-xs font-bold text-gray-900">{getDiscountLabel(p)} especial</p>
-                  <ProductCouponBadge compact className="mt-1 w-full justify-center" />
+                  {!isPromoWeb20ExcludedProduct(p) && (
+                    <ProductCouponBadge compact className="mt-1 w-full justify-center" />
+                  )}
                   <div className="flex items-center gap-1">
                     <p className="min-w-0 flex-1 text-[15px] font-bold leading-tight text-amazon_blue">
                       S/ {Number(p.price || 0).toFixed(2)}
@@ -361,7 +363,9 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
                       <ShoppingCartIcon className="h-4 w-4" />
                     </span>
                   </div>
-                  <ProductCouponBadge compact className="mt-1 w-full justify-center" />
+                  {!isPromoWeb20ExcludedProduct(p) && (
+                    <ProductCouponBadge compact className="mt-1 w-full justify-center" />
+                  )}
                   <div className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
                     <TruckIcon className="h-3.5 w-3.5 text-amazon_blue" />
                     Envío disponible
@@ -390,13 +394,13 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
                   ofertasExpress={ofertasExpress}
                 />
               </section>
+        {hasBehaviorData && realTopProducts.length > 0 && (
         <section className="px-4 md:px-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-bold text-gray-900">
-              Productos más comprados
-            </h2>
-          </div>
-          {hasBehaviorData && realTopProducts.length > 0 ? (
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold text-gray-900">
+                Productos más comprados
+              </h2>
+            </div>
             <div className="relative">
               {/* Desktop navigation buttons */}
               <button
@@ -430,15 +434,10 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
                 ))}
               </div>
             </div>
-          ) : (
-            <div className="p-1 text-sm text-gray-600">
-              Aún no hay compras confirmadas para mostrar productos más comprados.
-            </div>
-          )}
         </section>
+        )}
 
         <HomeAdBanner />
-        <PromoWeb20HomeBanner />
 
         {/* Ofertas Express */}
         {ofertasExpress.length > 0 && (

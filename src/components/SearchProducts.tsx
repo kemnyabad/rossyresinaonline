@@ -3,6 +3,7 @@ import Image from "next/image";
 import FormattedPrice from "./FormattedPrice";
 import ProductCouponBadge from "./ProductCouponBadge";
 import { formatProductTitle } from "@/lib/textFormat";
+import { isPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
 
 import { ProductProps } from "../../type";
 type Item = {
@@ -11,6 +12,7 @@ type Item = {
 
 const SearchProducts = ({ item }: Item) => {
   const displayTitle = formatProductTitle(item.title || "Producto");
+  const showCoupon = !isPromoWeb20ExcludedProduct(item);
   const normImg = (s?: string) => {
     const t = String(s || "");
     if (!t) return "/favicon-96x96.png";
@@ -60,9 +62,11 @@ const SearchProducts = ({ item }: Item) => {
             </span>
           )}
         </p>
-        <div className="mt-1">
-          <ProductCouponBadge compact />
-        </div>
+        {showCoupon && (
+          <div className="mt-1">
+            <ProductCouponBadge compact />
+          </div>
+        )}
       </div>
       <div className="flex-1 text-right px-4">
         {typeof item.oldPrice === "number" && item.oldPrice > item.price && (

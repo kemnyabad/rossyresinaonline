@@ -9,6 +9,7 @@ import Link from "next/link";
 import FormattedPrice from "./FormattedPrice";
 import ProductCouponBadge from "./ProductCouponBadge";
 import { formatProductTitle } from "@/lib/textFormat";
+import { isPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
 import {
   fetchProductStats,
   normalizeImageUrl,
@@ -92,6 +93,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
           const href = toProductHref(code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title);
           const hasSales = itemStats.salesCount > 0;
           const hasReviews = itemStats.reviewCount > 0;
+          const showCoupon = !isPromoWeb20ExcludedProduct({ title, brand, category, description, code, price });
 
           return (
             <div
@@ -172,9 +174,11 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                       {hasReviews && <span>{itemStats.avgRating.toFixed(1)} ({itemStats.reviewCount})</span>}
                     </div>
                   )}
-                  <div className="mt-1">
-                    <ProductCouponBadge compact />
-                  </div>
+                  {showCoupon && (
+                    <div className="mt-1">
+                      <ProductCouponBadge compact />
+                    </div>
+                  )}
                 </div>
 
                 {hasReviews && (

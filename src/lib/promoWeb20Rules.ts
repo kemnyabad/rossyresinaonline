@@ -17,16 +17,21 @@ const normalizeSearchText = (value: unknown) =>
     .toLowerCase();
 
 export const isPromoWeb20ExcludedProduct = (product: PromoProductLike) => {
+  const category = normalizeSearchText(product.category);
+  const nameText = normalizeSearchText([product.title, product.name, product.code, product.sku].join(" "));
   const text = normalizeSearchText([
-    product.title,
-    product.name,
-    product.category,
+    nameText,
+    category,
     product.description,
     product.brand,
-    product.code,
-    product.sku,
   ].join(" "));
-  return /\bresina\b/.test(text) && /\bepoxi(?:ca)?\b/.test(text);
+
+  const isResinCategory = /\bresinas?\b/.test(category);
+  const isResinNamedProduct =
+    /(^|\bkit\s+)(?:resina|ecoresina|eco\s+resina)\b/.test(nameText) ||
+    /\b(?:resina\s*(?:epoxi(?:ca)?|uv)|(?:epoxi(?:ca)?|uv)\s*resina)\b/.test(text);
+
+  return isResinCategory || isResinNamedProduct;
 };
 
 export const hasPromoWeb20ExcludedProduct = (items: PromoProductLike[] = []) =>
