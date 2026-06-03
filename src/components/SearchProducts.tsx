@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import FormattedPrice from "./FormattedPrice";
+import ProductCouponBadge from "./ProductCouponBadge";
 import { formatProductTitle } from "@/lib/textFormat";
 
 import { ProductProps } from "../../type";
@@ -59,6 +60,9 @@ const SearchProducts = ({ item }: Item) => {
             </span>
           )}
         </p>
+        <div className="mt-1">
+          <ProductCouponBadge compact />
+        </div>
       </div>
       <div className="flex-1 text-right px-4">
         {typeof item.oldPrice === "number" && item.oldPrice > item.price && (

@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/nextSlice";
 import Link from "next/link";
 import FormattedPrice from "./FormattedPrice";
+import ProductCouponBadge from "./ProductCouponBadge";
 import { formatProductTitle } from "@/lib/textFormat";
 import {
   fetchProductStats,
@@ -171,6 +172,9 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                       {hasReviews && <span>{itemStats.avgRating.toFixed(1)} ({itemStats.reviewCount})</span>}
                     </div>
                   )}
+                  <div className="mt-1">
+                    <ProductCouponBadge compact />
+                  </div>
                 </div>
 
                 {hasReviews && (

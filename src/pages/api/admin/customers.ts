@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { isAdminApiRequest } from "@/lib/adminAuth";
 import { readCustomers } from "@/lib/customerStore";
 import prisma from "@/lib/prisma";
+import { isInternalTestOrder } from "@/lib/testOrders";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (!isAdminApiRequest(req)) return res.status(401).json({ error: 'No autorizado' });
@@ -32,11 +33,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       createdAt: true,
     },
   });
+  const realOrders = orders.filter((order: any) => !isInternalTestOrder(order));
   const enriched = filtered.map((customer) => {
     const dni = String(customer.dni || "").trim();
     const phone = String(customer.phone || "").replace(/\D/g, "");
     const name = String(customer.name || "").trim().toLowerCase();
-    const customerOrders = orders.filter((order: any) => {
+    const customerOrders = realOrders.filter((order: any) => {
       const orderPhone = String(order.customerPhone || "").replace(/\D/g, "");
       const orderName = String(order.customerName || "").trim().toLowerCase();
       const notes = String(order.customerNotes || "");

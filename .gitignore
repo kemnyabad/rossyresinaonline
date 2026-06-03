@@ -29,6 +29,7 @@ frontend-next/out/
 *.pem
 backups/
 reports/
+data/local-test-orders.json
 
 # debug
 npm-debug.log*

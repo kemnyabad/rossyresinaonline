@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { readProductMetricsStore, writeProductMetricsStore } from "@/lib/productMetricsStore";
+import { isInternalTestOrder } from "@/lib/testOrders";
 const db = prisma as any;
 
 const findProductByIdentifier = async (identifier: string) => {
@@ -24,11 +25,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       const orders = await db.order.findMany({
         where: { status: { in: ["PAID", "SHIPPED"] } },
-        select: { items: true },
+        select: { items: true, customerName: true, customerPhone: true, customerEmail: true, customerNotes: true },
       });
 
       let paidUnits = 0;
       for (const order of orders) {
+        if (isInternalTestOrder(order)) continue;
         const items = Array.isArray(order.items) ? (order.items as any[]) : [];
         for (const item of items) {
           if (String(item?.productId || "") !== product.id) continue;

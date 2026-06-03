@@ -40,6 +40,7 @@ type Order = {
     notes?: string;
   };
   paymentImage?: string;
+  isInternalTestOrder?: boolean;
 };
 
 const STATUS_OPTIONS = [
@@ -77,13 +78,18 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("Todos");
   const [search, setSearch]           = useState("");
   const [includeHistory, setIncludeHistory] = useState(false);
+  const [showTestOrders, setShowTestOrders] = useState(false);
   const [detailOrder, setDetailOrder] = useState<Order | null>(null);
   const [shipModalOrder, setShipModalOrder] = useState<Order | null>(null);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const res  = await fetch(`/api/orders${includeHistory ? "?includeHistory=1" : ""}`);
+      const params = new URLSearchParams();
+      if (includeHistory) params.set("includeHistory", "1");
+      if (showTestOrders) params.set("includeTestOrders", "1");
+      const query = params.toString();
+      const res  = await fetch(`/api/orders${query ? `?${query}` : ""}`);
       const data = await res.json();
       const rows = Array.isArray(data) ? data : [];
       setOrders(rows);
@@ -101,7 +107,7 @@ export default function AdminOrdersPage() {
       });
     } catch { setOrders([]); }
     finally  { setLoading(false); }
-  }, [includeHistory]);
+  }, [includeHistory, showTestOrders]);
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
 
@@ -222,6 +228,10 @@ export default function AdminOrdersPage() {
             <input type="checkbox" checked={includeHistory} onChange={(e) => setIncludeHistory(e.target.checked)} className="rounded" />
             Historial completo
           </label>
+          <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
+            <input type="checkbox" checked={showTestOrders} onChange={(e) => setShowTestOrders(e.target.checked)} className="rounded" />
+            Mostrar pruebas
+          </label>
           <button onClick={loadOrders} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition">
             <ArrowPathIcon className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Actualizar
@@ -294,6 +304,11 @@ export default function AdminOrdersPage() {
                   <tr key={o.id} className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">
                       {o.orderCode || o.id.slice(0, 8) + "…"}
+                      {o.isInternalTestOrder && (
+                        <span className="mt-1 block w-fit rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 font-sans text-[10px] font-bold uppercase text-slate-600">
+                          Prueba
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-semibold text-gray-800 whitespace-nowrap">{o.customer?.name || "—"}</p>

@@ -1,4 +1,5 @@
 import FormattedPrice from "@/components/FormattedPrice";
+import ProductCouponBadge from "@/components/ProductCouponBadge";
 import { addToCart } from "@/store/nextSlice";
 import Image from "next/image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -1055,6 +1056,9 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   {hasActiveDiscount && (
                     <span className="text-xs px-2 py-1 rounded-full border border-amazon_blue text-amazon_blue">Descuento</span>
                   )}
+                </div>
+                <div className="mt-2">
+                  <ProductCouponBadge />
                 </div>
 
                 {productVariants.length > 0 && (

@@ -18,6 +18,8 @@ import {
 import { normalizePromoCode, validatePromoWeb20 } from "@/lib/promoWeb20";
 import { getPromoWeb20EligibleSubtotal } from "@/lib/promoWeb20Rules";
 import { getPresentationTotalPrice } from "@/lib/productPricing";
+import { isInternalTestOrder } from "@/lib/testOrders";
+import { isLocalOrderSimulationRequest, readOrdersStore, upsertLocalOrder } from "@/lib/orderStore";
 
 type DbOrderStatus = "PENDING" | "PAID" | "SHIPPED";
 const db = prisma as any;
@@ -119,7 +121,141 @@ const serializeOrder = (order: any) => {
     couponCode: meta.couponCode,
     couponDiscount: Number(meta.couponDiscount || 0),
     couponSubtotal: Number(meta.couponSubtotal || 0),
+    isInternalTestOrder: isInternalTestOrder(order),
   };
+};
+
+const createLocalSimulatedOrder = async (body: any) => {
+  const customer = body.customer || {};
+  const items = Array.isArray(body.items) ? (body.items as IncomingItem[]) : [];
+  const name = String(customer.name || "").trim();
+  const dni = String(customer.dni || "").trim();
+  const phone = String(customer.phone || "").trim();
+  const email = String(customer.email || "").trim().toLowerCase() || "localhost@rossyresina.test";
+  const locationLine = String(customer.locationLine || "").trim();
+  const notes = String(customer.notes || "").trim();
+  const shippingCarrier = normalizeShippingCarrier(body.shippingCarrier || customer.shippingCarrier);
+  const shalomAgency = String(body.shalomAgency || customer.shalomAgency || "").trim();
+  const olvaAddress = String(body.olvaAddress || customer.olvaAddress || "").trim();
+  const olvaReference = String(body.olvaReference || customer.olvaReference || "").trim();
+  const paymentMethod = normalizePaymentMethod(body.paymentMethod || customer.paymentMethod);
+  const location = splitLocation(locationLine);
+
+  const keys = Array.from(
+    new Set(
+      items
+        .flatMap((it) => [
+          String(it.productId ?? "").trim(),
+          String(it._id ?? "").trim(),
+          String(it.code ?? "").trim(),
+        ])
+        .filter(Boolean)
+    )
+  );
+  if (keys.length === 0) throw new Error("Items invalidos");
+
+  const products: any[] = await db.product.findMany({
+    where: {
+      OR: [
+        { id: { in: keys } },
+        { legacyId: { in: keys } },
+        { code: { in: keys } },
+      ],
+    },
+    select: {
+      id: true,
+      legacyId: true,
+      code: true,
+      title: true,
+      category: true,
+      description: true,
+      brand: true,
+      sku: true,
+      price: true,
+      variants: { select: { id: true, label: true, price: true, oldPrice: true } },
+    },
+  });
+
+  const byId = new Map(products.map((p: any) => [String(p.id), p]));
+  const byLegacyId = new Map(products.filter((p: any) => p.legacyId).map((p: any) => [String(p.legacyId), p]));
+  const byCode = new Map(products.filter((p: any) => p.code).map((p: any) => [String(p.code), p]));
+  const normalizedItems = [];
+  let computedTotal = 0;
+
+  for (const item of items) {
+    const candidateKeys = [
+      String(item.productId ?? "").trim(),
+      String(item._id ?? "").trim(),
+      String(item.code ?? "").trim(),
+    ].filter(Boolean);
+    const qty = Math.max(1, Number(item.quantity || 1));
+    const product: any = candidateKeys.map((k) => byId.get(k) || byLegacyId.get(k) || byCode.get(k)).find(Boolean);
+    if (!product) throw new Error(`Producto no encontrado: ${candidateKeys[0] || "sin-id"}`);
+    const price = Number(product.price);
+    computedTotal += price * qty;
+    normalizedItems.push({
+      productId: product.id,
+      legacyId: product.legacyId || null,
+      code: product.code || null,
+      title: product.title,
+      category: product.category || "",
+      description: product.description || "",
+      brand: product.brand || "",
+      sku: product.sku || null,
+      variantId: null,
+      variantLabel: "",
+      quantity: qty,
+      price,
+    });
+  }
+
+  const promoCode = normalizePromoCode(body.promoCode);
+  let couponDiscount = 0;
+  let couponSubtotal = 0;
+  if (promoCode === "WEB20") {
+    couponSubtotal = getPromoWeb20EligibleSubtotal(normalizedItems);
+    if (couponSubtotal >= 100) couponDiscount = Math.min(20, couponSubtotal);
+  }
+  const finalTotal = Math.max(0, Number((computedTotal - couponDiscount).toFixed(2)));
+  const createdAt = new Date();
+  const id = `local_${createdAt.getTime()}_${Math.random().toString(36).slice(2, 8)}`;
+  const orderCode = `LOCAL-${toYYYYMMDD(createdAt)}-${id.slice(-6).toUpperCase()}`;
+  const order = {
+    id,
+    userId: null,
+    status: "PENDING",
+    total: finalTotal,
+    items: normalizedItems,
+    customerName: name,
+    customerEmail: email,
+    customerPhone: phone,
+    customerAddress: shippingCarrier === "OLVA" ? olvaAddress : `Agencia Shalom: ${shalomAgency}`,
+    customerCity: location.province || "",
+    customerDistrict: location.district || locationLine,
+    customerNotes: encodeOrderMeta({
+      orderCode,
+      workflowStatus: "Pendiente por confirmar",
+      paymentMethod,
+      shippingCarrier,
+      dni,
+      locationLine,
+      department: location.department,
+      province: location.province,
+      district: location.district,
+      shalomAgency,
+      olvaAddress,
+      olvaReference,
+      notes: `[SIMULACION LOCAL] ${notes}`.trim(),
+      couponCode: couponDiscount > 0 ? "WEB20" : "",
+      couponDiscount,
+      couponSubtotal,
+    }),
+    paymentImage: "",
+    createdAt: createdAt.toISOString(),
+    updatedAt: createdAt.toISOString(),
+  };
+  upsertLocalOrder(order);
+  return order;
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -132,6 +268,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const sessionEmail = String((session?.user as any)?.email || "").trim().toLowerCase();
       const isAdminSession = (session?.user as any)?.role === "ADMIN";
       const canBrowseByEmail = isAdminApiRequest(req) || isAdminSession || (email && sessionEmail === email);
+      if (isLocalOrderSimulationRequest(req)) {
+        const localOrders = readOrdersStore<any>().map(serializeOrder);
+        if (email) {
+          const filteredByEmail = localOrders.filter((o: any) => String(o.customer?.email || "").trim().toLowerCase() === email);
+          const filtered = orderQuery
+            ? filteredByEmail.filter((o: any) => {
+                const code = String(o.orderCode || "").trim().toLowerCase();
+                const id = String(o.id || "").trim().toLowerCase();
+                return code === orderQuery || id === orderQuery;
+              })
+            : filteredByEmail;
+          return res.status(200).json(filtered);
+        }
+        if (isAdminApiRequest(req) || isAdminSession) return res.status(200).json(localOrders);
+        if (!sessionEmail) return res.status(200).json([]);
+        return res.status(200).json(localOrders.filter((o: any) => String(o.customer?.email || "").trim().toLowerCase() === sessionEmail));
+      }
 
       if (email) {
         if (!canBrowseByEmail && !orderQuery) {
@@ -152,11 +305,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json(filtered);
       }
       if (isAdminApiRequest(req)) {
+        const includeTestOrders = String(req.query.includeTestOrders || "").trim() === "1";
         const orders = await db.order.findMany({ orderBy: { createdAt: "desc" } });
         const serialized = orders.map(serializeOrder);
-        if (includeHistory) return res.status(200).json(serialized);
+        const visible = includeTestOrders ? serialized : serialized.filter((o: any) => !o.isInternalTestOrder);
+        if (includeHistory) return res.status(200).json(visible);
         const now = Date.now();
-        const active = serialized.filter((o: any) => {
+        const active = visible.filter((o: any) => {
           if (String(o.workflowStatus || "").toLowerCase() !== "finalizado") return true;
           const createdAtMs = new Date(String(o.createdAt || "")).getTime();
           if (!Number.isFinite(createdAtMs)) return true;
@@ -195,6 +350,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const body = parsed.data;
+    if (isLocalOrderSimulationRequest(req)) {
+      try {
+        const localOrder = await createLocalSimulatedOrder(body);
+        return res.status(201).json(serializeOrder(localOrder));
+      } catch (error: any) {
+        return res.status(400).json({ error: error?.message || "No se pudo simular el pedido local" });
+      }
+    }
+
     const customer = body.customer || {};
     const items = Array.isArray(body.items) ? (body.items as IncomingItem[]) : [];
 

@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { parseOrderMeta } from "@/lib/orderMeta";
+import { isInternalTestOrder } from "@/lib/testOrders";
 
 const db = prisma as any;
 
@@ -11,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const orders = await db.order.findMany({
-      select: { createdAt: true, total: true, customerNotes: true },
+      select: { createdAt: true, total: true, customerName: true, customerPhone: true, customerEmail: true, customerNotes: true },
       orderBy: { createdAt: "asc" },
     });
 
@@ -24,6 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let currentYearOrders = 0;
 
     for (const order of orders) {
+      if (isInternalTestOrder(order)) continue;
       const createdAt = new Date(order.createdAt);
       const year = createdAt.getFullYear();
       const amount = Number(order.total || 0);
