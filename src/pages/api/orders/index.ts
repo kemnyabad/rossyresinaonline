@@ -16,6 +16,7 @@ import {
   shippingCarrierLabel,
 } from "@/lib/orderMeta";
 import { normalizePromoCode, validatePromoWeb20 } from "@/lib/promoWeb20";
+import { getPresentationTotalPrice } from "@/lib/productPricing";
 
 type DbOrderStatus = "PENDING" | "PAID" | "SHIPPED";
 const db = prisma as any;
@@ -38,6 +39,7 @@ type IncomingItem = {
   _id?: string | number;
   productId?: string | number;
   code?: string;
+  variantId?: string;
   quantity?: number;
   title?: string;
   category?: string;
@@ -280,6 +282,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           brand: true,
           sku: true,
           price: true,
+          variants: {
+            select: {
+              id: true,
+              label: true,
+              price: true,
+              oldPrice: true,
+            },
+          },
         },
       });
 
@@ -295,6 +305,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description: string;
         brand: string;
         sku: string | null;
+        variantId: string | null;
+        variantLabel: string;
         quantity: number;
         price: number;
       }> = [];
@@ -315,7 +327,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             error: `Producto no encontrado: ${candidateKeys[0] || "sin-id"}`,
           });
         }
-        const price = Number(product.price);
+        const variantId = String(item.variantId || "").trim();
+        const variant = variantId
+          ? (Array.isArray(product.variants) ? product.variants : []).find((v: any) => String(v.id) === variantId)
+          : null;
+        const price = variant
+          ? getPresentationTotalPrice(variant.price, variant.label)
+          : Number(product.price);
         computedTotal += price * qty;
         normalizedItems.push({
           productId: product.id,
@@ -326,6 +344,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           description: product.description || "",
           brand: product.brand || "",
           sku: product.sku || null,
+          variantId: variant?.id || null,
+          variantLabel: variant?.label || "",
           quantity: qty,
           price,
         });

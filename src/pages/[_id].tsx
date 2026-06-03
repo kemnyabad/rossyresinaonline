@@ -16,6 +16,7 @@ import { formatProductTitle } from "@/lib/textFormat";
 import { trackViewContent } from "@/lib/metaPixel";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
+import { getPresentationTotalPrice } from "@/lib/productPricing";
 import {
   ArrowLeftIcon,
   ChevronRightIcon,
@@ -142,8 +143,12 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const activeViewerIsProcess = isProcessImage(activeViewerImage || undefined);
   const hasOffer = typeof product?.oldPrice === "number" && Number(product.oldPrice) > Number(product?.price || 0);
   const productVariants: any[] = (product as any)?.variants || [];
-  const activePrice = Number(selectedVariant ? selectedVariant.price : product?.price || 0);
-  const activeOldPriceValue = getOptionalPrice(selectedVariant ? selectedVariant.oldPrice : product?.oldPrice);
+  const activePrice = selectedVariant
+    ? getPresentationTotalPrice(selectedVariant.price, selectedVariant.label)
+    : Number(product?.price || 0);
+  const activeOldPriceValue = selectedVariant
+    ? getOptionalPrice(getPresentationTotalPrice(selectedVariant.oldPrice, selectedVariant.label))
+    : getOptionalPrice(product?.oldPrice);
   const hasActiveDiscount = activeOldPriceValue !== null && activeOldPriceValue > activePrice;
   const displayProductTitle = formatProductTitle(product?.title || product?.code || "Producto");
 
@@ -1067,7 +1072,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                               : "border-gray-300 text-gray-700 hover:border-slate-900"
                           }`}
                         >
-                          {v.label} — S/ {Number(v.price).toFixed(2)}
+                          {v.label} — S/ {Number(v.price).toFixed(2)} por kg
                         </button>
                       ))}
                     </div>
