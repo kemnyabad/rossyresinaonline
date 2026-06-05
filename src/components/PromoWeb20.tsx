@@ -96,9 +96,19 @@ export function PromoWeb20TopBar() {
           />
           <span>WEB20 | S/{promo.discountValue.toFixed(0)} de descuento en compras desde S/{promo.minimumSubtotal.toFixed(0)}</span>
         </span>
-        <Link href="/cart" className="rounded-full bg-amazon_blue px-3 py-1 text-xs font-black text-white">
-          Usar cupón
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/cart" className="rounded-full bg-amazon_blue px-3 py-1 text-xs font-black text-white">
+            Usar cupón
+          </Link>
+          <a
+            href="https://wa.me/51966357648"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full border border-amazon_blue bg-white px-3 py-1 text-xs font-black text-amazon_blue"
+          >
+            Atención al cliente
+          </a>
+        </div>
       </div>
     </div>
   );
