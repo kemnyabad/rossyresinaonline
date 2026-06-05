@@ -7,6 +7,18 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { verifyUser, ensureOAuthUser, isAdminEmail } from "@/lib/users";
 
+const isLocalTestAuthEnabled = () => {
+  const explicit = String(process.env.LOCAL_TEST_AUTH_ENABLED || "").trim().toLowerCase();
+  return explicit === "true" || explicit === "1";
+};
+
+const getLocalTestUser = () => ({
+  id: "local-test-user",
+  email: String(process.env.LOCAL_TEST_EMAIL || "prueba@localhost.test").trim().toLowerCase(),
+  name: String(process.env.LOCAL_TEST_NAME || "Cliente de Prueba Local").trim() || "Cliente de Prueba Local",
+  role: "CUSTOMER" as const,
+});
+
 const oauthProviders = [
   process.env.GITHUB_ID && process.env.GITHUB_SECRET
     ? GithubProvider({
@@ -59,6 +71,11 @@ export const authOptions: NextAuthOptions = {
         try {
           const email = String(credentials?.email || "").trim().toLowerCase();
           const pass = String(credentials?.password || "");
+          const localPassword = String(process.env.LOCAL_TEST_PASSWORD || "");
+          const localUser = getLocalTestUser();
+          if (isLocalTestAuthEnabled() && email === localUser.email && pass === localPassword) {
+            return localUser as any;
+          }
           const user = await verifyUser(email, pass);
           if (user) {
             if (user.role === "ADMIN") return null;

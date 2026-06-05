@@ -15,6 +15,82 @@ import { Bars3Icon, ChevronLeftIcon } from "@heroicons/react/24/outline";
 type PaymentMethod = "YAPE" | "TRANSFER";
 type ShippingCarrier = "SHALOM" | "OLVA";
 
+const PAYMENT_DETAILS: Record<
+  PaymentMethod,
+  {
+    label: string;
+    numberLabel: string;
+    number: string;
+    holder: string;
+  }
+> = {
+  YAPE: {
+    label: "Yape",
+    numberLabel: "Numero de Yape",
+    number: "961770723",
+    holder: "Rosa Maribel Abad Landacay",
+  },
+  TRANSFER: {
+    label: "Transferencia",
+    numberLabel: "Cuenta BCP",
+    number: "19397649019070",
+    holder: "Rosa Maribel Abad Landacay",
+  },
+};
+
+function PaymentBrandMark({ method }: { method: PaymentMethod }) {
+  if (method === "YAPE") {
+    return (
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#742384] text-xs font-black text-white shadow-sm">
+        yape
+      </span>
+    );
+  }
+
+  return (
+    <span className="flex h-11 w-16 shrink-0 items-center justify-center rounded-lg bg-white px-2 shadow-sm ring-1 ring-gray-200">
+      <img src="/bcp-logo.svg" alt="BCP" className="max-h-8 w-full object-contain" />
+    </span>
+  );
+}
+
+function PaymentDetailsCard({
+  method,
+  showAll = false,
+  className = "",
+}: {
+  method: PaymentMethod;
+  showAll?: boolean;
+  className?: string;
+}) {
+  const methods = showAll ? (["YAPE", "TRANSFER"] as PaymentMethod[]) : [method];
+
+  return (
+    <div className={`rounded-lg border border-gray-200 bg-white p-4 shadow-sm ${className}`}>
+      <h3 className="text-sm font-black text-gray-950">{showAll ? "Medios de pago" : "Datos para pagar"}</h3>
+      <div className="mt-3 grid gap-3">
+        {methods.map((item) => {
+          const detail = PAYMENT_DETAILS[item];
+          return (
+            <div key={item} className="rounded-lg bg-gray-50 p-3">
+              <div className="flex items-center gap-3">
+                <PaymentBrandMark method={item} />
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-gray-950">{detail.label}</p>
+                  <p className="text-xs font-semibold text-gray-500">{detail.numberLabel}</p>
+                </div>
+              </div>
+              <p className="mt-3 break-words text-2xl font-black tracking-normal text-amazon_blue">{detail.number}</p>
+              <p className="mt-1 text-xs font-semibold text-gray-500">Titular</p>
+              <p className="text-sm font-bold text-gray-900">{detail.holder}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function CheckoutPage() {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -460,29 +536,32 @@ export default function CheckoutPage() {
 
               {!showShippingForm && name && phone && locationLine ? (
                 <>
-                  <div className={`mt-4 rounded-lg border p-4 ${selectedSavedAddress ? "border-amazon_blue bg-amazon_blue/5" : "border-gray-300 bg-white"}`}>
-                    <p className="text-base font-black text-gray-950 md:text-lg">{name}</p>
-                    <p className="mt-1 text-sm font-semibold text-amazon_blue md:text-base">
-                      {shippingCarrier === "OLVA" ? olvaAddress : `Agencia Shalom: ${shalomAgency}`}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-800 md:text-base">{locationLine}</p>
-                    {shippingCarrier === "OLVA" && olvaReference && (
-                      <p className="text-sm text-gray-800 md:text-base">Referencia: {olvaReference}</p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-800 md:text-base">WhatsApp: {phone}</p>
-                    <div className="mt-3 border-t border-gray-200 pt-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowShippingForm(true);
-                          setSelectedSavedAddress(false);
-                          setShippingConfirmed(false);
-                        }}
-                        className="rounded-full border border-gray-300 px-4 py-2 text-sm font-black text-gray-950 hover:bg-gray-50"
-                      >
-                        Deseo usar otra dirección
-                      </button>
+                  <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                    <div className={`rounded-lg border p-4 ${selectedSavedAddress ? "border-amazon_blue bg-amazon_blue/5" : "border-gray-300 bg-white"}`}>
+                      <p className="text-base font-black text-gray-950 md:text-lg">{name}</p>
+                      <p className="mt-1 text-sm font-semibold text-amazon_blue md:text-base">
+                        {shippingCarrier === "OLVA" ? olvaAddress : `Agencia Shalom: ${shalomAgency}`}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-800 md:text-base">{locationLine}</p>
+                      {shippingCarrier === "OLVA" && olvaReference && (
+                        <p className="text-sm text-gray-800 md:text-base">Referencia: {olvaReference}</p>
+                      )}
+                      <p className="mt-1 text-sm text-gray-800 md:text-base">WhatsApp: {phone}</p>
+                      <div className="mt-3 border-t border-gray-200 pt-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowShippingForm(true);
+                            setSelectedSavedAddress(false);
+                            setShippingConfirmed(false);
+                          }}
+                          className="rounded-full border border-gray-300 px-4 py-2 text-sm font-black text-gray-950 hover:bg-gray-50"
+                        >
+                          Deseo usar otra dirección
+                        </button>
+                      </div>
                     </div>
+                    <PaymentDetailsCard showAll method={paymentMethod} className="hidden lg:block" />
                   </div>
                 </>
               ) : null}
@@ -597,6 +676,7 @@ export default function CheckoutPage() {
                   <option value="YAPE">Yape</option>
                   <option value="TRANSFER">Transferencia</option>
                 </select>
+                <PaymentDetailsCard method={paymentMethod} className="mt-3 lg:hidden" />
               </div>
 
               <div className="sm:col-span-2">
@@ -644,6 +724,7 @@ export default function CheckoutPage() {
                     <option value="YAPE">Yape</option>
                     <option value="TRANSFER">Transferencia</option>
                   </select>
+                  <PaymentDetailsCard method={paymentMethod} className="mt-3 lg:hidden" />
                 </div>
 
                 <div>

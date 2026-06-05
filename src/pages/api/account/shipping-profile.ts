@@ -1,8 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
+import fs from "fs";
+import path from "path";
 import { authOptions } from "../auth/[...nextauth]";
 import { readCustomers, upsertCustomer } from "@/lib/customerStore";
 import { normalizeShippingCarrier } from "@/lib/orderMeta";
+import { isLocalOrderSimulationRequest } from "@/lib/orderStore";
 
 const toProfile = (row: any) => ({
   dni: row.dni || "",
@@ -15,6 +18,30 @@ const toProfile = (row: any) => ({
   olvaReference: row.olvaReference || "",
 });
 
+const LOCAL_CUSTOMERS_FILE = path.join(process.cwd(), "data", "local-test-customers.json");
+
+const readLocalCustomers = () => {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(LOCAL_CUSTOMERS_FILE, "utf8"));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const upsertLocalCustomer = (profile: any) => {
+  const rows = readLocalCustomers();
+  const dni = String(profile.dni || "").trim();
+  const now = new Date().toISOString();
+  const nextProfile = { ...profile, createdAt: now, updatedAt: now };
+  const index = rows.findIndex((row: any) => String(row.dni || "").trim() === dni);
+  const next = index >= 0
+    ? rows.map((row: any, itemIndex: number) => itemIndex === index ? { ...row, ...profile, updatedAt: now } : row)
+    : [nextProfile, ...rows];
+  fs.mkdirSync(path.dirname(LOCAL_CUSTOMERS_FILE), { recursive: true });
+  fs.writeFileSync(LOCAL_CUSTOMERS_FILE, JSON.stringify(next, null, 2));
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session: any = await getServerSession(req, res, authOptions as any);
   if (!session?.user?.email || session?.user?.role === "ADMIN") {
@@ -24,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "GET") {
     try {
       const name = String(session.user.name || "").trim().toLowerCase();
-      const rows = await readCustomers();
+      const rows = isLocalOrderSimulationRequest(req) ? readLocalCustomers() : await readCustomers();
       const found = rows.find((row) => String(row.name || "").trim().toLowerCase() === name) ||
         rows.find((row) => name && String(row.name || "").trim().toLowerCase().includes(name));
       return res.status(200).json({ found: Boolean(found), profile: found ? toProfile(found) : null });
@@ -55,7 +82,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
       const profile = { dni, name, phone, locationLine, shippingCarrier, shalomAgency, olvaAddress, olvaReference };
-      await upsertCustomer(profile);
+      if (isLocalOrderSimulationRequest(req)) {
+        upsertLocalCustomer(profile);
+      } else {
+        await upsertCustomer(profile);
+      }
       return res.status(200).json({ profile });
     } catch {
       return res.status(500).json({ error: "No se pudo guardar la direccion" });

@@ -30,6 +30,7 @@ frontend-next/out/
 backups/
 reports/
 data/local-test-orders.json
+data/local-test-customers.json
 
 # debug
 npm-debug.log*
