@@ -20,6 +20,19 @@ const isLocalHost = (req: NextRequest): boolean => {
   return host.includes("localhost") || host.startsWith("127.0.0.1");
 };
 
+const isSearchBot = (req: NextRequest): boolean => {
+  const ua = String(req.headers.get("user-agent") || "").toLowerCase();
+  return [
+    /googlebot/i,
+    /bingbot/i,
+    /slurp/i,
+    /duckduckbot/i,
+    /baiduspider/i,
+    /yandex/i,
+    /applebot/i,
+  ].some((rx) => rx.test(ua));
+};
+
 const getCountry = (req: NextRequest): string => {
   const candidates = [
     req.headers.get("x-vercel-ip-country"),
@@ -52,10 +65,11 @@ export function middleware(req: NextRequest) {
   }
 
   // --- Lógica de restricción por país (solo en producción) ---
-  if (isLocalHost(req)) return NextResponse.next();
+  if (isLocalHost(req) || isSearchBot(req)) return NextResponse.next();
 
   const country = getCountry(req);
-  const allowPeruOnly = process.env.PERU_ONLY_MODE !== "0";
+  const peruOnlyMode = String(process.env.PERU_ONLY_MODE || "0").trim().toLowerCase();
+  const allowPeruOnly = peruOnlyMode === "1" || peruOnlyMode === "true";
 
   if (!allowPeruOnly) return NextResponse.next();
   if (country === "PE") return NextResponse.next();
