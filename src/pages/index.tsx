@@ -11,7 +11,6 @@ import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
 import {
-  ArrowRightIcon,
   ChatBubbleLeftRightIcon,
   CheckBadgeIcon,
   QuestionMarkCircleIcon,
@@ -219,13 +218,6 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
         text: "Soporte ante inconvenientes",
         icon: TruckIcon,
         endIcon: CheckBadgeIcon,
-      },
-      {
-        href: "/curso-redes-sociales",
-        title: "Curso redes sociales",
-        text: "Inscríbete y vende más",
-        icon: UserGroupIcon,
-        endIcon: ArrowRightIcon,
       },
     ],
     []
@@ -437,8 +429,6 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
         </section>
         )}
 
-        <HomeAdBanner />
-
         {/* Ofertas Express */}
         {ofertasExpress.length > 0 && (
         <section className="px-4 md:px-6">
@@ -505,34 +495,6 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
         </section>
       </main>
     </>
-  );
-}
-
-function HomeAdBanner() {
-  return (
-      <section className="relative left-1/2 w-screen -translate-x-1/2 py-2 md:py-3">
-        <Link
-          href="/curso-redes-sociales"
-          aria-label="Inscribirme al curso vende por redes sociales"
-          className="rr-shine group relative mx-auto block aspect-[1962/331] w-full max-w-[1962px] overflow-hidden bg-white"
-      >
-        <Image
-          src="/banners/curso-redes-sociales-web.png"
-          alt="Curso online vende por redes sociales"
-          fill
-          className="object-cover object-center"
-          sizes="(min-width: 1536px) 1536px, 100vw"
-        />
-        <div className="absolute inset-0">
-          <span className="rr-cta-pulse absolute bottom-[16.5%] left-[13.2%] inline-flex h-[clamp(30px,2.35vw,38px)] w-[clamp(148px,10.8vw,190px)] items-center justify-between rounded-full bg-gradient-to-r from-[#f0268a] to-[#e4147f] pl-[clamp(12px,1vw,16px)] pr-1 text-[clamp(9px,0.62vw,11px)] font-black uppercase tracking-wide text-white shadow-[0_12px_26px_rgba(228,20,127,0.30)] transition group-hover:scale-[1.03]">
-            Inscribirme ahora
-            <span className="flex h-[clamp(24px,1.7vw,28px)] w-[clamp(24px,1.7vw,28px)] items-center justify-center rounded-full bg-white text-[#e4147f]">
-              <ArrowRightIcon className="h-3.5 w-3.5 stroke-[3]" />
-            </span>
-          </span>
-        </div>
-      </Link>
-    </section>
   );
 }
 
