@@ -15,8 +15,6 @@ import {
   paymentMethodLabel,
   shippingCarrierLabel,
 } from "@/lib/orderMeta";
-import { normalizePromoCode, validatePromoWeb20 } from "@/lib/promoWeb20";
-import { getPromoWeb20EligibleSubtotal } from "@/lib/promoWeb20Rules";
 import { getPresentationTotalPrice } from "@/lib/productPricing";
 import { isInternalTestOrder } from "@/lib/testOrders";
 import { isLocalOrderSimulationRequest, readOrdersStore, upsertLocalOrder } from "@/lib/orderStore";
@@ -209,13 +207,8 @@ const createLocalSimulatedOrder = async (body: any) => {
     });
   }
 
-  const promoCode = normalizePromoCode(body.promoCode);
   let couponDiscount = 0;
   let couponSubtotal = 0;
-  if (promoCode === "WEB20") {
-    couponSubtotal = getPromoWeb20EligibleSubtotal(normalizedItems);
-    if (couponSubtotal >= 100) couponDiscount = Math.min(20, couponSubtotal);
-  }
   const finalTotal = Math.max(0, Number((computedTotal - couponDiscount).toFixed(2)));
   const createdAt = new Date();
   const id = `local_${createdAt.getTime()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -246,7 +239,7 @@ const createLocalSimulatedOrder = async (body: any) => {
       olvaAddress,
       olvaReference,
       notes: `[SIMULACION LOCAL] ${notes}`.trim(),
-      couponCode: couponDiscount > 0 ? "WEB20" : "",
+      couponCode: "",
       couponDiscount,
       couponSubtotal,
     }),
@@ -523,20 +516,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         : email
         ? await db.user.findUnique({ where: { email } })
         : null;
-      const promoCode = normalizePromoCode((body as any).promoCode);
       let couponDiscount = 0;
       let couponSubtotal = 0;
-      if (promoCode) {
-        couponSubtotal = getPromoWeb20EligibleSubtotal(normalizedItems);
-        const validation = await validatePromoWeb20({
-          code: promoCode,
-          subtotal: computedTotal,
-          email: sessionEmail || email,
-          items: normalizedItems,
-        });
-        if (!validation.ok) return res.status(400).json({ error: validation.message });
-        couponDiscount = validation.discount;
-      }
       const finalTotal = Math.max(0, Number((computedTotal - couponDiscount).toFixed(2)));
 
       const created = await db.order.create({
@@ -568,7 +549,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             shalomPickupCode: "",
             olvaTrackingImage: "",
             notes,
-            couponCode: couponDiscount > 0 ? "WEB20" : "",
+            couponCode: "",
             couponDiscount,
             couponSubtotal,
           }),

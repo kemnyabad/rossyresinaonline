@@ -57,6 +57,7 @@ export default function ProductosPage({ allProducts, marketplaceProducts }: Prop
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonical} />
         <meta property="og:image" content={absoluteImageUrl("/web-app-manifest-512x512.png")} />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
       </Head>

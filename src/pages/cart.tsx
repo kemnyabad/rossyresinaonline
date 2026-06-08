@@ -9,42 +9,30 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import FormattedPrice from "@/components/FormattedPrice";
 import Products from "@/components/Products";
-import { trackPromoWEB20Applied } from "@/lib/metaPixel";
-import { getPromoWeb20EligibleSubtotal, hasPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
 import {
   Bars3Icon,
   ChevronLeftIcon,
   ShoppingCartIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { useSession } from "next-auth/react";
-import { addToCart, applyPromoCoupon, clearPromoCoupon, decreaseQuantity, deleteProduct, increaseQuantity } from "@/store/nextSlice";
+import { addToCart, clearPromoCoupon, decreaseQuantity, deleteProduct, increaseQuantity } from "@/store/nextSlice";
 
 const CartPage = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { data: session } = useSession();
   const cartItems = useSelector((state: StateProps) => (state.next?.productData || []) as StoreProduct[]);
-  const promoCoupon = useSelector((state: StateProps) => state.next?.promoCoupon || null);
   const [recs, setRecs] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
-  const [couponInput, setCouponInput] = useState("WEB20");
-  const [couponMessage, setCouponMessage] = useState("");
-  const [couponError, setCouponError] = useState("");
-  const [applyingCoupon, setApplyingCoupon] = useState(false);
-  const eligibleWeb20Subtotal = useMemo(() => getPromoWeb20EligibleSubtotal(cartItems), [cartItems]);
 
   const totals = useMemo(() => {
     const subtotal = cartItems.reduce(
       (sum: number, p: StoreProduct) => sum + p.price * p.quantity,
       0
     );
-    const discount = promoCoupon?.code === "WEB20" && eligibleWeb20Subtotal >= 100
-      ? Math.min(Number(promoCoupon.discount || 0), eligibleWeb20Subtotal)
-      : 0;
-    const total = Math.max(0, subtotal - discount);
+    const discount = 0;
+    const total = subtotal;
     return { subtotal, discount, total };
-  }, [cartItems, eligibleWeb20Subtotal, promoCoupon]);
+  }, [cartItems]);
   const totalUnits = useMemo(
     () => cartItems.reduce((sum: number, p: StoreProduct) => sum + p.quantity, 0),
     [cartItems]
@@ -53,7 +41,6 @@ const CartPage = () => {
   const selectedCount = cartItems.length;
   const originalTotal = cartItems.reduce((sum, item) => sum + Number(item.oldPrice || item.price) * item.quantity, 0);
   const hasCartDiscount = originalTotal > totals.total;
-  const hasWeb20ExcludedProduct = useMemo(() => hasPromoWeb20ExcludedProduct(cartItems), [cartItems]);
   const formatPlainPrice = (value: number) => `S/ ${Number(value || 0).toFixed(2)}`;
   const normalizeCartImage = (src?: string) => {
     const raw = String(src || "").replace(/\\/g, "/");
@@ -68,16 +55,8 @@ const CartPage = () => {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (promoCoupon?.code === "WEB20" && eligibleWeb20Subtotal < 100) {
-      dispatch(clearPromoCoupon());
-      const missing = Math.max(0, 100 - eligibleWeb20Subtotal);
-      setCouponMessage("");
-      setCouponError(`Te faltan S/${missing.toFixed(2)} para utilizar el cupón WEB20.`);
-    }
-  }, [dispatch, eligibleWeb20Subtotal, promoCoupon?.code]);
+    dispatch(clearPromoCoupon());
+  }, [dispatch]);
 
   useEffect(() => {
     let alive = true;
@@ -113,81 +92,6 @@ const CartPage = () => {
     }));
     return Array.from(new Map(fallback.map((p) => [String(p._id), p])).values()).slice(0, 8);
   }, [recs, cartItems]);
-
-  const applyWeb20Coupon = async () => {
-    setCouponMessage("");
-    setCouponError("");
-    const code = couponInput.trim().toUpperCase();
-    if (!code) {
-      setCouponError("Ingresa un código promocional.");
-      return;
-    }
-    try {
-      setApplyingCoupon(true);
-      const res = await fetch("/api/promo/web20", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code,
-          subtotal: eligibleWeb20Subtotal,
-          email: String((session?.user as any)?.email || ""),
-          items: cartItems,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || "No se pudo aplicar el cupón.");
-      dispatch(applyPromoCoupon({ code: data.code, discount: data.discount, message: data.message }));
-      setCouponMessage(data.message || "🎉 Cupón WEB20 aplicado correctamente. Ahorraste S/20.");
-      trackPromoWEB20Applied({ discount: Number(data.discount || 0), subtotal: eligibleWeb20Subtotal });
-    } catch (error: any) {
-      dispatch(clearPromoCoupon());
-      setCouponError(error?.message || "No se pudo aplicar el cupón.");
-    } finally {
-      setApplyingCoupon(false);
-    }
-  };
-
-  const CouponBox = () => (
-    <div className="rounded-lg border border-pink-200 bg-pink-50/70 p-3">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-black text-gray-950">Código promocional</p>
-          <p className="text-xs font-semibold text-amazon_blue">🎁 Descuento web exclusivo</p>
-        </div>
-        <span className="rounded-full bg-amazon_blue px-2.5 py-1 text-[10px] font-black uppercase text-white">
-          🔥 Oferta limitada
-        </span>
-      </div>
-      <div className="flex gap-2">
-        <input
-          value={couponInput}
-          onChange={(event) => setCouponInput(event.target.value.toUpperCase())}
-          className="min-w-0 flex-1 rounded-md border border-pink-200 bg-white px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-amazon_blue"
-          placeholder="WEB20"
-        />
-        <button
-          type="button"
-          onClick={applyWeb20Coupon}
-          disabled={applyingCoupon}
-          className="rounded-md bg-amazon_blue px-4 py-2 text-sm font-black text-white hover:brightness-95 disabled:opacity-60"
-        >
-          {applyingCoupon ? "Aplicando..." : "Aplicar"}
-        </button>
-      </div>
-      {couponMessage || promoCoupon?.message ? (
-        <p className="mt-2 text-sm font-semibold text-emerald-700">{couponMessage || promoCoupon.message}</p>
-      ) : null}
-      {couponError ? <p className="mt-2 text-sm font-semibold text-red-600">{couponError}</p> : null}
-      {hasWeb20ExcludedProduct ? (
-        <p className="mt-2 text-xs font-semibold text-gray-600">
-          Las resinas no cuentan para WEB20. Subtotal compatible: S/{eligibleWeb20Subtotal.toFixed(2)}.
-        </p>
-      ) : null}
-      {totals.discount > 0 ? (
-        <p className="mt-2 text-xs font-semibold text-gray-600">Contador de ahorro: S/{totals.discount.toFixed(2)}</p>
-      ) : null}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] px-0 pb-[92px] pt-0 md:px-6 md:pb-8">
@@ -290,10 +194,6 @@ const CartPage = () => {
               })}
             </section>
 
-            <section className="bg-white px-3 py-3">
-              <CouponBox />
-            </section>
-
             <section className="grid grid-cols-2 gap-1 bg-white pt-3">
               {recommendedProducts.slice(0, 10).map((product: any) => {
                 const recDiscount = discountLabel(product.oldPrice, product.price);
@@ -376,19 +276,12 @@ const CartPage = () => {
               <div className="mx-auto w-full max-w-[480px] border-t border-gray-200 bg-white px-4 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-4 shadow-[0_-6px_18px_rgba(17,24,39,0.08)] lg:sticky lg:top-24 md:max-w-none md:rounded-none md:border-t-0 md:p-4 md:shadow-none">
                 <h2 className="hidden text-xl font-black text-gray-950 md:block">Resumen del pedido</h2>
                 <div className="hidden space-y-2.5 border-b border-dashed border-gray-300 pb-3 text-sm md:mt-4 md:block md:space-y-3 md:border-gray-950 md:pb-3 md:text-lg">
-                  <CouponBox />
                   <div className="flex justify-between gap-4">
                     <span className="text-gray-500 md:text-gray-950">Sub total</span>
                     <span className="text-gray-950">
                       <FormattedPrice amount={totals.subtotal} />
                     </span>
                   </div>
-                  {totals.discount > 0 ? (
-                    <div className="flex justify-between gap-4 text-emerald-700">
-                      <span>Descuento WEB20</span>
-                      <span>-<FormattedPrice amount={totals.discount} /></span>
-                    </div>
-                  ) : null}
                   <div className="flex justify-between gap-4">
                     <span className="text-gray-500 md:text-gray-950">Envío</span>
                     <span className="text-gray-950">
@@ -442,9 +335,6 @@ const CartPage = () => {
                           <FormattedPrice amount={originalTotal} />
                         </p>
                       )}
-                      {totals.discount > 0 ? (
-                        <p className="text-xs font-semibold text-emerald-700">WEB20 -S/{totals.discount.toFixed(2)}</p>
-                      ) : null}
                       <p className="text-2xl font-black leading-none text-amazon_blue">
                         <FormattedPrice amount={totals.total + shippingAmount} />
                       </p>

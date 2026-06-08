@@ -6,8 +6,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import FormattedPrice from "@/components/FormattedPrice";
-import { trackInitiateCheckout, trackPromoWEB20Purchase, trackPurchase } from "@/lib/metaPixel";
-import { getPromoWeb20EligibleSubtotal } from "@/lib/promoWeb20Rules";
+import { trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { resetCart } from "@/store/nextSlice";
 import { useSession } from "next-auth/react";
 import { Bars3Icon, ChevronLeftIcon } from "@heroicons/react/24/outline";
@@ -96,7 +95,6 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { productData, userInfo } = useSelector((state: StateProps) => state.next);
-  const promoCoupon = useSelector((state: StateProps) => state.next?.promoCoupon || null);
   const isAdminSession = (session?.user as any)?.role === "ADMIN";
   const customerSession = !isAdminSession ? session : null;
   const storeUser = isAdminSession ? null : (userInfo as any);
@@ -225,13 +223,10 @@ export default function CheckoutPage() {
 
   const totals = useMemo(() => {
     const subtotal = productData.reduce((sum: number, p: StoreProduct) => sum + p.price * p.quantity, 0);
-    const eligibleWeb20Subtotal = getPromoWeb20EligibleSubtotal(productData);
-    const discount = promoCoupon?.code === "WEB20" && eligibleWeb20Subtotal >= 100
-      ? Math.min(Number(promoCoupon.discount || 0), eligibleWeb20Subtotal)
-      : 0;
-    const total = Math.max(0, subtotal - discount);
-    return { subtotal, discount, total, eligibleWeb20Subtotal };
-  }, [productData, promoCoupon]);
+    const discount = 0;
+    const total = subtotal;
+    return { subtotal, discount, total };
+  }, [productData]);
   const totalUnits = useMemo(
     () => productData.reduce((sum: number, p: StoreProduct) => sum + p.quantity, 0),
     [productData]
@@ -377,7 +372,7 @@ export default function CheckoutPage() {
           paymentImage: paymentPreview,
           items: productData,
           total: totals.total,
-          promoCode: totals.discount > 0 ? "WEB20" : "",
+          promoCode: "",
         }),
       });
 
@@ -393,13 +388,6 @@ export default function CheckoutPage() {
         value: totals.total,
         contentIds: productData.map((item: StoreProduct) => item.productId || item._id),
       });
-      if (totals.discount > 0) {
-        trackPromoWEB20Purchase({
-          transactionId: orderCode,
-          discount: totals.discount,
-          value: totals.total,
-        });
-      }
       saveLocalShippingProfile();
       setSuccessId(orderCode);
       dispatch(resetCart());
@@ -780,12 +768,6 @@ export default function CheckoutPage() {
               </ul>
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between"><span>Subtotal</span><span><FormattedPrice amount={totals.subtotal} /></span></div>
-                {totals.discount > 0 ? (
-                  <div className="flex justify-between text-emerald-700">
-                    <span>Descuento WEB20</span>
-                    <span>-<FormattedPrice amount={totals.discount} /></span>
-                  </div>
-                ) : null}
                 <div className="flex justify-between font-semibold text-lg"><span>Total</span><span><FormattedPrice amount={totals.total} /></span></div>
               </div>
             </div>

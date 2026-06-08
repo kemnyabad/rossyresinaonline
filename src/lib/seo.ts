@@ -7,7 +7,10 @@ const isLocalUrl = (value?: string) => /localhost|127\.0\.0\.1/i.test(String(val
 export const getSiteUrl = () => {
   const publicUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const authUrl = process.env.NEXTAUTH_URL;
-  const siteUrl = publicUrl || (isLocalUrl(authUrl) ? "" : authUrl) || DEFAULT_SITE_URL;
+  const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const vercelUrl = process.env.VERCEL_URL;
+  const deployedUrl = vercelProductionUrl || vercelUrl;
+  const siteUrl = publicUrl || (isLocalUrl(authUrl) ? "" : authUrl) || (deployedUrl ? `https://${deployedUrl}` : "") || DEFAULT_SITE_URL;
   return String(siteUrl).replace(/\/+$/, "");
 };
 
@@ -32,10 +35,21 @@ export const truncateMeta = (value: string, max = 155) => {
 
 export const organizationJsonLd = () => ({
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": "Store",
+  "@id": absoluteUrl("/#organization"),
   name: SITE_NAME,
   url: getSiteUrl(),
   logo: absoluteImageUrl("/web-app-manifest-512x512.png"),
+  image: absoluteImageUrl(DEFAULT_OG_IMAGE),
+  address: {
+    "@type": "PostalAddress",
+    addressCountry: "PE",
+    addressLocality: "Lima",
+  },
+  areaServed: {
+    "@type": "Country",
+    name: "Perú",
+  },
   contactPoint: [
     {
       "@type": "ContactPoint",
@@ -55,8 +69,13 @@ export const organizationJsonLd = () => ({
 export const websiteJsonLd = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": absoluteUrl("/#website"),
   name: SITE_NAME,
   url: getSiteUrl(),
+  inLanguage: "es-PE",
+  publisher: {
+    "@id": absoluteUrl("/#organization"),
+  },
   potentialAction: {
     "@type": "SearchAction",
     target: `${getSiteUrl()}/search?q={search_term_string}`,

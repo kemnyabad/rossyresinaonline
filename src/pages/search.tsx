@@ -44,7 +44,7 @@ export default function SearchPage({ q, category, results }: Props) {
         <meta
           name="description"
           key="description"
-          content={`Resultados de b?squeda para ${q || "productos"}${categoryLabel} en Rossy Resina.`}
+          content={`Resultados de búsqueda para ${q || "productos"}${categoryLabel} en Rossy Resina.`}
         />
         <meta name="robots" content="noindex,follow" key="robots" />
         <link rel="canonical" href={absoluteUrl("/search")} />
@@ -63,7 +63,7 @@ export default function SearchPage({ q, category, results }: Props) {
           />
         ) : (
           <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
-            No se encontraron productos para tu b?squeda.
+            No se encontraron productos para tu búsqueda.
           </div>
         )}
       </div>

@@ -88,6 +88,17 @@ export default function CategoryPage({ slug, label, items, marketplaceProducts }
     url: canonical,
     numberOfItems: visibleItems.length,
   };
+  const itemListJson = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${label || "Productos"} en Rossy Resina`,
+    itemListElement: visibleItems.slice(0, 24).map((product, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: absoluteUrl(`/${encodeURIComponent(String(product.code || product._id))}`),
+      name: product.title || product.code || "Producto",
+    })),
+  };
 
   return (
     <StoreWithAdsLayout className="py-8">
@@ -100,11 +111,12 @@ export default function CategoryPage({ slug, label, items, marketplaceProducts }
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonical} />
         <meta property="og:image" content={absoluteImageUrl("/web-app-manifest-512x512.png")} />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbJson, collectionJson]) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbJson, collectionJson, itemListJson]) }}
         />
       </Head>
 
@@ -443,6 +455,8 @@ export const getServerSideProps = async (ctx: any) => {
       if (bc) return 1;
       return Number(a._id || 0) - Number(b._id || 0);
     });
+
+    if (!label && slug !== "creaciones") return { notFound: true };
 
     return { props: { slug, label, items, marketplaceProducts: JSON.parse(JSON.stringify(marketplaceProducts)) } };
   } catch (e) {

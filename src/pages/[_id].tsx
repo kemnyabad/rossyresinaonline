@@ -1,5 +1,4 @@
 import FormattedPrice from "@/components/FormattedPrice";
-import ProductCouponBadge from "@/components/ProductCouponBadge";
 import { addToCart } from "@/store/nextSlice";
 import Image from "next/image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +17,6 @@ import { trackViewContent } from "@/lib/metaPixel";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
 import { getPresentationTotalPrice } from "@/lib/productPricing";
-import { isPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
 import {
   ArrowLeftIcon,
   ChevronRightIcon,
@@ -153,7 +151,6 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
     : getOptionalPrice(product?.oldPrice);
   const hasActiveDiscount = activeOldPriceValue !== null && activeOldPriceValue > activePrice;
   const displayProductTitle = formatProductTitle(product?.title || product?.code || "Producto");
-  const showPromoWeb20 = product ? !isPromoWeb20ExcludedProduct(product) : false;
 
   useEffect(() => {
     const productId = String(product?._id || "").trim();
@@ -509,6 +506,9 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
         <meta property="og:type" content="product" />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:image" content={absolutePageImage} />
+        <meta property="product:price:amount" content={Number(product?.price || 0).toFixed(2)} />
+        <meta property="product:price:currency" content="PEN" />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
         <meta name="twitter:image" content={absolutePageImage} />
@@ -1026,11 +1026,6 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     </Link>
                   </div>
                 ) : null}
-                {showPromoWeb20 && (
-                  <div className="mb-2">
-                    <ProductCouponBadge prominent className="w-full max-w-[430px]" />
-                  </div>
-                )}
                 <h1 className="text-xl md:text-2xl font-semibold">{displayProductTitle}</h1>
                 <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
                   {salesCount > 0 && (

@@ -5,6 +5,6 @@ export default function ProductsRedirect() {
 export const getServerSideProps = async () => ({
   redirect: {
     destination: "/productos",
-    permanent: false,
+    permanent: true,
   },
 });

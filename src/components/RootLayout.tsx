@@ -10,7 +10,6 @@ import {
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
-import { PromoWeb20TopBar, PromoWeb20WelcomePopup } from "@/components/PromoWeb20";
 
 interface Props {
   children: ReactElement;
@@ -95,7 +94,6 @@ const RootLayout = ({ children }: Props) => {
 
   return (
     <>
-      {!isRifasPage && !isResinyPage && !isCursoRedesSocialesPage ? <PromoWeb20TopBar /> : null}
       {showHeader && (
         isResinyPage ? (
           <div className="resiny-fixed-header fixed left-0 right-0 top-0 z-[9998] bg-white">
@@ -168,7 +166,6 @@ const RootLayout = ({ children }: Props) => {
       )}
 
       <div className={`${showMobileBottomNav ? "pb-20 md:pb-0" : ""} ${isResinyPage ? "bg-white pt-[72px] md:pt-[76px]" : ""}`}>{children}</div>
-      {!isRifasPage && !isResinyPage && !isCursoRedesSocialesPage ? <PromoWeb20WelcomePopup /> : null}
       <div>
         {!hideFooter && <Footer />} {/* Renderiza Footer solo en páginas públicas de tienda */}
       </div>

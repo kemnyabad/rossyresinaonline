@@ -22,12 +22,12 @@ const nextConfig = {
       {
         source: "/p/:slug",
         destination: "/:slug",
-        permanent: false,
+        permanent: true,
       },
       {
         source: "/c/:slug",
         destination: "/categoria/:slug",
-        permanent: false,
+        permanent: true,
       },
     ];
 

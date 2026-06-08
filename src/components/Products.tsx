@@ -7,9 +7,7 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/nextSlice";
 import Link from "next/link";
 import FormattedPrice from "./FormattedPrice";
-import ProductCouponBadge from "./ProductCouponBadge";
 import { formatProductTitle } from "@/lib/textFormat";
-import { isPromoWeb20ExcludedProduct } from "@/lib/promoWeb20Rules";
 import {
   fetchProductStats,
   normalizeImageUrl,
@@ -93,8 +91,6 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
           const href = toProductHref(code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title);
           const hasSales = itemStats.salesCount > 0;
           const hasReviews = itemStats.reviewCount > 0;
-          const showCoupon = !isPromoWeb20ExcludedProduct({ title, brand, category, description, code, price });
-
           return (
             <div
               key={_id}
@@ -172,11 +168,6 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                     <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-gray-500">
                       {hasSales && <span>{itemStats.salesCount} ventas</span>}
                       {hasReviews && <span>{itemStats.avgRating.toFixed(1)} ({itemStats.reviewCount})</span>}
-                    </div>
-                  )}
-                  {showCoupon && (
-                    <div className="mt-1">
-                      <ProductCouponBadge compact />
                     </div>
                   )}
                 </div>

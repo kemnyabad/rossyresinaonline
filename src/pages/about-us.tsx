@@ -8,21 +8,21 @@ export default function AboutUsPage() {
         <title>Rossy Resina - Sobre nosotros</title>
         <meta
           name="description"
-          content="Conoce la historia, misin y valores de Rossy Resina. Calidad en resina epoxi, moldes, pigmentos y asesora."
+          content="Conoce la historia, misión y valores de Rossy Resina. Calidad en resina epoxi, moldes, pigmentos y asesoría."
         />
       </Head>
 
       <header className="rounded-lg bg-amazon_blue text-white p-6 shadow">
         <h1 className="text-2xl md:text-3xl font-semibold">Somos Rossy Resina</h1>
         <p className="mt-2 text-sm md:text-base opacity-95">
-          Pasin por la resina epoxi y UV, asesora cercana y productos de calidad para que tus proyectos brillen.
+          Pasión por la resina epoxi y UV, asesoría cercana y productos de calidad para que tus proyectos brillen.
         </p>
         <div className="mt-4 flex items-center gap-3">
           <Link
             href="/contact"
             className="inline-block px-4 py-2 rounded bg-white text-amazon_blue hover:bg-amazon_yellow hover:text-black font-semibold text-sm"
           >
-            Contctanos
+            Contáctanos
           </Link>
           <Link
             href="/categoria/resina"
@@ -37,12 +37,12 @@ export default function AboutUsPage() {
         <div className="rounded-lg p-6 bg-white shadow border border-gray-200">
           <p className="text-lg font-semibold">Calidad comprobada</p>
           <p className="text-sm text-gray-700 mt-1">
-            Seleccionamos resinas, moldes y pigmentos que garantizan resultados profesionales.
+            Seleccionamos resinas, moldes y pigmentos que ayudan a lograr resultados profesionales.
           </p>
         </div>
         <div className="rounded-lg p-6 bg-white shadow border border-gray-200">
           <p className="text-lg font-semibold">Asesora cercana</p>
-          <p className="text-sm text-gray-700 mt-1">Te ayudamos a elegir materiales y tcnicas segn tu proyecto.</p>
+          <p className="text-sm text-gray-700 mt-1">Te ayudamos a elegir materiales y técnicas según tu proyecto.</p>
         </div>
         <div className="rounded-lg p-6 bg-white shadow border border-gray-200">
           <p className="text-lg font-semibold">Aprendizaje constante</p>
@@ -55,11 +55,11 @@ export default function AboutUsPage() {
           <h2 className="text-xl font-semibold">Nuestra historia</h2>
           <div className="mt-2 text-sm text-gray-700 grid gap-3">
             <p>
-              Comenzamos como amantes del arte en resina, buscando materiales confiables y tcnicas claras. Esa
-              bsqueda nos llev a crear una tienda enfocada en ayudarte a lograr piezas duraderas y estticas.
+              Comenzamos como amantes del arte en resina, buscando materiales confiables y técnicas claras. Esa
+              búsqueda nos llevó a crear una tienda enfocada en ayudarte a lograr piezas duraderas y estéticas.
             </p>
             <p>
-              Hoy ofrecemos resinas epoxi y UV, moldes de silicona, pigmentos y accesorios, adems de talleres para
+              Hoy ofrecemos resinas epoxi y UV, moldes de silicona, pigmentos y accesorios, además de talleres para
               principiantes y avanzados.
             </p>
           </div>
