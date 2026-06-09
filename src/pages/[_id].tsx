@@ -28,6 +28,7 @@ import {
   ShoppingCartIcon,
   TruckIcon,
 } from "@heroicons/react/24/outline";
+import { BoltIcon } from "@heroicons/react/24/solid";
 
 interface Props {
   product: ProductProps | null;
@@ -142,6 +143,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
       : null;
   const activeViewerIsProcess = isProcessImage(activeViewerImage || undefined);
   const hasOffer = typeof product?.oldPrice === "number" && Number(product.oldPrice) > Number(product?.price || 0);
+  const showMobileMegaOffer = String(router.query?.oferta || "").trim() === "mega" && hasOffer;
   const productVariants: any[] = (product as any)?.variants || [];
   const activePrice = selectedVariant
     ? getPresentationTotalPrice(selectedVariant.price, selectedVariant.label)
@@ -150,6 +152,9 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
     ? getOptionalPrice(getPresentationTotalPrice(selectedVariant.oldPrice, selectedVariant.label))
     : getOptionalPrice(product?.oldPrice);
   const hasActiveDiscount = activeOldPriceValue !== null && activeOldPriceValue > activePrice;
+  const activeDiscountPercent = hasActiveDiscount
+    ? Math.max(1, Math.round((((activeOldPriceValue || 0) - activePrice) / (activeOldPriceValue || 1)) * 100))
+    : 0;
   const displayProductTitle = formatProductTitle(product?.title || product?.code || "Producto");
 
   useEffect(() => {
@@ -555,7 +560,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     alt={displayProductTitle}
                     fill
                     sizes="100vw"
-                    className="object-contain"
+                    className="object-cover"
                     priority
                   />
                 )}
@@ -564,7 +569,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="absolute left-3 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-950 shadow-[0_4px_16px_rgba(15,23,42,0.28)] ring-1 ring-black/10 backdrop-blur"
+                className="absolute left-3 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white shadow-[0_4px_16px_rgba(15,23,42,0.28)] backdrop-blur"
                 aria-label="Volver"
               >
                 <ArrowLeftIcon className="h-6 w-6" />
@@ -633,7 +638,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     <button
                       type="button"
                       onClick={() => setMobileProductSearchOpen(true)}
-                      className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-950 shadow-[0_4px_16px_rgba(15,23,42,0.28)] ring-1 ring-black/10 backdrop-blur"
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white shadow-[0_4px_16px_rgba(15,23,42,0.28)] backdrop-blur"
                       aria-label="Buscar productos"
                     >
                       <MagnifyingGlassIcon className="h-6 w-6" />
@@ -643,161 +648,49 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                 <button
                   type="button"
                   onClick={shareProduct}
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-950 shadow-[0_4px_16px_rgba(15,23,42,0.28)] ring-1 ring-black/10 backdrop-blur"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white shadow-[0_4px_16px_rgba(15,23,42,0.28)] backdrop-blur"
                   aria-label="Compartir producto"
                 >
                   <ShareIcon className="h-6 w-6" />
                 </button>
               </div>
-              <div className="absolute bottom-3 right-3 rounded-full bg-slate-900/70 px-3 py-1 text-xs font-semibold text-white">
+              <div className="absolute bottom-12 right-3 z-20 rounded-full bg-slate-900/70 px-3 py-1 text-xs font-semibold text-white">
                 {Math.max(1, productImages.findIndex((img) => img === mainImage) + 1)}/{productImages.length}
               </div>
-            </div>
-
-            {productImages.length > 1 ? (
-              <div className="no-scrollbar flex gap-2 overflow-x-auto border-b border-gray-100 px-4 py-2">
-                {productImages.map((img, index) => (
-                  <button
-                    key={`mobile-thumb-${img}`}
-                    type="button"
-                    onClick={() => setActiveImage(img)}
-                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-white ${
-                      mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"
-                    }`}
-                    aria-label={`Ver imagen ${index + 1}`}
-                  >
-                    {isProcessImage(img) ? (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
-                        Proceso
-                      </div>
-                    ) : (
-                      <Image src={img} alt="Miniatura" fill className="object-cover" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-
-            <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-amazon_blue">
-              <span className="inline-flex items-center gap-1">
-                <TruckIcon className="h-4 w-4" />
-                Envíos nacionales
-              </span>
-              <span className="h-4 w-px bg-gray-200" />
-              <span className="inline-flex items-center gap-1">
-                <ShieldCheckIcon className="h-4 w-4" />
-                Compra segura
-              </span>
-              <ChevronRightIcon className="ml-auto h-4 w-4" />
-            </div>
-
-            <div className="px-4 py-3">
-              <h1 className="text-base font-medium leading-6 text-gray-950">{displayProductTitle}</h1>
-              <div className="mt-1 flex items-center justify-between gap-3 text-sm text-gray-600">
-                <span>{salesCount > 0 ? `${salesCount} vendidos` : "Rossy Resina"}</span>
-                {reviewCount > 0 ? (
-                  <span className="flex items-center gap-1">
-                    {reviewAverage.toFixed(1)}
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <FaStar
-                        key={i}
-                        className={`h-3.5 w-3.5 ${
-                          i < Math.round(reviewAverage) ? "text-amazon_blue" : "text-gray-300"
-                        }`}
-                      />
-                    ))}
+              {(showMobileMegaOffer || hasActiveDiscount) ? (
+                <div className="absolute inset-x-0 bottom-0 z-10 flex overflow-hidden text-[13px] font-black leading-4 text-white shadow-[0_-2px_10px_rgba(17,24,39,0.18)]">
+                  <span className="relative z-10 flex h-12 w-[104px] shrink-0 items-center justify-center rounded-tr-xl bg-yellow-300 px-1 text-center leading-[15px] text-white">
+                    Oferta<br />Relámpago
                   </span>
-                ) : (
-                  <span className="text-xs font-medium text-gray-500">Sin reseñas</span>
-                )}
-              </div>
-
-              <div className="mt-3 flex flex-wrap items-end gap-2">
-                <span className="text-3xl font-bold leading-none text-amazon_blue">
-                  <FormattedPrice amount={activePrice} />
-                </span>
-                {hasActiveDiscount && (
-                  <span className="pb-0.5 text-sm text-gray-400 line-through">
-                    <FormattedPrice amount={activeOldPriceValue} />
+                  <span className="-ml-4 flex h-12 min-w-0 flex-1 items-center justify-center truncate bg-amazon_blue pl-6 pr-2 text-lg font-black italic tracking-wide">
+                    ¡Aprovechalo YA!
                   </span>
-                )}
-                {hasActiveDiscount && (
-                  <span className="mb-0.5 rounded border border-amazon_blue px-2 py-0.5 text-xs font-bold text-amazon_blue">
-                    {Math.round((((activeOldPriceValue || 0) - activePrice) / (activeOldPriceValue || 1)) * 100)}% OFF
-                  </span>
-                )}
-              </div>
-
-              {productVariants.length > 0 ? (
-                <div className="mt-4">
-                  <p className="text-sm font-semibold text-gray-900">Presentación</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {productVariants.map((v: any) => (
-                      <button
-                        key={`mobile-variant-${v.id}`}
-                        type="button"
-                        onClick={() => setSelectedVariant(selectedVariant?.id === v.id ? null : v)}
-                        className={`rounded-md border px-3 py-2 text-sm font-semibold ${
-                          selectedVariant?.id === v.id
-                            ? "border-amazon_blue bg-white text-amazon_blue"
-                            : "border-gray-300 text-gray-700"
-                        }`}
-                      >
-                        {v.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               ) : null}
-
-              <div className="mt-4 flex items-center gap-3">
-                <span className="text-sm font-semibold text-gray-900">Cantidad</span>
-                <div className="grid h-9 grid-cols-3 overflow-hidden rounded-md border border-gray-300 bg-gray-50">
-                  <button
-                    type="button"
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="flex w-10 items-center justify-center text-gray-700"
-                    aria-label="Reducir cantidad"
-                  >
-                    <MinusIcon className="h-4 w-4" />
-                  </button>
-                  <span className="flex w-10 items-center justify-center border-x border-gray-300 bg-white text-sm font-semibold">
-                    {qty}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQty((q) => q + 1)}
-                    className="flex w-10 items-center justify-center text-gray-900"
-                    aria-label="Aumentar cantidad"
-                  >
-                    <PlusIcon className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
             </div>
 
-            <div className="border-y border-gray-100 px-4 py-4">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowShippingProcess((v) => !v);
-                }}
-                className="flex w-full items-center gap-3 text-left"
-              >
-                <TruckIcon className="h-5 w-5 shrink-0 text-amazon_blue" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-bold text-amazon_blue">Envío disponible para este producto</span>
-                  <span className="block text-xs text-gray-600">Entrega entre 2 a 3 días aproximadamente</span>
-                </span>
-                <ChevronRightIcon className="h-5 w-5 text-gray-400" />
-              </button>
-              {showShippingProcess ? (
-                <div className="mt-3 rounded-md bg-gray-50 px-3 py-3 text-xs text-gray-700">
-                  <p className="font-semibold text-amazon_blue">Proceso de envío</p>
-                  <p className="mt-1">1. Agrega tus productos al carrito.</p>
-                  <p className="mt-1">2. Completa tus datos en checkout.</p>
-                  <p className="mt-1">3. Coordinamos el despacho por nuestros canales disponibles.</p>
+            <div className="bg-white px-4 py-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                <div className="min-w-0">
+                  <h1 className="line-clamp-2 text-[22px] font-medium leading-7 text-gray-950">{displayProductTitle}</h1>
+                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                    <span>Vendido por</span>
+                    <span className="font-semibold text-gray-900">Rossy Resina</span>
+                    <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  {hasActiveDiscount ? (
+                    <span className="block text-base font-black text-gray-700 line-through">
+                      <FormattedPrice amount={activeOldPriceValue} />
+                    </span>
+                  ) : null}
+                  <span className="block text-[28px] font-black leading-none text-amazon_blue">S/ {activePrice.toFixed(2)}</span>
+                </div>
+              </div>
+              {hasActiveDiscount ? (
+                <div className="mt-2 inline-flex rounded border border-orange-300 px-2 py-0.5 text-sm font-black italic text-orange-500">
+                  {activeDiscountPercent}% DE DESCUENTO
                 </div>
               ) : null}
             </div>
@@ -816,36 +709,37 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   >
                     <div className="min-w-[82px] leading-tight">
                       {hasActiveDiscount && (
-                        <p className="text-xs text-gray-400 line-through">
+                        <p className="text-sm text-gray-700 line-through">
                           <FormattedPrice amount={activeOldPriceValue} />
                         </p>
                       )}
-                      <p className="text-xl font-bold leading-none text-amazon_blue">
-                        <FormattedPrice amount={activePrice} />
+                      <p className="text-2xl font-black leading-none text-amazon_blue">
+                        S/ {activePrice.toFixed(2)}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => addProductToCart(qty)}
-                      className={`group rr-shine flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-amazon_blue px-4 text-base font-bold text-white shadow-[0_8px_18px_rgba(203,41,158,0.24)] transition-transform active:scale-[0.98] ${
+                      className={`group rr-shine flex h-12 flex-1 items-center justify-center rounded-full px-4 text-base font-black leading-tight text-white transition-transform active:scale-[0.98] ${
+                        hasActiveDiscount
+                          ? "bg-[#056b35] text-yellow-300 shadow-[0_8px_18px_rgba(5,107,53,0.28)]"
+                          : "bg-amazon_blue shadow-[0_8px_18px_rgba(203,41,158,0.24)]"
+                      } ${
                         justAdded ? "rr-add-to-cart-hit" : ""
                       }`}
                     >
-                      <ShoppingCartIcon className="rr-cart-wiggle h-5 w-5 shrink-0" />
-                      {justAdded ? "Producto añadido" : "¡Agrégalo al carrito!"}
-                    </button>
-                    <Link
-                      href="/cart"
-                      className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-amazon_blue bg-white text-amazon_blue shadow-[0_8px_18px_rgba(203,41,158,0.16)]"
-                      aria-label="Ver carrito"
-                    >
-                      <ShoppingCartIcon className="h-6 w-6" />
-                      {cartCount > 0 ? (
-                        <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amazon_blue px-1 text-[10px] font-bold text-white">
-                          {cartCount > 99 ? "99+" : cartCount}
+                      {!hasActiveDiscount ? <ShoppingCartIcon className="rr-cart-wiggle mr-2 h-5 w-5 shrink-0" /> : null}
+                      {justAdded ? (
+                        <span>Producto añadido</span>
+                      ) : hasActiveDiscount ? (
+                        <span className="flex flex-col items-center leading-tight">
+                          <span>¡LOS ÚLTIMOS!</span>
+                          <span>¡AGREGA AHORA!</span>
                         </span>
-                      ) : null}
-                    </Link>
+                      ) : (
+                        <span>¡Agregar al carrito!</span>
+                      )}
+                    </button>
                   </div>,
                   document.body
                 )

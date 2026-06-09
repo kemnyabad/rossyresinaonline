@@ -361,9 +361,14 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
               style={{ scrollBehavior: "smooth" }}
             >
               {lightningProducts.map((p) => (
-                <Link key={`flash-${p._id}`} href={`/${p.code || p._id}`} className="w-[132px] shrink-0">
+                <Link key={`flash-${p._id}`} href={{ pathname: `/${p.code || p._id}`, query: { oferta: "mega" } }} className="w-[132px] shrink-0">
                   <div className="relative h-[132px] overflow-hidden rounded-sm bg-gray-100">
                     <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover" />
+                    <div className="absolute bottom-0 left-0 text-[9px] font-black leading-3 shadow-[0_-2px_8px_rgba(17,24,39,0.18)]">
+                      <span className="flex h-7 w-[54px] items-center justify-center rounded-tr-xl bg-yellow-300 px-1 text-center text-[10px] leading-[10px] text-amazon_blue">
+                        Mega<br />Oferta
+                      </span>
+                    </div>
                   </div>
                   <p className="mt-1 line-clamp-1 text-xs font-bold text-gray-900">{getDiscountLabel(p)} especial</p>
                   <div className="flex items-center gap-1">
@@ -386,9 +391,14 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
                 <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
                   <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover" />
                   {typeof p.oldPrice === "number" && p.oldPrice > p.price ? (
-                    <span className="absolute left-1.5 top-1.5 rounded-sm bg-amazon_blue px-1.5 py-0.5 text-[10px] font-bold text-white">
-                      {getDiscountLabel(p)}
-                    </span>
+                    <>
+                      <span className="absolute left-1.5 top-1.5 rounded-sm bg-amazon_blue px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        {getDiscountLabel(p)}
+                      </span>
+                      <span className="absolute bottom-0 left-0 flex h-7 w-[58px] items-center justify-center rounded-tr-xl bg-yellow-300 px-1 text-center text-[10px] font-black leading-[10px] text-amazon_blue shadow-[0_-2px_8px_rgba(17,24,39,0.18)]">
+                        Mega<br />Oferta
+                      </span>
+                    </>
                   ) : null}
                 </div>
                 <div className="p-2">
@@ -396,6 +406,11 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
                   <div className="mt-1 flex items-end gap-1">
                     <p className="text-lg font-bold leading-none text-amazon_blue">S/ {Number(p.price || 0).toFixed(2)}</p>
                     <span className="pb-0.5 text-[10px] text-gray-500">c/u</span>
+                    {typeof p.oldPrice === "number" && p.oldPrice > p.price ? (
+                      <span className="pb-0.5 text-[10px] text-gray-400 line-through">
+                        S/ {Number(p.oldPrice || 0).toFixed(2)}
+                      </span>
+                    ) : null}
                     <span className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-amazon_blue bg-white text-amazon_blue">
                       <ShoppingCartIcon className="h-4 w-4" />
                     </span>

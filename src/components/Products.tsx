@@ -135,16 +135,20 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                 </Link>
 
                 <div className="mt-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-semibold text-amazon_blue md:text-xl">
-                      <FormattedPrice amount={price} />
-                    </span>
-                    <span className="text-xs text-gray-500 md:text-sm">c/unidad</span>
-                    {hasDiscount && (
-                      <span className="text-xs text-gray-400 line-through md:text-sm">
-                        <FormattedPrice amount={oldPrice as number} />
-                      </span>
-                    )}
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 flex-wrap items-baseline gap-x-1 gap-y-0.5">
+                        <span className="text-base font-semibold text-amazon_blue md:text-xl">
+                          <FormattedPrice amount={price} />
+                        </span>
+                        <span className="text-xs text-gray-500 md:text-sm">c/unidad</span>
+                        {hasDiscount && (
+                          <span className="text-xs text-gray-400 line-through md:text-sm">
+                            <FormattedPrice amount={oldPrice as number} />
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     <button
                       type="button"
                       onClick={() => {
@@ -153,7 +157,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                         showAddedFeedback(_id);
                       }}
                       className={
-                        "ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full border md:hidden " +
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border md:hidden " +
                         (wasAdded
                           ? "border-emerald-500 bg-emerald-50 text-emerald-700"
                           : "border-amazon_blue bg-white text-amazon_blue")
