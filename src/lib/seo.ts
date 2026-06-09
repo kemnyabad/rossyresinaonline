@@ -1,5 +1,5 @@
 export const SITE_NAME = "Rossy Resina";
-export const DEFAULT_SITE_URL = "https://rossyresina.vercel.app";
+export const DEFAULT_SITE_URL = "https://www.rossyresina.com";
 export const DEFAULT_OG_IMAGE = "/web-app-manifest-512x512.png";
 
 const isLocalUrl = (value?: string) => /localhost|127\.0\.0\.1/i.test(String(value || ""));

@@ -30,6 +30,37 @@ const slugToCategory: Record<string, string> = {
   talleres: "Escuela de formación en resina",
 };
 
+const categorySeo: Record<string, { title: string; description: string; intro: string }> = {
+  resina: {
+    title: "Resina epóxica y resina UV en Perú | Rossy Resina",
+    description:
+      "Compra resina epóxica, resina UV y materiales para artesanía en Rossy Resina. Productos para manualidades, bisutería y emprendimientos con envío a todo Perú.",
+    intro:
+      "Resina epóxica, resina UV y materiales para crear llaveros, dijes, bandejas, decoraciones y productos personalizados.",
+  },
+  "moldes-de-silicona": {
+    title: "Moldes de silicona para resina en Perú | Rossy Resina",
+    description:
+      "Encuentra moldes de silicona para resina: llaveros, lapiceros shaker, dijes, botones, figuras y recuerdos personalizados con envío a todo Perú.",
+    intro:
+      "Moldes de silicona para trabajar resina epóxica y resina UV en proyectos de manualidades, recuerdos y productos para vender.",
+  },
+  pigmentos: {
+    title: "Pigmentos para resina y glitters | Rossy Resina",
+    description:
+      "Compra pigmentos, micas, glitters y colorantes para resina. Materiales para dar color, brillo y acabado profesional a tus piezas.",
+    intro:
+      "Pigmentos, micas y glitters para dar color a piezas de resina, bisutería, llaveros y decoraciones artesanales.",
+  },
+  accesorios: {
+    title: "Accesorios para resina y manualidades | Rossy Resina",
+    description:
+      "Accesorios para trabajar resina: vasos mezcladores, herramientas, insumos y complementos para piezas artesanales con envío en Perú.",
+    intro:
+      "Accesorios y herramientas para medir, mezclar, decorar y terminar piezas de resina con mejor presentación.",
+  },
+};
+
 const toCategorySlug = (value: any): string =>
   String(value || "")
     .normalize("NFD")
@@ -68,11 +99,13 @@ export default function CategoryPage({ slug, label, items, marketplaceProducts }
     if (slug === "creaciones") return true;
     return toCategorySlug(product.category) === targetSlug;
   });
-  const title = `${label || "Categoría"} | Rossy Resina`;
+  const seo = categorySeo[slug];
+  const title = seo?.title || `${label || "Categoría"} para resina | Rossy Resina`;
   const description = truncateMeta(
-    label
-      ? `Compra ${label} en Rossy Resina. Encuentra productos para resina, manualidades, moldes, pigmentos y accesorios con envío a todo Perú.`
-      : "Explora categorías de resina, moldes, pigmentos y accesorios en Rossy Resina."
+    seo?.description ||
+      (label
+        ? `Compra ${label} en Rossy Resina. Encuentra productos para resina, manualidades, moldes, pigmentos y accesorios con envío a todo Perú.`
+        : "Explora categorías de resina, moldes, pigmentos y accesorios en Rossy Resina.")
   );
   const canonical = absoluteUrl(`/categoria/${encodeURIComponent(slug)}`);
   const breadcrumbJson = breadcrumbJsonLd([
@@ -124,6 +157,7 @@ export default function CategoryPage({ slug, label, items, marketplaceProducts }
         {label ? (
           <>
             <h1 className="text-2xl font-semibold mb-4">{label}</h1>
+            {seo?.intro && <p className="mb-5 max-w-3xl text-sm leading-6 text-gray-700">{seo.intro}</p>}
             <div className="space-y-8">
               {visibleItems.length > 0 ? (
                 <Products productData={visibleItems} />
