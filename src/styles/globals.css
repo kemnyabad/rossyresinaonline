@@ -248,6 +248,51 @@ img, video, canvas, svg {
   }
 }
 
+@keyframes rrPromoSlideUp {
+  0%,
+  42% {
+    transform: translateY(0);
+  }
+  50%,
+  92% {
+    transform: translateY(-50%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.rr-promo-slide-up {
+  animation: rrPromoSlideUp 5s ease-in-out infinite;
+}
+
+@keyframes rrPromoClockRing {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  12% {
+    transform: rotate(-8deg) scale(1.04);
+  }
+  24% {
+    transform: rotate(8deg) scale(1.04);
+  }
+  36% {
+    transform: rotate(-5deg) scale(1.02);
+  }
+  48% {
+    transform: rotate(5deg) scale(1.02);
+  }
+  60% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.rr-promo-clock {
+  transform-origin: 50% 18%;
+  animation: rrPromoClockRing 2.4s ease-in-out infinite;
+}
+
 /* Scrollbar estético para el sidebar del admin */
 .sidebar-scroll::-webkit-scrollbar { width: 4px; }
 .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }

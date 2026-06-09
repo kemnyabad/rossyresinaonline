@@ -18,6 +18,7 @@ import {
   TruckIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/solid";
+import { FaClock } from "react-icons/fa";
 import {
   getOfferProducts,
 } from "@/lib/services/productCatalogService";
@@ -546,10 +547,33 @@ function ExpressOfferGroup({
       <div className="mb-4 flex items-center justify-between gap-3">
         <Link
           href="/productos?ofertas=1"
-          className="flex min-h-[50px] w-full items-center justify-center gap-4 bg-[#0b6f3a] px-4 text-center text-sm font-black text-white transition hover:brightness-95 md:text-base"
+          className="relative flex min-h-[58px] w-full items-center justify-center overflow-visible rounded-lg bg-[#056b35] px-3 text-center text-sm font-black text-white shadow-[0_6px_14px_rgba(17,24,39,0.16),inset_0_1px_0_rgba(255,255,255,0.22)] ring-1 ring-emerald-900/20 transition hover:brightness-95 md:px-7 md:text-base"
         >
-          <span className="text-yellow-300">Mega Promo</span>
-          <span>{subtitle}</span>
+          <span className="absolute inset-0 rounded-lg bg-[radial-gradient(circle_at_18%_45%,rgba(255,255,255,0.16),transparent_18%),linear-gradient(180deg,rgba(255,255,255,0.10),transparent_45%)]" />
+          <span className="relative flex min-w-0 items-center justify-center gap-3 md:gap-6">
+            <span className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full bg-yellow-300 text-[#056b35] shadow-[0_2px_0_rgba(0,0,0,0.18)] sm:flex">
+              <FaClock className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span className="shrink-0 text-lg font-black text-yellow-300 md:text-2xl">Mega Promo</span>
+            <span className="relative h-6 min-w-0 overflow-hidden text-left text-white md:h-7">
+              <span className="rr-promo-slide-up flex flex-col">
+                <span className="h-6 whitespace-nowrap md:h-7">{subtitle}</span>
+                <span className="h-6 whitespace-nowrap md:h-7">No te pierdas super ofertas express</span>
+              </span>
+            </span>
+            <span className="hidden shrink-0 rounded-full bg-amazon_blue px-4 py-2 text-sm font-black uppercase text-white shadow-[4px_4px_0_rgba(92,18,65,0.85)] ring-1 ring-white/20 md:inline-flex">
+              ¡Tiempo limitado!
+            </span>
+            <span className="hidden h-16 w-16 shrink-0 items-center justify-center md:flex">
+              <Image
+                src="/reloj-promo.png"
+                alt="Tiempo limitado"
+                width={64}
+                height={64}
+                className="rr-promo-clock h-16 w-16 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
+              />
+            </span>
+          </span>
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
