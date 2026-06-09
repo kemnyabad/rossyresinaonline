@@ -352,11 +352,8 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
           />
 
           <section className="mt-3">
-            <div className="mb-2 flex items-center justify-between px-4">
-              <h2 className="text-base font-bold text-amazon_blue">
-                Super ofertas
-              </h2>
-              <Link href="/productos?ofertas=1" className="text-sm text-gray-700">Por tiempo limitado</Link>
+            <div className="mb-3 px-4">
+              <MobileMegaPromoBanner subtitle="Termina : 15 jun., 21:59" />
             </div>
             <div
               ref={visitedCarouselRef}
@@ -528,6 +525,37 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
         </section>
       </main>
     </>
+  );
+}
+
+function MobileMegaPromoBanner({ subtitle }: { subtitle: string }) {
+  return (
+    <Link
+      href="/productos?ofertas=1"
+      className="relative flex min-h-[44px] w-full items-center overflow-hidden bg-white px-2 text-gray-950"
+    >
+      <span className="relative grid min-w-0 flex-1 grid-cols-[32px_auto_minmax(0,1fr)] items-center gap-2 pr-2">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-300 text-[#056b35] shadow-[0_2px_0_rgba(0,0,0,0.18)]">
+          <FaClock className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <span className="shrink-0 text-[15px] font-black leading-none text-[#056b35]">Mega Promo</span>
+        <span className="relative h-5 min-w-0 overflow-hidden text-left text-[12px] font-black leading-5 text-gray-950">
+          <span className="rr-promo-slide-up flex flex-col">
+            <span className="h-5 whitespace-nowrap">{subtitle}</span>
+            <span className="h-5 whitespace-nowrap">No te pierdas super ofertas express</span>
+          </span>
+        </span>
+      </span>
+      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center">
+        <Image
+          src="/reloj-promo.png"
+          alt="Tiempo limitado"
+          width={32}
+          height={32}
+          className="rr-promo-clock h-8 w-8 object-contain drop-shadow-[0_2px_2px_rgba(0,0,0,0.18)]"
+        />
+      </span>
+    </Link>
   );
 }
 
