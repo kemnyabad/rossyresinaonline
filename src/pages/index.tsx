@@ -14,6 +14,7 @@ import {
   CheckBadgeIcon,
   QuestionMarkCircleIcon,
   ShoppingCartIcon,
+  StarIcon,
   TruckIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/solid";
@@ -29,9 +30,21 @@ import { useLiveProducts } from "@/lib/useLiveProducts";
 interface Props {
   productData: ProductProps[];
   behavior: PurchaseBehaviorSnapshot;
-  ofertasExpress: { id: string; nombre: string; imagen: string }[];
+  ofertasExpress: ExpressOfferItem[];
   marketplaceProducts: any[];
 }
+
+type ExpressOfferItem = {
+  id: string;
+  nombre: string;
+  imagen: string;
+  href?: string;
+  badge?: string;
+  price?: number;
+  oldPrice?: number;
+  soldCount?: number;
+  stock?: number;
+};
 
 export default function Home({ productData, behavior, ofertasExpress, marketplaceProducts }: Props) {
   const pageTitle = "Rossy Resina | Resina epóxica, moldes y pigmentos en Perú";
@@ -232,6 +245,45 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
     if (oldPrice > price && oldPrice > 0) return `-${Math.round(((oldPrice - price) / oldPrice) * 100)}%`;
     return "Oferta";
   };
+  const expressOfferItems = useMemo(() => {
+    const seen = new Set<string>();
+    const items: ExpressOfferItem[] = [];
+
+    for (const item of ofertasExpress || []) {
+      const key = `manual:${String(item.id || item.nombre).trim().toLowerCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items.push({ ...item, badge: item.badge || "EXPRESS" });
+    }
+
+    const discountedProducts = allProducts
+      .filter((p) => Number(p.oldPrice || 0) > Number(p.price || 0) && Number(p.price || 0) > 0)
+      .sort((a, b) => {
+        const da = Number(a.oldPrice || 0) - Number(a.price || 0);
+        const db = Number(b.oldPrice || 0) - Number(b.price || 0);
+        return db - da;
+      });
+
+    for (const product of discountedProducts) {
+      const productKey = String(product.code || product._id || "").trim();
+      const key = `product:${productKey || product.title}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items.push({
+        id: `product-${productKey || product._id}`,
+        nombre: product.title || "Producto en oferta",
+        imagen: normalizeMobileImage(product.image),
+        href: `/${encodeURIComponent(productKey || String(product._id))}`,
+        badge: getDiscountLabel(product),
+        price: Number(product.price || 0),
+        oldPrice: Number(product.oldPrice || 0),
+        soldCount: 46,
+        stock: Number(product.stock || 0),
+      });
+    }
+
+    return items;
+  }, [allProducts, ofertasExpress]);
 
   return (
     <>
@@ -422,25 +474,13 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
         )}
 
         {/* Ofertas Express */}
-        {ofertasExpress.length > 0 && (
+        {expressOfferItems.length > 0 && (
         <section className="px-4 md:px-6">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="rr-icon-pop text-xl">⚡</span>
-            <h2 className="text-xl font-bold text-amazon_blue">Ofertas Express</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-            {ofertasExpress.map((item) => (
-              <div key={item.id} className="group rounded-lg border border-gray-200 bg-white p-2 shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_8px_18px_rgba(17,24,39,0.10)]">
-                <div className="relative h-32 w-full overflow-hidden rounded-lg bg-gray-50">
-                  <Image src={item.imagen} alt={item.nombre} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                  <div className="absolute top-1.5 left-1.5">
-                    <span className="bg-amazon_blue text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">EXPRESS</span>
-                  </div>
-                </div>
-                <p className="mt-2 text-xs font-semibold text-gray-800 text-center line-clamp-2 group-hover:text-amazon_blue transition-colors">{item.nombre}</p>
-              </div>
-            ))}
-          </div>
+          <ExpressOfferGroup
+            subtitle="Termina : 15 jun., 21:59 (GMT-5)"
+            items={expressOfferItems}
+            tone="relampago"
+          />
         </section>
         )}
 
@@ -488,6 +528,148 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
       </main>
     </>
   );
+}
+
+function ExpressOfferGroup({
+  subtitle,
+  items,
+  tone,
+}: {
+  subtitle: string;
+  items: ExpressOfferItem[];
+  tone: "relampago" | "liquidacion";
+}) {
+  const titleClass = tone === "relampago" ? "text-amazon_light" : "text-amazon_blue";
+
+  return (
+    <section className="min-w-0 bg-white">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <Link
+          href="/productos?ofertas=1"
+          className="flex min-h-[50px] w-full items-center justify-center gap-4 bg-[#0b6f3a] px-4 text-center text-sm font-black text-white transition hover:brightness-95 md:text-base"
+        >
+          <span className="text-yellow-300">Mega Promo</span>
+          <span>{subtitle}</span>
+        </Link>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {items.slice(0, 6).map((item) => {
+              const price = Number(item.price || 0);
+              const oldPrice = Number(item.oldPrice || 0);
+              const hasPrice = price > 0;
+              const hasDiscount = oldPrice > price && price > 0;
+              const discountPercent = hasDiscount ? Math.max(1, Math.round(((oldPrice - price) / oldPrice) * 100)) : 0;
+              const [priceWhole, priceCents] = price.toFixed(2).split(".");
+              const stock = Number(item.stock || 0);
+              const stockLabel = stock > 0 && stock <= 9 ? `Últimas ${stock} a precio promocional` : "Oferta express";
+              const cardClass = "group block bg-white text-left text-gray-950 transition-colors hover:text-amazon_blue";
+              const content = (
+                <>
+                  <ExpressOfferImage item={item} stockLabel={stockLabel} />
+                  <div className="pt-2">
+                    <p className="line-clamp-1 text-sm font-medium leading-5 text-gray-950 group-hover:text-amazon_blue">{item.nombre}</p>
+                    {hasPrice ? (
+                      <div className="mt-1 flex items-end gap-1 text-gray-950">
+                        <span className={`text-sm font-bold leading-none ${titleClass}`}>S/</span>
+                        <span className={`text-2xl font-black leading-none tracking-normal ${titleClass}`}>{priceWhole}</span>
+                        <span className={`pb-1.5 text-xs font-bold leading-none ${titleClass}`}>{priceCents}</span>
+                        {hasDiscount && (
+                          <span className="pb-1 text-xs text-gray-500 line-through">S/{oldPrice.toFixed(2)}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className={`mt-1 text-sm font-black uppercase ${titleClass}`}>{item.badge || "Promo express"}</div>
+                    )}
+                    {hasDiscount ? (
+                      <div className="mt-1 text-sm font-black leading-5 text-red-600">
+                        -{discountPercent}% tiempo limitado
+                      </div>
+                    ) : (
+                      <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                        <span className="flex items-center gap-0 text-gray-950">
+                        {[0, 1, 2, 3, 4].map((star) => (
+                          <StarIcon key={star} className="h-3.5 w-3.5" />
+                        ))}
+                        </span>
+                        <span>{item.soldCount || 46}</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+              return item.href ? (
+                <Link key={item.id} href={item.href} className={cardClass}>
+                  {content}
+                </Link>
+              ) : (
+                <div key={item.id} className={cardClass}>
+                  {content}
+                </div>
+              );
+            })}
+      </div>
+    </section>
+  );
+}
+
+function ExpressOfferImage({ item, stockLabel }: { item: ExpressOfferItem; stockLabel: string }) {
+  const [hasDarkLabelArea, setHasDarkLabelArea] = useState(false);
+
+  return (
+    <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
+      <Image
+        src={item.imagen}
+        alt={item.nombre}
+        fill
+        className="object-cover transition-transform duration-300 group-hover:scale-105"
+        onLoadingComplete={(img) => setHasDarkLabelArea(detectDarkBottomArea(img))}
+      />
+      <span className="absolute right-1.5 top-1.5 rounded-sm bg-gray-950/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+        Express
+      </span>
+      <div
+        className={
+          "absolute inset-x-3 bottom-3 rounded-full px-3 py-2 text-center text-[11px] font-semibold uppercase leading-4 backdrop-blur-sm " +
+          (hasDarkLabelArea ? "bg-white/95 text-gray-950" : "bg-gray-950/70 text-white")
+        }
+      >
+        {stockLabel}
+      </div>
+    </div>
+  );
+}
+
+function detectDarkBottomArea(img: HTMLImageElement) {
+  try {
+    if (typeof document === "undefined" || !img.naturalWidth || !img.naturalHeight) return false;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return false;
+
+    const sampleWidth = 32;
+    const sampleHeight = 16;
+    canvas.width = sampleWidth;
+    canvas.height = sampleHeight;
+
+    const sx = Math.floor(img.naturalWidth * 0.12);
+    const sy = Math.floor(img.naturalHeight * 0.68);
+    const sw = Math.max(1, Math.floor(img.naturalWidth * 0.76));
+    const sh = Math.max(1, Math.floor(img.naturalHeight * 0.2));
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sampleWidth, sampleHeight);
+
+    const data = ctx.getImageData(0, 0, sampleWidth, sampleHeight).data;
+    let total = 0;
+    let dark = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const luminance = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+      total += luminance;
+      if (luminance < 55) dark += 1;
+    }
+    const pixels = data.length / 4;
+    return total / pixels < 70 && dark / pixels > 0.55;
+  } catch {
+    return false;
+  }
 }
 
 type MobilePromoSlide = {

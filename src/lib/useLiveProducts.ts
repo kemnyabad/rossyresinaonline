@@ -53,9 +53,7 @@ export function useLiveProducts(initialProducts: ProductProps[] = [], refreshMs 
       if (document.visibilityState === "visible") refresh();
     };
 
-    if (!hasInitialProducts) {
-      refresh();
-    }
+    refresh();
     schedule();
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", onVisible);
