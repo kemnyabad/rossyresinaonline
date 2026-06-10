@@ -12,6 +12,8 @@ import Image from "next/image";
 import {
   ChatBubbleLeftRightIcon,
   CheckBadgeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   QuestionMarkCircleIcon,
   ShoppingCartIcon,
   StarIcon,
@@ -33,6 +35,7 @@ interface Props {
   behavior: PurchaseBehaviorSnapshot;
   ofertasExpress: ExpressOfferItem[];
   marketplaceProducts: any[];
+  promotionSeed: string;
 }
 
 type ExpressOfferItem = {
@@ -47,7 +50,36 @@ type ExpressOfferItem = {
   stock?: number;
 };
 
-export default function Home({ productData, behavior, ofertasExpress, marketplaceProducts }: Props) {
+function promotionKey(item: ProductProps | ExpressOfferItem) {
+  if ("nombre" in item) return String(item.id || item.nombre || "");
+  return String(item.code || item._id || item.title || "");
+}
+
+function hashPromotionValue(value: string) {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function shufflePromotionItems<T extends ProductProps | ExpressOfferItem>(items: T[], seed: string): T[] {
+  return [...items].sort((a, b) => {
+    const scoreA = hashPromotionValue(`${seed}:${promotionKey(a)}`);
+    const scoreB = hashPromotionValue(`${seed}:${promotionKey(b)}`);
+    if (scoreA !== scoreB) return scoreA - scoreB;
+    return promotionKey(a).localeCompare(promotionKey(b));
+  });
+}
+
+function rotatePromotionItems<T extends ProductProps | ExpressOfferItem>(items: T[], seed: string): T[] {
+  if (items.length <= 1) return items;
+  const offset = hashPromotionValue(seed) % items.length;
+  return [...items.slice(offset), ...items.slice(0, offset)];
+}
+
+export default function Home({ productData, behavior, ofertasExpress, marketplaceProducts, promotionSeed }: Props) {
   const pageTitle = "Rossy Resina | Resina epóxica, moldes y pigmentos en Perú";
   const pageDesc =
     "Compra resina epóxica, moldes de silicona, pigmentos y accesorios. Envío a todo Perú y atención por WhatsApp.";
@@ -143,7 +175,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
     return keys.map((k) => productByLookup.get(String(k))).filter(Boolean) as ProductProps[];
   }, [behavior?.topProductKeys, productByLookup]);
 
-  const offerProducts = useMemo(() => getOfferProducts(allProducts, 10), [allProducts]);
+  const offerProducts = useMemo(() => shufflePromotionItems(getOfferProducts(allProducts, Math.max(allProducts.length, 1)), promotionSeed), [allProducts, promotionSeed]);
 
   const hasBehaviorData = !!behavior?.hasRealData;
   const remateProducts = useMemo(() => {
@@ -257,13 +289,16 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
       items.push({ ...item, badge: item.badge || "EXPRESS" });
     }
 
-    const discountedProducts = allProducts
+    const discountedProducts = shufflePromotionItems(
+      allProducts
       .filter((p) => Number(p.oldPrice || 0) > Number(p.price || 0) && Number(p.price || 0) > 0)
       .sort((a, b) => {
         const da = Number(a.oldPrice || 0) - Number(a.price || 0);
         const db = Number(b.oldPrice || 0) - Number(b.price || 0);
         return db - da;
-      });
+      }),
+      promotionSeed
+    );
 
     for (const product of discountedProducts) {
       const productKey = String(product.code || product._id || "").trim();
@@ -283,8 +318,8 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
       });
     }
 
-    return items;
-  }, [allProducts, ofertasExpress]);
+    return rotatePromotionItems(items, promotionSeed);
+  }, [allProducts, ofertasExpress, promotionSeed]);
 
   return (
     <>
@@ -621,6 +656,18 @@ function ExpressOfferGroup({
   tone: "relampago" | "liquidacion";
 }) {
   const titleClass = tone === "relampago" ? "text-amazon_light" : "text-amazon_blue";
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const canSlide = items.length > 6;
+  const scrollOffers = (direction: "left" | "right") => {
+    const node = carouselRef.current;
+    if (!node) return;
+    const card = node.querySelector<HTMLElement>("[data-express-offer-card]");
+    const scrollAmount = card ? card.offsetWidth + 16 : 320;
+    node.scrollTo({
+      left: direction === "left" ? node.scrollLeft - scrollAmount * 2 : node.scrollLeft + scrollAmount * 2,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <section className="min-w-0 bg-white">
@@ -656,8 +703,33 @@ function ExpressOfferGroup({
           </span>
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {items.slice(0, 6).map((item) => {
+      <div className="relative">
+        {canSlide && (
+          <>
+            <button
+              type="button"
+              onClick={() => scrollOffers("left")}
+              className="absolute left-0 top-[38%] z-10 hidden h-10 w-10 -translate-x-3 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-800 shadow-[0_8px_20px_rgba(17,24,39,0.14)] transition hover:border-amazon_blue hover:text-amazon_blue md:flex"
+              aria-label="Deslizar ofertas hacia atrás"
+            >
+              <ChevronLeftIcon className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollOffers("right")}
+              className="absolute right-0 top-[38%] z-10 hidden h-10 min-w-10 translate-x-3 items-center justify-center gap-1 rounded-full border border-gray-200 bg-white px-3 text-sm font-bold text-gray-800 shadow-[0_8px_20px_rgba(17,24,39,0.14)] transition hover:border-amazon_blue hover:text-amazon_blue md:flex"
+              aria-label="Deslizar y ver más ofertas"
+            >
+              <span>Deslizar</span>
+              <ChevronRightIcon className="h-5 w-5" />
+            </button>
+          </>
+        )}
+        <div
+          ref={carouselRef}
+          className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2"
+        >
+        {items.map((item) => {
               const price = Number(item.price || 0);
               const oldPrice = Number(item.oldPrice || 0);
               const hasPrice = price > 0;
@@ -702,15 +774,28 @@ function ExpressOfferGroup({
                 </>
               );
               return item.href ? (
-                <Link key={item.id} href={item.href} className={cardClass}>
+                <Link key={item.id} href={item.href} className={`${cardClass} w-[calc((100%_-_0.75rem)/2)] shrink-0 snap-start sm:w-[calc((100%_-_1.5rem)/3)] lg:w-[calc((100%_-_3.75rem)/6)]`} data-express-offer-card="true">
                   {content}
                 </Link>
               ) : (
-                <div key={item.id} className={cardClass}>
+                <div key={item.id} className={`${cardClass} w-[calc((100%_-_0.75rem)/2)] shrink-0 snap-start sm:w-[calc((100%_-_1.5rem)/3)] lg:w-[calc((100%_-_3.75rem)/6)]`} data-express-offer-card="true">
                   {content}
                 </div>
               );
             })}
+        </div>
+        {canSlide && (
+          <div className="mt-2 flex justify-center md:hidden">
+            <button
+              type="button"
+              onClick={() => scrollOffers("right")}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-amazon_blue bg-white px-5 text-sm font-bold text-amazon_blue"
+            >
+              Deslizar ofertas
+              <ChevronRightIcon className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -829,6 +914,7 @@ function MobilePromoSlider({
 }
 
 export const getServerSideProps = async () => {
+  const promotionSeed = String(Date.now());
   try {
     const productData = await getAllProducts();
     const [behavior, marketplaceProducts] = await Promise.all([
@@ -847,6 +933,7 @@ export const getServerSideProps = async () => {
         behavior,
         ofertasExpress: JSON.parse(JSON.stringify(ofertasExpress)),
         marketplaceProducts: JSON.parse(JSON.stringify(marketplaceProducts)),
+        promotionSeed,
       },
     };
   } catch (e) {
@@ -861,6 +948,7 @@ export const getServerSideProps = async () => {
         } as PurchaseBehaviorSnapshot,
         ofertasExpress: [],
         marketplaceProducts: [],
+        promotionSeed,
       },
     };
   }
