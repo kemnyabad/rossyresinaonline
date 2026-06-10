@@ -172,7 +172,8 @@ const mainImagePreview = useMemo(() => {
       return;
     }
 
-    // Siempre enviar TODAS las imágenes y SIEMPRE preservar existentes
+    // En edición, la galería enviada debe ser la fuente exacta de verdad.
+    // Si una imagen fue quitada en pantalla, no debe volver a mezclarse desde BD.
     const payload = {
       _id: form._id || form.id,
       code: form.code,
@@ -189,7 +190,7 @@ const mainImagePreview = useMemo(() => {
       isNew: form.isNew,
       images: images,
       image: String(form.image || images[0] || "").trim(),
-      preserveExistingImages: true,
+      preserveExistingImages: false,
     };
 
     try {
