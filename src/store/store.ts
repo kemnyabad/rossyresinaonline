@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import nextReducer from "./nextSlice";
+import { getBundleLineTotal } from "@/lib/bundlePromo";
 import { trackAddToCart } from "@/lib/metaPixel";
 import {
   persistStore,
@@ -36,7 +37,7 @@ export const store = configureStore({
         trackAddToCart({
           contentName: String(item.title || ""),
           contentId: String(item.productId || item._id || ""),
-          value: Number(item.price || 0) * Math.max(1, Number(item.quantity || 1)),
+          value: getBundleLineTotal(item),
           quantity: Number(item.quantity || 1),
         });
       }

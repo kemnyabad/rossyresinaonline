@@ -14,6 +14,8 @@ export interface ProductProps {
   isNew: boolean;
   oldPrice?: number;
   price: number;
+  bundleQuantity?: number;
+  bundlePrice?: number;
   title: string;
   _id: number | string;
   variants?: Array<{
@@ -44,6 +46,8 @@ export interface StoreProduct {
   isNew: boolean;
   oldPrice?: number;
   price: number;
+  bundleQuantity?: number;
+  bundlePrice?: number;
   title: string;
   _id: number | string;
   quantity: number;

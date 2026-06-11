@@ -18,6 +18,8 @@ const productBaseSelect = {
   image: true,
   price: true,
   oldPrice: true,
+  bundleQuantity: true,
+  bundlePrice: true,
   isNew: true,
   stock: true,
 };
@@ -53,6 +55,16 @@ const normalizeStock = (value: any): number => {
   const n = Number(value);
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.floor(n));
+};
+
+const normalizeBundleQuantity = (value: any): number | null => {
+  const n = Math.floor(Number(value || 0));
+  return Number.isFinite(n) && n >= 2 ? n : null;
+};
+
+const normalizeBundlePrice = (value: any): number | null => {
+  const n = Number(value || 0);
+  return Number.isFinite(n) && n > 0 ? Number(n.toFixed(2)) : null;
 };
 
 const sanitizeBarcode = (value: any): string | null => {
@@ -174,6 +186,8 @@ const toLegacyProduct = (p: any) => ({
   isNew: Boolean(p.isNew),
   oldPrice: p.oldPrice != null ? Number(p.oldPrice) : undefined,
   price: Number(p.price || 0),
+  bundleQuantity: p.bundleQuantity != null ? Number(p.bundleQuantity) : undefined,
+  bundlePrice: p.bundlePrice != null ? Number(p.bundlePrice) : undefined,
   images: normalizeImages(p?.images),
 });
 
@@ -188,11 +202,13 @@ const toDbData = (body: any) => {
   const image = pickMainImage(body?.image, gallery);
   const price = Number(body?.price || 0);
   const oldPrice = body?.oldPrice != null && body.oldPrice !== "" ? Number(body.oldPrice) : null;
+  const bundleQuantity = normalizeBundleQuantity(body?.bundleQuantity);
+  const bundlePrice = normalizeBundlePrice(body?.bundlePrice);
   const isNew = Boolean(body?.isNew);
   const stock = normalizeStock(body?.stock);
   const barcode = sanitizeBarcode(body?.barcode);
   const sku = fixMojibakeText(String(body?.sku || "").trim()) || null;
-  return { legacyId, code, barcode, sku, title, description, brand, category, image, images: gallery, price, oldPrice, isNew, stock };
+  return { legacyId, code, barcode, sku, title, description, brand, category, image, images: gallery, price, oldPrice, bundleQuantity, bundlePrice, isNew, stock };
 };
 
 const isTooManyClientsError = (error: any): boolean =>

@@ -17,6 +17,7 @@ import { trackViewContent } from "@/lib/metaPixel";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
 import { getPresentationTotalPrice } from "@/lib/productPricing";
+import { getBundlePromoLabel } from "@/lib/bundlePromo";
 import {
   ArrowLeftIcon,
   ChevronRightIcon,
@@ -156,6 +157,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
     ? Math.max(1, Math.round((((activeOldPriceValue || 0) - activePrice) / (activeOldPriceValue || 1)) * 100))
     : 0;
   const displayProductTitle = formatProductTitle(product?.title || product?.code || "Producto");
+  const bundlePromoLabel = !selectedVariant ? getBundlePromoLabel(product || {}) : "";
 
   useEffect(() => {
     const productId = String(product?._id || "").trim();
@@ -273,6 +275,8 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
         isNew: product.isNew,
         oldPrice: activeOldPriceValue ?? undefined,
         price: activePrice,
+        bundleQuantity: !selectedVariant ? product.bundleQuantity : undefined,
+        bundlePrice: !selectedVariant ? product.bundlePrice : undefined,
         title: variantLabel ? `${product.title} - ${variantLabel}` : product.title,
         quantity,
       })
@@ -691,6 +695,11 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               {hasActiveDiscount ? (
                 <div className="mt-2 inline-flex rounded border border-orange-300 px-2 py-0.5 text-sm font-black italic text-orange-500">
                   {activeDiscountPercent}% DE DESCUENTO
+                </div>
+              ) : null}
+              {bundlePromoLabel ? (
+                <div className="mt-2 inline-flex rounded-md border border-lime-300 bg-[#f01891] px-3 py-1 text-base font-black italic text-white shadow-sm">
+                  {bundlePromoLabel}
                 </div>
               ) : null}
             </div>

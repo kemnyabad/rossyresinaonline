@@ -8,6 +8,7 @@ import { addToCart } from "@/store/nextSlice";
 import Link from "next/link";
 import FormattedPrice from "./FormattedPrice";
 import { formatProductTitle } from "@/lib/textFormat";
+import { getBundlePromoLabel } from "@/lib/bundlePromo";
 import {
   fetchProductStats,
   normalizeImageUrl,
@@ -60,10 +61,12 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
     isNew: boolean,
     oldPrice: number | undefined,
     price: number,
-    title: string
+    title: string,
+    bundleQuantity?: number,
+    bundlePrice?: number
   ) => ({
     pathname: productSlug(code, _id),
-    query: { _id, brand, category, description, image, isNew, oldPrice, price, title },
+    query: { _id, brand, category, description, image, isNew, oldPrice, price, title, bundleQuantity, bundlePrice },
   });
 
   const showAddedFeedback = (id: string | number) => {
@@ -82,13 +85,14 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   return (
     <div ref={ref} className={`grid w-full items-stretch px-1 md:px-0 ${gridClass}`}>
       {(Array.isArray(productData) ? productData : []).map(
-        ({ _id, code, title, brand, category, description, image, images, isNew, oldPrice, price }: ProductProps) => {
+        ({ _id, code, title, brand, category, description, image, images, isNew, oldPrice, price, bundleQuantity, bundlePrice }: ProductProps) => {
           const itemStats = stats[String(_id)] || { salesCount: 0, avgRating: 0, reviewCount: 0 };
           const wasAdded = Boolean(addedMap[String(_id)]);
           const hasDiscount = typeof oldPrice === "number" && oldPrice > price;
           const displayTitle = formatProductTitle(title || "Producto");
           const displayImage = pickDisplayImage(image, images);
-          const href = toProductHref(code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title);
+          const href = toProductHref(code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title, bundleQuantity, bundlePrice);
+          const bundlePromoLabel = getBundlePromoLabel({ bundleQuantity, bundlePrice });
           const hasSales = itemStats.salesCount > 0;
           const hasReviews = itemStats.reviewCount > 0;
           return (
@@ -124,6 +128,11 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                       </span>
                     )}
                   </div>
+                  {bundlePromoLabel && (
+                    <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-10 rounded-md border border-lime-300 bg-[#f01891] px-2 py-1 text-center text-sm font-black italic text-white shadow-sm md:text-lg">
+                      {bundlePromoLabel}
+                    </div>
+                  )}
                 </div>
               </Link>
 
@@ -152,7 +161,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                     <button
                       type="button"
                       onClick={() => {
-                        dispatch(addToCart({ _id, brand, category, description, image: displayImage, isNew, oldPrice, price, title, quantity: 1 }));
+                        dispatch(addToCart({ _id, brand, category, description, image: displayImage, isNew, oldPrice, price, bundleQuantity, bundlePrice, title, quantity: 1 }));
                         trackProductCartAdd(_id, 1);
                         showAddedFeedback(_id);
                       }}
@@ -189,7 +198,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
 
                 <button
                   onClick={() => {
-                    dispatch(addToCart({ _id, brand, category, description, image: displayImage, isNew, oldPrice, price, title, quantity: 1 }));
+                    dispatch(addToCart({ _id, brand, category, description, image: displayImage, isNew, oldPrice, price, bundleQuantity, bundlePrice, title, quantity: 1 }));
                     trackProductCartAdd(_id, 1);
                     showAddedFeedback(_id);
                   }}

@@ -83,6 +83,8 @@ model Product {
   images      Json?
   price       Decimal  @db.Decimal(10, 2)
   oldPrice    Decimal? @db.Decimal(10, 2)
+  bundleQuantity Int?
+  bundlePrice Decimal? @db.Decimal(10, 2)
   isNew       Boolean  @default(false)
   stock       Int      @default(0)
   createdAt   DateTime @default(now())

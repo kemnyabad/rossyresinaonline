@@ -106,6 +106,8 @@ export default function NewProduct() {
     isNew: true,
     oldPrice: 0,
     price: 0,
+    bundleQuantity: "",
+    bundlePrice: "",
   });
 
   const [files, setFiles] = useState<File[]>([]);
@@ -314,6 +316,40 @@ export default function NewProduct() {
                 onChange={(e) => setForm({ ...form, stock: sanitizeStockInput(e.target.value) })}
               />
             </label>
+
+            <div className="grid gap-3 rounded-lg border border-pink-100 bg-pink-50/60 p-3 md:col-span-2 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <p className="text-sm font-semibold text-gray-800">Promo por cantidad</p>
+                <p className="text-xs text-gray-500">Ejemplo: cantidad 4 y precio 10 mostrara 4X10 SOLES.</p>
+              </div>
+              <label className="grid gap-1">
+                <span className="text-sm text-gray-700">Cantidad</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="rounded-md border border-gray-300 px-3 py-2"
+                  value={form.bundleQuantity ?? ""}
+                  onChange={(e) => setForm({ ...form, bundleQuantity: sanitizeStockInput(e.target.value) })}
+                  placeholder="4"
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className="text-sm text-gray-700">Precio total promo</span>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500">S/</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
+                    className="w-full rounded-md border border-gray-300 py-2 pl-10 pr-3"
+                    value={form.bundlePrice ?? ""}
+                    onChange={(e) => setForm({ ...form, bundlePrice: sanitizePriceInput(e.target.value) })}
+                    placeholder="10"
+                  />
+                </div>
+              </label>
+            </div>
 
             <label className="grid gap-1">
               <span className="text-sm text-gray-700">Codigo de barras</span>

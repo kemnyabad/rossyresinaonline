@@ -24,6 +24,7 @@ import { useEffect, useState, useRef, useMemo, useDeferredValue } from "react";
 import { addUser, removeUser } from "@/store/nextSlice";
 import SearchProducts from "../SearchProducts";
 import FormattedPrice from "@/components/FormattedPrice";
+import { getBundleLineTotal } from "@/lib/bundlePromo";
 import { FcGoogle } from "react-icons/fc";
 import { MdOutlineEmail } from "react-icons/md";
 
@@ -233,7 +234,7 @@ const Header = () => {
   }, [mobileSearchOpen]);
 
   const cartSubtotal = isHydrated
-    ? productData.reduce((s: number, p: any) => s + p.price * p.quantity, 0)
+    ? productData.reduce((s: number, p: any) => s + getBundleLineTotal(p), 0)
     : 0;
   const cartCount = isHydrated && productData ? productData.length : 0;
   const isAuthenticated = Boolean(sessionUser?.email || storeUser?.email);

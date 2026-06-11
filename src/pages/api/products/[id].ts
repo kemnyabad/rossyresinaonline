@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: true, legacyId: true, code: true, barcode: true, sku: true,
         title: true, description: true, brand: true, category: true,
         image: true, images: true, price: true, oldPrice: true,
+        bundleQuantity: true, bundlePrice: true,
         isNew: true, stock: true,
       },
     });
@@ -44,6 +45,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       images: normalizeImages(product.images),
       price: Number(product.price || 0),
       oldPrice: product.oldPrice != null ? Number(product.oldPrice) : 0,
+      bundleQuantity: product.bundleQuantity != null ? Number(product.bundleQuantity) : "",
+      bundlePrice: product.bundlePrice != null ? Number(product.bundlePrice) : "",
       isNew: Boolean(product.isNew),
     });
   } catch {

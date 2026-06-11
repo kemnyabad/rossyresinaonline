@@ -1,6 +1,7 @@
 import Image from "next/image";
 import React from "react";
 import FormattedPrice from "./FormattedPrice";
+import { getBundleLineTotal, getBundlePromoLabel } from "@/lib/bundlePromo";
 import { LuMinus, LuPlus } from "react-icons/lu";
 import { useDispatch } from "react-redux";
 import {
@@ -16,6 +17,8 @@ interface Item {
   isNew: boolean;
   oldPrice?: number;
   price: number;
+  bundleQuantity?: number;
+  bundlePrice?: number;
   title: string;
   _id: number | string;
   cartKey?: string;
@@ -29,6 +32,7 @@ interface cartProductsProps {
 const CartProduct = ({ item }: cartProductsProps) => {
   const dispatch = useDispatch();
   const hasDiscount = typeof item.oldPrice === "number" && item.oldPrice > item.price;
+  const bundlePromoLabel = getBundlePromoLabel(item);
   const discountPercent = hasDiscount
     ? Math.round(((Number(item.oldPrice) - Number(item.price)) / Number(item.oldPrice)) * 100)
     : 0;
@@ -70,6 +74,11 @@ const CartProduct = ({ item }: cartProductsProps) => {
           <p className="mt-1 text-xl font-black text-amazon_blue md:hidden">
             <FormattedPrice amount={item.price} />
           </p>
+          {bundlePromoLabel ? (
+            <p className="mt-1 inline-flex rounded bg-[#f01891] px-2 py-0.5 text-xs font-black italic text-white">
+              {bundlePromoLabel}
+            </p>
+          ) : null}
           <div className="mt-4 hidden space-y-0.5 text-sm text-gray-800 md:block md:text-[15px]">
             <p>Origen: Perú</p>
             <p>Envío: Envío coordinado por WhatsApp</p>
@@ -129,8 +138,13 @@ const CartProduct = ({ item }: cartProductsProps) => {
             )}
           </div>
           <p className="mt-3 text-base text-gray-950">x {item.quantity} unidad{item.quantity > 1 ? "es" : ""}</p>
+          {bundlePromoLabel ? (
+            <p className="mt-1 inline-flex rounded bg-[#f01891] px-2 py-0.5 text-xs font-black italic text-white">
+              {bundlePromoLabel}
+            </p>
+          ) : null}
           <p className="mt-1 text-xl font-black text-gray-950">
-            <FormattedPrice amount={item.price * item.quantity} />
+            <FormattedPrice amount={getBundleLineTotal(item)} />
           </p>
         </div>
       </div>

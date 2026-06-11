@@ -16,6 +16,7 @@ import {
   shippingCarrierLabel,
 } from "@/lib/orderMeta";
 import { getPresentationTotalPrice } from "@/lib/productPricing";
+import { getBundleLineTotal } from "@/lib/bundlePromo";
 import { isInternalTestOrder } from "@/lib/testOrders";
 import { isLocalOrderSimulationRequest, readOrdersStore, upsertLocalOrder } from "@/lib/orderStore";
 
@@ -47,6 +48,8 @@ type IncomingItem = {
   description?: string;
   brand?: string;
   sku?: string;
+  bundleQuantity?: number;
+  bundlePrice?: number;
 };
 
 const toLegacyStatus = (status: DbOrderStatus): string => {
@@ -170,6 +173,8 @@ const createLocalSimulatedOrder = async (body: any) => {
       brand: true,
       sku: true,
       price: true,
+      bundleQuantity: true,
+      bundlePrice: true,
       variants: { select: { id: true, label: true, price: true, oldPrice: true } },
     },
   });
@@ -190,7 +195,13 @@ const createLocalSimulatedOrder = async (body: any) => {
     const product: any = candidateKeys.map((k) => byId.get(k) || byLegacyId.get(k) || byCode.get(k)).find(Boolean);
     if (!product) throw new Error(`Producto no encontrado: ${candidateKeys[0] || "sin-id"}`);
     const price = Number(product.price);
-    computedTotal += price * qty;
+    const lineTotal = getBundleLineTotal({
+      price,
+      quantity: qty,
+      bundleQuantity: product.bundleQuantity,
+      bundlePrice: product.bundlePrice,
+    });
+    computedTotal += lineTotal;
     normalizedItems.push({
       productId: product.id,
       legacyId: product.legacyId || null,
@@ -204,6 +215,9 @@ const createLocalSimulatedOrder = async (body: any) => {
       variantLabel: "",
       quantity: qty,
       price,
+      bundleQuantity: product.bundleQuantity != null ? Number(product.bundleQuantity) : undefined,
+      bundlePrice: product.bundlePrice != null ? Number(product.bundlePrice) : undefined,
+      lineTotal,
     });
   }
 
@@ -440,6 +454,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           brand: true,
           sku: true,
           price: true,
+          bundleQuantity: true,
+          bundlePrice: true,
           variants: {
             select: {
               id: true,
@@ -467,6 +483,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         variantLabel: string;
         quantity: number;
         price: number;
+        bundleQuantity?: number;
+        bundlePrice?: number;
+        lineTotal?: number;
       }> = [];
 
       let computedTotal = 0;
@@ -492,7 +511,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const price = variant
           ? getPresentationTotalPrice(variant.price, variant.label)
           : Number(product.price);
-        computedTotal += price * qty;
+        const lineTotal = variant
+          ? Number((price * qty).toFixed(2))
+          : getBundleLineTotal({
+              price,
+              quantity: qty,
+              bundleQuantity: product.bundleQuantity,
+              bundlePrice: product.bundlePrice,
+            });
+        computedTotal += lineTotal;
         normalizedItems.push({
           productId: product.id,
           legacyId: product.legacyId || null,
@@ -506,6 +533,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           variantLabel: variant?.label || "",
           quantity: qty,
           price,
+          bundleQuantity: !variant && product.bundleQuantity != null ? Number(product.bundleQuantity) : undefined,
+          bundlePrice: !variant && product.bundlePrice != null ? Number(product.bundlePrice) : undefined,
+          lineTotal,
         });
       }
 

@@ -14,6 +14,14 @@ export const ProductSchema = z.object({
   stock: z.union([z.number(), z.string()])
     .transform((v) => Math.floor(Number(v) || 0))
     .pipe(z.number().int().nonnegative("El stock no puede ser negativo")),
+  bundleQuantity: z.union([z.number(), z.string()])
+    .transform((v) => Math.floor(Number(v) || 0))
+    .pipe(z.number().int().nonnegative())
+    .optional(),
+  bundlePrice: z.union([z.number(), z.string()])
+    .transform((v) => Number(v || 0))
+    .pipe(z.number().nonnegative())
+    .optional(),
   images: z.union([
     cloudinaryUrl,
     z.array(cloudinaryUrl),

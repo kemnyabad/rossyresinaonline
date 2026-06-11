@@ -9,6 +9,7 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import FormattedPrice from "@/components/FormattedPrice";
 import Products from "@/components/Products";
+import { getBundleLineTotal } from "@/lib/bundlePromo";
 import {
   Bars3Icon,
   ChevronLeftIcon,
@@ -25,10 +26,7 @@ const CartPage = () => {
   const [mounted, setMounted] = useState(false);
 
   const totals = useMemo(() => {
-    const subtotal = cartItems.reduce(
-      (sum: number, p: StoreProduct) => sum + p.price * p.quantity,
-      0
-    );
+    const subtotal = cartItems.reduce((sum: number, p: StoreProduct) => sum + getBundleLineTotal(p), 0);
     const discount = 0;
     const total = subtotal;
     return { subtotal, discount, total };
@@ -89,6 +87,8 @@ const CartPage = () => {
       isNew: item.isNew,
       oldPrice: item.oldPrice,
       price: item.price,
+      bundleQuantity: item.bundleQuantity,
+      bundlePrice: item.bundlePrice,
     }));
     return Array.from(new Map(fallback.map((p) => [String(p._id), p])).values()).slice(0, 8);
   }, [recs, cartItems]);

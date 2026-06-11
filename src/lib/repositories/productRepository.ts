@@ -12,6 +12,8 @@ const productBaseSelect = {
   image: true,
   price: true,
   oldPrice: true,
+  bundleQuantity: true,
+  bundlePrice: true,
   isNew: true,
   stock: true,
   variants: {
@@ -72,6 +74,8 @@ const toLegacyFromDb = (p: any): ProductProps => ({
   isNew: Boolean(p?.isNew),
   oldPrice: p?.oldPrice != null ? Number(p.oldPrice) : undefined,
   price: Number(p?.price || 0),
+  bundleQuantity: p?.bundleQuantity != null ? Number(p.bundleQuantity) : undefined,
+  bundlePrice: p?.bundlePrice != null ? Number(p.bundlePrice) : undefined,
   variants: Array.isArray(p?.variants)
     ? p.variants.map((v: any) => ({
         id: v.id,

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import FormattedPrice from "@/components/FormattedPrice";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
+import { getBundleLineTotal } from "@/lib/bundlePromo";
 import { resetCart } from "@/store/nextSlice";
 import { useSession } from "next-auth/react";
 import { Bars3Icon, ChevronLeftIcon } from "@heroicons/react/24/outline";
@@ -222,7 +223,7 @@ export default function CheckoutPage() {
   }, []);
 
   const totals = useMemo(() => {
-    const subtotal = productData.reduce((sum: number, p: StoreProduct) => sum + p.price * p.quantity, 0);
+    const subtotal = productData.reduce((sum: number, p: StoreProduct) => sum + getBundleLineTotal(p), 0);
     const discount = 0;
     const total = subtotal;
     return { subtotal, discount, total };
@@ -762,7 +763,7 @@ export default function CheckoutPage() {
                       <p className="font-medium">{p.title}</p>
                       <p className="text-sm text-gray-600">Cantidad: {p.quantity}</p>
                     </div>
-                    <div className="font-semibold"><FormattedPrice amount={p.price * p.quantity} /></div>
+                    <div className="font-semibold"><FormattedPrice amount={getBundleLineTotal(p)} /></div>
                   </li>
                 ))}
               </ul>
