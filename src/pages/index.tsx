@@ -332,6 +332,22 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
 
   const mobileOfferItems = useMemo(() => expressOfferItems.slice(0, 8), [expressOfferItems]);
   const desktopOfferItems = useMemo(() => expressOfferItems.slice(0, 8), [expressOfferItems]);
+  const promoSubtitle = useMemo(() => {
+    try {
+      if (!ofertasExpress || ofertasExpress.length === 0) return "";
+      const dates = ofertasExpress
+        .map((o: any) => o.endDate)
+        .filter(Boolean)
+        .map((d: any) => new Date(d))
+        .filter((dt: Date) => !Number.isNaN(dt.getTime()));
+      if (dates.length === 0) return "";
+      dates.sort((a: Date, b: Date) => a.getTime() - b.getTime());
+      const d = dates[0];
+      return `Termina : ${d.toLocaleString("es-PE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`;
+    } catch {
+      return "";
+    }
+  }, [ofertasExpress]);
 
   return (
     <>
@@ -400,9 +416,11 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
           />
 
           <section className="mt-3">
-            <div className="mb-3 px-4">
-              <MobileMegaPromoBanner subtitle="Termina : 15 jun., 21:59" />
-            </div>
+            {expressOfferItems.length > 0 && (
+              <div className="mb-3 px-4">
+                <MobileMegaPromoBanner subtitle={promoSubtitle} />
+              </div>
+            )}
             <div
               ref={visitedCarouselRef}
               className="no-scrollbar flex gap-3 overflow-x-auto px-4 pb-2"
@@ -543,7 +561,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
         {expressOfferItems.length > 0 && (
         <section className="hidden md:block px-4 md:px-6">
           <ExpressOfferGroup
-            subtitle="Termina : 15 jun., 21:59 (GMT-5)"
+            subtitle={promoSubtitle}
             items={expressOfferItems}
             tone="relampago"
           />
