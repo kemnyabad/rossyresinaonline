@@ -541,7 +541,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
 
         {/* Ofertas Express */}
         {expressOfferItems.length > 0 && (
-        <section className="px-4 md:px-6">
+        <section className="hidden md:block px-4 md:px-6">
           <ExpressOfferGroup
             subtitle="Termina : 15 jun., 21:59 (GMT-5)"
             items={expressOfferItems}
@@ -978,15 +978,24 @@ export const getServerSideProps = async () => {
     ]);
     const prisma = (await import("@/lib/prisma")).default as any;
     const ofertasExpress = await prisma.ofertaExpress.findMany({
-      where: { activo: true },
+      where: {},
       orderBy: [{ orden: "asc" }, { createdAt: "desc" }],
-      select: { id: true, nombre: true, imagen: true, productoId: true, precio: true, activo: true, orden: true },
+      select: { id: true, nombre: true, imagen: true, productoId: true, precio: true, activo: true, orden: true, startDate: true, endDate: true },
+    });
+
+    // Filtrar ofertas para que sólo se devuelvan las activas y dentro del periodo configurado
+    const now = new Date();
+    const ofertasActivas = ofertasExpress.filter((o: any) => {
+      if (!o.activo) return false;
+      if (o.startDate && new Date(o.startDate) > now) return false;
+      if (o.endDate && new Date(o.endDate) < now) return false;
+      return true;
     });
     return {
       props: {
         productData,
         behavior,
-        ofertasExpress: JSON.parse(JSON.stringify(ofertasExpress)),
+        ofertasExpress: JSON.parse(JSON.stringify(ofertasActivas)),
         marketplaceProducts: JSON.parse(JSON.stringify(marketplaceProducts)),
         promotionSeed,
       },

@@ -12,9 +12,11 @@ interface OfertaExpress {
   orden: number;
   productoId?: string | null;
   precio?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
-const emptyForm = { nombre: "", imagen: "", activo: true, orden: 0, productoId: "", precio: "" };
+const emptyForm = { nombre: "", imagen: "", activo: true, orden: 0, productoId: "", precio: "", startDate: "", endDate: "" };
 
 export default function AdminOfertasExpress() {
   const [items, setItems] = useState<OfertaExpress[]>([]);
@@ -104,7 +106,16 @@ export default function AdminOfertasExpress() {
 
   const startEdit = (item: OfertaExpress) => {
     setEditId(item.id);
-    setForm({ nombre: item.nombre, imagen: item.imagen, activo: item.activo, orden: item.orden, productoId: item.productoId || "", precio: item.precio ?? "" });
+    setForm({
+      nombre: item.nombre,
+      imagen: item.imagen,
+      activo: item.activo,
+      orden: item.orden,
+      productoId: item.productoId || "",
+      precio: item.precio ?? "",
+      startDate: item.startDate || "",
+      endDate: item.endDate || "",
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -150,6 +161,26 @@ export default function AdminOfertasExpress() {
               value={form.precio || ""}
               onChange={(e) => setForm({ ...form, precio: e.target.value })}
               placeholder="Ej: 25.00"
+            />
+          </label>
+
+          <label className="grid gap-1">
+            <span className="text-sm text-gray-700">Fecha inicio (visible desde)</span>
+            <input
+              type="datetime-local"
+              className="rounded-md border border-gray-300 px-3 py-2"
+              value={form.startDate || ""}
+              onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+            />
+          </label>
+
+          <label className="grid gap-1">
+            <span className="text-sm text-gray-700">Fecha fin (visible hasta)</span>
+            <input
+              type="datetime-local"
+              className="rounded-md border border-gray-300 px-3 py-2"
+              value={form.endDate || ""}
+              onChange={(e) => setForm({ ...form, endDate: e.target.value })}
             />
           </label>
 
