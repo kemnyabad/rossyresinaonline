@@ -253,6 +253,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
     { label: "Escuela", href: "/escuela" },
   ];
   const lightningProducts = (offerProducts.length > 0 ? offerProducts : allProducts).slice(0, 8);
+  const desktopOfferProducts = useMemo(() => (offerProducts.length > 0 ? lightningProducts.slice(0, 8) : []), [offerProducts, lightningProducts]);
   const mobileGridProducts = interestProducts.slice(0, 20);
   const mobilePromoSlides = useMemo(
     () => [
@@ -546,6 +547,24 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
           </StoreWithAdsLayout>
 
           <div className="mx-auto max-w-screen-2xl space-y-6 px-4 pb-10 md:px-6">
+            {desktopOfferProducts.length > 0 && (
+              <section className="hidden md:block">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Ofertas destacadas</h2>
+                    <p className="text-sm text-gray-600">Productos con descuento y promociones activas.</p>
+                  </div>
+                  <Link href="/productos?ofertas=1" className="text-sm font-semibold text-amazon_blue hover:underline">
+                    Ver todas
+                  </Link>
+                </div>
+                <Products
+                  productData={desktopOfferProducts}
+                  gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-3 md:gap-5"
+                />
+              </section>
+            )}
+
             {/* Productos por intereses */}
             <section>
               <div className="relative mb-4 flex items-center justify-center">
