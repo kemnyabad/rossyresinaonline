@@ -46,6 +46,8 @@ type ExpressOfferItem = {
   badge?: string;
   price?: number;
   oldPrice?: number;
+  precio?: number;
+  productoId?: string;
   soldCount?: number;
   stock?: number;
 };
@@ -252,8 +254,6 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
     { label: "Accesorios", href: "/categoria/accesorios" },
     { label: "Escuela", href: "/escuela" },
   ];
-  const lightningProducts = (offerProducts.length > 0 ? offerProducts : allProducts).slice(0, 8);
-  const desktopOfferProducts = useMemo(() => (offerProducts.length > 0 ? lightningProducts.slice(0, 8) : []), [offerProducts, lightningProducts]);
   const mobileGridProducts = interestProducts.slice(0, 20);
   const mobilePromoSlides = useMemo(
     () => [
@@ -287,40 +287,51 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
       const key = `manual:${String(item.id || item.nombre).trim().toLowerCase()}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      items.push({ ...item, badge: item.badge || "EXPRESS" });
+      items.push({
+        ...item,
+        badge: item.badge || "EXPRESS",
+        price: item.price ?? (typeof item.precio === "number" ? item.precio : undefined),
+        oldPrice: item.oldPrice ?? undefined,
+        href: item.href || (item.productoId ? `/${String(item.productoId)}` : "/productos?ofertas=1"),
+      });
     }
 
-    const discountedProducts = shufflePromotionItems(
-      allProducts
-      .filter((p) => Number(p.oldPrice || 0) > Number(p.price || 0) && Number(p.price || 0) > 0)
-      .sort((a, b) => {
-        const da = Number(a.oldPrice || 0) - Number(a.price || 0);
-        const db = Number(b.oldPrice || 0) - Number(b.price || 0);
-        return db - da;
-      }),
-      promotionSeed
-    );
+    if (items.length === 0) {
+      const discountedProducts = shufflePromotionItems(
+        allProducts
+          .filter((p) => Number(p.oldPrice || 0) > Number(p.price || 0) && Number(p.price || 0) > 0)
+          .sort((a, b) => {
+            const da = Number(a.oldPrice || 0) - Number(a.price || 0);
+            const db = Number(b.oldPrice || 0) - Number(b.price || 0);
+            return db - da;
+          }),
+        promotionSeed
+      );
 
-    for (const product of discountedProducts) {
-      const productKey = String(product.code || product._id || "").trim();
-      const key = `product:${productKey || product.title}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      items.push({
-        id: `product-${productKey || product._id}`,
-        nombre: product.title || "Producto en oferta",
-        imagen: normalizeMobileImage(product.image),
-        href: `/${encodeURIComponent(productKey || String(product._id))}`,
-        badge: getDiscountLabel(product),
-        price: Number(product.price || 0),
-        oldPrice: Number(product.oldPrice || 0),
-        soldCount: 46,
-        stock: Number(product.stock || 0),
-      });
+      for (const product of discountedProducts) {
+        const productKey = String(product.code || product._id || "").trim();
+        const key = `product:${productKey || product.title}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        items.push({
+          id: `product-${productKey || product._id}`,
+          nombre: product.title || "Producto en oferta",
+          imagen: normalizeMobileImage(product.image),
+          href: `/${encodeURIComponent(productKey || String(product._id))}`,
+          badge: getDiscountLabel(product),
+          price: Number(product.price || 0),
+          oldPrice: Number(product.oldPrice || 0),
+          soldCount: 46,
+          stock: Number(product.stock || 0),
+        });
+      }
     }
 
     return rotatePromotionItems(items, promotionSeed);
   }, [allProducts, ofertasExpress, promotionSeed]);
+
+  const mobileOfferItems = useMemo(() => expressOfferItems.slice(0, 8), [expressOfferItems]);
+  const desktopOfferItems = useMemo(() => expressOfferItems.slice(0, 8), [expressOfferItems]);
 
   return (
     <>
@@ -397,28 +408,33 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
               className="no-scrollbar flex gap-3 overflow-x-auto px-4 pb-2"
               style={{ scrollBehavior: "smooth" }}
             >
-              {lightningProducts.map((p) => (
-                <Link key={`flash-${p._id}`} href={{ pathname: `/${p.code || p._id}`, query: { oferta: "mega" } }} className="w-[132px] shrink-0">
-                  <div className="relative h-[132px] overflow-hidden rounded-sm bg-gray-100">
-                    <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover" />
-                    <div className="absolute bottom-0 left-0 text-[9px] font-black leading-3 shadow-[0_-2px_8px_rgba(17,24,39,0.18)]">
-                      <span className="flex h-7 w-[54px] items-center justify-center rounded-tr-xl bg-yellow-300 px-1 text-center text-[10px] leading-[10px] text-amazon_blue">
-                        Mega<br />Oferta
-                      </span>
+              {mobileOfferItems.map((item) => {
+                const price = Number(item.price || 0);
+                const oldPrice = Number(item.oldPrice || 0);
+                const hasDiscount = oldPrice > price && price > 0;
+                return (
+                  <Link key={`flash-${item.id}`} href={item.href || "/productos?ofertas=1"} className="w-[132px] shrink-0">
+                    <div className="relative h-[132px] overflow-hidden rounded-sm bg-gray-100">
+                      <Image src={normalizeMobileImage(item.imagen)} alt={item.nombre || "Oferta"} fill className="object-cover" />
+                      <div className="absolute bottom-0 left-0 text-[9px] font-black leading-3 shadow-[0_-2px_8px_rgba(17,24,39,0.18)]">
+                        <span className="flex h-7 w-[54px] items-center justify-center rounded-tr-xl bg-yellow-300 px-1 text-center text-[10px] leading-[10px] text-amazon_blue">
+                          {item.badge || "Oferta"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <p className="mt-1 line-clamp-1 text-xs font-bold text-gray-900">{getDiscountLabel(p)} especial</p>
-                  <div className="flex items-center gap-1">
-                    <p className="min-w-0 flex-1 text-[15px] font-bold leading-tight text-amazon_blue">
-                      S/ {Number(p.price || 0).toFixed(2)}
-                      <span className="ml-1 text-xs font-medium text-gray-500">c/u</span>
-                    </p>
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amazon_blue bg-white text-amazon_blue">
-                      <ShoppingCartIcon className="h-3.5 w-3.5" />
-                    </span>
-                  </div>
-                </Link>
-              ))}
+                    <p className="mt-1 line-clamp-1 text-xs font-bold text-gray-900">{item.nombre || "Oferta express"}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="min-w-0 flex-1 text-[15px] font-bold leading-tight text-amazon_blue">
+                        S/ {price.toFixed(2)}
+                        <span className="ml-1 text-xs font-medium text-gray-500">c/u</span>
+                      </p>
+                      {hasDiscount && (
+                        <span className="text-[10px] text-gray-400 line-through">S/ {oldPrice.toFixed(2)}</span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </section>
 
@@ -547,21 +563,41 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
           </StoreWithAdsLayout>
 
           <div className="mx-auto max-w-screen-2xl space-y-6 px-4 pb-10 md:px-6">
-            {desktopOfferProducts.length > 0 && (
+            {desktopOfferItems.length > 0 && (
               <section className="hidden md:block">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">Ofertas destacadas</h2>
-                    <p className="text-sm text-gray-600">Productos con descuento y promociones activas.</p>
+                    <p className="text-sm text-gray-600">Administradas desde el panel de ofertas express.</p>
                   </div>
                   <Link href="/productos?ofertas=1" className="text-sm font-semibold text-amazon_blue hover:underline">
                     Ver todas
                   </Link>
                 </div>
-                <Products
-                  productData={desktopOfferProducts}
-                  gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-3 md:gap-5"
-                />
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  {desktopOfferItems.map((item) => {
+                    const price = Number(item.price || 0);
+                    const oldPrice = Number(item.oldPrice || 0);
+                    const hasDiscount = oldPrice > price && price > 0;
+                    return (
+                      <Link key={`desktop-offer-${item.id}`} href={item.href || "/productos?ofertas=1"} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        <div className="relative aspect-[4/5] bg-gray-100">
+                          <Image src={normalizeMobileImage(item.imagen)} alt={item.nombre || "Oferta"} fill className="object-cover" />
+                          <span className="absolute left-2 top-2 rounded-full bg-amazon_blue px-2.5 py-1 text-[10px] font-semibold uppercase text-white">
+                            {item.badge || "Oferta"}
+                          </span>
+                        </div>
+                        <div className="p-3">
+                          <p className="line-clamp-2 text-sm font-semibold text-gray-900">{item.nombre || "Oferta express"}</p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-base font-black text-amazon_blue">S/ {price.toFixed(2)}</span>
+                            {hasDiscount && <span className="text-xs text-gray-400 line-through">S/ {oldPrice.toFixed(2)}</span>}
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
               </section>
             )}
 
@@ -944,7 +980,7 @@ export const getServerSideProps = async () => {
     const ofertasExpress = await prisma.ofertaExpress.findMany({
       where: { activo: true },
       orderBy: [{ orden: "asc" }, { createdAt: "desc" }],
-      select: { id: true, nombre: true, imagen: true },
+      select: { id: true, nombre: true, imagen: true, productoId: true, precio: true, activo: true, orden: true },
     });
     return {
       props: {
