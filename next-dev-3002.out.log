@@ -1,5 +1,22 @@
+
+> next_rossyresina_yt@0.1.0 dev
+> next dev -p 3002
+
 - ready started server on 0.0.0.0:3002, url: http://localhost:3002
-- [36minfo[39m Loaded env from c:\Users\rossy\Documents\rossyresinaonline\.env
-- [35mevent[39m compiled client and server successfully in 1681 ms (18 modules)
+- [36minfo[39m Loaded env from C:\Users\rossy\Documents\rossyresinaonline\.env.local
+- [36minfo[39m Loaded env from C:\Users\rossy\Documents\rossyresinaonline\.env
+- [35mevent[39m compiled client and server successfully in 524 ms (18 modules)
 - [36mwait[39m compiling...
-- [35mevent[39m compiled client and server successfully in 454 ms (18 modules)
+- [35mevent[39m compiled client and server successfully in 237 ms (18 modules)
+- [36mwait[39m compiling /src/middleware (client and server)...
+- [35mevent[39m compiled successfully in 183 ms (44 modules)
+- [36mwait[39m compiling...
+- [35mevent[39m compiled successfully in 92 ms (44 modules)
+- [36mwait[39m compiling...
+- [35mevent[39m compiled successfully in 45 ms (44 modules)
+- [36mwait[39m compiling /api/admin/auth/session (client and server)...
+- [35mevent[39m compiled successfully in 676 ms (117 modules)
+- [36mwait[39m compiling...
+- [35mevent[39m compiled successfully in 238 ms (117 modules)
+- [36mwait[39m compiling...
+- [35mevent[39m compiled successfully in 109 ms (117 modules)

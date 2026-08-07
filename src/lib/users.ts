@@ -1,5 +1,7 @@
 // Use require to avoid type resolution issues during production builds.
 const bcrypt = require("bcryptjs");
+import { promises as fs } from "fs";
+import path from "path";
 import prisma from "./prisma";
 
 export type UserRole = "ADMIN" | "EDITOR" | "SELLER" | "CUSTOMER";
@@ -13,13 +15,49 @@ export interface AppUser {
   createdAt: string | Date;
 }
 
+const USERS_BACKUP_PATH = path.join(process.cwd(), "src", "data", "users.json");
+
+const normalizeRole = (role: unknown): UserRole => {
+  if (role === "ADMIN" || role === "EDITOR" || role === "SELLER" || role === "CUSTOMER") return role;
+  return "CUSTOMER";
+};
+
+async function getBackupUsers(): Promise<AppUser[]> {
+  try {
+    const raw = await fs.readFile(USERS_BACKUP_PATH, "utf8");
+    const users = JSON.parse(raw);
+    if (!Array.isArray(users)) return [];
+    return users.map((user) => ({
+      id: String(user.id || user.email || ""),
+      name: String(user.name || "Usuario"),
+      email: String(user.email || "").trim().toLowerCase(),
+      passwordHash: String(user.passwordHash || ""),
+      role: normalizeRole(user.role),
+      createdAt: String(user.createdAt || new Date().toISOString()),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function getUsers(): Promise<AppUser[]> {
-  return prisma.user.findMany({ orderBy: { createdAt: "desc" } });
+  try {
+    const users = await prisma.user.findMany({ orderBy: { createdAt: "desc" } });
+    return users.map((user) => ({ ...user, role: normalizeRole(user.role) } as AppUser));
+  } catch {
+    return getBackupUsers();
+  }
 }
 
 export async function findUserByEmail(email: string): Promise<AppUser | null> {
   const needle = email.trim().toLowerCase();
-  return prisma.user.findUnique({ where: { email: needle } });
+  try {
+    const user = await prisma.user.findUnique({ where: { email: needle } });
+    return user ? ({ ...user, role: normalizeRole(user.role) } as AppUser) : null;
+  } catch {
+    const users = await getBackupUsers();
+    return users.find((user) => user.email === needle) || null;
+  }
 }
 
 export async function createUser(input: {

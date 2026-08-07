@@ -6,12 +6,7 @@ import {
   UserIcon,
   ShoppingCartIcon,
   ShoppingBagIcon,
-  Bars3Icon,
   XMarkIcon,
-  TagIcon,
-  SparklesIcon,
-  GiftIcon,
-  BookOpenIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
@@ -130,18 +125,6 @@ const Header = () => {
     setMobileSearchOpen(false);
   };
 
-  const mobileMenuItems = [
-    { href: "/categoria/moldes-de-silicona", label: "Moldes", icon: SparklesIcon },
-    { href: "/categoria/pigmentos", label: "Pigmentos", icon: SparklesIcon },
-    { href: "/categoria/accesorios", label: "Accesorios", icon: TagIcon },
-    { href: "/categoria/resina", label: "Resina", icon: SparklesIcon },
-    { href: "/categoria/creaciones", label: "Creaciones", icon: SparklesIcon },
-    { href: "/mercado-creativo", label: "Mercado Creativo", icon: ShoppingBagIcon },
-    { href: "/escuela", label: "Escuela", icon: BookOpenIcon },
-    { href: "/productos?ofertas=1", label: "Ofertas", icon: GiftIcon },
-    { href: "/rifas", label: "Rifas", icon: GiftIcon },
-    { href: "/track-orders", label: "Mis pedidos", icon: ShoppingCartIcon },
-  ];
   const searchCategories = useMemo(() => [
     { label: "Categorías", value: "", href: "/search", terms: [] as string[] },
     { label: "Moldes", value: "moldes", href: "/categoria/moldes-de-silicona", terms: ["molde", "silicona"] },
@@ -334,11 +317,11 @@ const Header = () => {
             aria-label="Cerrar menú"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div id="mobile-store-menu" className="absolute left-3 right-3 top-[76px] mx-auto max-w-md overflow-hidden rounded-lg border border-gray-200 bg-white shadow-[0_14px_34px_rgba(17,24,39,0.14)]">
+          <div id="mobile-store-menu" className="absolute left-3 right-3 top-[76px] mx-auto max-h-[calc(100vh-92px)] max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-[0_14px_34px_rgba(17,24,39,0.14)]">
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
               <div>
                 <p className="text-sm font-bold text-slate-900">Menú de tienda</p>
-                <p className="text-xs text-slate-500">Categorías y accesos rápidos</p>
+                <p className="text-xs text-slate-500">Categorías principales y accesos claros</p>
               </div>
               <button
                 type="button"
@@ -374,28 +357,6 @@ const Header = () => {
                   </span>
                 </Link>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2 p-3">
-              {mobileMenuItems.map((item) => {
-                const Icon = item.icon;
-                const active = router.asPath.split("?")[0] === item.href.split("?")[0];
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex min-h-[52px] items-center gap-3 rounded-xl border px-3 py-2 text-left transition-colors ${
-                      active
-                        ? "border-amazon_blue bg-white text-amazon_blue"
-                        : "border-gray-100 bg-white text-slate-700 hover:border-gray-300 hover:bg-gray-50"
-                    }`}
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amazon_blue text-amazon_blue">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <span className="text-sm font-semibold leading-tight">{item.label}</span>
-                  </Link>
-                );
-              })}
             </div>
           </div>
         </div>
