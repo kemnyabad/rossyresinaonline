@@ -332,10 +332,30 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
 
   const mobileOfferItems = useMemo(() => expressOfferItems.slice(0, 8), [expressOfferItems]);
   const desktopOfferItems = useMemo(() => expressOfferItems.slice(0, 8), [expressOfferItems]);
+
+  // adminOfferItems: only offers explicitly created in admin (no fallback)
+  const adminOfferItems = useMemo(() => {
+    if (!ofertasExpress || ofertasExpress.length === 0) return [] as ExpressOfferItem[];
+    return (ofertasExpress as any[])
+      .map((item) => ({
+        id: item.id,
+        nombre: item.nombre,
+        imagen: item.imagen,
+        href: item.productoId ? `/${String(item.productoId)}` : "/productos?ofertas=1",
+        badge: "EXPRESS",
+        price: item.precio ?? item.price ?? 0,
+        oldPrice: item.oldPrice ?? undefined,
+        productoId: item.productoId,
+      }))
+      .slice(0, 8);
+  }, [ofertasExpress]);
+
+  const hasAdminOffers = adminOfferItems.length > 0;
+
   const promoSubtitle = useMemo(() => {
     try {
-      if (!ofertasExpress || ofertasExpress.length === 0) return "";
-      const dates = ofertasExpress
+      if (!hasAdminOffers) return "";
+      const dates = (ofertasExpress || [])
         .map((o: any) => o.endDate)
         .filter(Boolean)
         .map((d: any) => new Date(d))
@@ -347,7 +367,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
     } catch {
       return "";
     }
-  }, [ofertasExpress]);
+  }, [ofertasExpress, hasAdminOffers]);
 
   return (
     <>
@@ -416,7 +436,7 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
           />
 
           <section className="mt-3">
-            {expressOfferItems.length > 0 && (
+            {hasAdminOffers && (
               <div className="mb-3 px-4">
                 <MobileMegaPromoBanner subtitle={promoSubtitle} />
               </div>
@@ -558,11 +578,11 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
         )}
 
         {/* Ofertas Express */}
-        {expressOfferItems.length > 0 && (
+        {hasAdminOffers && (
         <section className="hidden md:block px-4 md:px-6">
           <ExpressOfferGroup
             subtitle={promoSubtitle}
-            items={expressOfferItems}
+            items={adminOfferItems}
             tone="relampago"
           />
         </section>
