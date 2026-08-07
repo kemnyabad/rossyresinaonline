@@ -33,7 +33,6 @@ import { useLiveProducts } from "@/lib/useLiveProducts";
 interface Props {
   productData: ProductProps[];
   behavior: PurchaseBehaviorSnapshot;
-  ofertasExpress: ExpressOfferItem[];
   marketplaceProducts: any[];
   promotionSeed: string;
 }
@@ -81,7 +80,7 @@ function rotatePromotionItems<T extends ProductProps | ExpressOfferItem>(items: 
   return [...items.slice(offset), ...items.slice(0, offset)];
 }
 
-export default function Home({ productData, behavior, ofertasExpress, marketplaceProducts, promotionSeed }: Props) {
+export default function Home({ productData, behavior, marketplaceProducts, promotionSeed }: Props) {
   const pageTitle = "Rossy Resina | Resina epóxica, moldes y pigmentos en Perú";
   const pageDesc =
     "Compra resina epóxica, moldes de silicona, pigmentos y accesorios. Envío a todo Perú y atención por WhatsApp.";
@@ -279,95 +278,6 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
     if (oldPrice > price && oldPrice > 0) return `-${Math.round(((oldPrice - price) / oldPrice) * 100)}%`;
     return "Oferta";
   };
-  const expressOfferItems = useMemo(() => {
-    const seen = new Set<string>();
-    const items: ExpressOfferItem[] = [];
-
-    for (const item of ofertasExpress || []) {
-      const key = `manual:${String(item.id || item.nombre).trim().toLowerCase()}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      items.push({
-        ...item,
-        badge: item.badge || "EXPRESS",
-        price: item.price ?? (typeof item.precio === "number" ? item.precio : undefined),
-        oldPrice: item.oldPrice ?? undefined,
-        href: item.href || (item.productoId ? `/${String(item.productoId)}` : "/productos?ofertas=1"),
-      });
-    }
-
-    if (items.length === 0) {
-      const discountedProducts = shufflePromotionItems(
-        allProducts
-          .filter((p) => Number(p.oldPrice || 0) > Number(p.price || 0) && Number(p.price || 0) > 0)
-          .sort((a, b) => {
-            const da = Number(a.oldPrice || 0) - Number(a.price || 0);
-            const db = Number(b.oldPrice || 0) - Number(b.price || 0);
-            return db - da;
-          }),
-        promotionSeed
-      );
-
-      for (const product of discountedProducts) {
-        const productKey = String(product.code || product._id || "").trim();
-        const key = `product:${productKey || product.title}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        items.push({
-          id: `product-${productKey || product._id}`,
-          nombre: product.title || "Producto en oferta",
-          imagen: normalizeMobileImage(product.image),
-          href: `/${encodeURIComponent(productKey || String(product._id))}`,
-          badge: getDiscountLabel(product),
-          price: Number(product.price || 0),
-          oldPrice: Number(product.oldPrice || 0),
-          soldCount: 46,
-          stock: Number(product.stock || 0),
-        });
-      }
-    }
-
-    return rotatePromotionItems(items, promotionSeed);
-  }, [allProducts, ofertasExpress, promotionSeed]);
-
-  const mobileOfferItems = useMemo(() => expressOfferItems.slice(0, 8), [expressOfferItems]);
-  const desktopOfferItems = useMemo(() => expressOfferItems.slice(0, 8), [expressOfferItems]);
-
-  // adminOfferItems: only offers explicitly created in admin (no fallback)
-  const adminOfferItems = useMemo(() => {
-    if (!ofertasExpress || ofertasExpress.length === 0) return [] as ExpressOfferItem[];
-    return (ofertasExpress as any[])
-      .map((item) => ({
-        id: item.id,
-        nombre: item.nombre,
-        imagen: item.imagen,
-        href: item.productoId ? `/${String(item.productoId)}` : "/productos?ofertas=1",
-        badge: "EXPRESS",
-        price: item.precio ?? item.price ?? 0,
-        oldPrice: item.oldPrice ?? undefined,
-        productoId: item.productoId,
-      }))
-      .slice(0, 8);
-  }, [ofertasExpress]);
-
-  const hasAdminOffers = adminOfferItems.length > 0;
-
-  const promoSubtitle = useMemo(() => {
-    try {
-      if (!hasAdminOffers) return "";
-      const dates = (ofertasExpress || [])
-        .map((o: any) => o.endDate)
-        .filter(Boolean)
-        .map((d: any) => new Date(d))
-        .filter((dt: Date) => !Number.isNaN(dt.getTime()));
-      if (dates.length === 0) return "";
-      dates.sort((a: Date, b: Date) => a.getTime() - b.getTime());
-      const d = dates[0];
-      return `Termina : ${d.toLocaleString("es-PE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`;
-    } catch {
-      return "";
-    }
-  }, [ofertasExpress, hasAdminOffers]);
 
   return (
     <>
@@ -435,46 +345,6 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
             onSelect={setMobilePromoIndex}
           />
 
-          <section className="mt-3">
-            {hasAdminOffers && (
-              <div className="mb-3 px-4">
-                <MobileMegaPromoBanner subtitle={promoSubtitle} />
-              </div>
-            )}
-            <div
-              ref={visitedCarouselRef}
-              className="no-scrollbar flex gap-3 overflow-x-auto px-4 pb-2"
-              style={{ scrollBehavior: "smooth" }}
-            >
-              {mobileOfferItems.map((item) => {
-                const price = Number(item.price || 0);
-                const oldPrice = Number(item.oldPrice || 0);
-                const hasDiscount = oldPrice > price && price > 0;
-                return (
-                  <Link key={`flash-${item.id}`} href={item.href || "/productos?ofertas=1"} className="w-[132px] shrink-0">
-                    <div className="relative h-[132px] overflow-hidden rounded-sm bg-gray-100">
-                      <Image src={normalizeMobileImage(item.imagen)} alt={item.nombre || "Oferta"} fill className="object-cover" />
-                      <div className="absolute bottom-0 left-0 text-[9px] font-black leading-3 shadow-[0_-2px_8px_rgba(17,24,39,0.18)]">
-                        <span className="flex h-7 w-[54px] items-center justify-center rounded-tr-xl bg-yellow-300 px-1 text-center text-[10px] leading-[10px] text-amazon_blue">
-                          {item.badge || "Oferta"}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="mt-1 line-clamp-1 text-xs font-bold text-gray-900">{item.nombre || "Oferta express"}</p>
-                    <div className="flex items-center gap-1">
-                      <p className="min-w-0 flex-1 text-[15px] font-bold leading-tight text-amazon_blue">
-                        S/ {price.toFixed(2)}
-                        <span className="ml-1 text-xs font-medium text-gray-500">c/u</span>
-                      </p>
-                      {hasDiscount && (
-                        <span className="text-[10px] text-gray-400 line-through">S/ {oldPrice.toFixed(2)}</span>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
 
           <section className="columns-2 gap-1.5 bg-gray-100 p-1.5">
             {mobileGridProducts.map((p) => (
@@ -531,7 +401,6 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
                   remateProducts={remateProducts}
                   topVisitedProducts={topVisitedForHero}
                   moldProducts={moldProductsForHero}
-                  ofertasExpress={ofertasExpress}
                 />
               </section>
         {hasBehaviorData && realTopProducts.length > 0 && (
@@ -577,17 +446,6 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
         </section>
         )}
 
-        {/* Ofertas Express */}
-        {hasAdminOffers && (
-        <section className="hidden md:block px-4 md:px-6">
-          <ExpressOfferGroup
-            subtitle={promoSubtitle}
-            items={adminOfferItems}
-            tone="relampago"
-          />
-        </section>
-        )}
-
         {marketplaceProducts.length > 0 && (
           <section className="px-4 md:px-6">
             <MarketplaceProductGrid
@@ -601,44 +459,6 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
           </StoreWithAdsLayout>
 
           <div className="mx-auto max-w-screen-2xl space-y-6 px-4 pb-10 md:px-6">
-            {desktopOfferItems.length > 0 && (
-              <section className="hidden md:block">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">Ofertas destacadas</h2>
-                    <p className="text-sm text-gray-600">Administradas desde el panel de ofertas express.</p>
-                  </div>
-                  <Link href="/productos?ofertas=1" className="text-sm font-semibold text-amazon_blue hover:underline">
-                    Ver todas
-                  </Link>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  {desktopOfferItems.map((item) => {
-                    const price = Number(item.price || 0);
-                    const oldPrice = Number(item.oldPrice || 0);
-                    const hasDiscount = oldPrice > price && price > 0;
-                    return (
-                      <Link key={`desktop-offer-${item.id}`} href={item.href || "/productos?ofertas=1"} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                        <div className="relative aspect-[4/5] bg-gray-100">
-                          <Image src={normalizeMobileImage(item.imagen)} alt={item.nombre || "Oferta"} fill className="object-cover" />
-                          <span className="absolute left-2 top-2 rounded-full bg-amazon_blue px-2.5 py-1 text-[10px] font-semibold uppercase text-white">
-                            {item.badge || "Oferta"}
-                          </span>
-                        </div>
-                        <div className="p-3">
-                          <p className="line-clamp-2 text-sm font-semibold text-gray-900">{item.nombre || "Oferta express"}</p>
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className="text-base font-black text-amazon_blue">S/ {price.toFixed(2)}</span>
-                            {hasDiscount && <span className="text-xs text-gray-400 line-through">S/ {oldPrice.toFixed(2)}</span>}
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
             {/* Productos por intereses */}
             <section>
               <div className="relative mb-4 flex items-center justify-center">
@@ -708,96 +528,6 @@ export default function Home({ productData, behavior, ofertasExpress, marketplac
   );
 }
 
-function MobileMegaPromoBanner({ subtitle }: { subtitle: string }) {
-  return (
-    <Link
-      href="/productos?ofertas=1"
-      className="relative flex min-h-[44px] w-full items-center overflow-hidden bg-white px-2 text-gray-950"
-    >
-      <span className="relative grid min-w-0 flex-1 grid-cols-[32px_auto_minmax(0,1fr)] items-center gap-2 pr-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-300 text-[#056b35] shadow-[0_2px_0_rgba(0,0,0,0.18)]">
-          <FaClock className="h-4 w-4" aria-hidden="true" />
-        </span>
-        <span className="shrink-0 text-[15px] font-black leading-none text-[#056b35]">Mega Promo</span>
-        <span className="relative h-5 min-w-0 overflow-hidden text-left text-[12px] font-black leading-5 text-gray-950">
-          <span className="rr-promo-slide-up flex flex-col">
-            <span className="h-5 whitespace-nowrap">{subtitle}</span>
-            <span className="h-5 whitespace-nowrap">No te pierdas super ofertas express</span>
-          </span>
-        </span>
-      </span>
-      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center">
-        <Image
-          src="/reloj-promo.png"
-          alt="Tiempo limitado"
-          width={32}
-          height={32}
-          className="rr-promo-clock h-8 w-8 object-contain drop-shadow-[0_2px_2px_rgba(0,0,0,0.18)]"
-        />
-      </span>
-    </Link>
-  );
-}
-
-function ExpressOfferGroup({
-  subtitle,
-  items,
-  tone,
-}: {
-  subtitle: string;
-  items: ExpressOfferItem[];
-  tone: "relampago" | "liquidacion";
-}) {
-  const titleClass = tone === "relampago" ? "text-amazon_light" : "text-amazon_blue";
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const canSlide = items.length > 6;
-  const scrollOffers = (direction: "left" | "right") => {
-    const node = carouselRef.current;
-    if (!node) return;
-    const card = node.querySelector<HTMLElement>("[data-express-offer-card]");
-    const scrollAmount = card ? card.offsetWidth + 16 : 320;
-    node.scrollTo({
-      left: direction === "left" ? node.scrollLeft - scrollAmount * 2 : node.scrollLeft + scrollAmount * 2,
-      behavior: "smooth",
-    });
-  };
-
-  return (
-    <section className="min-w-0 bg-white">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <Link
-          href="/productos?ofertas=1"
-          className="relative flex min-h-[58px] w-full items-center justify-center overflow-visible rounded-lg bg-[#056b35] px-3 text-center text-sm font-black text-white shadow-[0_6px_14px_rgba(17,24,39,0.16),inset_0_1px_0_rgba(255,255,255,0.22)] ring-1 ring-emerald-900/20 transition hover:brightness-95 md:px-7 md:text-base"
-        >
-          <span className="absolute inset-0 rounded-lg bg-[radial-gradient(circle_at_18%_45%,rgba(255,255,255,0.16),transparent_18%),linear-gradient(180deg,rgba(255,255,255,0.10),transparent_45%)]" />
-          <span className="relative flex min-w-0 items-center justify-center gap-3 md:gap-6">
-            <span className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full bg-yellow-300 text-[#056b35] shadow-[0_2px_0_rgba(0,0,0,0.18)] sm:flex">
-              <FaClock className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span className="shrink-0 text-lg font-black text-yellow-300 md:text-2xl">Mega Promo</span>
-            <span className="relative h-6 min-w-0 overflow-hidden text-left text-white md:h-7">
-              <span className="rr-promo-slide-up flex flex-col">
-                <span className="h-6 whitespace-nowrap md:h-7">{subtitle}</span>
-                <span className="h-6 whitespace-nowrap md:h-7">No te pierdas super ofertas express</span>
-              </span>
-            </span>
-            <span className="hidden shrink-0 rounded-full bg-amazon_blue px-4 py-2 text-sm font-black uppercase text-white shadow-[4px_4px_0_rgba(92,18,65,0.85)] ring-1 ring-white/20 md:inline-flex">
-              ¡Tiempo limitado!
-            </span>
-            <span className="hidden h-16 w-16 shrink-0 items-center justify-center md:flex">
-              <Image
-                src="/reloj-promo.png"
-                alt="Tiempo limitado"
-                width={64}
-                height={64}
-                className="rr-promo-clock h-16 w-16 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
-              />
-            </span>
-          </span>
-        </Link>
-      </div>
-      <div className="relative">
-        {canSlide && (
           <>
             <button
               type="button"
