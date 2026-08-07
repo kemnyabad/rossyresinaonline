@@ -744,26 +744,10 @@ export const getServerSideProps = async () => {
       getPurchaseBehaviorSnapshot(8, 12, 180),
       getPublishedMarketplaceProducts(),
     ]);
-    const prisma = (await import("@/lib/prisma")).default as any;
-    const ofertasExpress = await prisma.ofertaExpress.findMany({
-      where: {},
-      orderBy: [{ orden: "asc" }, { createdAt: "desc" }],
-      select: { id: true, nombre: true, imagen: true, productoId: true, precio: true, activo: true, orden: true, startDate: true, endDate: true },
-    });
-
-    // Filtrar ofertas para que sólo se devuelvan las activas y dentro del periodo configurado
-    const now = new Date();
-    const ofertasActivas = ofertasExpress.filter((o: any) => {
-      if (!o.activo) return false;
-      if (o.startDate && new Date(o.startDate) > now) return false;
-      if (o.endDate && new Date(o.endDate) < now) return false;
-      return true;
-    });
     return {
       props: {
         productData,
         behavior,
-        ofertasExpress: JSON.parse(JSON.stringify(ofertasActivas)),
         marketplaceProducts: JSON.parse(JSON.stringify(marketplaceProducts)),
         promotionSeed,
       },
