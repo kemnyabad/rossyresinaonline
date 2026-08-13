@@ -21,7 +21,7 @@ import {
   getOfferProducts,
 } from "@/lib/services/productCatalogService";
 import { getAllProducts } from "@/lib/repositories/productRepository";
-import { getPublishedMarketplaceProducts } from "@/lib/marketplaceDb";
+import { getPublishedMarketplaceProducts } from "@/lib/marketplaceStore";
 import { getPurchaseBehaviorSnapshot, type PurchaseBehaviorSnapshot } from "@/lib/repositories/categoryInsightsRepository";
 import { absoluteImageUrl, absoluteUrl, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { useLiveProducts } from "@/lib/useLiveProducts";

@@ -17,7 +17,7 @@ import MarketplaceProductGrid from "@/components/MarketplaceProductGrid";
 import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import type { ProductProps } from "../../../type";
 import { getAllProducts } from "@/lib/repositories/productRepository";
-import { getPublishedMarketplaceProducts } from "@/lib/marketplaceDb";
+import { getPublishedMarketplaceProducts } from "@/lib/marketplaceStore";
 import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
 import { useLiveProducts } from "@/lib/useLiveProducts";
 

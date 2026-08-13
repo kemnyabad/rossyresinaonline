@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import prisma from "@/lib/prisma";
 
 export type MarketplaceRole = "CUSTOMER" | "SELLER" | "ADMIN";
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -71,105 +70,115 @@ export type MarketplaceEvent = {
   createdAt: string;
 };
 
-type MarketplaceData = {
-  applications: SellerApplication[];
-  shops: SellerShop[];
-  products: SellerProduct[];
-  events: MarketplaceEvent[];
-};
-
-const filePath = path.join(process.cwd(), "data", "marketplace.json");
-
-const now = () => new Date().toISOString();
+const db = prisma as any;
 
 export const slugify = (value: string) =>
   String(value || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 70) || "tienda";
 
-const makeId = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+const normalizeEmail = (value: unknown) => String(value || "").trim().toLowerCase();
 
-const emptyData = (): MarketplaceData => ({
-  applications: [],
-  shops: [],
-  products: [],
-  events: [],
+const toIso = (value: unknown) => (value instanceof Date ? value.toISOString() : String(value || ""));
+
+const mapApplication = (row: any): SellerApplication => ({
+  id: row.id,
+  userEmail: row.userEmail,
+  fullName: row.fullName,
+  sellerDni: row.sellerDni || "",
+  businessName: row.businessName,
+  city: row.city,
+  whatsapp: row.whatsapp,
+  productType: row.productType,
+  description: row.description,
+  socialUrl: row.socialUrl,
+  logoUrl: row.logoUrl,
+  dniFrontUrl: row.dniFrontUrl || "",
+  dniBackUrl: row.dniBackUrl || "",
+  businessPhotoUrl: row.businessPhotoUrl || "",
+  status: row.status,
+  note: row.note,
+  createdAt: toIso(row.createdAt),
+  updatedAt: toIso(row.updatedAt),
 });
 
-const ensureFile = () => {
-  const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, JSON.stringify(emptyData(), null, 2));
-};
+const mapShop = (row: any): SellerShop => ({
+  id: row.id,
+  userEmail: row.userEmail,
+  applicationId: row.applicationId,
+  slug: row.slug,
+  logoUrl: row.logoUrl,
+  commercialName: row.commercialName,
+  city: row.city,
+  description: row.description,
+  whatsapp: row.whatsapp,
+  facebook: row.facebook,
+  instagram: row.instagram,
+  tiktok: row.tiktok,
+  status: row.status,
+  featured: row.featured,
+  createdAt: toIso(row.createdAt),
+  updatedAt: toIso(row.updatedAt),
+});
 
-export function readMarketplace(): MarketplaceData {
-  ensureFile();
-  try {
-    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
-    return { ...emptyData(), ...parsed };
-  } catch {
-    return emptyData();
-  }
-}
+const mapProduct = (row: any): SellerProduct => ({
+  id: row.id,
+  sellerEmail: row.sellerEmail,
+  shopId: row.shopId,
+  slug: row.slug,
+  name: row.name,
+  category: row.category,
+  price: Number(row.price),
+  description: row.description,
+  images: Array.isArray(row.images) ? row.images.map(String).filter(Boolean) : [],
+  status: row.status,
+  featured: row.featured,
+  rejectionReason: row.rejectionReason,
+  createdAt: toIso(row.createdAt),
+  updatedAt: toIso(row.updatedAt),
+});
 
-function writeMarketplace(data: MarketplaceData) {
-  ensureFile();
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
+const mapEvent = (row: any): MarketplaceEvent => ({
+  id: row.id,
+  type: row.type,
+  shopId: row.shopId || undefined,
+  productId: row.productId || undefined,
+  createdAt: toIso(row.createdAt),
+});
 
-const uniqueSlug = (base: string, existing: string[]) => {
+const uniqueSlug = async (base: string, checkTaken: (slug: string) => Promise<boolean>) => {
   const clean = slugify(base);
-  if (!existing.includes(clean)) return clean;
+  if (!(await checkTaken(clean))) return clean;
   let i = 2;
-  while (existing.includes(`${clean}-${i}`)) i += 1;
+  while (await checkTaken(`${clean}-${i}`)) i += 1;
   return `${clean}-${i}`;
 };
 
-export function getSellerContext(email?: string | null) {
-  const userEmail = String(email || "").trim().toLowerCase();
-  const data = readMarketplace();
-  const shop = data.shops.find((item) => item.userEmail === userEmail && item.status === "ACTIVE") || null;
-  const application =
-    data.applications
-      .filter((item) => item.userEmail === userEmail)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] || null;
+export async function getSellerContext(
+  email?: string | null
+): Promise<{ role: MarketplaceRole; application: SellerApplication | null; shop: SellerShop | null }> {
+  const userEmail = normalizeEmail(email);
+  const [shopRow, applicationRow] = await Promise.all([
+    db.sellerShop.findFirst({ where: { userEmail, status: "ACTIVE" } }),
+    db.sellerApplication.findFirst({ where: { userEmail }, orderBy: { createdAt: "desc" } }),
+  ]);
+  const shop = shopRow ? mapShop(shopRow) : null;
+  const application = applicationRow ? mapApplication(applicationRow) : null;
   const role: MarketplaceRole = shop ? "SELLER" : "CUSTOMER";
   return { role, application, shop };
 }
 
-export function createSellerApplication(input: Partial<SellerApplication> & { userEmail: string }) {
-  const data = readMarketplace();
-  const email = String(input.userEmail || "").trim().toLowerCase();
-  const existingPending = data.applications.find((item) => item.userEmail === email && item.status === "PENDING");
-  const timestamp = now();
+export async function createSellerApplication(
+  input: Partial<SellerApplication> & { userEmail: string }
+): Promise<SellerApplication> {
+  const email = normalizeEmail(input.userEmail);
+  const existingPending = await db.sellerApplication.findFirst({ where: { userEmail: email, status: "PENDING" } });
 
-  if (existingPending) {
-    Object.assign(existingPending, {
-      fullName: String(input.fullName || existingPending.fullName || "").trim(),
-      sellerDni: String(input.sellerDni || existingPending.sellerDni || "").trim(),
-      businessName: String(input.businessName || existingPending.businessName || "").trim(),
-      city: String(input.city || existingPending.city || "").trim(),
-      whatsapp: String(input.whatsapp || existingPending.whatsapp || "").trim(),
-      productType: String(input.productType || existingPending.productType || "").trim(),
-      description: String(input.description || existingPending.description || "").trim(),
-      socialUrl: String(input.socialUrl || existingPending.socialUrl || "").trim(),
-      logoUrl: String(input.logoUrl || existingPending.logoUrl || "").trim(),
-      dniFrontUrl: String(input.dniFrontUrl || existingPending.dniFrontUrl || "").trim(),
-      dniBackUrl: String(input.dniBackUrl || existingPending.dniBackUrl || "").trim(),
-      businessPhotoUrl: String(input.businessPhotoUrl || existingPending.businessPhotoUrl || "").trim(),
-      updatedAt: timestamp,
-    });
-    writeMarketplace(data);
-    return existingPending;
-  }
-
-  const application: SellerApplication = {
-    id: makeId("app"),
-    userEmail: email,
+  const fields = {
     fullName: String(input.fullName || "").trim(),
     sellerDni: String(input.sellerDni || "").trim(),
     businessName: String(input.businessName || "").trim(),
@@ -182,169 +191,285 @@ export function createSellerApplication(input: Partial<SellerApplication> & { us
     dniFrontUrl: String(input.dniFrontUrl || "").trim(),
     dniBackUrl: String(input.dniBackUrl || "").trim(),
     businessPhotoUrl: String(input.businessPhotoUrl || "").trim(),
-    status: "PENDING",
-    note: "",
-    createdAt: timestamp,
-    updatedAt: timestamp,
   };
-  data.applications.unshift(application);
-  writeMarketplace(data);
-  return application;
-}
 
-export function decideSellerApplication(id: string, decision: "APPROVED" | "REJECTED", note = "") {
-  const data = readMarketplace();
-  const application = data.applications.find((item) => item.id === id);
-  if (!application) return null;
-  application.status = decision;
-  application.note = String(note || "");
-  application.updatedAt = now();
-
-  let shop = data.shops.find((item) => item.userEmail === application.userEmail) || null;
-  if (decision === "APPROVED" && !shop) {
-    const timestamp = now();
-    shop = {
-      id: makeId("shop"),
-      userEmail: application.userEmail,
-      applicationId: application.id,
-      slug: uniqueSlug(application.businessName, data.shops.map((item) => item.slug)),
-      logoUrl: application.logoUrl,
-      commercialName: application.businessName,
-      city: application.city,
-      description: application.description,
-      whatsapp: application.whatsapp,
-      facebook: "",
-      instagram: application.socialUrl,
-      tiktok: "",
-      status: "ACTIVE",
-      featured: false,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-    data.shops.unshift(shop);
+  if (existingPending) {
+    const updated = await db.sellerApplication.update({
+      where: { id: existingPending.id },
+      data: fields,
+    });
+    return mapApplication(updated);
   }
 
-  writeMarketplace(data);
-  return { application, shop };
-}
-
-export function updateSellerShop(email: string, input: Partial<SellerShop>) {
-  const data = readMarketplace();
-  const shop = data.shops.find((item) => item.userEmail === String(email || "").trim().toLowerCase());
-  if (!shop) return null;
-  Object.assign(shop, {
-    logoUrl: String(input.logoUrl ?? shop.logoUrl),
-    commercialName: String(input.commercialName ?? shop.commercialName),
-    city: String(input.city ?? shop.city),
-    description: String(input.description ?? shop.description),
-    whatsapp: String(input.whatsapp ?? shop.whatsapp),
-    facebook: String(input.facebook ?? shop.facebook),
-    instagram: String(input.instagram ?? shop.instagram),
-    tiktok: String(input.tiktok ?? shop.tiktok),
-    updatedAt: now(),
+  const created = await db.sellerApplication.create({
+    data: { userEmail: email, status: "PENDING", note: "", ...fields },
   });
-  writeMarketplace(data);
-  return shop;
+  return mapApplication(created);
 }
 
-export function setSellerShopStatus(id: string, status: "ACTIVE" | "PAUSED") {
-  const data = readMarketplace();
-  const shop = data.shops.find((item) => item.id === id);
-  if (!shop) return null;
-  shop.status = status;
-  shop.updatedAt = now();
-  writeMarketplace(data);
-  return shop;
-}
+export async function decideSellerApplication(
+  id: string,
+  decision: "APPROVED" | "REJECTED",
+  note = ""
+): Promise<{ application: SellerApplication; shop: SellerShop | null } | null> {
+  const application = await db.sellerApplication.findUnique({ where: { id } });
+  if (!application) return null;
 
-export function createSellerProduct(email: string, input: Partial<SellerProduct>) {
-  const data = readMarketplace();
-  const shop = data.shops.find((item) => item.userEmail === String(email || "").trim().toLowerCase() && item.status === "ACTIVE");
-  if (!shop) return null;
-  const timestamp = now();
-  const product: SellerProduct = {
-    id: makeId("prod"),
-    sellerEmail: shop.userEmail,
-    shopId: shop.id,
-    slug: uniqueSlug(String(input.name || "producto"), data.products.map((item) => item.slug)),
-    name: String(input.name || "").trim(),
-    category: String(input.category || "").trim(),
-    price: Number(input.price || 0),
-    description: String(input.description || "").trim(),
-    images: Array.isArray(input.images) ? input.images.map(String).filter(Boolean) : [],
-    status: "PENDING",
-    featured: false,
-    rejectionReason: "",
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  };
-  data.products.unshift(product);
-  writeMarketplace(data);
-  return product;
-}
-
-export function updateSellerProduct(email: string, id: string, input: Partial<SellerProduct>) {
-  const data = readMarketplace();
-  const product = data.products.find((item) => item.id === id && item.sellerEmail === String(email || "").trim().toLowerCase());
-  if (!product) return null;
-  Object.assign(product, {
-    name: String(input.name ?? product.name),
-    category: String(input.category ?? product.category),
-    price: Number(input.price ?? product.price),
-    description: String(input.description ?? product.description),
-    images: Array.isArray(input.images) ? input.images.map(String).filter(Boolean) : product.images,
-    status: product.status === "PUBLISHED" ? "PENDING" : product.status,
-    updatedAt: now(),
+  const updatedApplication = await db.sellerApplication.update({
+    where: { id },
+    data: { status: decision, note: String(note || "") },
   });
-  writeMarketplace(data);
-  return product;
+
+  let shop = await db.sellerShop.findFirst({ where: { userEmail: application.userEmail } });
+  if (decision === "APPROVED" && !shop) {
+    const slug = await uniqueSlug(application.businessName, async (candidate) => {
+      const existing = await db.sellerShop.findUnique({ where: { slug: candidate } });
+      return Boolean(existing);
+    });
+    shop = await db.sellerShop.create({
+      data: {
+        userEmail: application.userEmail,
+        applicationId: application.id,
+        slug,
+        logoUrl: application.logoUrl,
+        commercialName: application.businessName,
+        city: application.city,
+        description: application.description,
+        whatsapp: application.whatsapp,
+        facebook: "",
+        instagram: application.socialUrl,
+        tiktok: "",
+        status: "ACTIVE",
+        featured: false,
+      },
+    });
+  }
+
+  return { application: mapApplication(updatedApplication), shop: shop ? mapShop(shop) : null };
 }
 
-export function setSellerProductStatus(email: string, id: string, status: MarketplaceProductStatus) {
-  const data = readMarketplace();
-  const product = data.products.find((item) => item.id === id && item.sellerEmail === String(email || "").trim().toLowerCase());
+export async function updateSellerShop(email: string, input: Partial<SellerShop>): Promise<SellerShop | null> {
+  const shop = await db.sellerShop.findFirst({ where: { userEmail: normalizeEmail(email) } });
+  if (!shop) return null;
+  const updated = await db.sellerShop.update({
+    where: { id: shop.id },
+    data: {
+      logoUrl: String(input.logoUrl ?? shop.logoUrl),
+      commercialName: String(input.commercialName ?? shop.commercialName),
+      city: String(input.city ?? shop.city),
+      description: String(input.description ?? shop.description),
+      whatsapp: String(input.whatsapp ?? shop.whatsapp),
+      facebook: String(input.facebook ?? shop.facebook),
+      instagram: String(input.instagram ?? shop.instagram),
+      tiktok: String(input.tiktok ?? shop.tiktok),
+    },
+  });
+  return mapShop(updated);
+}
+
+export async function setSellerShopStatus(id: string, status: "ACTIVE" | "PAUSED"): Promise<SellerShop | null> {
+  const shop = await db.sellerShop.findUnique({ where: { id } });
+  if (!shop) return null;
+  const updated = await db.sellerShop.update({ where: { id }, data: { status } });
+  return mapShop(updated);
+}
+
+export async function createSellerProduct(email: string, input: Partial<SellerProduct>): Promise<SellerProduct | null> {
+  const shop = await db.sellerShop.findFirst({ where: { userEmail: normalizeEmail(email), status: "ACTIVE" } });
+  if (!shop) return null;
+  const images = Array.isArray(input.images) ? input.images.map(String).filter(Boolean) : [];
+  const slug = await uniqueSlug(String(input.name || "producto"), async (candidate) => {
+    const existing = await db.sellerProduct.findUnique({ where: { slug: candidate } });
+    return Boolean(existing);
+  });
+  const created = await db.sellerProduct.create({
+    data: {
+      sellerEmail: shop.userEmail,
+      shopId: shop.id,
+      slug,
+      name: String(input.name || "").trim(),
+      category: String(input.category || "").trim(),
+      price: Number(input.price || 0),
+      description: String(input.description || "").trim(),
+      images,
+      status: "PENDING",
+      featured: false,
+      rejectionReason: "",
+    },
+  });
+  return mapProduct(created);
+}
+
+export async function updateSellerProduct(
+  email: string,
+  id: string,
+  input: Partial<SellerProduct>
+): Promise<SellerProduct | null> {
+  const product = await db.sellerProduct.findFirst({ where: { id, sellerEmail: normalizeEmail(email) } });
   if (!product) return null;
-  product.status = status;
-  product.updatedAt = now();
-  writeMarketplace(data);
-  return product;
+  const updated = await db.sellerProduct.update({
+    where: { id },
+    data: {
+      name: String(input.name ?? product.name),
+      category: String(input.category ?? product.category),
+      price: Number(input.price ?? product.price),
+      description: String(input.description ?? product.description),
+      images: Array.isArray(input.images) ? input.images.map(String).filter(Boolean) : product.images,
+      status: product.status === "PUBLISHED" ? "PENDING" : product.status,
+    },
+  });
+  return mapProduct(updated);
 }
 
-export function deleteSellerProduct(email: string, id: string) {
-  const data = readMarketplace();
-  const initial = data.products.length;
-  data.products = data.products.filter((item) => !(item.id === id && item.sellerEmail === String(email || "").trim().toLowerCase()));
-  writeMarketplace(data);
-  return data.products.length !== initial;
-}
-
-export function moderateProduct(id: string, status: "PUBLISHED" | "REJECTED", rejectionReason = "") {
-  const data = readMarketplace();
-  const product = data.products.find((item) => item.id === id);
+export async function setSellerProductStatus(
+  email: string,
+  id: string,
+  status: MarketplaceProductStatus
+): Promise<SellerProduct | null> {
+  const product = await db.sellerProduct.findFirst({ where: { id, sellerEmail: normalizeEmail(email) } });
   if (!product) return null;
-  product.status = status;
-  product.rejectionReason = status === "REJECTED" ? String(rejectionReason || "") : "";
-  product.updatedAt = now();
-  writeMarketplace(data);
-  return product;
+  const updated = await db.sellerProduct.update({ where: { id }, data: { status } });
+  return mapProduct(updated);
 }
 
-export function recordMarketplaceEvent(input: Omit<MarketplaceEvent, "id" | "createdAt">) {
-  const data = readMarketplace();
-  data.events.unshift({ id: makeId("evt"), createdAt: now(), ...input });
-  data.events = data.events.slice(0, 5000);
-  writeMarketplace(data);
+export async function deleteSellerProduct(email: string, id: string): Promise<boolean> {
+  const product = await db.sellerProduct.findFirst({ where: { id, sellerEmail: normalizeEmail(email) } });
+  if (!product) return false;
+  await db.sellerProduct.delete({ where: { id } });
+  return true;
 }
 
-export function getSellerStats(shopId?: string | null) {
-  const data = readMarketplace();
-  const products = data.products.filter((item) => item.shopId === shopId);
-  const productIds = products.map((item) => item.id);
+export async function moderateProduct(
+  id: string,
+  status: "PUBLISHED" | "REJECTED",
+  rejectionReason = ""
+): Promise<SellerProduct | null> {
+  const product = await db.sellerProduct.findUnique({ where: { id } });
+  if (!product) return null;
+  const updated = await db.sellerProduct.update({
+    where: { id },
+    data: { status, rejectionReason: status === "REJECTED" ? String(rejectionReason || "") : "" },
+  });
+  return mapProduct(updated);
+}
+
+export async function recordMarketplaceEvent(input: Omit<MarketplaceEvent, "id" | "createdAt">) {
+  await db.marketplaceEvent.create({
+    data: {
+      type: input.type,
+      shopId: input.shopId || null,
+      productId: input.productId || null,
+    },
+  });
+}
+
+export async function getSellerStats(shopId?: string | null): Promise<{
+  published: number;
+  pending: number;
+  shopViews: number;
+  productViews: number;
+  whatsappClicks: number;
+}> {
+  if (!shopId) {
+    return { published: 0, pending: 0, shopViews: 0, productViews: 0, whatsappClicks: 0 };
+  }
+  const products = await db.sellerProduct.findMany({ where: { shopId }, select: { id: true, status: true } });
+  const productIds = products.map((item: any) => item.id);
+  const [published, pending, shopViews, productViews, whatsappClicks] = await Promise.all([
+    Promise.resolve(products.filter((item: any) => item.status === "PUBLISHED").length),
+    Promise.resolve(products.filter((item: any) => item.status === "PENDING").length),
+    db.marketplaceEvent.count({ where: { type: "SHOP_VIEW", shopId } }),
+    db.marketplaceEvent.count({ where: { type: "PRODUCT_VIEW", productId: { in: productIds.length ? productIds : ["__none__"] } } }),
+    db.marketplaceEvent.count({
+      where: {
+        type: "WHATSAPP_CLICK",
+        OR: [{ shopId }, { productId: { in: productIds.length ? productIds : ["__none__"] } }],
+      },
+    }),
+  ]);
+  return { published, pending, shopViews, productViews, whatsappClicks };
+}
+
+export async function getShopProducts(shopId?: string | null): Promise<SellerProduct[]> {
+  if (!shopId) return [];
+  const rows = await db.sellerProduct.findMany({ where: { shopId }, orderBy: { createdAt: "desc" } });
+  return rows.map(mapProduct);
+}
+
+export async function getSellerProducts(email: string): Promise<SellerProduct[]> {
+  const rows = await db.sellerProduct.findMany({
+    where: { sellerEmail: normalizeEmail(email) },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(mapProduct);
+}
+
+export function toPublicShop(shop: SellerShop | null) {
+  if (!shop) return null;
   return {
-    published: products.filter((item) => item.status === "PUBLISHED").length,
-    pending: products.filter((item) => item.status === "PENDING").length,
-    shopViews: data.events.filter((item) => item.type === "SHOP_VIEW" && item.shopId === shopId).length,
-    productViews: data.events.filter((item) => item.type === "PRODUCT_VIEW" && productIds.includes(String(item.productId || ""))).length,
-    whatsappClicks: data.events.filter((item) => item.type === "WHATSAPP_CLICK" && (item.shopId === shopId || productIds.includes(String(item.productId || "")))).length,
+    id: shop.id,
+    slug: shop.slug,
+    logoUrl: shop.logoUrl,
+    commercialName: shop.commercialName,
+    city: shop.city,
+    description: shop.description,
+    whatsapp: shop.whatsapp,
+    facebook: shop.facebook,
+    instagram: shop.instagram,
+    tiktok: shop.tiktok,
+    status: shop.status,
+    featured: shop.featured,
+  };
+}
+
+export function toPublicProduct(product: SellerProduct | null) {
+  if (!product) return null;
+  return {
+    id: product.id,
+    shopId: product.shopId,
+    slug: product.slug,
+    name: product.name,
+    category: product.category,
+    price: product.price,
+    description: product.description,
+    images: product.images,
+    status: product.status,
+    featured: product.featured,
+  };
+}
+
+export async function getPublishedMarketplaceProducts(): Promise<Array<ReturnType<typeof toPublicProduct> & { shop: ReturnType<typeof toPublicShop> }>> {
+  const [shopRows, productRows] = await Promise.all([
+    db.sellerShop.findMany({ where: { status: "ACTIVE" } }),
+    db.sellerProduct.findMany({ where: { status: "PUBLISHED" }, orderBy: { createdAt: "desc" } }),
+  ]);
+  const shops: SellerShop[] = shopRows.map(mapShop);
+  const products: SellerProduct[] = productRows.map(mapProduct);
+  const shopById = new Map(shops.map((shop) => [shop.id, shop]));
+  return products
+    .map((product) => ({
+      ...toPublicProduct(product)!,
+      shop: toPublicShop(shopById.get(product.shopId) || null),
+    }))
+    .filter((product) => product.shop);
+}
+
+export async function readMarketplace(): Promise<{
+  applications: SellerApplication[];
+  shops: SellerShop[];
+  products: SellerProduct[];
+  events: MarketplaceEvent[];
+}> {
+  const [applications, shops, products, events] = await Promise.all([
+    db.sellerApplication.findMany({ orderBy: { createdAt: "desc" } }),
+    db.sellerShop.findMany({ orderBy: { createdAt: "desc" } }),
+    db.sellerProduct.findMany({ orderBy: { createdAt: "desc" } }),
+    db.marketplaceEvent.findMany({ orderBy: { createdAt: "desc" }, take: 5000 }),
+  ]);
+  return {
+    applications: applications.map(mapApplication),
+    shops: shops.map(mapShop),
+    products: products.map(mapProduct),
+    events: events.map(mapEvent),
   };
 }

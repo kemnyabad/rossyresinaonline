@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/router";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { getAllProducts } from "@/lib/repositories/productRepository";
-import { getPublishedMarketplaceProducts } from "@/lib/marketplaceDb";
+import { getPublishedMarketplaceProducts } from "@/lib/marketplaceStore";
 import { absoluteImageUrl, absoluteUrl, truncateMeta } from "@/lib/seo";
 import { useLiveProducts } from "@/lib/useLiveProducts";
 

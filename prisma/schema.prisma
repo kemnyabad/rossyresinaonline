@@ -362,3 +362,110 @@ model RifaTicket {
   @@index([rifaId])
   @@index([status])
 }
+
+// Solicitud de una clienta para vender en el marketplace (Vende con nosotros)
+model SellerApplication {
+  id                String   @id @default(cuid())
+  userEmail         String
+  fullName          String
+  sellerDni         String?
+  businessName      String
+  city              String
+  whatsapp          String
+  productType       String
+  description       String   @db.Text
+  socialUrl         String
+  logoUrl           String
+  dniFrontUrl       String?
+  dniBackUrl        String?
+  businessPhotoUrl  String?
+  status            String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  note              String   @default("")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userEmail])
+  @@index([status])
+}
+
+// Tienda activa de una vendedora aprobada en el marketplace
+model SellerShop {
+  id             String   @id @default(cuid())
+  userEmail      String
+  applicationId  String
+  slug           String   @unique
+  logoUrl        String
+  commercialName String
+  city           String
+  description    String   @db.Text
+  whatsapp       String
+  facebook       String   @default("")
+  instagram      String   @default("")
+  tiktok         String   @default("")
+  status         String   @default("ACTIVE") // ACTIVE, PAUSED
+  featured       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  products       SellerProduct[]
+
+  @@index([userEmail])
+  @@index([status])
+}
+
+// Producto publicado por una vendedora del marketplace
+model SellerProduct {
+  id               String     @id @default(cuid())
+  sellerEmail      String
+  shopId           String
+  shop             SellerShop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  slug             String     @unique
+  name             String
+  category         String
+  price            Decimal    @db.Decimal(10, 2)
+  description      String     @db.Text
+  images           Json?
+  status           String     @default("PENDING") // PENDING, PUBLISHED, PAUSED, REJECTED
+  featured         Boolean    @default(false)
+  rejectionReason  String     @default("")
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([sellerEmail])
+  @@index([shopId])
+  @@index([status])
+}
+
+// Evento de analitica del marketplace (vistas de tienda/producto, clicks a WhatsApp)
+model MarketplaceEvent {
+  id        String   @id @default(cuid())
+  type      String   // SHOP_VIEW, PRODUCT_VIEW, WHATSAPP_CLICK
+  shopId    String?
+  productId String?
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([shopId])
+  @@index([productId])
+}
+
+// Cuenta de acceso mayorista (login separado del User normal)
+model WholesaleUser {
+  id           String   @id // telefono normalizado (solo digitos)
+  name         String
+  business     String
+  phone        String
+  city         String
+  channel      String
+  volume       String
+  passwordHash String
+  status       String   @default("ACTIVE") // PENDING, ACTIVE
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Contador liviano de agregados al carrito por producto
+model ProductMetric {
+  productId String   @id
+  cartAdds  Int      @default(0)
+  updatedAt DateTime @updatedAt
+}

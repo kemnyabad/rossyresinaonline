@@ -1,8 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { GetServerSideProps } from "next";
-import { readMarketplace, recordMarketplaceEvent } from "@/lib/marketplaceStore";
-import { getDbMarketplaceData, publicMarketplaceProduct, publicMarketplaceShop } from "@/lib/marketplaceDb";
+import { readMarketplace, recordMarketplaceEvent, toPublicProduct, toPublicShop } from "@/lib/marketplaceStore";
 
 export default function PublicShopPage({ shop, products }: any) {
   const whatsapp = String(shop.whatsapp || "").replace(/\D/g, "");
@@ -69,15 +68,12 @@ export default function PublicShopPage({ shop, products }: any) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-  const data = readMarketplace();
-  const dbData = await getDbMarketplaceData();
-  const shops = [...dbData.shops, ...data.shops];
-  const productsSource = [...dbData.products, ...data.products];
+  const { shops, products: productsSource } = await readMarketplace();
   const shop = shops.find((item) => item.slug === String(params?.slug || "") && item.status === "ACTIVE");
   if (!shop) return { notFound: true };
-  recordMarketplaceEvent({ type: "SHOP_VIEW", shopId: shop.id });
+  await recordMarketplaceEvent({ type: "SHOP_VIEW", shopId: shop.id });
   const products = productsSource
     .filter((item) => item.shopId === shop.id && item.status === "PUBLISHED")
-    .map(publicMarketplaceProduct);
-  return { props: { shop: publicMarketplaceShop(shop), products } };
+    .map(toPublicProduct);
+  return { props: { shop: toPublicShop(shop), products } };
 };

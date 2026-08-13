@@ -1,7 +1,6 @@
-import { promises as fs } from "fs";
-import path from "path";
-import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import prisma from "@/lib/prisma";
+import { createWholesaleSessionToken, readWholesaleUserIdFromToken } from "@/lib/wholesaleAuth";
 
 export type WholesaleUserRecord = {
   id: string;
@@ -17,20 +16,7 @@ export type WholesaleUserRecord = {
   updatedAt: string;
 };
 
-type WholesaleSessionRecord = {
-  token: string;
-  userId: string;
-  createdAt: string;
-};
-
-type WholesaleData = {
-  users: WholesaleUserRecord[];
-  sessions: WholesaleSessionRecord[];
-};
-
-const dataFile = path.join(process.cwd(), "src", "data", "wholesale-users.json");
-
-const emptyData = (): WholesaleData => ({ users: [], sessions: [] });
+const db = prisma as any;
 
 const normalizePhone = (value: string) => String(value || "").replace(/\D/g, "");
 
@@ -44,25 +30,6 @@ const publicUser = (user: WholesaleUserRecord) => ({
   volume: user.volume,
   status: user.status,
 });
-
-async function readData(): Promise<WholesaleData> {
-  try {
-    const raw = await fs.readFile(dataFile, "utf8");
-    const parsed = JSON.parse(raw || "{}");
-    return {
-      users: Array.isArray(parsed.users) ? parsed.users : [],
-      sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
-    };
-  } catch (error: any) {
-    if (error?.code === "ENOENT") return emptyData();
-    throw error;
-  }
-}
-
-async function writeData(data: WholesaleData) {
-  await fs.mkdir(path.dirname(dataFile), { recursive: true });
-  await fs.writeFile(dataFile, `${JSON.stringify(data, null, 2)}\n`, "utf8");
-}
 
 export async function registerWholesaleUser(input: {
   name: string;
@@ -78,61 +45,57 @@ export async function registerWholesaleUser(input: {
     throw new Error("Datos incompletos");
   }
 
-  const data = await readData();
-  const now = new Date().toISOString();
-  const existing = data.users.find((user) => user.id === phoneKey);
-  const record: WholesaleUserRecord = {
-    id: phoneKey,
-    name: input.name.trim(),
-    business: input.business.trim(),
-    phone: input.phone.trim(),
-    city: input.city.trim(),
-    channel: input.channel.trim(),
-    volume: input.volume.trim(),
-    passwordHash: await bcrypt.hash(input.password, 10),
-    status: existing?.status || "ACTIVE",
-    createdAt: existing?.createdAt || now,
-    updatedAt: now,
-  };
+  const existing = await db.wholesaleUser.findUnique({ where: { id: phoneKey } });
+  const record = await db.wholesaleUser.upsert({
+    where: { id: phoneKey },
+    update: {
+      name: input.name.trim(),
+      business: input.business.trim(),
+      phone: input.phone.trim(),
+      city: input.city.trim(),
+      channel: input.channel.trim(),
+      volume: input.volume.trim(),
+      passwordHash: await bcrypt.hash(input.password, 10),
+    },
+    create: {
+      id: phoneKey,
+      name: input.name.trim(),
+      business: input.business.trim(),
+      phone: input.phone.trim(),
+      city: input.city.trim(),
+      channel: input.channel.trim(),
+      volume: input.volume.trim(),
+      passwordHash: await bcrypt.hash(input.password, 10),
+      status: existing?.status || "ACTIVE",
+    },
+  });
 
-  data.users = [...data.users.filter((user) => user.id !== phoneKey), record];
-  const token = crypto.randomBytes(32).toString("hex");
-  data.sessions = [...data.sessions.filter((session) => session.userId !== phoneKey), { token, userId: phoneKey, createdAt: now }];
-  await writeData(data);
-
+  const token = createWholesaleSessionToken(record.id);
   return { token, user: publicUser(record) };
 }
 
 export async function loginWholesaleUser(input: { user: string; password: string }) {
-  const data = await readData();
   const loginKey = normalizePhone(input.user);
-  const found = data.users.find(
-    (user) => user.id === loginKey || normalizePhone(user.phone) === loginKey
-  );
+  const found = await db.wholesaleUser.findFirst({
+    where: { OR: [{ id: loginKey }, { phone: input.user.trim() }] },
+  });
   if (!found || !(await bcrypt.compare(input.password, found.passwordHash))) {
     throw new Error("Usuario o clave mayorista incorrectos");
   }
 
-  const token = crypto.randomBytes(32).toString("hex");
-  data.sessions = [...data.sessions.filter((session) => session.userId !== found.id), { token, userId: found.id, createdAt: new Date().toISOString() }];
-  await writeData(data);
-
+  const token = createWholesaleSessionToken(found.id);
   return { token, user: publicUser(found) };
 }
 
 export async function getWholesaleSession(token: string) {
-  if (!token) return null;
-  const data = await readData();
-  const session = data.sessions.find((item) => item.token === token);
-  if (!session) return null;
-  const user = data.users.find((item) => item.id === session.userId);
+  const userId = readWholesaleUserIdFromToken(token);
+  if (!userId) return null;
+  const user = await db.wholesaleUser.findUnique({ where: { id: userId } });
   if (!user) return null;
   return { token, user: publicUser(user) };
 }
 
-export async function logoutWholesaleSession(token: string) {
-  if (!token) return;
-  const data = await readData();
-  data.sessions = data.sessions.filter((item) => item.token !== token);
-  await writeData(data);
+export async function logoutWholesaleSession(_token: string) {
+  // Los tokens son firmados y sin estado en servidor; no hay nada que invalidar
+  // del lado del servidor. El cliente descarta el token localmente.
 }

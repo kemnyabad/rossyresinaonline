@@ -31,6 +31,12 @@ backups/
 reports/
 data/local-test-orders.json
 data/local-test-customers.json
+data/marketplace.json
+data/product-metrics.json
+
+# runtime state that must not carry real credentials/PII into the repo
+src/data/users.json
+src/data/wholesale-users.json
 
 # debug
 npm-debug.log*
