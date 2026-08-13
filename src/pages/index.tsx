@@ -12,15 +12,11 @@ import Image from "next/image";
 import {
   ChatBubbleLeftRightIcon,
   CheckBadgeIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   QuestionMarkCircleIcon,
   ShoppingCartIcon,
-  StarIcon,
   TruckIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/solid";
-import { FaClock } from "react-icons/fa";
 import {
   getOfferProducts,
 } from "@/lib/services/productCatalogService";
@@ -37,22 +33,7 @@ interface Props {
   promotionSeed: string;
 }
 
-type ExpressOfferItem = {
-  id: string;
-  nombre: string;
-  imagen: string;
-  href?: string;
-  badge?: string;
-  price?: number;
-  oldPrice?: number;
-  precio?: number;
-  productoId?: string;
-  soldCount?: number;
-  stock?: number;
-};
-
-function promotionKey(item: ProductProps | ExpressOfferItem) {
-  if ("nombre" in item) return String(item.id || item.nombre || "");
+function promotionKey(item: ProductProps) {
   return String(item.code || item._id || item.title || "");
 }
 
@@ -65,19 +46,13 @@ function hashPromotionValue(value: string) {
   return hash >>> 0;
 }
 
-function shufflePromotionItems<T extends ProductProps | ExpressOfferItem>(items: T[], seed: string): T[] {
+function shufflePromotionItems<T extends ProductProps>(items: T[], seed: string): T[] {
   return [...items].sort((a, b) => {
     const scoreA = hashPromotionValue(`${seed}:${promotionKey(a)}`);
     const scoreB = hashPromotionValue(`${seed}:${promotionKey(b)}`);
     if (scoreA !== scoreB) return scoreA - scoreB;
     return promotionKey(a).localeCompare(promotionKey(b));
   });
-}
-
-function rotatePromotionItems<T extends ProductProps | ExpressOfferItem>(items: T[], seed: string): T[] {
-  if (items.length <= 1) return items;
-  const offset = hashPromotionValue(seed) % items.length;
-  return [...items.slice(offset), ...items.slice(0, offset)];
 }
 
 export default function Home({ productData, behavior, marketplaceProducts, promotionSeed }: Props) {
@@ -528,162 +503,6 @@ export default function Home({ productData, behavior, marketplaceProducts, promo
   );
 }
 
-          <>
-            <button
-              type="button"
-              onClick={() => scrollOffers("left")}
-              className="absolute left-0 top-[38%] z-10 hidden h-10 w-10 -translate-x-3 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-800 shadow-[0_8px_20px_rgba(17,24,39,0.14)] transition hover:border-amazon_blue hover:text-amazon_blue md:flex"
-              aria-label="Deslizar ofertas hacia atrás"
-            >
-              <ChevronLeftIcon className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollOffers("right")}
-              className="absolute right-0 top-[38%] z-10 hidden h-10 min-w-10 translate-x-3 items-center justify-center gap-1 rounded-full border border-gray-200 bg-white px-3 text-sm font-bold text-gray-800 shadow-[0_8px_20px_rgba(17,24,39,0.14)] transition hover:border-amazon_blue hover:text-amazon_blue md:flex"
-              aria-label="Deslizar y ver más ofertas"
-            >
-              <span>Deslizar</span>
-              <ChevronRightIcon className="h-5 w-5" />
-            </button>
-          </>
-        )}
-        <div
-          ref={carouselRef}
-          className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2"
-        >
-        {items.map((item) => {
-              const price = Number(item.price || 0);
-              const oldPrice = Number(item.oldPrice || 0);
-              const hasPrice = price > 0;
-              const hasDiscount = oldPrice > price && price > 0;
-              const discountPercent = hasDiscount ? Math.max(1, Math.round(((oldPrice - price) / oldPrice) * 100)) : 0;
-              const [priceWhole, priceCents] = price.toFixed(2).split(".");
-              const stock = Number(item.stock || 0);
-              const stockLabel = stock > 0 && stock <= 9 ? `Últimas ${stock} a precio promocional` : "Oferta express";
-              const cardClass = "group block bg-white text-left text-gray-950 transition-colors hover:text-amazon_blue";
-              const content = (
-                <>
-                  <ExpressOfferImage item={item} stockLabel={stockLabel} />
-                  <div className="pt-2">
-                    <p className="line-clamp-1 text-sm font-medium leading-5 text-gray-950 group-hover:text-amazon_blue">{item.nombre}</p>
-                    {hasPrice ? (
-                      <div className="mt-1 flex items-end gap-1 text-gray-950">
-                        <span className={`text-sm font-bold leading-none ${titleClass}`}>S/</span>
-                        <span className={`text-2xl font-black leading-none tracking-normal ${titleClass}`}>{priceWhole}</span>
-                        <span className={`pb-1.5 text-xs font-bold leading-none ${titleClass}`}>{priceCents}</span>
-                        {hasDiscount && (
-                          <span className="pb-1 text-xs text-gray-500 line-through">S/{oldPrice.toFixed(2)}</span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className={`mt-1 text-sm font-black uppercase ${titleClass}`}>{item.badge || "Promo express"}</div>
-                    )}
-                    {hasDiscount ? (
-                      <div className="mt-1 text-sm font-black leading-5 text-red-600">
-                        -{discountPercent}% tiempo limitado
-                      </div>
-                    ) : (
-                      <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
-                        <span className="flex items-center gap-0 text-gray-950">
-                        {[0, 1, 2, 3, 4].map((star) => (
-                          <StarIcon key={star} className="h-3.5 w-3.5" />
-                        ))}
-                        </span>
-                        <span>{item.soldCount || 46}</span>
-                      </div>
-                    )}
-                  </div>
-                </>
-              );
-              return item.href ? (
-                <Link key={item.id} href={item.href} className={`${cardClass} w-[calc((100%_-_0.75rem)/2)] shrink-0 snap-start sm:w-[calc((100%_-_1.5rem)/3)] lg:w-[calc((100%_-_3.75rem)/6)]`} data-express-offer-card="true">
-                  {content}
-                </Link>
-              ) : (
-                <div key={item.id} className={`${cardClass} w-[calc((100%_-_0.75rem)/2)] shrink-0 snap-start sm:w-[calc((100%_-_1.5rem)/3)] lg:w-[calc((100%_-_3.75rem)/6)]`} data-express-offer-card="true">
-                  {content}
-                </div>
-              );
-            })}
-        </div>
-        {canSlide && (
-          <div className="mt-2 flex justify-center md:hidden">
-            <button
-              type="button"
-              onClick={() => scrollOffers("right")}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-amazon_blue bg-white px-5 text-sm font-bold text-amazon_blue"
-            >
-              Deslizar ofertas
-              <ChevronRightIcon className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function ExpressOfferImage({ item, stockLabel }: { item: ExpressOfferItem; stockLabel: string }) {
-  const [hasDarkLabelArea, setHasDarkLabelArea] = useState(false);
-
-  return (
-    <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
-      <Image
-        src={item.imagen}
-        alt={item.nombre}
-        fill
-        className="object-cover transition-transform duration-300 group-hover:scale-105"
-        onLoadingComplete={(img) => setHasDarkLabelArea(detectDarkBottomArea(img))}
-      />
-      <span className="absolute right-1.5 top-1.5 rounded-sm bg-gray-950/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-        Express
-      </span>
-      <div
-        className={
-          "absolute inset-x-3 bottom-3 rounded-full px-3 py-2 text-center text-[11px] font-semibold uppercase leading-4 backdrop-blur-sm " +
-          (hasDarkLabelArea ? "bg-white/95 text-gray-950" : "bg-gray-950/70 text-white")
-        }
-      >
-        {stockLabel}
-      </div>
-    </div>
-  );
-}
-
-function detectDarkBottomArea(img: HTMLImageElement) {
-  try {
-    if (typeof document === "undefined" || !img.naturalWidth || !img.naturalHeight) return false;
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return false;
-
-    const sampleWidth = 32;
-    const sampleHeight = 16;
-    canvas.width = sampleWidth;
-    canvas.height = sampleHeight;
-
-    const sx = Math.floor(img.naturalWidth * 0.12);
-    const sy = Math.floor(img.naturalHeight * 0.68);
-    const sw = Math.max(1, Math.floor(img.naturalWidth * 0.76));
-    const sh = Math.max(1, Math.floor(img.naturalHeight * 0.2));
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sampleWidth, sampleHeight);
-
-    const data = ctx.getImageData(0, 0, sampleWidth, sampleHeight).data;
-    let total = 0;
-    let dark = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      const luminance = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
-      total += luminance;
-      if (luminance < 55) dark += 1;
-    }
-    const pixels = data.length / 4;
-    return total / pixels < 70 && dark / pixels > 0.55;
-  } catch {
-    return false;
-  }
-}
-
 type MobilePromoSlide = {
   href: string;
   title: string;
@@ -762,7 +581,6 @@ export const getServerSideProps = async () => {
           topProductKeys: [],
           topOfferProductKeys: [],
         } as PurchaseBehaviorSnapshot,
-        ofertasExpress: [],
         marketplaceProducts: [],
         promotionSeed,
       },

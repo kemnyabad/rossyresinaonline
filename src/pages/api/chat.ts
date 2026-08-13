@@ -5,6 +5,7 @@ import { getResinyLearningContext, recordResinyLearning } from "@/lib/resinyLear
 import { getResinyWebContext } from "@/lib/resinyWebSearch";
 import { getAllProducts } from "@/lib/repositories/productRepository";
 import { getSmartProductRecommendations } from "@/lib/smartCatalog";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const SYSTEM_PROMPT = `Eres "Resiny", la asistente amiga de Rossy Resina (Perú). Sabes de artesanía general, resina epóxica, eco resina, resina UV, moldes de silicona, pigmentos, proyectos artesanales, compras y emprendimiento.
 
@@ -417,6 +418,12 @@ const getResinyExternalContext = async (message: string) => {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
+
+  const rateLimit = checkRateLimit(req, "chat", 20, 60 * 1000);
+  if (!rateLimit.allowed) {
+    res.setHeader("Retry-After", String(rateLimit.retryAfterSeconds));
+    return res.status(429).json({ error: "Estás enviando mensajes muy rápido. Espera unos segundos e intenta de nuevo." });
+  }
 
   const message  = String(req.body?.message || "").trim();
   const history  = Array.isArray(req.body?.history) ? req.body.history : [];

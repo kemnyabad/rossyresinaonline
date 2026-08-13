@@ -5,7 +5,6 @@ interface Props {
   remateProducts?: ProductProps[];
   topVisitedProducts?: ProductProps[];
   moldProducts?: ProductProps[];
-  ofertasExpress?: { id: string; nombre: string; imagen: string }[];
 }
 
 export default function HeroCarousel({
@@ -13,13 +12,11 @@ export default function HeroCarousel({
   remateProducts = [],
   topVisitedProducts = [],
   moldProducts = [],
-  ofertasExpress = [],
 }: Props) {
   void productData;
   void remateProducts;
   void topVisitedProducts;
   void moldProducts;
-  void ofertasExpress;
 
   return null;
 }

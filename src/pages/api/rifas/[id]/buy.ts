@@ -3,6 +3,17 @@ import prisma from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import { v2 as cloudinary } from "cloudinary";
 
+class TicketsTakenError extends Error {
+  takenNumbers: number[];
+  constructor(takenNumbers: number[]) {
+    super('Números ya no disponibles');
+    this.takenNumbers = takenNumbers;
+  }
+}
+
+const isUniqueConstraintViolation = (error: unknown) =>
+  Boolean(error) && typeof error === 'object' && (error as any).code === 'P2002';
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -57,15 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       let numbersToReserve = uniqueNumbers;
 
-      if (isAmphora) {
-        const lastTicket = await prisma.rifaTicket.findFirst({
-          where: { rifaId: id },
-          orderBy: { number: 'desc' },
-          select: { number: true },
-        });
-        const startNumber = (lastTicket?.number || 0) + 1;
-        numbersToReserve = Array.from({ length: requestedQuantity }, (_, index) => startNumber + index);
-      } else {
+      if (!isAmphora) {
         // Verificar que los números solicitados están disponibles
         const existingTickets = await prisma.rifaTicket.findMany({
           where: {
@@ -96,48 +99,119 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Generar ID de transacción para el cliente
       const transactionId = randomBytes(8).toString('hex');
-      
-      // Usar transacción para asegurar consistencia
-      const tickets = await prisma.$transaction(
-        isAmphora
-          ? numbersToReserve.map((number) =>
-              prisma.rifaTicket.create({
+
+      let tickets: { id: string; number: number }[] = [];
+
+      if (isAmphora) {
+        // Modo ánfora: el número inicial se calcula y reserva dentro de la misma
+        // transacción para que dos compras simultáneas no obtengan el mismo rango.
+        // Si aun así chocan contra el índice único (rifaId, number), se reintenta.
+        const MAX_ATTEMPTS = 5;
+        let attempt = 0;
+        let created: { id: string; number: number }[] | null = null;
+
+        while (attempt < MAX_ATTEMPTS && !created) {
+          attempt += 1;
+          try {
+            created = await prisma.$transaction(async (tx) => {
+              const lastTicket = await tx.rifaTicket.findFirst({
+                where: { rifaId: id },
+                orderBy: { number: 'desc' },
+                select: { number: true },
+              });
+              const startNumber = (lastTicket?.number || 0) + 1;
+              const reserveNumbers = Array.from({ length: requestedQuantity }, (_, index) => startNumber + index);
+
+              const rows = [];
+              for (const number of reserveNumbers) {
+                const row = await tx.rifaTicket.create({
+                  data: {
+                    rifaId: id,
+                    number,
+                    status: 'PENDING',
+                    buyerName,
+                    buyerEmail: buyerEmail || "cliente@web.com",
+                    buyerPhone,
+                    paymentImage: finalImageUrl,
+                  },
+                });
+                rows.push({ id: row.id, number: row.number });
+              }
+              return rows;
+            });
+          } catch (error) {
+            if (isUniqueConstraintViolation(error) && attempt < MAX_ATTEMPTS) continue;
+            throw error;
+          }
+        }
+
+        if (!created) {
+          return res.status(409).json({ error: 'No se pudo reservar el ánfora, intenta nuevamente.' });
+        }
+        tickets = created;
+        numbersToReserve = tickets.map((t) => t.number);
+      } else {
+        // Modo números: cada reserva se confirma con una actualización condicionada
+        // a status = AVAILABLE (o creación si el número nunca se pre-generó), así
+        // que dos compradores no pueden pisarse el mismo número.
+        const takenNumbers: number[] = [];
+        const reservedTickets: { id: string; number: number }[] = [];
+
+        try {
+          await prisma.$transaction(async (tx) => {
+            for (const number of numbersToReserve) {
+              const updated = await tx.rifaTicket.updateMany({
+                where: { rifaId: id, number, status: 'AVAILABLE' },
                 data: {
-                  rifaId: id,
-                  number,
                   status: 'PENDING',
                   buyerName,
                   buyerEmail: buyerEmail || "cliente@web.com",
                   buyerPhone,
                   paymentImage: finalImageUrl,
-                },
-              })
-            )
-          : numbersToReserve.map((number) =>
-              prisma.rifaTicket.upsert({
-                where: {
-                  rifaId_number: { rifaId: id, number },
-                },
-                update: {
-                  status: 'PENDING',
-                  buyerName,
-                  buyerEmail: buyerEmail || "cliente@web.com",
-                  buyerPhone,
-                  paymentImage: finalImageUrl, // Guardamos la URL de Cloudinary (corta)
                   createdAt: new Date(),
                 },
-                create: {
-                  rifaId: id,
-                  number,
-                  status: 'PENDING',
-                  buyerName,
-                  buyerEmail: buyerEmail || "cliente@web.com",
-                  buyerPhone,
-                  paymentImage: finalImageUrl,
-                },
-              })
-            )
-      );
+              });
+
+              if (updated.count === 1) {
+                const ticket = await tx.rifaTicket.findUnique({ where: { rifaId_number: { rifaId: id, number } } });
+                if (ticket) reservedTickets.push({ id: ticket.id, number: ticket.number });
+                continue;
+              }
+
+              try {
+                const row = await tx.rifaTicket.create({
+                  data: {
+                    rifaId: id,
+                    number,
+                    status: 'PENDING',
+                    buyerName,
+                    buyerEmail: buyerEmail || "cliente@web.com",
+                    buyerPhone,
+                    paymentImage: finalImageUrl,
+                  },
+                });
+                reservedTickets.push({ id: row.id, number: row.number });
+              } catch {
+                takenNumbers.push(number);
+              }
+            }
+
+            if (takenNumbers.length > 0) {
+              throw new TicketsTakenError(takenNumbers);
+            }
+          });
+        } catch (error) {
+          if (error instanceof TicketsTakenError) {
+            return res.status(400).json({
+              error: 'Los números ' + error.takenNumbers.join(', ') + ' ya no están disponibles. Selecciona otros números.',
+              takenNumbers: error.takenNumbers,
+            });
+          }
+          throw error;
+        }
+
+        tickets = reservedTickets;
+      }
 
       res.status(201).json({
         success: true,

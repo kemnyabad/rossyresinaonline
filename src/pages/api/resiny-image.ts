@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const normalize = (value: string) =>
   String(value || "")
@@ -47,6 +48,12 @@ const toFriendlyOpenAiImageError = (message: string) => {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
+
+  const rateLimit = checkRateLimit(req, "resiny-image", 5, 10 * 60 * 1000);
+  if (!rateLimit.allowed) {
+    res.setHeader("Retry-After", String(rateLimit.retryAfterSeconds));
+    return res.status(429).json({ error: "Estás generando imágenes muy rápido. Intenta de nuevo en unos minutos." });
+  }
 
   const prompt = String(req.body?.prompt || "").trim();
   if (!prompt) return res.status(400).json({ error: "Describe la imagen que quieres generar." });
