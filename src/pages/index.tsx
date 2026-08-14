@@ -12,16 +12,20 @@ import Image from "next/image";
 import {
   ChatBubbleLeftRightIcon,
   CheckBadgeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   QuestionMarkCircleIcon,
   ShoppingCartIcon,
   TruckIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/solid";
+import { FaClock } from "react-icons/fa";
 import {
   getOfferProducts,
 } from "@/lib/services/productCatalogService";
 import { getAllProducts } from "@/lib/repositories/productRepository";
 import { getPublishedMarketplaceProducts } from "@/lib/marketplaceStore";
+import { getActiveOfertasExpress, type OfertaExpressItem } from "@/lib/ofertasExpress";
 import { getPurchaseBehaviorSnapshot, type PurchaseBehaviorSnapshot } from "@/lib/repositories/categoryInsightsRepository";
 import { absoluteImageUrl, absoluteUrl, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { useLiveProducts } from "@/lib/useLiveProducts";
@@ -30,6 +34,7 @@ interface Props {
   productData: ProductProps[];
   behavior: PurchaseBehaviorSnapshot;
   marketplaceProducts: any[];
+  ofertasExpress: OfertaExpressItem[];
   promotionSeed: string;
 }
 
@@ -55,7 +60,7 @@ function shufflePromotionItems<T extends ProductProps>(items: T[], seed: string)
   });
 }
 
-export default function Home({ productData, behavior, marketplaceProducts, promotionSeed }: Props) {
+export default function Home({ productData, behavior, marketplaceProducts, ofertasExpress, promotionSeed }: Props) {
   const pageTitle = "Rossy Resina | Resina epóxica, moldes y pigmentos en Perú";
   const pageDesc =
     "Compra resina epóxica, moldes de silicona, pigmentos y accesorios. Envío a todo Perú y atención por WhatsApp.";
@@ -276,6 +281,7 @@ export default function Home({ productData, behavior, marketplaceProducts, promo
       </Head>
       <main>
         <h1 className="sr-only">Rossy Resina - resina epóxica, moldes de silicona y pigmentos en Perú</h1>
+        <OfertasExpressSection items={ofertasExpress} />
         {/* Home mobile storefront */}
         <section className="md:hidden bg-white pb-3">
           <nav className="no-scrollbar flex gap-6 overflow-x-auto border-b border-gray-100 px-4 pt-1 text-[15px] font-medium text-gray-500">
@@ -503,6 +509,79 @@ export default function Home({ productData, behavior, marketplaceProducts, promo
   );
 }
 
+function OfertasExpressSection({ items }: { items: OfertaExpressItem[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  if (items.length === 0) return null;
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = 220;
+    el.scrollTo({
+      left: direction === "left" ? el.scrollLeft - amount : el.scrollLeft + amount,
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <section className="border-b border-gray-100 bg-white px-4 py-4 md:px-6">
+      <div className="mx-auto max-w-screen-2xl">
+        <div className="relative mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-black text-gray-950 md:text-xl">
+            <FaClock className="text-red-600" />
+            Ofertas Express
+          </h2>
+          <div className="hidden gap-2 md:flex">
+            <button
+              type="button"
+              onClick={() => scroll("left")}
+              aria-label="Ver ofertas anteriores"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-700 hover:border-amazon_blue hover:text-amazon_blue"
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scroll("right")}
+              aria-label="Ver más ofertas"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-700 hover:border-amazon_blue hover:text-amazon_blue"
+            >
+              <ChevronRightIcon className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        <div
+          ref={scrollRef}
+          className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-1"
+        >
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="w-[42%] shrink-0 snap-start sm:w-[28%] md:w-[19%] lg:w-[15%]"
+            >
+              <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50">
+                <Image src={item.imagen} alt={item.nombre} fill className="object-cover" />
+                <span className="absolute left-1.5 top-1.5 rounded-sm bg-red-600 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                  Express
+                </span>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-2 pb-2 pt-8">
+                  <p className="line-clamp-1 text-xs font-semibold text-white">{item.nombre}</p>
+                  {item.precio !== null ? (
+                    <p className="text-sm font-black text-white">S/ {item.precio.toFixed(2)}</p>
+                  ) : (
+                    <p className="text-[11px] font-bold uppercase text-yellow-300">Precio especial</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 type MobilePromoSlide = {
   href: string;
   title: string;
@@ -559,15 +638,17 @@ export const getServerSideProps = async () => {
   const promotionSeed = String(Date.now());
   try {
     const productData = await getAllProducts();
-    const [behavior, marketplaceProducts] = await Promise.all([
+    const [behavior, marketplaceProducts, ofertasExpress] = await Promise.all([
       getPurchaseBehaviorSnapshot(8, 12, 180),
       getPublishedMarketplaceProducts(),
+      getActiveOfertasExpress(),
     ]);
     return {
       props: {
         productData,
         behavior,
         marketplaceProducts: JSON.parse(JSON.stringify(marketplaceProducts)),
+        ofertasExpress,
         promotionSeed,
       },
     };
@@ -582,6 +663,7 @@ export const getServerSideProps = async () => {
           topOfferProductKeys: [],
         } as PurchaseBehaviorSnapshot,
         marketplaceProducts: [],
+        ofertasExpress: [],
         promotionSeed,
       },
     };
