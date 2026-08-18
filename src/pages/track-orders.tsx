@@ -5,9 +5,16 @@ import FormattedPrice from "@/components/FormattedPrice";
 import { useSession } from "next-auth/react";
 import { ClipboardDocumentListIcon, HomeIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 
-const statusTabs = ["Ver todo", "Pendiente por confirmar", "Confirmado", "En proceso de envío", "Enviado"] as const;
+const statusTabs = ["Ver todo", "Pendiente por confirmar", "Confirmado", "En proceso de envío", "Enviado", "Finalizado"] as const;
 
 type TabKey = (typeof statusTabs)[number];
+
+const normalizeStatus = (value: string) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim();
 
 type OrderItem = {
   title: string;
@@ -84,19 +91,14 @@ export default function TrackOrdersPage() {
   };
 
   useEffect(() => {
+    const sessionEmail = String((customerSession?.user as any)?.email || "").trim();
+    if (sessionEmail) setEmail(sessionEmail);
+  }, [customerSession?.user]);
+
+  useEffect(() => {
     if (email.trim() && (!isGuestLookup || orderCode.trim())) fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, orderCode, isGuestLookup]);
-
-  useEffect(() => {
-    const sessionEmail = String((customerSession?.user as any)?.email || "").trim();
-    if (!sessionEmail) return;
-    setEmail(sessionEmail);
-    fetch("/api/orders")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setOrders(Array.isArray(data) ? data : []))
-      .catch(() => setOrders([]));
-  }, [customerSession?.user]);
 
   const counts = useMemo(() => {
     const base: Record<string, number> = {
@@ -104,15 +106,11 @@ export default function TrackOrdersPage() {
       Confirmado: 0,
       "En proceso de envío": 0,
       Enviado: 0,
+      Finalizado: 0,
     };
     orders.forEach((o) => {
-      if (base[o.status] !== undefined) {
-        base[o.status] += 1;
-        return;
-      }
-      if (normalizeStatus(o.status) === normalizeStatus("En proceso de envío")) {
-        base["En proceso de envío"] += 1;
-      }
+      const match = Object.keys(base).find((k) => normalizeStatus(k) === normalizeStatus(o.status));
+      if (match) base[match] += 1;
     });
     return base;
   }, [orders]);
@@ -231,7 +229,7 @@ export default function TrackOrdersPage() {
                         En proceso de envío. Comunícate al 961770723 para seguimiento.
                       </div>
                     )}
-                    {o.status === "Enviado" && (
+                    {normalizeStatus(o.status) === normalizeStatus("Enviado") && (
                       <div className="mt-2 text-sm text-emerald-700 space-y-1">
                         <p>Tu pedido fue enviado por {o.shippingCarrierLabel || "agencia"}.</p>
                         {o.shippingCarrier === "SHALOM" && o.shalomPickupCode && (
@@ -251,6 +249,11 @@ export default function TrackOrdersPage() {
                             </a>
                           </p>
                         )}
+                      </div>
+                    )}
+                    {normalizeStatus(o.status) === normalizeStatus("Finalizado") && (
+                      <div className="mt-2 text-sm text-emerald-700">
+                        Pedido finalizado. ¡Gracias por tu compra!
                       </div>
                     )}
                     <div className="mt-4 border-t border-gray-100 pt-4 grid gap-3">
@@ -341,9 +344,3 @@ function AccountTab({
     </Link>
   );
 }
-  const normalizeStatus = (value: string) =>
-    String(value || "")
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      .toLowerCase()
-      .trim();
