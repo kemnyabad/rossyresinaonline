@@ -1057,9 +1057,12 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                 </div>
 
 
-                <div className="mt-4 text-sm text-gray-600 grid gap-1">
-                  <p>{"Entrega: entre 2 a 3 días aproximadamente"}</p>
-                  <p>Transportistas: Shalom, Olva Courier</p>
+                <div className="mt-4 text-sm text-gray-600">
+                  <p>Envíos por</p>
+                  <div className="mt-2 flex items-center gap-4">
+                    <Image src="/logos/shalom.png" alt="Shalom" width={120} height={24} className="h-6 w-auto object-contain" />
+                    <Image src="/logos/olva.png" alt="Olva Courier" width={28} height={28} className="h-7 w-auto object-contain" />
+                  </div>
                 </div>
               </div>
 
