@@ -131,13 +131,13 @@ const CartPage = () => {
                     key={item.cartKey || item._id}
                     className="grid grid-cols-[clamp(112px,31vw,135px)_minmax(0,1fr)] gap-3 rounded-lg bg-white px-2.5 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.06)] min-[390px]:grid-cols-[clamp(124px,34vw,145px)_minmax(0,1fr)] min-[390px]:px-3"
                   >
-                    <Link href={`/${item.code || item.productId || item._id}`} className="relative aspect-square w-full overflow-hidden rounded-md bg-gray-100">
+                    <Link href={`/${item.slug || item.code || item.productId || item._id}`} className="relative aspect-square w-full overflow-hidden rounded-md bg-gray-100">
                       <Image src={normalizeCartImage(item.image)} alt={item.title || "Producto"} fill className="object-cover" />
                     </Link>
                     <div className="flex min-w-0 flex-col rounded-md bg-white">
                       <div className="rounded-md bg-gray-50 px-2.5 py-2">
                         <div className="flex items-start gap-2">
-                        <Link href={`/${item.code || item.productId || item._id}`} className="min-w-0 flex-1">
+                        <Link href={`/${item.slug || item.code || item.productId || item._id}`} className="min-w-0 flex-1">
                           <p className="line-clamp-2 text-[13px] font-semibold leading-5 text-gray-800 min-[390px]:text-[15px]">{item.title}</p>
                           {item.variantLabel ? (
                             <p className="mt-1 text-xs font-semibold text-amazon_blue">{item.variantLabel}</p>
@@ -198,7 +198,7 @@ const CartPage = () => {
               {recommendedProducts.slice(0, 10).map((product: any) => {
                 const recDiscount = discountLabel(product.oldPrice, product.price);
                 return (
-                  <Link key={`cart-rec-${product._id}`} href={`/${product.code || product._id}`} className="min-w-0 bg-white">
+                  <Link key={`cart-rec-${product._id}`} href={`/${product.slug || product.code || product._id}`} className="min-w-0 bg-white">
                     <div className="relative aspect-square overflow-hidden bg-gray-100">
                       <Image src={normalizeCartImage(product.image)} alt={product.title || "Producto"} fill className="object-cover" />
                     </div>

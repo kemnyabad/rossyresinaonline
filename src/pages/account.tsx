@@ -232,7 +232,7 @@ export default function AccountPage() {
 
         <section className="grid grid-cols-2 gap-1 bg-white pt-2">
           {mobileProducts.slice(0, 12).map((product: any) => (
-            <Link key={product._id} href={`/${product.code || product._id}`} className="min-w-0 bg-white">
+            <Link key={product._id} href={`/${product.slug || product.code || product._id}`} className="min-w-0 bg-white">
               <div className="relative aspect-square overflow-hidden bg-gray-100">
                 <Image src={normalizeImage(product.image)} alt={product.title || "Producto"} fill className="object-cover" />
               </div>

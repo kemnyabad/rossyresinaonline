@@ -128,7 +128,7 @@ export default function CategoryPage({ slug, label, items, marketplaceProducts }
     itemListElement: visibleItems.slice(0, 24).map((product, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: absoluteUrl(`/${encodeURIComponent(String(product.code || product._id))}`),
+      url: absoluteUrl(`/${encodeURIComponent(String(product.slug || product.code || product._id))}`),
       name: product.title || product.code || "Producto",
     })),
   };

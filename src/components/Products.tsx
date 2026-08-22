@@ -34,7 +34,8 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   const [stats, setStats] = useState<Record<string, ProductStat>>({});
   const [addedMap, setAddedMap] = useState<Record<string, boolean>>({});
 
-  const productSlug = (code?: string, id?: string | number) => code ? `/${code}` : `/${id}`;
+  const productSlug = (slug?: string, code?: string, id?: string | number) =>
+    slug ? `/${slug}` : code ? `/${code}` : `/${id}`;
 
   const idsParam = useMemo(() => {
     const ids = (Array.isArray(productData) ? productData : [])
@@ -52,6 +53,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   }, [idsParam]);
 
   const toProductHref = (
+    slug: string | undefined,
     code: string | undefined,
     _id: string | number,
     brand: string,
@@ -65,7 +67,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
     bundleQuantity?: number,
     bundlePrice?: number
   ) => ({
-    pathname: productSlug(code, _id),
+    pathname: productSlug(slug, code, _id),
     query: { _id, brand, category, description, image, isNew, oldPrice, price, title, bundleQuantity, bundlePrice },
   });
 
@@ -85,13 +87,13 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   return (
     <div ref={ref} className={`grid w-full items-stretch px-1 md:px-0 ${gridClass}`}>
       {(Array.isArray(productData) ? productData : []).map(
-        ({ _id, code, title, brand, category, description, image, images, isNew, oldPrice, price, bundleQuantity, bundlePrice }: ProductProps) => {
+        ({ _id, slug, code, title, brand, category, description, image, images, isNew, oldPrice, price, bundleQuantity, bundlePrice }: ProductProps) => {
           const itemStats = stats[String(_id)] || { salesCount: 0, avgRating: 0, reviewCount: 0 };
           const wasAdded = Boolean(addedMap[String(_id)]);
           const hasDiscount = typeof oldPrice === "number" && oldPrice > price;
           const displayTitle = formatProductTitle(title || "Producto");
           const displayImage = pickDisplayImage(image, images);
-          const href = toProductHref(code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title, bundleQuantity, bundlePrice);
+          const href = toProductHref(slug, code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title, bundleQuantity, bundlePrice);
           const bundlePromoLabel = getBundlePromoLabel({ bundleQuantity, bundlePrice });
           const hasSales = itemStats.salesCount > 0;
           const hasReviews = itemStats.reviewCount > 0;

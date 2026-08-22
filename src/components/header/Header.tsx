@@ -478,7 +478,7 @@ const Header = () => {
                           key={`${item._id}-${item.code || item.title}`}
                           className="w-full border-b-[1px] border-b-gray-200 flex items-center gap-4"
                           href={{
-                            pathname: `/${item.code || item._id}`,
+                            pathname: `/${item.slug || item.code || item._id}`,
                             query: {
                               _id: item._id,
                               brand: item.brand,
@@ -723,7 +723,7 @@ const Header = () => {
                       key={`${item._id}-${item.code || item.title}`}
                       className="w-full border-b border-gray-200 flex items-center gap-4 px-3 py-2"
                       href={{
-                        pathname: `/${item.code || item._id}`,
+                        pathname: `/${item.slug || item.code || item._id}`,
                         query: {
                           _id: item._id,
                           brand: item.brand,

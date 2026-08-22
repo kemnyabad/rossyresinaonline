@@ -1,4 +1,5 @@
 export interface ProductProps {
+  slug?: string;
   code?: string;
   barcode?: string;
   sku?: string;
@@ -31,6 +32,7 @@ export interface StoreProduct {
   productId?: number | string;
   variantId?: string;
   variantLabel?: string;
+  slug?: string;
   code?: string;
   barcode?: string;
   sku?: string;

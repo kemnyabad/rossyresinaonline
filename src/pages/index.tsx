@@ -329,7 +329,7 @@ export default function Home({ productData, behavior, marketplaceProducts, ofert
 
           <section className="columns-2 gap-1.5 bg-gray-100 p-1.5">
             {mobileGridProducts.map((p) => (
-              <Link key={`mobile-grid-${p._id}`} href={`/${p.code || p._id}`} className="mb-1.5 inline-block w-full min-w-0 break-inside-avoid bg-white align-top">
+              <Link key={`mobile-grid-${p._id}`} href={`/${p.slug || p.code || p._id}`} className="mb-1.5 inline-block w-full min-w-0 break-inside-avoid bg-white align-top">
                 <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
                   <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover" />
                   {typeof p.oldPrice === "number" && p.oldPrice > p.price ? (
@@ -469,41 +469,6 @@ export default function Home({ productData, behavior, marketplaceProducts, ofert
           </div>
         </section>
 
-        <section className="border-t border-gray-100 bg-white px-4 py-8 md:px-6">
-          <div className="mx-auto max-w-screen-2xl">
-            <div className="grid gap-5 md:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] md:items-start">
-              <div>
-                <h2 className="text-xl font-bold text-gray-950 md:text-2xl">
-                  Tienda de resina epóxica y moldes de silicona en Perú
-                </h2>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-700 md:text-base">
-                  En Rossy Resina encuentras materiales para manualidades, bisutería y emprendimientos:
-                  resina epóxica, resina UV, moldes de silicona, pigmentos, glitters, vasos mezcladores y
-                  accesorios para crear piezas listas para vender.
-                </p>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-700 md:text-base">
-                  Atendemos pedidos con envío a todo Perú y soporte por WhatsApp para elegir productos según
-                  tu proyecto, desde llaveros y dijes hasta lapiceros shaker, recuerdos personalizados y piezas
-                  decorativas en resina.
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-sm font-semibold text-gray-800 sm:grid-cols-3 md:grid-cols-2">
-                <Link href="/categoria/resina" className="rounded-md border border-gray-200 px-3 py-3 hover:border-amazon_blue hover:text-amazon_blue">
-                  Resina epóxica
-                </Link>
-                <Link href="/categoria/moldes-de-silicona" className="rounded-md border border-gray-200 px-3 py-3 hover:border-amazon_blue hover:text-amazon_blue">
-                  Moldes de silicona
-                </Link>
-                <Link href="/categoria/pigmentos" className="rounded-md border border-gray-200 px-3 py-3 hover:border-amazon_blue hover:text-amazon_blue">
-                  Pigmentos
-                </Link>
-                <Link href="/productos" className="rounded-md border border-gray-200 px-3 py-3 hover:border-amazon_blue hover:text-amazon_blue">
-                  Catálogo completo
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
     </>
   );

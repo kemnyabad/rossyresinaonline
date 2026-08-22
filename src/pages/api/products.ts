@@ -3,12 +3,14 @@ import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { ProductSchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
+import { uniqueSlug } from "@/lib/slug";
 
 const db = prisma as any;
 const productBaseSelect = {
   id: true,
   legacyId: true,
   code: true,
+  slug: true,
   barcode: true,
   sku: true,
   title: true,
@@ -174,6 +176,7 @@ const pickMainImage = (image: any, images: any): string => {
 
 const toLegacyProduct = (p: any) => ({
   _id: p.legacyId ?? p.id,
+  slug: p.slug || "",
   code: fixMojibakeText(p.code || ""),
   barcode: fixMojibakeText(p.barcode || ""),
   sku: fixMojibakeText(p.sku || ""),
@@ -208,7 +211,25 @@ const toDbData = (body: any) => {
   const stock = normalizeStock(body?.stock);
   const barcode = sanitizeBarcode(body?.barcode);
   const sku = fixMojibakeText(String(body?.sku || "").trim()) || null;
-  return { legacyId, code, barcode, sku, title, description, brand, category, image, images: gallery, price, oldPrice, bundleQuantity, bundlePrice, isNew, stock };
+  return {
+    legacyId,
+    code,
+    slug: undefined as string | undefined,
+    barcode,
+    sku,
+    title,
+    description,
+    brand,
+    category,
+    image,
+    images: gallery,
+    price,
+    oldPrice,
+    bundleQuantity,
+    bundlePrice,
+    isNew,
+    stock,
+  };
 };
 
 const isTooManyClientsError = (error: any): boolean =>
@@ -298,6 +319,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!data.title || !Number.isFinite(data.price)) {
         return res.status(400).json({ error: "Datos de producto invalidos" });
       }
+      data.slug = await withDbRetry(() =>
+        uniqueSlug(data.title, async (candidate) =>
+          Boolean(await db.product.findFirst({ where: { slug: candidate }, select: { id: true } }))
+        )
+      );
 
       const where = data.code ? { code: data.code } : data.legacyId ? { legacyId: data.legacyId } : null;
       let created: any;
@@ -343,17 +369,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (data.code) {
         existing = await withDbRetry(() => db.product.findFirst({
           where: { code: data.code },
-          select: { id: true, barcode: true, image: true, images: true },
+          select: { id: true, barcode: true, image: true, images: true, slug: true },
         }));
       }
       if (!existing) {
         const orWhere: any[] = [{ id: key }, { legacyId: key }, { code: key }];
         existing = await withDbRetry(() => db.product.findFirst({
           where: { OR: orWhere },
-          select: { id: true, barcode: true, image: true, images: true },
+          select: { id: true, barcode: true, image: true, images: true, slug: true },
         }));
       }
       if (!existing) return res.status(404).json({ error: "Producto no encontrado" });
+
+      // Conserva el slug existente (no lo cambia el editar el titulo) salvo que aun no tenga uno.
+      if (!existing.slug) {
+        data.slug = await withDbRetry(() =>
+          uniqueSlug(data.title, async (candidate) =>
+            Boolean(
+              await db.product.findFirst({
+                where: { slug: candidate, NOT: { id: existing.id } },
+                select: { id: true },
+              })
+            )
+          )
+        );
+      } else {
+        data.slug = undefined;
+      }
 
       const incomingImages = normalizeImages((req.body || {}).images);
       const incomingMain = String((req.body || {}).image || "").trim();

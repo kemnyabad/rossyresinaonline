@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         OR: [{ id: key }, { legacyId: key }, { code: key }],
       },
       select: {
-        id: true, legacyId: true, code: true, barcode: true, sku: true,
+        id: true, legacyId: true, code: true, slug: true, barcode: true, sku: true,
         title: true, description: true, brand: true, category: true,
         image: true, images: true, price: true, oldPrice: true,
         bundleQuantity: true, bundlePrice: true,
@@ -33,6 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       id: product.id,
       _id: product.legacyId ?? product.id,
+      slug: product.slug || "",
       code: product.code || "",
       barcode: product.barcode || "",
       sku: product.sku || "",

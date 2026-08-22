@@ -48,7 +48,7 @@ export default function ComparePage() {
                 <p className="text-xs text-gray-600 line-clamp-1">{p.category}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <button onClick={() => addSel(p)} className="text-xs px-3 py-1 rounded bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black">Aadir</button>
-                  <Link href={{ pathname: `/${p._id}`, query: { ...p } }} className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-100">Ver</Link>
+                  <Link href={{ pathname: `/${p.slug || p.code || p._id}`, query: { ...p } }} className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-100">Ver</Link>
                 </div>
               </div>
             </div>

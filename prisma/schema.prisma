@@ -73,6 +73,7 @@ model Product {
   id          String   @id @default(cuid())
   legacyId    String?  @unique
   code        String?  @unique
+  slug        String?  @unique
   barcode     String?
   sku         String?
   title       String

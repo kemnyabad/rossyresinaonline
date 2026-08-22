@@ -4,6 +4,7 @@ const productBaseSelect = {
   id: true,
   legacyId: true,
   code: true,
+  slug: true,
   barcode: true,
   title: true,
   description: true,
@@ -62,6 +63,7 @@ const pickMainImage = (image: any, images: any): string => {
 
 const toLegacyFromDb = (p: any): ProductProps => ({
   _id: p?.legacyId ?? p?.id,
+  slug: p?.slug || "",
   code: p?.code || "",
   barcode: p?.barcode || "",
   stock: Number(p?.stock || 0),

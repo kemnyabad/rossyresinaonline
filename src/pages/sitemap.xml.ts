@@ -52,10 +52,12 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
         )
     )
   );
-  const productUrls = products.map((p: any) => ({
-    path: `/${encodeURIComponent(String(p.code || p._id))}`,
-    lastmod: new Date(p.updatedAt || p.createdAt || now).toISOString(),
-  }));
+  const productUrls = products
+    .filter((p: any) => p.slug)
+    .map((p: any) => ({
+      path: `/${encodeURIComponent(String(p.slug))}`,
+      lastmod: new Date(p.updatedAt || p.createdAt || now).toISOString(),
+    }));
 
   const urls = [
     ...Array.from(new Set([...staticUrls, ...dynamicCategoryUrls])).map((path) => ({ path, lastmod: now })),

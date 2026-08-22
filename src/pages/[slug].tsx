@@ -418,7 +418,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
     if (/^https?:\/\//i.test(raw)) return raw;
     return raw.startsWith("/") ? raw : `/${raw}`;
   })();
-  const productPath = product ? `/${encodeURIComponent(String(product.code || product._id))}` : "/";
+  const productPath = product ? `/${encodeURIComponent(String(product.slug || product.code || product._id))}` : "/";
   const canonicalUrl = absoluteUrl(productPath);
   const absolutePageImage = absoluteImageUrl(pageImage);
   const productJsonLd = product
@@ -607,7 +607,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                             mobileProductSearchResults.map((item) => (
                               <Link
                                 key={`mobile-search-${item._id}`}
-                                href={`/${item.code || item._id}`}
+                                href={`/${item.slug || item.code || item._id}`}
                                 className="grid grid-cols-[46px_minmax(0,1fr)] gap-2 border-b border-gray-100 p-2 last:border-b-0"
                                 onClick={() => {
                                   setMobileProductSearchOpen(false);
@@ -1172,12 +1172,27 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
 export default DynamicPage;
 
 export const getServerSideProps = async (ctx: any) => {
-  const id = String(ctx?.params?._id || "").trim();
+  const key = String(ctx?.params?.slug || "").trim();
   const all: ProductProps[] = await getAllProducts();
+
+  const bySlug = all.find((p) => String(p.slug || "").toLowerCase() === key.toLowerCase()) || null;
   const product =
-    all.find((p) => String(p._id) === id) ||
-    all.find((p) => String(p.code || "").toLowerCase() === id.toLowerCase()) ||
+    bySlug ||
+    all.find((p) => String(p._id) === key) ||
+    all.find((p) => String(p.code || "").toLowerCase() === key.toLowerCase()) ||
     null;
+
+  // Los productos ya tienen slug: cualquier acceso por ID/código crudo redirige
+  // permanentemente a la URL canónica para consolidar el SEO en una sola URL.
+  if (product && !bySlug && product.slug) {
+    return {
+      redirect: {
+        destination: `/${encodeURIComponent(product.slug)}`,
+        permanent: true,
+      },
+    };
+  }
+
   const recs = product
     ? (() => {
         const withoutCurrent = all.filter((p) => String(p._id) !== String(product._id));
