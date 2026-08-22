@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { uploadImageToCloudinary } from '@/lib/cloudinaryUpload';
 
 interface RifaFormData {
   title: string;
@@ -124,49 +125,8 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
     }
   };
 
-  const readApiError = async (res: Response, fallback: string) => {
-    const text = await res.text().catch(() => '');
-    if (!text) return fallback;
-
-    try {
-      const json = JSON.parse(text);
-      return json?.error || json?.message || fallback;
-    } catch {
-      if (res.status === 413 || text.includes('Request Entity Too Large')) {
-        return 'El archivo es demasiado grande para subirlo. Reduce el tamaño o comprime la imagen.';
-      }
-      return text.slice(0, 180);
-    }
-  };
-
   const uploadFile = async (f: File): Promise<string> => {
-    const signRes = await fetch('/api/admin/rifas/cloudinary-sign?folder=rifas', {
-      method: 'GET',
-    });
-    if (!signRes.ok) {
-      throw new Error(await readApiError(signRes, 'No se pudo preparar la subida de imagen'));
-    }
-
-    const signData = await signRes.json();
-    const form = new FormData();
-    form.append('file', f);
-    form.append('api_key', signData.apiKey);
-    form.append('timestamp', String(signData.timestamp));
-    form.append('folder', 'rifas');
-    form.append('signature', signData.signature);
-
-    const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${signData.cloudName}/image/upload`, {
-      method: 'POST',
-      body: form,
-    });
-    if (!uploadRes.ok) {
-      throw new Error(await readApiError(uploadRes, 'Error al subir imagen a Cloudinary'));
-    }
-
-    const json = await uploadRes.json();
-    const url = String(json.secure_url || '').trim();
-    if (!url) throw new Error('Cloudinary no devolvió URL de la imagen');
-    return url;
+    return uploadImageToCloudinary(f, 'rifas');
   };
 
   const uploadVideoFile = async (f: File): Promise<string> => {
@@ -465,7 +425,7 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
             <label className="block text-sm font-semibold text-gray-700 mb-2">Imagen (opcional)</label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               onChange={handleImageChange}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
             />
@@ -482,7 +442,7 @@ export default function RifaAdminForm({ rifaId, initialData }: RifaFormProps) {
             </label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               multiple
               onChange={handlePrizeImagesChange}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"

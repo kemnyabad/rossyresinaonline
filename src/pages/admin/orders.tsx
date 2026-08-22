@@ -450,13 +450,13 @@ export default function AdminOrdersPage() {
                 <input value={shipData[shipModalOrder.id]?.shalomPickupCode || ""} onChange={(e) => setShipField(shipModalOrder.id, "shalomPickupCode", e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
               </Field>
               <Field label="Voucher Shalom (imagen)">
-                <input type="file" accept="image/*" onChange={(e) => handleShipImage(shipModalOrder.id, "shalomVoucherImage", e.target.files?.[0])} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" />
+                <input type="file" accept="image/*,.heic,.heif" onChange={(e) => handleShipImage(shipModalOrder.id, "shalomVoucherImage", e.target.files?.[0])} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" />
                 {shipData[shipModalOrder.id]?.shalomVoucherImage && <a href={shipData[shipModalOrder.id].shalomVoucherImage} target="_blank" rel="noreferrer" className="text-xs text-amazon_blue hover:underline mt-1 block">Ver voucher cargado</a>}
               </Field>
             </div>
           ) : (
             <Field label="Tracking Olva (imagen voucher)">
-              <input type="file" accept="image/*" onChange={(e) => handleShipImage(shipModalOrder.id, "olvaTrackingImage", e.target.files?.[0])} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" />
+              <input type="file" accept="image/*,.heic,.heif" onChange={(e) => handleShipImage(shipModalOrder.id, "olvaTrackingImage", e.target.files?.[0])} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" />
               {shipData[shipModalOrder.id]?.olvaTrackingImage && <a href={shipData[shipModalOrder.id].olvaTrackingImage} target="_blank" rel="noreferrer" className="text-xs text-amazon_blue hover:underline mt-1 block">Ver tracking cargado</a>}
             </Field>
           )}

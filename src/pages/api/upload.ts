@@ -27,10 +27,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { filename, data } = (req.body || {}) as any;
     if (!data || typeof data !== "string") return res.status(400).json({ error: "Datos invalidos" });
 
-    const match = data.match(/^data:(image\/(png|jpe?g|webp|avif));base64,(.+)$/i);
+    const match = data.match(/^data:(image\/(png|jpe?g|webp|avif|hei[cf]));base64,(.+)$/i);
     if (!match) return res.status(400).json({ error: "Formato de imagen invalido" });
 
-    const ext = match[2].toLowerCase() === "jpeg" ? "jpg" : match[2].toLowerCase();
+    const rawExt = match[2].toLowerCase();
+    const isHeic = rawExt === "heic" || rawExt === "heif";
+    // HEIC/HEIF (fotos de iPhone) no se puede mostrar en la mayoria de navegadores,
+    // asi que forzamos a Cloudinary a convertirla a JPG al subirla.
+    const ext = rawExt === "jpeg" || isHeic ? "jpg" : rawExt;
     const base64 = match[3];
     const buf = Buffer.from(base64, "base64");
     if (buf.length > 10 * 1024 * 1024) return res.status(413).json({ error: "Imagen muy grande (máximo 10MB)" });
@@ -48,6 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       resource_type: "auto",
       public_id: finalPublicId,
       overwrite: false,
+      ...(isHeic ? { format: "jpg" } : {}),
     });
 
     const url = String(upload.secure_url || "").trim();

@@ -186,7 +186,7 @@ export default function AdminOfertasExpress() {
 
           <label className="grid gap-1">
             <span className="text-sm text-gray-700">Imagen</span>
-            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <input type="file" accept="image/*,.heic,.heif" onChange={(e) => setFile(e.target.files?.[0] || null)} />
             {form.imagen && (
               <div className="relative h-24 w-24 rounded-lg overflow-hidden border border-gray-200 mt-1">
                 <Image src={form.imagen} alt="preview" fill className="object-cover" />

@@ -4,6 +4,7 @@ import type { GetServerSideProps } from "next";
 import { requireAdminPage } from "@/lib/adminAuth";
 import Image from "next/image";
 import ProductVariants, { type Variant } from "@/components/admin/ProductVariants";
+import { uploadImageToCloudinary } from "@/lib/cloudinaryUpload";
 
 const normalizeUrls = (value: any): string[] => {
   if (!Array.isArray(value)) return [];
@@ -48,48 +49,7 @@ const isResinCategory = (value: any): boolean =>
     .replace(/[\u0300-\u036f]/g, "")
     .includes("resina");
 
-const readUploadError = async (res: Response, fallback: string) => {
-  const text = await res.text().catch(() => "");
-  if (!text) return fallback;
-
-  try {
-    const json = JSON.parse(text);
-    return String(json?.error || json?.message || fallback);
-  } catch {
-    if (res.status === 413 || text.includes("Request Entity Too Large")) {
-      return "Una o más imágenes son demasiado grandes. Comprime las imágenes o súbelas en grupos más pequeños.";
-    }
-    return text.slice(0, 180);
-  }
-};
-
-const uploadProductImage = async (file: File): Promise<string> => {
-  const signRes = await fetch("/api/admin/rifas/cloudinary-sign?folder=products");
-  if (!signRes.ok) {
-    throw new Error(await readUploadError(signRes, "No se pudo preparar la subida de imagen."));
-  }
-
-  const signData = await signRes.json();
-  const body = new FormData();
-  body.append("file", file);
-  body.append("api_key", signData.apiKey);
-  body.append("timestamp", String(signData.timestamp));
-  body.append("folder", "products");
-  body.append("signature", signData.signature);
-
-  const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${signData.cloudName}/image/upload`, {
-    method: "POST",
-    body,
-  });
-  if (!uploadRes.ok) {
-    throw new Error(await readUploadError(uploadRes, "No se pudo subir la imagen a Cloudinary."));
-  }
-
-  const json = await uploadRes.json();
-  const url = String(json.secure_url || "").trim();
-  if (!url) throw new Error("Cloudinary no devolvió la URL de la imagen.");
-  return url;
-};
+const uploadProductImage = (file: File): Promise<string> => uploadImageToCloudinary(file, "products");
 
 export default function NewProduct() {
   const router = useRouter();
@@ -416,7 +376,7 @@ export default function NewProduct() {
             <div className="flex flex-wrap items-center gap-2">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 multiple
                 onChange={(e) => setFiles(Array.from(e.target.files || []))}
               />

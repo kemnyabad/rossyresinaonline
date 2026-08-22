@@ -16,9 +16,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const timestamp = Math.round(new Date().getTime() / 1000);
     const folder = req.query.folder as string || "rifas";
-    
+    const format = (req.query.format as string || "").trim();
+
+    const paramsToSign: Record<string, string | number> = { timestamp, folder };
+    if (format) paramsToSign.format = format;
+
     const signature = cloudinary.utils.api_sign_request(
-      { timestamp, folder },
+      paramsToSign,
       process.env.CLOUDINARY_API_SECRET!
     );
 
