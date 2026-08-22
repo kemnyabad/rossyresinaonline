@@ -7,10 +7,10 @@ const isLocalUrl = (value?: string) => /localhost|127\.0\.0\.1/i.test(String(val
 export const getSiteUrl = () => {
   const publicUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const authUrl = process.env.NEXTAUTH_URL;
-  const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
-  const vercelUrl = process.env.VERCEL_URL;
-  const deployedUrl = vercelProductionUrl || vercelUrl;
-  const siteUrl = publicUrl || (isLocalUrl(authUrl) ? "" : authUrl) || (deployedUrl ? `https://${deployedUrl}` : "") || DEFAULT_SITE_URL;
+  // The canonical domain always wins over Vercel's auto-generated *.vercel.app
+  // URLs (VERCEL_URL / VERCEL_PROJECT_PRODUCTION_URL). Those are only used as
+  // a last resort when neither env var above nor the hardcoded default apply.
+  const siteUrl = publicUrl || (isLocalUrl(authUrl) ? "" : authUrl) || DEFAULT_SITE_URL;
   return String(siteUrl).replace(/\/+$/, "");
 };
 
