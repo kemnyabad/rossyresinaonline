@@ -946,7 +946,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               </div>
             </div>
 
-            <div className="flex w-full flex-col gap-4 pt-6 lg:flex-1 lg:max-w-[420px]">
+            <div className="flex w-full flex-col gap-4 pt-6 lg:w-[420px] lg:shrink lg:grow-0">
               <div className="rounded-xl p-5">
                 {hasOffer ? (
                   <div className="mb-2 flex h-7 items-center justify-center">
