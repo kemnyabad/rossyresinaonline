@@ -1020,6 +1020,22 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
                 </div>
 
+                {productSpecs.length > 0 && (
+                  <div className="mt-4 rounded-lg border border-gray-200 overflow-hidden">
+                    <h3 className="bg-gray-50 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-gray-600 border-b border-gray-200">
+                      Detalles
+                    </h3>
+                    <div className="divide-y divide-gray-100">
+                      {productSpecs.map((s: { label: string; value: string }, i: number) => (
+                        <div key={`${s.label}-${i}`} className="grid grid-cols-[130px_minmax(0,1fr)] gap-3 px-3 py-2 text-sm">
+                          <span className="text-gray-600">{s.label}</span>
+                          <span className="font-semibold text-gray-900">{s.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {descriptionBullets.length > 0 && (
                   <div className="mt-4">
                     <h3 className="text-base font-semibold text-gray-800 mb-2">Sobre este producto</h3>
@@ -1103,24 +1119,6 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               </div>
 
             </div>
-
-            {productSpecs.length > 0 && (
-              <div className="hidden lg:block w-[260px] shrink-0 pt-6 lg:sticky lg:top-6 lg:self-start">
-                <div className="rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <h3 className="bg-gray-50 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gray-600 border-b border-gray-200">
-                    Detalles del producto
-                  </h3>
-                  <div className="divide-y divide-gray-100">
-                    {productSpecs.map((s: { label: string; value: string }, i: number) => (
-                      <div key={`${s.label}-${i}`} className="grid grid-cols-[90px_minmax(0,1fr)] items-baseline gap-2 px-4 py-3 text-sm">
-                        <span className="text-gray-500">{s.label}</span>
-                        <span className="text-right font-semibold text-gray-900">{s.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {activeViewerImage && viewerReady
