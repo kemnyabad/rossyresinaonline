@@ -784,8 +784,8 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
 
           <div className="hidden md:flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
             <div className="w-full lg:flex-1 lg:max-w-[760px]">
-              <div className="flex gap-4 items-center">
-                <div className="hidden lg:flex max-h-[520px] w-[72px] shrink-0 flex-col gap-3 overflow-y-auto pr-1 no-scrollbar">
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center gap-2">
                   {productImages.map((img) => (
                     <button
                       key={img}
@@ -803,7 +803,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   ))}
                 </div>
 
-                <div className="relative bg-transparent rounded-xl p-0 min-w-0 flex-1">
+                <div className="relative bg-transparent rounded-xl p-0 w-full">
                   <button
                     type="button"
                     onClick={() => openImageViewer(mainImage)}
@@ -848,24 +848,6 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                       </button>
                     </>
                   )}
-                  <div className="mt-2 flex flex-wrap items-center gap-1 lg:hidden">
-                    {productImages.map((img) => (
-                      <button
-                        key={img}
-                        onClick={() => setActiveImage(img)}
-                        className={`h-12 w-12 rounded ${mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"} bg-white`}
-                        aria-label="Cambiar imagen"
-                      >
-                        {isProcessImage(img) ? (
-                          <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
-                            Proceso
-                          </div>
-                        ) : (
-                          <Image src={img} alt="Miniatura" width={64} height={64} className="object-cover" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
 
