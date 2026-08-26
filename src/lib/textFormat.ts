@@ -5,6 +5,13 @@
   return lowered.charAt(0).toLocaleUpperCase("es") + lowered.slice(1);
 }
 
+export function formatDescriptionBullets(description?: string): string[] {
+  return String(description || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^[-•*]\s*/, ""))
+    .filter(Boolean);
+}
+
 export function sanitizeHumanText(input: string): string {
   let out = String(input || "");
 

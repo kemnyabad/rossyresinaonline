@@ -18,6 +18,7 @@ const productBaseSelect = {
   brand: true,
   category: true,
   image: true,
+  specs: true,
   price: true,
   oldPrice: true,
   bundleQuantity: true,
@@ -174,6 +175,16 @@ const pickMainImage = (image: any, images: any): string => {
   return "";
 };
 
+const normalizeSpecs = (specs: any): Array<{ label: string; value: string }> => {
+  if (!Array.isArray(specs)) return [];
+  return specs
+    .map((s: any) => ({
+      label: fixMojibakeText(String(s?.label || "").trim()),
+      value: fixMojibakeText(String(s?.value || "").trim()),
+    }))
+    .filter((s) => s.label && s.value);
+};
+
 const toLegacyProduct = (p: any) => ({
   _id: p.legacyId ?? p.id,
   slug: p.slug || "",
@@ -186,6 +197,7 @@ const toLegacyProduct = (p: any) => ({
   brand: fixMojibakeText(p.brand || ""),
   category: fixMojibakeText(p.category || ""),
   image: pickMainImage(p.image, p?.images),
+  specs: normalizeSpecs(p?.specs),
   isNew: Boolean(p.isNew),
   oldPrice: p.oldPrice != null ? Number(p.oldPrice) : undefined,
   price: Number(p.price || 0),
@@ -211,6 +223,7 @@ const toDbData = (body: any) => {
   const stock = normalizeStock(body?.stock);
   const barcode = sanitizeBarcode(body?.barcode);
   const sku = fixMojibakeText(String(body?.sku || "").trim()) || null;
+  const specs = normalizeSpecs(body?.specs);
   return {
     legacyId,
     code,
@@ -223,6 +236,7 @@ const toDbData = (body: any) => {
     category,
     image,
     images: gallery,
+    specs,
     price,
     oldPrice,
     bundleQuantity,

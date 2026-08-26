@@ -11,6 +11,7 @@ const productBaseSelect = {
   brand: true,
   category: true,
   image: true,
+  specs: true,
   price: true,
   oldPrice: true,
   bundleQuantity: true,
@@ -61,6 +62,13 @@ const pickMainImage = (image: any, images: any): string => {
   return "";
 };
 
+const normalizeSpecs = (specs: any): Array<{ label: string; value: string }> => {
+  if (!Array.isArray(specs)) return [];
+  return specs
+    .map((s) => ({ label: String(s?.label || "").trim(), value: String(s?.value || "").trim() }))
+    .filter((s) => s.label && s.value);
+};
+
 const toLegacyFromDb = (p: any): ProductProps => ({
   _id: p?.legacyId ?? p?.id,
   slug: p?.slug || "",
@@ -73,6 +81,7 @@ const toLegacyFromDb = (p: any): ProductProps => ({
   category: p?.category || "",
   image: pickMainImage(p?.image, p?.images),
   images: normalizeImages(p?.images),
+  specs: normalizeSpecs(p?.specs),
   isNew: Boolean(p?.isNew),
   oldPrice: p?.oldPrice != null ? Number(p.oldPrice) : undefined,
   price: Number(p?.price || 0),

@@ -4,6 +4,7 @@ import type { GetServerSideProps } from "next";
 import { requireAdminPage } from "@/lib/adminAuth";
 import Image from "next/image";
 import ProductVariants, { type Variant } from "@/components/admin/ProductVariants";
+import ProductSpecs, { type Spec } from "@/components/admin/ProductSpecs";
 import { uploadImageToCloudinary } from "@/lib/cloudinaryUpload";
 
 const normalizeUrls = (value: any): string[] => {
@@ -140,6 +141,7 @@ const mainImagePreview = useMemo(() => {
       legacyId: form.legacyId,
       title: form.title,
       description: form.description,
+      specs: form.specs || [],
       brand: form.brand,
       category: form.category,
       price: form.price,
@@ -297,7 +299,9 @@ const mainImagePreview = useMemo(() => {
                 className="rounded-md border border-gray-300 px-3 py-2"
                 value={form.description || ""}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder={"Escribe cada punto en una línea aparte.\nSe mostrarán como viñetas \"Sobre este producto\"."}
               />
+              <span className="text-xs text-gray-500">Cada línea se muestra como una viñeta en la página del producto.</span>
             </label>
 
             <label className="grid gap-1">
@@ -409,6 +413,8 @@ const mainImagePreview = useMemo(() => {
           {isResinCategory(form?.category) && (
             <ProductVariants productId={productDbId} variants={variants} onChange={setVariants} />
           )}
+
+          <ProductSpecs specs={form?.specs || []} onChange={(specs) => setForm({ ...form, specs })} />
 
           <div className="space-y-3 border-t border-gray-100 pt-4">
             {saveError ? <p className="text-sm text-red-600">{saveError}</p> : null}

@@ -8,6 +8,13 @@ const normalizeImages = (images: any): string[] => {
   return [];
 };
 
+const normalizeSpecs = (specs: any): Array<{ label: string; value: string }> => {
+  if (!Array.isArray(specs)) return [];
+  return specs
+    .map((s: any) => ({ label: String(s?.label || "").trim(), value: String(s?.value || "").trim() }))
+    .filter((s) => s.label && s.value);
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Método no permitido" });
 
@@ -22,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       select: {
         id: true, legacyId: true, code: true, slug: true, barcode: true, sku: true,
         title: true, description: true, brand: true, category: true,
-        image: true, images: true, price: true, oldPrice: true,
+        image: true, images: true, specs: true, price: true, oldPrice: true,
         bundleQuantity: true, bundlePrice: true,
         isNew: true, stock: true,
       },
@@ -44,6 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       category: product.category || "",
       image: product.image || "",
       images: normalizeImages(product.images),
+      specs: normalizeSpecs(product.specs),
       price: Number(product.price || 0),
       oldPrice: product.oldPrice != null ? Number(product.oldPrice) : 0,
       bundleQuantity: product.bundleQuantity != null ? Number(product.bundleQuantity) : "",

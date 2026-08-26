@@ -76,12 +76,13 @@ model Product {
   slug        String?  @unique
   barcode     String?
   sku         String?
-  title       String
-  description String
+  title       String   @db.Text
+  description String   @db.Text
   brand       String
   category    String
   image       String
   images      Json?
+  specs       Json?
   price       Decimal  @db.Decimal(10, 2)
   oldPrice    Decimal? @db.Decimal(10, 2)
   bundleQuantity Int?

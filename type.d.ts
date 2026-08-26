@@ -19,6 +19,7 @@ export interface ProductProps {
   bundlePrice?: number;
   title: string;
   _id: number | string;
+  specs?: Array<{ label: string; value: string }>;
   variants?: Array<{
     id: string;
     label: string;
