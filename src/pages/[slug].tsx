@@ -946,6 +946,24 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               </div>
             </div>
 
+            {productSpecs.length > 0 && (
+              <div className="hidden lg:block w-[220px] shrink-0 pt-6">
+                <div className="rounded-lg border border-gray-200 overflow-hidden">
+                  <h3 className="bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-800 border-b border-gray-200">
+                    Detalles
+                  </h3>
+                  <div className="divide-y divide-gray-100">
+                    {productSpecs.map((s: { label: string; value: string }, i: number) => (
+                      <div key={`${s.label}-${i}`} className="px-3 py-2 text-sm">
+                        <p className="text-gray-600">{s.label}</p>
+                        <p className="font-semibold text-gray-900">{s.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex w-full flex-col gap-4 pt-6 lg:flex-1 lg:max-w-[420px]">
               <div className="rounded-xl p-5">
                 {hasOffer ? (
@@ -1020,33 +1038,14 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
                 </div>
 
-                {(productSpecs.length > 0 || descriptionBullets.length > 0) && (
-                  <div className="mt-4 space-y-4">
-                    {productSpecs.length > 0 && (
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <h3 className="bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-800 border-b border-gray-200">
-                          Detalles
-                        </h3>
-                        <div className="divide-y divide-gray-100">
-                          {productSpecs.map((s: { label: string; value: string }, i: number) => (
-                            <div key={`${s.label}-${i}`} className="grid grid-cols-[130px_minmax(0,1fr)] gap-3 px-3 py-2 text-sm">
-                              <span className="text-gray-600">{s.label}</span>
-                              <span className="font-semibold text-gray-900">{s.value}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {descriptionBullets.length > 0 && (
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-800 mb-2">Sobre este producto</h3>
-                        <ul className="list-disc space-y-1.5 pl-5 text-sm leading-6 text-gray-700">
-                          {descriptionBullets.map((line, i) => (
-                            <li key={i}>{line}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                {descriptionBullets.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Sobre este producto</h3>
+                    <ul className="list-disc space-y-1.5 pl-5 text-sm leading-6 text-gray-700">
+                      {descriptionBullets.map((line, i) => (
+                        <li key={i}>{line}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
