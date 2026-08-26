@@ -1112,9 +1112,9 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                         href={waHref}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-bold text-white shadow-[0_3px_0_rgba(0,0,0,0.35)] transition-transform hover:brightness-95 active:translate-y-[1px] active:shadow-[0_2px_0_rgba(0,0,0,0.35)]"
+                        className="rr-wa-pulse group flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-bold text-white transition-transform hover:brightness-95 active:translate-y-[1px]"
                       >
-                        <FaWhatsapp className="h-5 w-5 shrink-0" />
+                        <FaWhatsapp className="rr-icon-pop h-5 w-5 shrink-0 group-hover:animate-none" />
                         Compartir por WhatsApp
                       </a>
                     </div>

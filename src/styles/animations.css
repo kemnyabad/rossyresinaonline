@@ -73,6 +73,11 @@
   50% { box-shadow: 0 18px 34px rgba(228, 20, 127, 0.36); }
 }
 
+@keyframes rrWhatsappPulse {
+  0%, 100% { box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(37, 211, 102, 0.55); }
+  50% { box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), 0 0 0 8px rgba(37, 211, 102, 0); }
+}
+
 .rr-icon-float {
   animation: rrFloatSoft 3.4s ease-in-out infinite;
 }
@@ -83,6 +88,10 @@
 
 .rr-cta-pulse {
   animation: rrGlowPulse 2.8s ease-in-out infinite;
+}
+
+.rr-wa-pulse {
+  animation: rrWhatsappPulse 2s ease-out infinite;
 }
 
 .rr-shine {
@@ -123,6 +132,7 @@
   .rr-icon-float,
   .rr-icon-pop,
   .rr-cta-pulse,
+  .rr-wa-pulse,
   .rr-cart-wiggle,
   .rr-add-to-cart-hit,
   .rr-shine::after {
