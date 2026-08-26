@@ -726,8 +726,8 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                 )}
                 {descriptionBullets.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Sobre este producto</h3>
-                    <ul className="list-disc space-y-1.5 pl-5 text-sm leading-6 text-gray-700">
+                    <h3 className="text-base font-semibold text-gray-800 mb-2">Sobre este producto</h3>
+                    <ul className="list-disc space-y-2 pl-5 text-base leading-7 text-gray-700">
                       {descriptionBullets.map((line, i) => (
                         <li key={i}>{line}</li>
                       ))}
@@ -1022,8 +1022,8 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
 
                 {descriptionBullets.length > 0 && (
                   <div className="mt-4">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Sobre este producto</h3>
-                    <ul className="list-disc space-y-1.5 pl-5 text-sm leading-6 text-gray-700">
+                    <h3 className="text-base font-semibold text-gray-800 mb-2">Sobre este producto</h3>
+                    <ul className="list-disc space-y-2 pl-5 text-base leading-7 text-gray-700">
                       {descriptionBullets.map((line, i) => (
                         <li key={i}>{line}</li>
                       ))}
