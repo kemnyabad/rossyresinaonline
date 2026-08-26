@@ -783,8 +783,8 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
 
           <div className="hidden md:flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
             <div className="w-full lg:flex-1 lg:max-w-[760px]">
-              <div className="flex gap-4 items-start">
-                <div className="hidden lg:flex h-[520px] w-[72px] shrink-0 flex-col justify-between gap-3 overflow-y-auto pr-1 pt-0 pb-1 no-scrollbar">
+              <div className="flex gap-4 items-center">
+                <div className="hidden lg:flex max-h-[520px] w-[72px] shrink-0 flex-col gap-3 overflow-y-auto pr-1 no-scrollbar">
                   {productImages.map((img) => (
                     <button
                       key={img}
