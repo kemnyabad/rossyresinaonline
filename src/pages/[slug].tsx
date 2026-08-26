@@ -1012,50 +1012,52 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   </div>
                 )}
 
-                <div className="mt-4 flex items-center gap-3">
-                  <span className="text-2xl font-semibold text-gray-900">
-                    <FormattedPrice amount={activePrice} />
-                  </span>
-                  <span className="text-sm font-normal text-gray-500">c/unidad</span>
-                  {hasActiveDiscount && (
-                    <span className="text-sm line-through text-gray-400">
-                      <FormattedPrice amount={activeOldPriceValue} />
+                <div className={productSpecs.length > 0 ? "lg:pr-[240px]" : ""}>
+                  <div className="mt-4 flex items-center gap-3">
+                    <span className="text-2xl font-semibold text-gray-900">
+                      <FormattedPrice amount={activePrice} />
                     </span>
-                  )}
-                  {hasActiveDiscount && (
-                    <span className="text-xs px-2 py-1 rounded-full border border-amazon_blue text-amazon_blue">Descuento</span>
-                  )}
-                </div>
-                {productVariants.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Presentación:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {productVariants.map((v: any) => (
-                        <button
-                          key={v.id}
-                          type="button"
-                          onClick={() => setSelectedVariant(selectedVariant?.id === v.id ? null : v)}
-                          className={`px-3 py-1.5 rounded-full border text-sm font-semibold transition ${
-                            selectedVariant?.id === v.id
-                              ? "bg-slate-900 text-white border-slate-900"
-                              : "border-gray-300 text-gray-700 hover:border-slate-900"
-                          }`}
-                        >
-                          {v.label} — S/ {Number(v.price).toFixed(2)} por kg
-                        </button>
-                      ))}
-                    </div>
+                    <span className="text-sm font-normal text-gray-500">c/unidad</span>
+                    {hasActiveDiscount && (
+                      <span className="text-sm line-through text-gray-400">
+                        <FormattedPrice amount={activeOldPriceValue} />
+                      </span>
+                    )}
+                    {hasActiveDiscount && (
+                      <span className="text-xs px-2 py-1 rounded-full border border-amazon_blue text-amazon_blue">Descuento</span>
+                    )}
                   </div>
-                )}
-                <div className="mt-3 text-base font-bold text-emerald-700 md:text-lg">
-                  {"Sin mínimo ni máximo de pedidos enviados"}
-                </div>
-                <div className="mt-3 text-sm text-amazon_blue">
-                  {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
+                  {productVariants.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">Presentación:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {productVariants.map((v: any) => (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => setSelectedVariant(selectedVariant?.id === v.id ? null : v)}
+                            className={`px-3 py-1.5 rounded-full border text-sm font-semibold transition ${
+                              selectedVariant?.id === v.id
+                                ? "bg-slate-900 text-white border-slate-900"
+                                : "border-gray-300 text-gray-700 hover:border-slate-900"
+                            }`}
+                          >
+                            {v.label} — S/ {Number(v.price).toFixed(2)} por kg
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-3 text-base font-bold text-emerald-700 md:text-lg">
+                    {"Sin mínimo ni máximo de pedidos enviados"}
+                  </div>
+                  <div className="mt-3 text-sm text-amazon_blue">
+                    {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
+                  </div>
                 </div>
 
                 {descriptionBullets.length > 0 && (
-                  <div className="mt-4">
+                  <div className={`mt-4 ${productSpecs.length > 0 ? "lg:pr-[240px]" : ""}`}>
                     <h3 className="text-base font-semibold text-gray-800 mb-2">Sobre este producto</h3>
                     <ul className="list-disc space-y-2 pl-5 text-base leading-7 text-gray-700">
                       {descriptionBullets.map((line, i) => (
