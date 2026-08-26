@@ -1105,7 +1105,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
             </div>
 
             {productSpecs.length > 0 && (
-              <div className="hidden lg:block w-[220px] shrink-0 pt-6">
+              <div className="hidden lg:block w-[220px] shrink-0 pt-6 lg:sticky lg:top-6 lg:self-start">
                 <div className="rounded-lg border border-gray-200 overflow-hidden">
                   <h3 className="bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-800 border-b border-gray-200">
                     Detalles
