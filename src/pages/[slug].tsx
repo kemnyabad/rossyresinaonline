@@ -4,7 +4,7 @@ import Image from "next/image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaWhatsapp } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import type { ProductProps } from "../../type";
 import Head from "next/head";
@@ -1108,7 +1108,13 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                         <span className="font-semibold">{qty}</span>
                         <button onClick={() => setQty((q) => q + 1)} className="text-lg">+</button>
                       </div>
-                      <a href={waHref} target="_blank" rel="noreferrer" className="text-sm px-3 py-2 rounded border border-amazon_blue text-amazon_blue hover:bg-amazon_blue hover:text-white">
+                      <a
+                        href={waHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-bold text-white shadow-[0_3px_0_rgba(0,0,0,0.35)] transition-transform hover:brightness-95 active:translate-y-[1px] active:shadow-[0_2px_0_rgba(0,0,0,0.35)]"
+                      >
+                        <FaWhatsapp className="h-5 w-5 shrink-0" />
                         Compartir por WhatsApp
                       </a>
                     </div>
