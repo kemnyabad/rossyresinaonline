@@ -781,72 +781,74 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               : null}
           </div>
 
-          <div className="hidden md:grid grid-cols-1 lg:grid-cols-[72px_minmax(0,720px)_minmax(0,1fr)] gap-4 items-start">
-            <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[72px_minmax(0,1fr)] gap-4 items-start">
-              <div className="hidden lg:flex h-[520px] flex-col justify-between gap-3 overflow-y-auto pr-1 pt-0 pb-1 no-scrollbar">
-                {productImages.map((img) => (
-                  <button
-                    key={img}
-                    onClick={() => setActiveImage(img)}
-                    className={`h-14 w-14 shrink-0 rounded ${mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"} bg-white overflow-hidden`}
-                  >
-                    {isProcessImage(img) ? (
-                      <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
-                        Proceso
-                      </div>
-                    ) : (
-                      <Image src={img} alt="Miniatura" width={80} height={80} className="object-cover" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <div className="bg-transparent rounded-xl p-0 w-full">
-                <button
-                  type="button"
-                  onClick={() => openImageViewer(mainImage)}
-                  className="relative w-full h-[360px] md:h-[520px] bg-white rounded-xl overflow-hidden"
-                  aria-label="Ver imagen grande"
-                >
-                  {mainImageIsProcess ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-4 text-center text-sm font-semibold uppercase tracking-wide text-gray-400">
-                      Producto en Proceso
-                    </div>
-                  ) : (
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        backgroundImage: `url(${mainImage})`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundSize: "contain",
-                        backgroundPosition: "50% 50%",
-                        backgroundColor: "transparent",
-                        transition: "none",
-                      }}
-                    />
-                  )}
-                </button>
-                <div className="mt-2 flex flex-wrap items-center gap-1 lg:hidden">
+          <div className="hidden md:flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
+            <div className="w-full lg:flex-1 lg:max-w-[760px]">
+              <div className="flex gap-4 items-start">
+                <div className="hidden lg:flex h-[520px] w-[72px] shrink-0 flex-col justify-between gap-3 overflow-y-auto pr-1 pt-0 pb-1 no-scrollbar">
                   {productImages.map((img) => (
                     <button
                       key={img}
                       onClick={() => setActiveImage(img)}
-                      className={`h-12 w-12 rounded ${mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"} bg-white`}
-                      aria-label="Cambiar imagen"
+                      className={`h-14 w-14 shrink-0 rounded ${mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"} bg-white overflow-hidden`}
                     >
                       {isProcessImage(img) ? (
                         <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
                           Proceso
                         </div>
                       ) : (
-                        <Image src={img} alt="Miniatura" width={64} height={64} className="object-cover" />
+                        <Image src={img} alt="Miniatura" width={80} height={80} className="object-cover" />
                       )}
                     </button>
                   ))}
                 </div>
+
+                <div className="bg-transparent rounded-xl p-0 min-w-0 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => openImageViewer(mainImage)}
+                    className="relative w-full h-[360px] md:h-[520px] bg-white rounded-xl overflow-hidden"
+                    aria-label="Ver imagen grande"
+                  >
+                    {mainImageIsProcess ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-4 text-center text-sm font-semibold uppercase tracking-wide text-gray-400">
+                        Producto en Proceso
+                      </div>
+                    ) : (
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          backgroundImage: `url(${mainImage})`,
+                          backgroundRepeat: "no-repeat",
+                          backgroundSize: "contain",
+                          backgroundPosition: "50% 50%",
+                          backgroundColor: "transparent",
+                          transition: "none",
+                        }}
+                      />
+                    )}
+                  </button>
+                  <div className="mt-2 flex flex-wrap items-center gap-1 lg:hidden">
+                    {productImages.map((img) => (
+                      <button
+                        key={img}
+                        onClick={() => setActiveImage(img)}
+                        className={`h-12 w-12 rounded ${mainImage === img ? "ring-2 ring-amazon_blue" : "ring-1 ring-gray-200"} bg-white`}
+                        aria-label="Cambiar imagen"
+                      >
+                        {isProcessImage(img) ? (
+                          <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[9px] font-semibold uppercase tracking-wide text-gray-400">
+                            Proceso
+                          </div>
+                        ) : (
+                          <Image src={img} alt="Miniatura" width={64} height={64} className="object-cover" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              <div className="lg:col-span-2 mt-6">
+              <div className="mt-6">
                 <div className="flex items-center gap-4 mb-4">
                   <h2 className="text-lg font-semibold">Reseñas</h2>
                   {reviewCount > 0 && (
@@ -941,7 +943,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 w-full pt-6">
+            <div className="flex w-full flex-col gap-4 pt-6 lg:flex-1 lg:max-w-[420px]">
               <div className="rounded-xl p-5">
                 {hasOffer ? (
                   <div className="mb-2 flex h-7 items-center justify-center">
