@@ -1105,16 +1105,16 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
             </div>
 
             {productSpecs.length > 0 && (
-              <div className="hidden lg:block w-[220px] shrink-0 pt-6 lg:sticky lg:top-6 lg:self-start">
-                <div className="rounded-lg border border-gray-200 overflow-hidden">
-                  <h3 className="bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-800 border-b border-gray-200">
-                    Detalles
+              <div className="hidden lg:block w-[260px] shrink-0 pt-6 lg:sticky lg:top-6 lg:self-start">
+                <div className="rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <h3 className="bg-gray-50 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gray-600 border-b border-gray-200">
+                    Detalles del producto
                   </h3>
                   <div className="divide-y divide-gray-100">
                     {productSpecs.map((s: { label: string; value: string }, i: number) => (
-                      <div key={`${s.label}-${i}`} className="px-3 py-2 text-sm">
-                        <p className="text-gray-600">{s.label}</p>
-                        <p className="font-semibold text-gray-900">{s.value}</p>
+                      <div key={`${s.label}-${i}`} className="grid grid-cols-[90px_minmax(0,1fr)] items-baseline gap-2 px-4 py-3 text-sm">
+                        <span className="text-gray-500">{s.label}</span>
+                        <span className="text-right font-semibold text-gray-900">{s.value}</span>
                       </div>
                     ))}
                   </div>
