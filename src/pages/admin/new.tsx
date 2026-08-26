@@ -230,7 +230,7 @@ export default function NewProduct() {
             <label className="grid gap-1 md:col-span-2">
               <span className="text-sm text-gray-700">Descripción</span>
               <textarea
-                rows={5}
+                rows={10}
                 className="rounded-md border border-gray-300 px-3 py-2"
                 value={form.description || ""}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
