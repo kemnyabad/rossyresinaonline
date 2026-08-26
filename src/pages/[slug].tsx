@@ -1067,49 +1067,51 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   </div>
                 )}
 
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Información del producto</h4>
-                  <div className="space-y-1.5 text-sm">
-                    {product.sku && (
-                      <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
-                        <span className="text-gray-600">SKU:</span>
-                        <span className="font-mono font-semibold text-gray-900">{product.sku}</span>
-                      </div>
-                    )}
-                    {product.barcode && (
-                      <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
-                        <span className="text-gray-600">Código de barras:</span>
-                        <span className="font-mono font-semibold text-gray-900">{product.barcode}</span>
-                      </div>
-                    )}
-                    {product.code && (
-                      <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
-                        <span className="text-gray-600">Código:</span>
-                        <span className="font-mono font-semibold text-gray-900">{product.code}</span>
-                      </div>
-                    )}
-                    {product.stock !== undefined && (
-                      <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
-                        <span className="text-gray-600">Stock disponible:</span>
-                        <span className={`font-semibold ${product.stock > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {product.stock > 0 ? `${product.stock} unidades` : 'Agotado'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600">Cantidad:</p>
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="flex items-center justify-between border border-gray-300 px-3 py-1 rounded-md w-28">
-                      <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="text-lg">-</button>
-                      <span className="font-semibold">{qty}</span>
-                      <button onClick={() => setQty((q) => q + 1)} className="text-lg">+</button>
+                <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-start">
+                  <div className="p-3 bg-gray-50 rounded-lg md:flex-1">
+                    <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Información del producto</h4>
+                    <div className="space-y-1.5 text-sm">
+                      {product.sku && (
+                        <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
+                          <span className="text-gray-600">SKU:</span>
+                          <span className="font-mono font-semibold text-gray-900">{product.sku}</span>
+                        </div>
+                      )}
+                      {product.barcode && (
+                        <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
+                          <span className="text-gray-600">Código de barras:</span>
+                          <span className="font-mono font-semibold text-gray-900">{product.barcode}</span>
+                        </div>
+                      )}
+                      {product.code && (
+                        <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
+                          <span className="text-gray-600">Código:</span>
+                          <span className="font-mono font-semibold text-gray-900">{product.code}</span>
+                        </div>
+                      )}
+                      {product.stock !== undefined && (
+                        <div className="grid grid-cols-[130px_minmax(0,1fr)] items-center gap-3">
+                          <span className="text-gray-600">Stock disponible:</span>
+                          <span className={`font-semibold ${product.stock > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {product.stock > 0 ? `${product.stock} unidades` : 'Agotado'}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <a href={waHref} target="_blank" rel="noreferrer" className="text-sm px-3 py-2 rounded border border-amazon_blue text-amazon_blue hover:bg-amazon_blue hover:text-white">
-                      Compartir por WhatsApp
-                    </a>
+                  </div>
+
+                  <div className="md:flex-1">
+                    <p className="text-sm text-gray-600">Cantidad:</p>
+                    <div className="mt-2 flex items-center gap-3">
+                      <div className="flex items-center justify-between border border-gray-300 px-3 py-1 rounded-md w-28">
+                        <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="text-lg">-</button>
+                        <span className="font-semibold">{qty}</span>
+                        <button onClick={() => setQty((q) => q + 1)} className="text-lg">+</button>
+                      </div>
+                      <a href={waHref} target="_blank" rel="noreferrer" className="text-sm px-3 py-2 rounded border border-amazon_blue text-amazon_blue hover:bg-amazon_blue hover:text-white">
+                        Compartir por WhatsApp
+                      </a>
+                    </div>
                   </div>
                 </div>
 
