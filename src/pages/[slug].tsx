@@ -947,7 +947,22 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
             </div>
 
             <div className="flex w-full flex-col gap-4 pt-6 lg:w-[640px] lg:shrink lg:grow-0">
-              <div className="rounded-xl p-5">
+              <div className="relative rounded-xl p-5">
+                {productSpecs.length > 0 && (
+                  <div className="absolute right-5 top-5 hidden w-[220px] rounded-lg border border-gray-200 overflow-hidden lg:block">
+                    <h3 className="bg-gray-50 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-gray-600 border-b border-gray-200">
+                      Detalles
+                    </h3>
+                    <div className="divide-y divide-gray-100">
+                      {productSpecs.map((s: { label: string; value: string }, i: number) => (
+                        <div key={`${s.label}-${i}`} className="px-3 py-2 text-sm">
+                          <p className="text-gray-500">{s.label}</p>
+                          <p className="font-semibold text-gray-900">{s.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {hasOffer ? (
                   <div className="mb-2 flex h-7 items-center justify-center">
                     <Link
@@ -960,42 +975,25 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     </Link>
                   </div>
                 ) : null}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-xl md:text-2xl font-semibold">{displayProductTitle}</h1>
-                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
-                      {salesCount > 0 && (
-                        <>
-                          <span>{salesCount} ventas</span>
-                          <span className="text-gray-300">|</span>
-                        </>
-                      )}
-                      <span>Distribuidor Rossy Resina</span>
-                      {reviewCount > 0 && (
-                        <div className="flex items-center gap-1 text-yellow-500 ml-auto">
-                          {[0, 1, 2, 3, 4].map((i) => (
-                            <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
-                          ))}
-                          <span className="text-gray-700 text-sm ml-1">{reviewAverage.toFixed(1)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {productSpecs.length > 0 && (
-                    <div className="hidden shrink-0 lg:block lg:w-[220px] rounded-lg border border-gray-200 overflow-hidden">
-                      <h3 className="bg-gray-50 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-gray-600 border-b border-gray-200">
-                        Detalles
-                      </h3>
-                      <div className="divide-y divide-gray-100">
-                        {productSpecs.map((s: { label: string; value: string }, i: number) => (
-                          <div key={`${s.label}-${i}`} className="px-3 py-2 text-sm">
-                            <p className="text-gray-500">{s.label}</p>
-                            <p className="font-semibold text-gray-900">{s.value}</p>
-                          </div>
+                <div className={productSpecs.length > 0 ? "lg:pr-[240px]" : ""}>
+                  <h1 className="text-xl md:text-2xl font-semibold">{displayProductTitle}</h1>
+                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                    {salesCount > 0 && (
+                      <>
+                        <span>{salesCount} ventas</span>
+                        <span className="text-gray-300">|</span>
+                      </>
+                    )}
+                    <span>Distribuidor Rossy Resina</span>
+                    {reviewCount > 0 && (
+                      <div className="flex items-center gap-1 text-yellow-500 ml-auto">
+                        {[0, 1, 2, 3, 4].map((i) => (
+                          <FaStar key={i} className={`h-4 w-4 ${i < Math.round(reviewAverage) ? "text-amber-500" : "text-gray-300"}`} />
                         ))}
+                        <span className="text-gray-700 text-sm ml-1">{reviewAverage.toFixed(1)}</span>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 {productSpecs.length > 0 && (
