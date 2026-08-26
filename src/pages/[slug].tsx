@@ -20,6 +20,7 @@ import { getPresentationTotalPrice } from "@/lib/productPricing";
 import { getBundlePromoLabel } from "@/lib/bundlePromo";
 import {
   ArrowLeftIcon,
+  ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
   MinusIcon,
@@ -802,7 +803,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   ))}
                 </div>
 
-                <div className="bg-transparent rounded-xl p-0 min-w-0 flex-1">
+                <div className="relative bg-transparent rounded-xl p-0 min-w-0 flex-1">
                   <button
                     type="button"
                     onClick={() => openImageViewer(mainImage)}
@@ -827,6 +828,26 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                       />
                     )}
                   </button>
+                  {productImages.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={showPrevProductImage}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md ring-1 ring-gray-200 hover:bg-white"
+                        aria-label="Imagen anterior"
+                      >
+                        <ChevronLeftIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={showNextProductImage}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md ring-1 ring-gray-200 hover:bg-white"
+                        aria-label="Imagen siguiente"
+                      >
+                        <ChevronRightIcon className="h-5 w-5" />
+                      </button>
+                    </>
+                  )}
                   <div className="mt-2 flex flex-wrap items-center gap-1 lg:hidden">
                     {productImages.map((img) => (
                       <button
