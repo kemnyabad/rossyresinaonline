@@ -8,6 +8,7 @@ import {
   ShoppingBagIcon,
   XMarkIcon,
   ChevronDownIcon,
+  Bars3Icon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -133,8 +134,7 @@ const Header = () => {
     { label: "Accesorios", value: "accesorios", href: "/categoria/accesorios", terms: ["accesorio", "dije", "llavero", "arete", "collar", "gancho"] },
     { label: "Creaciones", value: "creaciones", href: "/categoria/creaciones", terms: ["creacion", "creaciones"] },
   ], []);
-  const currentSearchCategory =
-    searchCategories.find((category) => category.value === selectedSearchCategory) || searchCategories[0];
+  const navCategories = useMemo(() => searchCategories.filter((category) => category.value), [searchCategories]);
 
   const filteredProducts = useMemo(() => {
     const normalizeSearchText = (value: string) =>
@@ -413,56 +413,10 @@ const Header = () => {
         {/* searchbar */}
         {!isResinyPage && <div className="hidden lg:flex flex-1 min-w-[220px] items-center justify-center">
           <form onSubmit={submitSearch} className="w-full max-w-3xl h-11 inline-flex items-center justify-between relative rounded-full border border-white bg-white shadow-sm focus-within:ring-2 focus-within:ring-[#e4147f]/35">
-            <div ref={searchCategoryRef} className="relative h-full w-[168px] shrink-0">
-              <button
-                type="button"
-                onClick={() => setSearchCategoryOpen((open) => !open)}
-                className="flex h-full w-full items-center justify-between gap-2 rounded-l-full border-r border-gray-200 bg-[#f8fafc] pl-5 pr-3 text-left text-sm font-bold text-slate-800 transition-colors hover:bg-white"
-                aria-haspopup="listbox"
-                aria-expanded={searchCategoryOpen}
-                aria-label="Filtrar por categoría"
-              >
-                <span className="truncate">{currentSearchCategory.label}</span>
-                <ChevronDownIcon className={`h-4 w-4 shrink-0 text-slate-600 transition-transform ${searchCategoryOpen ? "rotate-180" : ""}`} />
-              </button>
-              {searchCategoryOpen && (
-                <div
-                  className="absolute left-0 top-[calc(100%+8px)] z-40 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1.5 text-sm text-slate-800 shadow-[0_18px_40px_rgba(15,23,42,0.18)]"
-                  role="listbox"
-                >
-                  {searchCategories.map((category) => {
-                    const active = category.value === selectedSearchCategory;
-                    return (
-                      <button
-                        key={category.value || "all"}
-                        type="button"
-                        onClick={() => {
-                          setSelectedSearchCategory(category.value);
-                          setSearchCategoryOpen(false);
-                          if (category.value) {
-                            router.push(category.href);
-                          }
-                        }}
-                        className={`flex h-10 w-full items-center justify-between px-4 text-left font-semibold transition-colors ${
-                          active
-                            ? "bg-[#fff4f9] text-[#e4147f]"
-                            : "text-slate-700 hover:bg-[#f5fbfc] hover:text-[#10aebb]"
-                        }`}
-                        role="option"
-                        aria-selected={active}
-                      >
-                        <span>{category.label}</span>
-                        {active ? <span className="h-2 w-2 rounded-full bg-[#e4147f]" /> : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
             <input
               onChange={handleSearch}
               value={searchQuery}
-              className="h-full min-w-0 flex-1 bg-transparent pl-4 pr-28 text-sm text-black outline-none placeholder:text-xs placeholder:text-gray-400"
+              className="h-full min-w-0 flex-1 rounded-full bg-transparent pl-5 pr-28 text-sm text-black outline-none placeholder:text-xs placeholder:text-gray-400"
               type="text"
               placeholder="Buscar productos..."
             />
@@ -673,6 +627,59 @@ const Header = () => {
           )}
         </div>
       </div>
+
+      {!isResinyPage && (
+        <div className="hidden border-t border-[#749f14] bg-[#749f14] lg:block">
+          <div className="mx-auto flex max-w-screen-2xl items-center gap-6 px-3 py-2 sm:px-4 md:px-6 xl:px-8">
+            <div ref={searchCategoryRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setSearchCategoryOpen((open) => !open)}
+                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-semibold text-white transition-colors hover:bg-white/15"
+                aria-haspopup="listbox"
+                aria-expanded={searchCategoryOpen}
+              >
+                <Bars3Icon className="h-4 w-4" />
+                Categorías
+                <ChevronDownIcon className={`h-4 w-4 transition-transform ${searchCategoryOpen ? "rotate-180" : ""}`} />
+              </button>
+              {searchCategoryOpen && (
+                <div
+                  className="absolute left-0 top-[calc(100%+8px)] z-40 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1.5 text-sm text-slate-800 shadow-[0_18px_40px_rgba(15,23,42,0.18)]"
+                  role="listbox"
+                >
+                  {navCategories.map((category) => (
+                    <Link
+                      key={category.value}
+                      href={category.href}
+                      onClick={() => {
+                        setSelectedSearchCategory(category.value);
+                        setSearchCategoryOpen(false);
+                      }}
+                      className="flex h-10 w-full items-center px-4 text-left font-semibold text-slate-700 transition-colors hover:bg-[#f5fbfc] hover:text-[#10aebb]"
+                      role="option"
+                    >
+                      {category.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            <nav className="flex items-center gap-5 text-sm font-semibold text-white">
+              {navCategories.map((category) => (
+                <Link
+                  key={category.value}
+                  href={category.href}
+                  onClick={() => setSelectedSearchCategory(category.value)}
+                  className="transition-colors hover:text-[#fff2f9]"
+                >
+                  {category.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
 
       {mobileSearchOpen && (
         <div className="lg:hidden fixed inset-0 z-[60] bg-white">
