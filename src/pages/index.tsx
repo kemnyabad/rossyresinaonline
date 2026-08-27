@@ -594,7 +594,7 @@ function CategoryPanelCard({ name, items }: { name: string; items: ProductProps[
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 p-5">
+    <div className="group rounded-xl border border-gray-200 p-5">
       <div className="mb-4 flex flex-col items-center gap-2">
         <h3 className="text-xl font-bold text-gray-900">{name}</h3>
         <Link
@@ -610,7 +610,7 @@ function CategoryPanelCard({ name, items }: { name: string; items: ProductProps[
           type="button"
           onClick={() => scroll("left")}
           aria-label="Ver anteriores"
-          className="absolute left-0 top-1/2 z-10 hidden -translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 shadow-[0_6px_16px_rgba(17,24,39,0.10)] hover:bg-gray-50 md:flex"
+          className="absolute left-0 top-1/2 z-10 hidden -translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 opacity-0 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-opacity hover:bg-gray-50 group-hover:opacity-100 md:flex"
         >
           <ChevronLeftIcon className="h-5 w-5 text-gray-700" />
         </button>
@@ -618,7 +618,7 @@ function CategoryPanelCard({ name, items }: { name: string; items: ProductProps[
           type="button"
           onClick={() => scroll("right")}
           aria-label="Ver más"
-          className="absolute right-0 top-1/2 z-10 hidden translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 shadow-[0_6px_16px_rgba(17,24,39,0.10)] hover:bg-gray-50 md:flex"
+          className="absolute right-0 top-1/2 z-10 hidden translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 opacity-0 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-opacity hover:bg-gray-50 group-hover:opacity-100 md:flex"
         >
           <ChevronRightIcon className="h-5 w-5 text-gray-700" />
         </button>
