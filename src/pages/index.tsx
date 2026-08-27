@@ -268,7 +268,7 @@ export default function Home({ productData, behavior, marketplaceProducts, ofert
       buckets.get(cat)!.push(p);
     });
     return Array.from(buckets.entries())
-      .map(([name, items]) => ({ name, items: shufflePromotionItems(items, promotionSeed).slice(0, 3) }))
+      .map(([name, items]) => ({ name, items: shufflePromotionItems(items, promotionSeed).slice(0, 10) }))
       .filter((c) => c.items.length >= 3)
       .sort((a, b) => b.items.length - a.items.length)
       .slice(0, 2);
@@ -573,41 +573,77 @@ function CategoryShowcaseSection({
       <h2 className="mb-4 text-center text-2xl font-bold text-gray-900">Explora por categoría</h2>
       <div className={`grid gap-4 ${panels.length > 1 ? "md:grid-cols-2" : ""}`}>
         {panels.map((panel) => (
-          <div key={panel.name} className="rounded-xl border border-gray-200 p-5">
-            <div className="mb-4 flex flex-col items-center gap-2">
-              <h3 className="text-xl font-bold text-gray-900">{panel.name}</h3>
-              <Link
-                href={`/productos?categoria=${encodeURIComponent(panel.name)}`}
-                className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1.5 text-sm font-semibold text-amazon_blue"
-              >
-                Ver todo en {panel.name}
-                <ChevronRightIcon className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {panel.items.map((product) => (
-                <Link
-                  key={`${panel.name}-${product._id}`}
-                  href={`/${product.slug || product.code || product._id}`}
-                  className="min-w-0"
-                >
-                  <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
-                    <Image src={product.image || "/favicon-96x96.png"} alt={product.title || "Producto"} fill className="object-cover" />
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-sm text-gray-700">{product.title || "Producto"}</p>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <span className="font-bold text-amazon_blue">S/ {Number(product.price || 0).toFixed(2)}</span>
-                    {typeof product.oldPrice === "number" && product.oldPrice > product.price ? (
-                      <span className="text-xs text-gray-400 line-through">S/ {Number(product.oldPrice).toFixed(2)}</span>
-                    ) : null}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+          <CategoryPanelCard key={panel.name} name={panel.name} items={panel.items} />
         ))}
       </div>
     </section>
+  );
+}
+
+function CategoryPanelCard({ name, items }: { name: string; items: ProductProps[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = 200;
+    el.scrollTo({
+      left: direction === "left" ? el.scrollLeft - amount : el.scrollLeft + amount,
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <div className="rounded-xl border border-gray-200 p-5">
+      <div className="mb-4 flex flex-col items-center gap-2">
+        <h3 className="text-xl font-bold text-gray-900">{name}</h3>
+        <Link
+          href={`/productos?categoria=${encodeURIComponent(name)}`}
+          className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1.5 text-sm font-semibold text-amazon_blue"
+        >
+          Ver todo en {name}
+          <ChevronRightIcon className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => scroll("left")}
+          aria-label="Ver anteriores"
+          className="absolute left-0 top-1/2 z-10 hidden -translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 shadow-[0_6px_16px_rgba(17,24,39,0.10)] hover:bg-gray-50 md:flex"
+        >
+          <ChevronLeftIcon className="h-5 w-5 text-gray-700" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scroll("right")}
+          aria-label="Ver más"
+          className="absolute right-0 top-1/2 z-10 hidden translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 shadow-[0_6px_16px_rgba(17,24,39,0.10)] hover:bg-gray-50 md:flex"
+        >
+          <ChevronRightIcon className="h-5 w-5 text-gray-700" />
+        </button>
+        <div ref={scrollRef} className="no-scrollbar flex gap-3 overflow-x-auto scroll-smooth pb-1">
+          {items.map((product) => (
+            <Link
+              key={`${name}-${product._id}`}
+              href={`/${product.slug || product.code || product._id}`}
+              className="w-[140px] shrink-0"
+            >
+              <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+                <Image src={product.image || "/favicon-96x96.png"} alt={product.title || "Producto"} fill className="object-cover" />
+              </div>
+              <p className="mt-2 line-clamp-2 text-sm text-gray-700">{product.title || "Producto"}</p>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="font-bold text-amazon_blue">S/ {Number(product.price || 0).toFixed(2)}</span>
+                {typeof product.oldPrice === "number" && product.oldPrice > product.price ? (
+                  <span className="text-xs text-gray-400 line-through">S/ {Number(product.oldPrice).toFixed(2)}</span>
+                ) : null}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
