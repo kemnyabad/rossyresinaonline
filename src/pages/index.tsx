@@ -14,7 +14,9 @@ import {
   CheckBadgeIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ClockIcon,
   QuestionMarkCircleIcon,
+  ShoppingBagIcon,
   ShoppingCartIcon,
   TruckIcon,
   UserGroupIcon,
@@ -259,6 +261,32 @@ export default function Home({ productData, behavior, marketplaceProducts, ofert
     return "Oferta";
   };
 
+  const bestSellersForDeals = useMemo(
+    () => (realTopProducts.length > 0 ? realTopProducts : allProducts).slice(0, 3),
+    [realTopProducts, allProducts]
+  );
+  const topDiscountedForDeals = useMemo(() => {
+    const withDiscount = allProducts.filter(
+      (p) =>
+        typeof p.oldPrice === "number" &&
+        Number(p.oldPrice) > Number(p.price || 0) &&
+        Number(p.price || 0) > 0
+    );
+    return [...withDiscount]
+      .sort((a, b) => {
+        const pctA = (Number(a.oldPrice || 0) - Number(a.price || 0)) / Number(a.oldPrice || 1);
+        const pctB = (Number(b.oldPrice || 0) - Number(b.price || 0)) / Number(b.oldPrice || 1);
+        return pctB - pctA;
+      })
+      .slice(0, 3);
+  }, [allProducts]);
+  const maxDiscountPct = useMemo(() => {
+    return topDiscountedForDeals.reduce((max, p) => {
+      const pct = Math.round(((Number(p.oldPrice || 0) - Number(p.price || 0)) / Number(p.oldPrice || 1)) * 100);
+      return Math.max(max, pct);
+    }, 0);
+  }, [topDiscountedForDeals]);
+
   return (
     <>
       <Head>
@@ -440,6 +468,8 @@ export default function Home({ productData, behavior, marketplaceProducts, ofert
           </StoreWithAdsLayout>
 
           <div className="mx-auto max-w-screen-2xl space-y-6 px-4 pb-10 md:px-6">
+            <TodayDealsSection bestSellers={bestSellersForDeals} discounted={topDiscountedForDeals} maxDiscountPct={maxDiscountPct} />
+
             {/* Productos por intereses */}
             <section>
               <div className="relative mb-4 flex items-center justify-center">
@@ -542,6 +572,94 @@ function OfertasExpressSection({ items }: { items: OfertaExpressItem[] }) {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function TodayDealsSection({
+  bestSellers,
+  discounted,
+  maxDiscountPct,
+}: {
+  bestSellers: ProductProps[];
+  discounted: ProductProps[];
+  maxDiscountPct: number;
+}) {
+  if (bestSellers.length === 0 && discounted.length === 0) return null;
+
+  const panels = [
+    {
+      key: "superventas",
+      title: "Superventas",
+      icon: ShoppingBagIcon,
+      badge: "Gran selección de precio y calidad",
+      badgeClass: "bg-orange-50 text-orange-700",
+      iconClass: "text-orange-500",
+      href: "/productos",
+      items: bestSellers,
+    },
+    {
+      key: "superofertas",
+      title: "SuperOfertas",
+      icon: ClockIcon,
+      badge: maxDiscountPct > 0 ? `Hasta -${maxDiscountPct}%` : "Ofertas del día",
+      badgeClass: "bg-rose-50 text-rose-700",
+      iconClass: "text-rose-500",
+      href: "/productos?ofertas=1",
+      items: discounted,
+    },
+  ].filter((panel) => panel.items.length > 0);
+
+  if (panels.length === 0) return null;
+
+  return (
+    <section>
+      <h2 className="mb-4 text-center text-2xl font-bold text-gray-900">Ofertas de hoy</h2>
+      <div className={`grid gap-4 ${panels.length > 1 ? "md:grid-cols-2" : ""}`}>
+        {panels.map((panel) => {
+          const Icon = panel.icon;
+          return (
+            <div key={panel.key} className="rounded-xl border border-gray-200 p-5">
+              <div className="mb-4 flex flex-col items-center gap-2">
+                <h3 className="text-xl font-bold text-gray-900">{panel.title}</h3>
+                <Link
+                  href={panel.href}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${panel.badgeClass}`}
+                >
+                  <Icon className={`h-4 w-4 ${panel.iconClass}`} />
+                  {panel.badge}
+                  <ChevronRightIcon className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {panel.items.map((product) => (
+                  <Link
+                    key={`${panel.key}-${product._id}`}
+                    href={`/${product.slug || product.code || product._id}`}
+                    className="min-w-0"
+                  >
+                    <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+                      <Image src={product.image || "/favicon-96x96.png"} alt={product.title || "Producto"} fill className="object-cover" />
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-sm text-gray-700">{product.title || "Producto"}</p>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span className="font-bold text-amazon_blue">S/ {Number(product.price || 0).toFixed(2)}</span>
+                      {typeof product.oldPrice === "number" && product.oldPrice > product.price ? (
+                        <span className="text-xs text-gray-400 line-through">S/ {Number(product.oldPrice).toFixed(2)}</span>
+                      ) : null}
+                    </div>
+                    {typeof product.oldPrice === "number" && product.oldPrice > product.price ? (
+                      <span className="mt-1 inline-block rounded bg-rose-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
+                        {`-${Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%`}
+                      </span>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
