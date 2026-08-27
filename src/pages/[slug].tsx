@@ -1048,12 +1048,12 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                       </div>
                     </div>
                   )}
-                  <div className="mt-3 text-base font-bold text-emerald-700 md:text-lg">
-                    {"Sin mínimo ni máximo de pedidos enviados"}
-                  </div>
-                  <div className="mt-3 text-sm text-amazon_blue">
-                    {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
-                  </div>
+                </div>
+                <div className="mt-3 text-lg font-bold text-emerald-700 md:text-xl">
+                  {"Sin mínimo ni máximo de pedidos enviados"}
+                </div>
+                <div className="mt-3 text-base text-amazon_blue">
+                  {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
                 </div>
 
                 {descriptionBullets.length > 0 && (
