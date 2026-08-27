@@ -459,13 +459,10 @@ export default function Home({ productData, behavior, marketplaceProducts, ofert
 
             {/* Productos por intereses */}
             <section>
-              <div className="relative mb-4 flex items-center justify-center">
+              <div className="mb-4 flex items-center justify-center">
                 <h2 className="text-center text-xl font-bold text-gray-900">
                   Explora tus intereses
                 </h2>
-                <Link href="/productos" className="absolute right-0 text-sm font-semibold text-amazon_blue hover:underline">
-                  Ver catálogo
-                </Link>
               </div>
               <Products
                 productData={interestProducts}
