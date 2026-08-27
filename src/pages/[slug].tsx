@@ -949,7 +949,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
             <div className="flex w-full flex-col gap-4 pt-6 lg:w-[640px] lg:shrink lg:grow-0">
               <div className="relative rounded-xl p-5">
                 {productSpecs.length > 0 && (
-                  <div className="absolute right-5 top-5 hidden w-[220px] rounded-lg border border-gray-200 overflow-hidden lg:block">
+                  <div className="float-right ml-5 mb-4 hidden w-[220px] rounded-lg border border-gray-200 overflow-hidden lg:block">
                     <h3 className="bg-gray-50 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-gray-600 border-b border-gray-200">
                       Detalles
                     </h3>
@@ -975,7 +975,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     </Link>
                   </div>
                 ) : null}
-                <div className={productSpecs.length > 0 ? "lg:pr-[240px]" : ""}>
+                <div>
                   <h1 className="text-xl md:text-2xl font-semibold">{displayProductTitle}</h1>
                   <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
                     {salesCount > 0 && (
@@ -1012,7 +1012,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   </div>
                 )}
 
-                <div className={productSpecs.length > 0 ? "lg:pr-[240px]" : ""}>
+                <div>
                   <div className="mt-4 flex items-center gap-3">
                     <span className="text-4xl font-semibold text-gray-900">
                       <FormattedPrice amount={activePrice} />
@@ -1057,7 +1057,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                 </div>
 
                 {descriptionBullets.length > 0 && (
-                  <div className={`mt-4 ${productSpecs.length > 0 ? "lg:pr-[240px]" : ""}`}>
+                  <div className="mt-4">
                     <h3 className="text-base font-semibold text-gray-800 mb-2">Sobre este producto</h3>
                     <ul className="list-disc space-y-2 pl-5 text-base leading-7 text-gray-700">
                       {descriptionBullets.map((line, i) => (
@@ -1067,7 +1067,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   </div>
                 )}
 
-                <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-start">
+                <div className="mt-4 flex flex-col gap-4 clear-both md:flex-row md:items-start">
                   <div className="p-3 bg-gray-50 rounded-lg md:flex-1">
                     <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Información del producto</h4>
                     <div className="space-y-1.5 text-sm">
