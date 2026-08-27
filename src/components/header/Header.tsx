@@ -629,19 +629,19 @@ const Header = () => {
       </div>
 
       {!isResinyPage && (
-        <div className="hidden border-t border-[#749f14] bg-[#749f14] lg:block">
-          <div className="mx-auto flex max-w-screen-2xl items-center gap-6 px-3 py-2 sm:px-4 md:px-6 xl:px-8">
+        <div className="hidden border-b-2 border-[#e4147f] bg-white lg:block">
+          <div className="mx-auto flex max-w-screen-2xl items-center gap-7 px-3 py-3 sm:px-4 md:px-6 xl:px-8">
             <div ref={searchCategoryRef} className="relative">
               <button
                 type="button"
                 onClick={() => setSearchCategoryOpen((open) => !open)}
-                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-semibold text-white transition-colors hover:bg-white/15"
+                className="flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-[13.5px] font-bold tracking-tight text-slate-900 transition-colors hover:bg-gray-200"
                 aria-haspopup="listbox"
                 aria-expanded={searchCategoryOpen}
               >
                 <Bars3Icon className="h-4 w-4" />
-                Categorías
-                <ChevronDownIcon className={`h-4 w-4 transition-transform ${searchCategoryOpen ? "rotate-180" : ""}`} />
+                Todas las categorías
+                <ChevronDownIcon className={`h-3.5 w-3.5 transition-transform ${searchCategoryOpen ? "rotate-180" : ""}`} />
               </button>
               {searchCategoryOpen && (
                 <div
@@ -656,7 +656,7 @@ const Header = () => {
                         setSelectedSearchCategory(category.value);
                         setSearchCategoryOpen(false);
                       }}
-                      className="flex h-10 w-full items-center px-4 text-left font-semibold text-slate-700 transition-colors hover:bg-[#f5fbfc] hover:text-[#10aebb]"
+                      className="flex h-10 w-full items-center px-4 text-left font-semibold text-slate-700 transition-colors hover:bg-[#fff4f9] hover:text-[#e4147f]"
                       role="option"
                     >
                       {category.label}
@@ -665,13 +665,15 @@ const Header = () => {
                 </div>
               )}
             </div>
-            <nav className="flex items-center gap-5 text-sm font-semibold text-white">
-              {navCategories.map((category) => (
+            <nav className="flex items-center gap-6 text-[13.5px] font-bold tracking-tight">
+              {navCategories.map((category, index) => (
                 <Link
                   key={category.value}
                   href={category.href}
                   onClick={() => setSelectedSearchCategory(category.value)}
-                  className="transition-colors hover:text-[#fff2f9]"
+                  className={`transition-colors ${
+                    index === 0 ? "text-[#e4147f] hover:text-[#c21885]" : "text-slate-800 hover:text-[#e4147f]"
+                  }`}
                 >
                   {category.label}
                 </Link>
