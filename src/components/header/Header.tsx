@@ -635,13 +635,13 @@ const Header = () => {
               <button
                 type="button"
                 onClick={() => setSearchCategoryOpen((open) => !open)}
-                className="flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-[13.5px] font-bold tracking-tight text-slate-900 transition-colors hover:bg-gray-200"
+                className="flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2.5 text-base font-bold text-slate-900 transition-colors hover:bg-gray-200"
                 aria-haspopup="listbox"
                 aria-expanded={searchCategoryOpen}
               >
-                <Bars3Icon className="h-4 w-4" />
+                <Bars3Icon className="h-5 w-5" />
                 Todas las categorías
-                <ChevronDownIcon className={`h-3.5 w-3.5 transition-transform ${searchCategoryOpen ? "rotate-180" : ""}`} />
+                <ChevronDownIcon className={`h-4 w-4 transition-transform ${searchCategoryOpen ? "rotate-180" : ""}`} />
               </button>
               {searchCategoryOpen && (
                 <div
@@ -665,7 +665,7 @@ const Header = () => {
                 </div>
               )}
             </div>
-            <nav className="flex items-center gap-6 text-[13.5px] font-bold tracking-tight">
+            <nav className="flex items-center gap-6 text-base font-bold">
               {navCategories.map((category, index) => (
                 <Link
                   key={category.value}
