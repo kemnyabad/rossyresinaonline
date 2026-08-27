@@ -15,7 +15,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   QuestionMarkCircleIcon,
-  ShoppingBagIcon,
   ShoppingCartIcon,
   TruckIcon,
   UserGroupIcon,
@@ -584,7 +583,6 @@ function CategoryShowcaseSection({
                 href={`/productos?categoria=${encodeURIComponent(panel.name)}`}
                 className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1.5 text-sm font-semibold text-amazon_blue"
               >
-                <ShoppingBagIcon className="h-4 w-4" />
                 Ver todo en {panel.name}
                 <ChevronRightIcon className="h-3.5 w-3.5" />
               </Link>
