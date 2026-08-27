@@ -1014,7 +1014,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
 
                 <div className={productSpecs.length > 0 ? "lg:pr-[240px]" : ""}>
                   <div className="mt-4 flex items-center gap-3">
-                    <span className="text-2xl font-semibold text-gray-900">
+                    <span className="text-4xl font-semibold text-gray-900">
                       <FormattedPrice amount={activePrice} />
                     </span>
                     <span className="text-sm font-normal text-gray-500">c/unidad</span>
