@@ -390,7 +390,7 @@ export default function Home({ productData, behavior, marketplaceProducts, ofert
         </section>
 
         <section className="hidden md:block">
-          <StoreWithAdsLayout className="pb-10 pt-6">
+          <StoreWithAdsLayout className="pb-2 pt-3">
             <div className="space-y-6 md:space-y-8">
               <section className="w-full">
                 <HeroCarousel
