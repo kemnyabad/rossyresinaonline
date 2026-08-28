@@ -9,8 +9,9 @@ import FormattedPrice from "@/components/FormattedPrice";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { getBundleLineTotal } from "@/lib/bundlePromo";
 import { resetCart } from "@/store/nextSlice";
-import { useSession } from "next-auth/react";
-import { Bars3Icon, ChevronLeftIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useSession, signIn } from "next-auth/react";
+import { Bars3Icon, ChevronLeftIcon, ShieldCheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { FcGoogle } from "react-icons/fc";
 
 type PaymentMethod = "YAPE" | "TRANSFER";
 type ShippingCarrier = "SHALOM" | "OLVA";
@@ -108,6 +109,7 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [showAccountBanner, setShowAccountBanner] = useState(true);
+  const [isLocalhost, setIsLocalhost] = useState(false);
   const [locationLine, setLocationLine] = useState("");
 
   const [shippingCarrier, setShippingCarrier] = useState<ShippingCarrier>("SHALOM");
@@ -136,6 +138,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     setMounted(true);
+    setIsLocalhost(["localhost", "127.0.0.1", "::1"].includes(window.location.hostname));
   }, []);
 
   useEffect(() => {
@@ -459,32 +462,84 @@ export default function CheckoutPage() {
 
       {mounted && isGuestCheckout && showAccountBanner
         ? createPortal(
-            <div className="fixed inset-x-3 bottom-24 z-40 mx-auto max-w-md rounded-lg border border-amazon_blue/30 bg-white p-4 pr-10 shadow-[0_10px_30px_rgba(17,24,39,0.18)] md:inset-x-auto md:bottom-6 md:left-6 md:w-[380px]">
-              <button
-                type="button"
-                onClick={() => setShowAccountBanner(false)}
-                className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-gray-500 hover:bg-black/5"
-                aria-label="Cerrar aviso"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-              <p className="text-sm font-black text-gray-950">¿Ya tienes cuenta?</p>
-              <p className="mt-1 text-sm leading-6 text-gray-600">
-                Inicia sesión o regístrate para guardar tu dirección y no llenar el formulario la próxima vez.
-              </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <Link
-                  href="/register?callbackUrl=/checkout"
-                  className="flex h-11 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+              onClick={(e) => e.target === e.currentTarget && setShowAccountBanner(false)}
+            >
+              <div className="relative grid w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl md:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAccountBanner(false)}
+                  className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow hover:bg-gray-100"
+                  aria-label="Cerrar"
                 >
-                  Registrarme
-                </Link>
-                <Link
-                  href="/sign-in?callbackUrl=/checkout"
-                  className="flex h-11 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
-                >
-                  Ya tengo cuenta
-                </Link>
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+
+                <div className="hidden flex-col justify-center bg-gradient-to-br from-amazon_blue to-amazon_light p-8 text-white md:flex">
+                  <p className="text-2xl font-black leading-tight">Bienvenido a Rossy Resina</p>
+                  <p className="mt-3 text-sm leading-6 text-white/90">
+                    Regístrate o inicia sesión para guardar tu dirección de envío y no llenar el formulario en cada compra.
+                  </p>
+                  <ul className="mt-6 space-y-2 text-sm text-white/90">
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white" /> Guarda tu dirección de envío
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white" /> Consulta el estado de tus pedidos
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white" /> Compra más rápido la próxima vez
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="p-6 md:p-8">
+                  <h2 className="text-xl font-black text-gray-950 md:text-2xl">Regístrate o inicia sesión</h2>
+                  <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                    <ShieldCheckIcon className="h-4 w-4 shrink-0" /> Tus datos solo se usan para procesar tu pedido
+                  </p>
+
+                  <div className="mt-5 grid gap-2.5">
+                    <Link
+                      href="/register?callbackUrl=/checkout"
+                      className="flex h-12 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
+                    >
+                      Regístrate
+                    </Link>
+                    <Link
+                      href="/sign-in?callbackUrl=/checkout"
+                      className="flex h-12 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
+                    >
+                      ¿Ya tienes una cuenta?
+                    </Link>
+                  </div>
+
+                  {!isLocalhost && (
+                    <>
+                      <div className="mt-6 flex items-center gap-3">
+                        <span className="h-px flex-1 bg-gray-200" />
+                        <span className="text-xs font-semibold text-gray-500">Acceso rápido con</span>
+                        <span className="h-px flex-1 bg-gray-200" />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => signIn("google", { callbackUrl: "/checkout" })}
+                        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full border border-gray-300 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                      >
+                        <FcGoogle className="h-5 w-5" /> Continuar con Google
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setShowAccountBanner(false)}
+                    className="mt-6 w-full text-center text-sm font-semibold text-gray-500 underline-offset-2 hover:text-gray-700 hover:underline"
+                  >
+                    Continuar sin registrarme
+                  </button>
+                </div>
               </div>
             </div>,
             document.body
