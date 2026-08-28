@@ -20,9 +20,12 @@ import { getPresentationTotalPrice } from "@/lib/productPricing";
 import { getBundlePromoLabel } from "@/lib/bundlePromo";
 import {
   ArrowLeftIcon,
+  ArrowUturnLeftIcon,
+  CheckIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CreditCardIcon,
   MagnifyingGlassIcon,
   MinusIcon,
   PlusIcon,
@@ -825,6 +828,74 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                 )}
               </div>
             )}
+
+            <div className="px-4 pb-4">
+              <div className="overflow-hidden rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2 bg-emerald-50 px-4 py-3 border-b border-gray-200">
+                  <span className="rounded bg-amber-300 px-1.5 py-0.5 text-[10px] font-black uppercase text-gray-900">
+                    Rossy Resina
+                  </span>
+                  <span className="text-base font-bold text-emerald-600">Compromiso de compra</span>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  <Link href="/terms#envios" className="flex items-start justify-between gap-3 px-4 py-3">
+                    <div className="flex items-start gap-3">
+                      <TruckIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">Envío a todo el Perú</p>
+                        <p className="mt-0.5 text-sm text-gray-600">Entrega estimada: 2 a 7 días hábiles</p>
+                      </div>
+                    </div>
+                    <ChevronRightIcon className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
+                  </Link>
+
+                  <Link href="/checkout" className="flex items-start justify-between gap-3 px-4 py-3">
+                    <div className="flex items-start gap-3">
+                      <CreditCardIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">Pago seguro y flexible</p>
+                        <div className="mt-1 space-y-0.5 text-sm text-gray-600">
+                          <p className="flex items-center gap-1">
+                            <CheckIcon className="h-3.5 w-3.5 shrink-0 text-emerald-600" /> Yape y transferencia bancaria
+                          </p>
+                          <p className="flex items-center gap-1">
+                            <CheckIcon className="h-3.5 w-3.5 shrink-0 text-emerald-600" /> Contra entrega en zonas habilitadas
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronRightIcon className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
+                  </Link>
+
+                  <Link href="/terms#devolucion" className="flex items-start justify-between gap-3 px-4 py-3">
+                    <div className="flex items-start gap-3">
+                      <ArrowUturnLeftIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">Política de devoluciones y reembolsos</p>
+                        <p className="mt-0.5 text-sm text-gray-600">
+                          Cambios dentro de 7 días naturales, sin uso y en su empaque original
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRightIcon className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
+                  </Link>
+
+                  <Link href="/privacy" className="flex items-start justify-between gap-3 px-4 py-3">
+                    <div className="flex items-start gap-3">
+                      <ShieldCheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">Seguridad y privacidad</p>
+                        <div className="mt-1 space-y-0.5 text-sm text-gray-500">
+                          <p>Coordinamos tu pago y pedido de forma segura por WhatsApp.</p>
+                          <p>Tus datos solo se usan para procesar tu pedido y brindarte soporte.</p>
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronRightIcon className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
+                  </Link>
+                </div>
+              </div>
+            </div>
 
             {mobileBuyBarReady
               ? createPortal(
