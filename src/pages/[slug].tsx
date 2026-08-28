@@ -75,6 +75,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const [offerCtaVisible, setOfferCtaVisible] = useState(true);
   const [showShippingProcess, setShowShippingProcess] = useState(false);
   const [mobileTitleExpanded, setMobileTitleExpanded] = useState(false);
+  const [mobileVariantsExpanded, setMobileVariantsExpanded] = useState(false);
   const { data: session } = useSession();
   const dispatch = useDispatch();
   const cartCount = useSelector((state: any) =>
@@ -689,52 +690,110 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
             </div>
 
             <div className="bg-white px-4 py-3">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-                <div className="min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => setMobileTitleExpanded((v) => !v)}
-                    className="flex w-full items-start gap-1 text-left"
-                    aria-expanded={mobileTitleExpanded}
-                  >
-                    <h1
-                      className={`flex-1 text-[22px] font-medium leading-7 text-gray-950 ${
-                        mobileTitleExpanded ? "" : "line-clamp-2"
-                      }`}
-                    >
-                      {extendedProductTitle}
-                    </h1>
-                    <ChevronDownIcon
-                      className={`mt-1.5 h-5 w-5 shrink-0 text-gray-400 transition-transform ${
-                        mobileTitleExpanded ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
-                    <span>Vendido por</span>
-                    <span className="font-semibold text-gray-900">Rossy Resina</span>
-                    <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-                  </div>
-                </div>
-                <div className="shrink-0 text-right">
-                  {hasActiveDiscount ? (
-                    <span className="block text-base font-black text-gray-700 line-through">
+              <button
+                type="button"
+                onClick={() => setMobileTitleExpanded((v) => !v)}
+                className="flex w-full items-start gap-1 text-left"
+                aria-expanded={mobileTitleExpanded}
+              >
+                <h1
+                  className={`flex-1 text-[22px] font-medium leading-7 text-gray-950 ${
+                    mobileTitleExpanded ? "" : "line-clamp-2"
+                  }`}
+                >
+                  {extendedProductTitle}
+                </h1>
+                <ChevronDownIcon
+                  className={`mt-1.5 h-5 w-5 shrink-0 text-gray-400 transition-transform ${
+                    mobileTitleExpanded ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-sm text-gray-600">
+                <span>De</span>
+                <span className="flex items-center gap-1 font-semibold text-gray-900">
+                  <span className="flex h-4 w-4 items-center justify-center rounded bg-amazon_blue/10 text-[10px]">🏪</span>
+                  Rossy Resina
+                </span>
+                {reviewCount > 0 && (
+                  <span className="flex items-center gap-1 font-semibold text-amber-500">
+                    <FaStar className="h-3.5 w-3.5" />
+                    {reviewAverage.toFixed(1)}
+                  </span>
+                )}
+                {salesCount > 0 && <span className="text-gray-500">| {salesCount}+ vendido(s)</span>}
+                <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span className="text-[28px] font-black leading-none text-amazon_blue">S/ {activePrice.toFixed(2)}</span>
+                {hasActiveDiscount && (
+                  <>
+                    <span className="text-sm font-black italic text-orange-500">-{activeDiscountPercent}% dto.</span>
+                    <span className="text-sm text-gray-400 line-through">
                       <FormattedPrice amount={activeOldPriceValue} />
                     </span>
-                  ) : null}
-                  <span className="block text-[28px] font-black leading-none text-amazon_blue">S/ {activePrice.toFixed(2)}</span>
-                </div>
+                  </>
+                )}
               </div>
-              {hasActiveDiscount ? (
-                <div className="mt-2 inline-flex rounded border border-orange-300 px-2 py-0.5 text-sm font-black italic text-orange-500">
-                  {activeDiscountPercent}% DE DESCUENTO
-                </div>
-              ) : null}
+              <p className="mt-0.5 text-xs text-gray-500">Precio por unidad</p>
+
+              {typeof product.stock === "number" && product.stock > 0 && product.stock <= 5 && (
+                <p className="mt-2 text-sm font-semibold text-red-500">
+                  ¡Últimas unidades! Solo quedan {product.stock}
+                </p>
+              )}
+
               {bundlePromoLabel ? (
                 <div className="mt-2 inline-flex rounded-md border border-lime-300 bg-[#f01891] px-3 py-1 text-base font-black italic text-white shadow-sm">
                   {bundlePromoLabel}
                 </div>
               ) : null}
+
+              {productVariants.length > 0 && (
+                <div className="mt-3 border-t border-gray-100 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setMobileVariantsExpanded((v) => !v)}
+                    className="flex w-full items-center justify-between text-sm"
+                    aria-expanded={mobileVariantsExpanded}
+                  >
+                    <span className="text-gray-600">
+                      Presentación:{" "}
+                      <span className="font-semibold text-gray-900">
+                        {selectedVariant ? selectedVariant.label : "Elegir opción"}
+                      </span>
+                    </span>
+                    <ChevronRightIcon
+                      className={`h-4 w-4 text-gray-400 transition-transform ${
+                        mobileVariantsExpanded ? "rotate-90" : ""
+                      }`}
+                    />
+                  </button>
+                  {mobileVariantsExpanded && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {productVariants.map((v: any) => (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedVariant(selectedVariant?.id === v.id ? null : v);
+                            setMobileVariantsExpanded(false);
+                          }}
+                          className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
+                            selectedVariant?.id === v.id
+                              ? "border-slate-900 bg-slate-900 text-white"
+                              : "border-gray-300 text-gray-700 hover:border-slate-900"
+                          }`}
+                        >
+                          {v.label} — S/ {Number(v.price).toFixed(2)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {(productSpecs.length > 0 || descriptionBullets.length > 0) && (
