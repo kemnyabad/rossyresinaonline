@@ -71,7 +71,7 @@ export default function SpinWheelPopup() {
       className="animated fadeIn animate-fast fixed inset-0 z-[130] flex items-center justify-center bg-black/60 px-4"
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
-      <div className="animated zoomIn animate-fast relative w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff0f7] to-white p-6 text-center shadow-2xl">
+      <div className="animated zoomIn animate-fast relative w-full max-w-sm p-6 text-center">
         <button
           type="button"
           onClick={handleClose}
@@ -83,8 +83,8 @@ export default function SpinWheelPopup() {
 
         {!won ? (
           <>
-            <h2 className="text-xl font-black text-gray-950">Regalo especial para ti</h2>
-            <p className="mt-1 text-sm font-semibold text-gray-600">Gira para obtener tu premio</p>
+            <h2 className="text-xl font-black text-white">Regalo especial para ti</h2>
+            <p className="mt-1 text-sm font-semibold text-white/80">Gira para obtener tu premio</p>
 
             <div className="relative mx-auto mt-6 h-64 w-64">
               <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
@@ -124,13 +124,13 @@ export default function SpinWheelPopup() {
             >
               {spinning ? "Girando..." : "Girar"}
             </button>
-            <p className="mt-2 text-xs font-semibold text-gray-500">100% probabilidad de ganar</p>
+            <p className="mt-2 text-xs font-semibold text-white/70">100% probabilidad de ganar</p>
           </>
         ) : (
           <div className="py-4">
             <p className="text-5xl">🎉</p>
-            <h2 className="mt-3 text-xl font-black text-gray-950">{PRIZE.label}</h2>
-            <p className="mt-2 text-sm text-gray-600">{PRIZE.description}</p>
+            <h2 className="mt-3 text-xl font-black text-white">{PRIZE.label}</h2>
+            <p className="mt-2 text-sm text-white/80">{PRIZE.description}</p>
             <button
               type="button"
               onClick={handleClose}
