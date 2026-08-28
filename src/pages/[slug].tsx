@@ -20,7 +20,6 @@ import { getPresentationTotalPrice } from "@/lib/productPricing";
 import { getBundlePromoLabel } from "@/lib/bundlePromo";
 import {
   ArrowLeftIcon,
-  ArrowUturnLeftIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -30,7 +29,6 @@ import {
   MinusIcon,
   PlusIcon,
   ShareIcon,
-  ShieldCheckIcon,
   ShoppingCartIcon,
   TruckIcon,
 } from "@heroicons/react/24/outline";
@@ -79,6 +77,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const [showShippingProcess, setShowShippingProcess] = useState(false);
   const [mobileTitleExpanded, setMobileTitleExpanded] = useState(false);
   const [mobileVariantsExpanded, setMobileVariantsExpanded] = useState(false);
+  const [mobileShippingExpanded, setMobileShippingExpanded] = useState(false);
   const { data: session } = useSession();
   const dispatch = useDispatch();
   const cartCount = useSelector((state: any) =>
@@ -838,16 +837,34 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   <span className="text-base font-bold text-emerald-600">Compromiso de compra</span>
                 </div>
                 <div className="divide-y divide-gray-100">
-                  <Link href="/terms#envios" className="flex items-start justify-between gap-3 px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => setMobileShippingExpanded((v) => !v)}
+                    className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left"
+                    aria-expanded={mobileShippingExpanded}
+                  >
                     <div className="flex items-start gap-3">
                       <TruckIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
                       <div>
                         <p className="text-sm font-semibold text-gray-900">Envío a todo el Perú</p>
-                        <p className="mt-0.5 text-sm text-gray-600">Entrega estimada: 2 a 7 días hábiles</p>
+                        <p className="mt-0.5 text-sm text-gray-600">Envíos 2 a 3 días</p>
+                        {mobileShippingExpanded && (
+                          <div className="mt-2 flex items-center gap-4">
+                            <span className="text-sm text-gray-600">Envíos por</span>
+                            <div className="flex items-center gap-4">
+                              <Image src="/logos/shalom.png" alt="Shalom" width={120} height={24} className="h-6 w-auto object-contain" />
+                              <Image src="/logos/olva.png" alt="Olva Courier" width={28} height={28} className="h-7 w-auto object-contain" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <ChevronRightIcon className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
-                  </Link>
+                    <ChevronRightIcon
+                      className={`mt-1 h-4 w-4 shrink-0 text-gray-400 transition-transform ${
+                        mobileShippingExpanded ? "rotate-90" : ""
+                      }`}
+                    />
+                  </button>
 
                   <Link href="/checkout" className="flex items-start justify-between gap-3 px-4 py-3">
                     <div className="flex items-start gap-3">
@@ -867,32 +884,21 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     <ChevronRightIcon className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
                   </Link>
 
-                  <Link href="/terms#devolucion" className="flex items-start justify-between gap-3 px-4 py-3">
+                  <a
+                    href={`https://wa.me/51966357648?text=${encodeURIComponent(`Hola, tengo una consulta sobre: ${displayProductTitle}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start justify-between gap-3 px-4 py-3"
+                  >
                     <div className="flex items-start gap-3">
-                      <ArrowUturnLeftIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                      <FaWhatsapp className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">Política de devoluciones y reembolsos</p>
-                        <p className="mt-0.5 text-sm text-gray-600">
-                          Cambios dentro de 7 días naturales, sin uso y en su empaque original
-                        </p>
+                        <p className="text-sm font-semibold text-gray-900">Soporte al cliente</p>
+                        <p className="mt-0.5 text-sm text-gray-600">Escríbenos por WhatsApp</p>
                       </div>
                     </div>
                     <ChevronRightIcon className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
-                  </Link>
-
-                  <Link href="/privacy" className="flex items-start justify-between gap-3 px-4 py-3">
-                    <div className="flex items-start gap-3">
-                      <ShieldCheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">Seguridad y privacidad</p>
-                        <div className="mt-1 space-y-0.5 text-sm text-gray-500">
-                          <p>Coordinamos tu pago y pedido de forma segura por WhatsApp.</p>
-                          <p>Tus datos solo se usan para procesar tu pedido y brindarte soporte.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRightIcon className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
-                  </Link>
+                  </a>
                 </div>
               </div>
             </div>
