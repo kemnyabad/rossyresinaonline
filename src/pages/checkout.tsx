@@ -459,7 +459,7 @@ export default function CheckoutPage() {
 
       {mounted && isGuestCheckout && showAccountBanner
         ? createPortal(
-            <div className="fixed inset-x-3 top-[76px] z-40 mx-auto max-w-md rounded-lg border border-amazon_blue/30 bg-white p-4 pr-10 shadow-[0_10px_30px_rgba(17,24,39,0.18)] md:inset-x-auto md:right-6 md:top-24 md:w-[380px]">
+            <div className="fixed inset-x-3 bottom-24 z-40 mx-auto max-w-md rounded-lg border border-amazon_blue/30 bg-white p-4 pr-10 shadow-[0_10px_30px_rgba(17,24,39,0.18)] md:inset-x-auto md:bottom-6 md:left-6 md:w-[380px]">
               <button
                 type="button"
                 onClick={() => setShowAccountBanner(false)}
