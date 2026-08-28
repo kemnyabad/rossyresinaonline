@@ -21,7 +21,7 @@ const RootLayout = ({ children }: Props) => {
     router.pathname.startsWith("/rifas") ||
     router.pathname.startsWith("/rifa/") ||
     router.pathname.startsWith("/admin/rifa");
-  const isProductDetailPage = router.pathname === "/[_id]";
+  const isProductDetailPage = router.pathname === "/[slug]";
   const isCartPage = router.pathname === "/cart";
   const isCheckoutPage = router.pathname === "/checkout";
   const isAccountPage = router.pathname === "/account";
