@@ -238,7 +238,7 @@ export default function AccountPage() {
               </div>
               <div className="px-1.5 py-2">
                 <p className="line-clamp-1 text-xs text-gray-700">{product.title || "Producto"}</p>
-                <p className="mt-1 text-sm font-black text-amazon_blue">
+                <p className="mt-1 text-sm font-black text-red-600">
                   <FormattedPrice amount={Number(product.price || 0)} />
                 </p>
               </div>

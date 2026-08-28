@@ -363,7 +363,7 @@ export default function Home({ productData, behavior, marketplaceProducts, ofert
                 <div className="p-2">
                   <p className="line-clamp-2 text-xs font-medium leading-4 text-gray-900">{p.title || "Producto"}</p>
                   <div className="mt-1 flex items-end gap-1">
-                    <p className="text-lg font-bold leading-none text-amazon_blue">S/ {Number(p.price || 0).toFixed(2)}</p>
+                    <p className="text-lg font-bold leading-none text-red-600">S/ {Number(p.price || 0).toFixed(2)}</p>
                     <span className="pb-0.5 text-[10px] text-gray-500">c/u</span>
                     {typeof p.oldPrice === "number" && p.oldPrice > p.price ? (
                       <span className="pb-0.5 text-[10px] text-gray-400 line-through">
@@ -636,7 +636,7 @@ function CategoryPanelCard({ name, items }: { name: string; items: ProductProps[
               </div>
               <p className="mt-2 line-clamp-2 text-sm text-gray-700">{product.title || "Producto"}</p>
               <div className="mt-1 flex items-baseline gap-2">
-                <span className="font-bold text-amazon_blue">S/ {Number(product.price || 0).toFixed(2)}</span>
+                <span className="font-bold text-red-600">S/ {Number(product.price || 0).toFixed(2)}</span>
                 {typeof product.oldPrice === "number" && product.oldPrice > product.price ? (
                   <span className="text-xs text-gray-400 line-through">S/ {Number(product.oldPrice).toFixed(2)}</span>
                 ) : null}

@@ -642,7 +642,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                                 </div>
                                 <div className="min-w-0">
                                   <p className="truncate text-xs font-semibold text-gray-900">{item.title || "Producto"}</p>
-                                  <p className="mt-0.5 text-xs font-bold text-amazon_blue">
+                                  <p className="mt-0.5 text-xs font-bold text-red-600">
                                     <FormattedPrice amount={Number(item.price || 0)} />
                                   </p>
                                 </div>
@@ -729,7 +729,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               </div>
 
               <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <span className="text-[28px] font-black leading-none text-amazon_blue">S/ {activePrice.toFixed(2)}</span>
+                <span className="text-[28px] font-black leading-none text-red-600">S/ {activePrice.toFixed(2)}</span>
                 {hasActiveDiscount && (
                   <>
                     <span className="text-sm font-black italic text-orange-500">-{activeDiscountPercent}% dto.</span>
@@ -914,7 +914,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                           <FormattedPrice amount={activeOldPriceValue} />
                         </p>
                       )}
-                      <p className="text-2xl font-black leading-none text-amazon_blue">
+                      <p className="text-2xl font-black leading-none text-red-600">
                         S/ {activePrice.toFixed(2)}
                       </p>
                     </div>
@@ -1179,7 +1179,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
 
                 <div>
                   <div className="mt-4 flex items-center gap-3">
-                    <span className="text-4xl font-semibold text-gray-900">
+                    <span className="text-4xl font-semibold text-red-600">
                       <FormattedPrice amount={activePrice} />
                     </span>
                     <span className="text-sm font-normal text-gray-500">c/unidad</span>

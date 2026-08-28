@@ -72,7 +72,7 @@ export default function MarketplaceProductGrid({
                     {product.shop?.commercialName || "Tienda Rossy Resina"}
                   </p>
                   <div className="mt-2 flex items-end justify-between gap-2">
-                    <p className="text-base font-semibold text-amazon_blue md:text-xl">
+                    <p className="text-base font-semibold text-red-600 md:text-xl">
                       S/ {Number(product.price || 0).toFixed(2)}
                     </p>
                   </div>

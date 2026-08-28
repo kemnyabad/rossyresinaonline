@@ -71,7 +71,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
             {item.brand ? `${item.brand} · ` : ""}
             {item.category || "Producto Rossy Resina"}
           </p>
-          <p className="mt-1 text-xl font-black text-amazon_blue md:hidden">
+          <p className="mt-1 text-xl font-black text-red-600 md:hidden">
             <FormattedPrice amount={item.price} />
           </p>
           {bundlePromoLabel ? (
@@ -128,7 +128,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
             </p>
           )}
           <div className="mt-1 flex items-center gap-2 md:justify-end">
-            <p className="text-lg text-gray-950">
+            <p className="text-lg text-red-600">
               <FormattedPrice amount={item.price} />
             </p>
             {hasDiscount && (
@@ -143,7 +143,7 @@ const CartProduct = ({ item }: cartProductsProps) => {
               {bundlePromoLabel}
             </p>
           ) : null}
-          <p className="mt-1 text-xl font-black text-gray-950">
+          <p className="mt-1 text-xl font-black text-red-600">
             <FormattedPrice amount={getBundleLineTotal(item)} />
           </p>
         </div>

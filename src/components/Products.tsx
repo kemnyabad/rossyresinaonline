@@ -149,7 +149,7 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                     <div className="min-w-0">
                       <div className="flex min-w-0 flex-wrap items-baseline gap-x-1 gap-y-0.5">
-                        <span className="text-base font-semibold text-amazon_blue md:text-xl">
+                        <span className="text-base font-semibold text-red-600 md:text-xl">
                           <FormattedPrice amount={price} />
                         </span>
                         <span className="text-xs text-gray-500 md:text-sm">c/unidad</span>

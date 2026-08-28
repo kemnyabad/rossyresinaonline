@@ -79,7 +79,7 @@ export default function ComparePage() {
               <div className="border p-3">Precio</div>
               {selected.map((p) => (
                 <div key={`price-${p._id}`} className="border p-3">
-                  <span className="text-amazon_blue font-semibold"><FormattedPrice amount={p.price} /></span>
+                  <span className="text-red-600 font-semibold"><FormattedPrice amount={p.price} /></span>
                   {p.oldPrice ? (
                     <span className="ml-2 text-sm line-through"><FormattedPrice amount={p.oldPrice} /></span>
                   ) : null}

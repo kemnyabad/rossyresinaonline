@@ -851,7 +851,7 @@ export default function CheckoutPage() {
                       <p className="font-medium">{p.title}</p>
                       <p className="text-sm text-gray-600">Cantidad: {p.quantity}</p>
                     </div>
-                    <div className="font-semibold"><FormattedPrice amount={getBundleLineTotal(p)} /></div>
+                    <div className="font-semibold text-red-600"><FormattedPrice amount={getBundleLineTotal(p)} /></div>
                   </li>
                 ))}
               </ul>

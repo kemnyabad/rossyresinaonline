@@ -158,7 +158,7 @@ const CartPage = () => {
                       </div>
                       <div className="mt-3 flex flex-col items-stretch gap-2 rounded-md bg-white px-1 min-[390px]:flex-row min-[390px]:items-center min-[390px]:justify-between">
                         <div className="flex min-w-0 items-center text-left">
-                          <p className="flex flex-wrap items-center gap-1 text-lg font-black leading-tight text-gray-950 min-[390px]:text-xl">
+                          <p className="flex flex-wrap items-center gap-1 text-lg font-black leading-tight text-red-600 min-[390px]:text-xl">
                             {itemDiscount && (
                               <span className="rounded border border-amazon_blue px-1 text-xs font-bold leading-5 text-amazon_blue min-[390px]:text-sm">
                                 {itemDiscount}
@@ -212,7 +212,7 @@ const CartPage = () => {
                       </div>
                       <div className="mt-1 flex min-w-0 items-end gap-1">
                         {recDiscount && <span className="rounded border border-amazon_blue px-1 text-xs font-bold text-amazon_blue">{recDiscount}</span>}
-                        <span className="min-w-0 flex-1 text-lg font-black text-amazon_blue">
+                        <span className="min-w-0 flex-1 text-lg font-black text-red-600">
                           <FormattedPrice amount={Number(product.price || 0)} />
                         </span>
                         <button

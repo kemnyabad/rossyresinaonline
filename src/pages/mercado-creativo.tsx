@@ -89,7 +89,7 @@ function ProductSection({ title, products }: { title: string; products: any[] })
                     <p className="line-clamp-2 min-h-[44px] text-base font-black text-slate-950 group-hover:text-[#e4147f]">{product.name}</p>
                   </Link>
                   <p className="mt-1 line-clamp-1 text-sm text-slate-500">{product.shop?.commercialName || "Tienda Rossy Resina"}</p>
-                  <p className="mt-3 text-lg font-black text-[#e4147f]">S/ {Number(product.price || 0).toFixed(2)}</p>
+                  <p className="mt-3 text-lg font-black text-red-600">S/ {Number(product.price || 0).toFixed(2)}</p>
                   {whatsapp && (
                     <a
                       href={`https://wa.me/${whatsapp}?text=${message}`}
