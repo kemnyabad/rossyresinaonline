@@ -1,4 +1,5 @@
 import HeroCarousel from "@/components/HeroCarousel";
+import SpinWheelPopup from "@/components/SpinWheelPopup";
 import Products from "@/components/Products";
 import MarketplaceProductGrid from "@/components/MarketplaceProductGrid";
 import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
@@ -294,6 +295,7 @@ export default function Home({ productData, behavior, marketplaceProducts, ofert
           dangerouslySetInnerHTML={{ __html: JSON.stringify([organizationJsonLd(), websiteJsonLd()]) }}
         />
       </Head>
+      <SpinWheelPopup />
       <main>
         <h1 className="sr-only">Rossy Resina - resina epóxica, moldes de silicona y pigmentos en Perú</h1>
         <OfertasExpressSection items={ofertasExpress} />
