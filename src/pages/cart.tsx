@@ -194,6 +194,9 @@ const CartPage = () => {
               })}
             </section>
 
+            {recommendedProducts.length > 0 && (
+              <h3 className="bg-white px-3 pt-4 text-base font-semibold text-gray-900">Puede que te interese</h3>
+            )}
             <section className="grid grid-cols-2 gap-1 bg-white pt-3">
               {recommendedProducts.slice(0, 10).map((product: any) => {
                 const recDiscount = discountLabel(product.oldPrice, product.price);
@@ -351,17 +354,19 @@ const CartPage = () => {
               )
             : null}
 
-          <section className="mt-4 hidden rounded-xl border border-gray-200 bg-white p-4 md:block md:p-5">
+          <div className="mt-4 hidden md:block">
             <h3 className="mb-3 text-lg font-semibold text-gray-900">Puede que te interese</h3>
-            {recommendedProducts.length > 0 ? (
-              <Products
-                productData={recommendedProducts}
-                gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4"
-              />
-            ) : (
-              <p className="text-sm text-gray-600">Aún no hay productos para recomendar.</p>
-            )}
-          </section>
+            <section className="rounded-xl border border-gray-200 bg-white p-4 md:p-5">
+              {recommendedProducts.length > 0 ? (
+                <Products
+                  productData={recommendedProducts}
+                  gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4"
+                />
+              ) : (
+                <p className="text-sm text-gray-600">Aún no hay productos para recomendar.</p>
+              )}
+            </section>
+          </div>
         </>
       ) : (
         <div className="pt-7">
