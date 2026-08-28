@@ -1398,7 +1398,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
             : null}
 
           <div className="mt-4 pb-28 md:mt-10 md:pb-0">
-            <h2 className="text-xl font-semibold mb-3">Explora tus intereses</h2>
+            <h2 className="text-xl font-semibold mb-3">Explora más productos</h2>
             {recs.length > 0 ? (
               <Products
                 productData={recs}
