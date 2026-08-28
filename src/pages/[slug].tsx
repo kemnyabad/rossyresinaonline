@@ -12,7 +12,7 @@ import { useRouter } from "next/router";
 import Products from "@/components/Products";
 import { getAllProducts } from "@/lib/repositories/productRepository";
 import { useSession, signIn } from "next-auth/react";
-import { formatProductTitle, formatDescriptionBullets } from "@/lib/textFormat";
+import { formatProductTitle, formatDescriptionBullets, buildExtendedProductTitle } from "@/lib/textFormat";
 import { trackViewContent } from "@/lib/metaPixel";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
@@ -20,6 +20,7 @@ import { getPresentationTotalPrice } from "@/lib/productPricing";
 import { getBundlePromoLabel } from "@/lib/bundlePromo";
 import {
   ArrowLeftIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
@@ -73,6 +74,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const [offerCtaText, setOfferCtaText] = useState("!PRODUCTOS EN OFERTA! APROVÉCHALO AHORA!");
   const [offerCtaVisible, setOfferCtaVisible] = useState(true);
   const [showShippingProcess, setShowShippingProcess] = useState(false);
+  const [mobileTitleExpanded, setMobileTitleExpanded] = useState(false);
   const { data: session } = useSession();
   const dispatch = useDispatch();
   const cartCount = useSelector((state: any) =>
@@ -159,6 +161,16 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
     : 0;
   const displayProductTitle = formatProductTitle(product?.title || product?.code || "Producto");
   const productSpecs = useMemo(() => (product as any)?.specs || [], [product]);
+  const extendedProductTitle = useMemo(
+    () =>
+      buildExtendedProductTitle({
+        title: product?.title,
+        category: product?.category,
+        measure: (product as any)?.measure,
+        specs: productSpecs,
+      }),
+    [product, productSpecs]
+  );
   const descriptionBullets = useMemo(() => formatDescriptionBullets(product?.description), [product?.description]);
   const bundlePromoLabel = !selectedVariant ? getBundlePromoLabel(product || {}) : "";
 
@@ -679,7 +691,25 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
             <div className="bg-white px-4 py-3">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                 <div className="min-w-0">
-                  <h1 className="line-clamp-2 text-[22px] font-medium leading-7 text-gray-950">{displayProductTitle}</h1>
+                  <button
+                    type="button"
+                    onClick={() => setMobileTitleExpanded((v) => !v)}
+                    className="flex w-full items-start gap-1 text-left"
+                    aria-expanded={mobileTitleExpanded}
+                  >
+                    <h1
+                      className={`flex-1 text-[22px] font-medium leading-7 text-gray-950 ${
+                        mobileTitleExpanded ? "" : "line-clamp-2"
+                      }`}
+                    >
+                      {extendedProductTitle}
+                    </h1>
+                    <ChevronDownIcon
+                      className={`mt-1.5 h-5 w-5 shrink-0 text-gray-400 transition-transform ${
+                        mobileTitleExpanded ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
                   <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
                     <span>Vendido por</span>
                     <span className="font-semibold text-gray-900">Rossy Resina</span>
