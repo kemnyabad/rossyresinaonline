@@ -120,7 +120,7 @@ export default function SpinWheelPopup() {
               type="button"
               onClick={handleSpin}
               disabled={spinning}
-              className="mt-8 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)] disabled:opacity-70"
+              className="mt-8 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)] disabled:cursor-not-allowed"
             >
               {spinning ? "Girando..." : "Girar"}
             </button>
