@@ -473,48 +473,68 @@ export default function CheckoutPage() {
         <div className="bg-white rounded-lg p-8 shadow">
           <p className="text-lg">Preparando tus datos...</p>
         </div>
-      ) : !sessionCustomerEmail ? (
-        <div className="mx-auto max-w-xl rounded-lg bg-white p-6 shadow md:p-8">
-          <h2 className="text-2xl font-black text-gray-950">Primero ingresa a tu cuenta</h2>
-          <p className="mt-2 text-sm leading-6 text-gray-600">
-            Para pagar usamos la dirección que guardas al registrarte. Así no llenas el formulario en cada compra.
-          </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <Link
-              href="/register?callbackUrl=/checkout"
-              className="flex h-12 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
-            >
-              Registrarme
-            </Link>
-            <Link
-              href="/sign-in?callbackUrl=/checkout"
-              className="flex h-12 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
-            >
-              Ya tengo cuenta
-            </Link>
-          </div>
-        </div>
       ) : !hasSavedShippingAddress && !showShippingForm ? (
         <div className="mx-auto max-w-xl rounded-lg bg-white p-6 shadow md:p-8">
-          <h2 className="text-2xl font-black text-gray-950">Completa tu dirección de envío</h2>
-          <p className="mt-2 text-sm leading-6 text-gray-600">
-            Tu cuenta está activa, pero no encontramos una dirección guardada. Agrégala una vez y luego aparecerá aquí automáticamente.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link
-              href="/shipping-address"
-              className="flex h-12 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
-            >
-              Guardar dirección
-            </Link>
-            <button
-              type="button"
-              onClick={() => setShowShippingForm(true)}
-              className="flex h-12 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
-            >
-              Usar otra dirección
-            </button>
-          </div>
+          {isGuestCheckout && (
+            <div className="mb-5 rounded-lg border border-amazon_blue/30 bg-amazon_blue/5 p-4">
+              <p className="text-sm font-black text-gray-950">¿Ya tienes cuenta?</p>
+              <p className="mt-1 text-sm leading-6 text-gray-600">
+                Inicia sesión o regístrate para guardar tu dirección y no llenar el formulario la próxima vez. También puedes continuar sin cuenta.
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <Link
+                  href="/register?callbackUrl=/checkout"
+                  className="flex h-11 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
+                >
+                  Registrarme
+                </Link>
+                <Link
+                  href="/sign-in?callbackUrl=/checkout"
+                  className="flex h-11 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
+                >
+                  Ya tengo cuenta
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {isGuestCheckout ? (
+            <>
+              <h2 className="text-2xl font-black text-gray-950">Completa tu dirección de envío</h2>
+              <p className="mt-2 text-sm leading-6 text-gray-600">
+                Ingresa tus datos de entrega para continuar con el pago.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowShippingForm(true)}
+                className="mt-5 flex h-12 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
+              >
+                Continuar
+              </button>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-black text-gray-950">Completa tu dirección de envío</h2>
+              <p className="mt-2 text-sm leading-6 text-gray-600">
+                Tu cuenta está activa, pero no encontramos una dirección guardada. Agrégala una vez y luego aparecerá aquí automáticamente.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  href="/shipping-address"
+                  className="flex h-12 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
+                >
+                  Guardar dirección
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setShowShippingForm(true)}
+                  className="flex h-12 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
+                >
+                  Usar otra dirección
+                </button>
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <div className={isShippingReviewStep ? "mx-auto max-w-5xl" : "grid gap-3 lg:grid-cols-3 lg:gap-6"}>
