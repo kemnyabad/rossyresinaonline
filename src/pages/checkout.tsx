@@ -457,36 +457,39 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {isGuestCheckout && showAccountBanner && (
-        <div className="relative mb-3 rounded-lg border border-amazon_blue/30 bg-amazon_blue/5 p-4 pr-10">
-          <button
-            type="button"
-            onClick={() => setShowAccountBanner(false)}
-            className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-gray-500 hover:bg-black/5"
-            aria-label="Cerrar aviso"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
-          <p className="text-sm font-black text-gray-950">¿Ya tienes cuenta?</p>
-          <p className="mt-1 text-sm leading-6 text-gray-600">
-            Inicia sesión o regístrate para guardar tu dirección y no llenar el formulario la próxima vez.
-          </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <Link
-              href="/register?callbackUrl=/checkout"
-              className="flex h-11 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
-            >
-              Registrarme
-            </Link>
-            <Link
-              href="/sign-in?callbackUrl=/checkout"
-              className="flex h-11 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
-            >
-              Ya tengo cuenta
-            </Link>
-          </div>
-        </div>
-      )}
+      {mounted && isGuestCheckout && showAccountBanner
+        ? createPortal(
+            <div className="fixed inset-x-3 top-[76px] z-40 mx-auto max-w-md rounded-lg border border-amazon_blue/30 bg-white p-4 pr-10 shadow-[0_10px_30px_rgba(17,24,39,0.18)] md:inset-x-auto md:right-6 md:top-24 md:w-[380px]">
+              <button
+                type="button"
+                onClick={() => setShowAccountBanner(false)}
+                className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-gray-500 hover:bg-black/5"
+                aria-label="Cerrar aviso"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+              <p className="text-sm font-black text-gray-950">¿Ya tienes cuenta?</p>
+              <p className="mt-1 text-sm leading-6 text-gray-600">
+                Inicia sesión o regístrate para guardar tu dirección y no llenar el formulario la próxima vez.
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <Link
+                  href="/register?callbackUrl=/checkout"
+                  className="flex h-11 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
+                >
+                  Registrarme
+                </Link>
+                <Link
+                  href="/sign-in?callbackUrl=/checkout"
+                  className="flex h-11 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
+                >
+                  Ya tengo cuenta
+                </Link>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
 
       {!mounted ? (
         <div className="bg-white rounded-lg p-8 shadow">
