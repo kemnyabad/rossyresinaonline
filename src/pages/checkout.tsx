@@ -10,7 +10,7 @@ import { trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { getBundleLineTotal } from "@/lib/bundlePromo";
 import { resetCart } from "@/store/nextSlice";
 import { useSession } from "next-auth/react";
-import { Bars3Icon, ChevronLeftIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, ChevronLeftIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 type PaymentMethod = "YAPE" | "TRANSFER";
 type ShippingCarrier = "SHALOM" | "OLVA";
@@ -107,6 +107,7 @@ export default function CheckoutPage() {
   const [dni, setDni] = useState("");
   const [phone, setPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  const [showAccountBanner, setShowAccountBanner] = useState(true);
   const [locationLine, setLocationLine] = useState("");
 
   const [shippingCarrier, setShippingCarrier] = useState<ShippingCarrier>("SHALOM");
@@ -455,6 +456,38 @@ export default function CheckoutPage() {
           </button>
         </div>
       </div>
+
+      {isGuestCheckout && showAccountBanner && (
+        <div className="relative mb-3 rounded-lg border border-amazon_blue/30 bg-amazon_blue/5 p-4 pr-10">
+          <button
+            type="button"
+            onClick={() => setShowAccountBanner(false)}
+            className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-gray-500 hover:bg-black/5"
+            aria-label="Cerrar aviso"
+          >
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+          <p className="text-sm font-black text-gray-950">¿Ya tienes cuenta?</p>
+          <p className="mt-1 text-sm leading-6 text-gray-600">
+            Inicia sesión o regístrate para guardar tu dirección y no llenar el formulario la próxima vez.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <Link
+              href="/register?callbackUrl=/checkout"
+              className="flex h-11 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
+            >
+              Registrarme
+            </Link>
+            <Link
+              href="/sign-in?callbackUrl=/checkout"
+              className="flex h-11 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
+            >
+              Ya tengo cuenta
+            </Link>
+          </div>
+        </div>
+      )}
+
       {!mounted ? (
         <div className="bg-white rounded-lg p-8 shadow">
           <p className="text-lg">Cargando checkout...</p>
@@ -475,29 +508,6 @@ export default function CheckoutPage() {
         </div>
       ) : !hasSavedShippingAddress && !showShippingForm ? (
         <div className="mx-auto max-w-xl rounded-lg bg-white p-6 shadow md:p-8">
-          {isGuestCheckout && (
-            <div className="mb-5 rounded-lg border border-amazon_blue/30 bg-amazon_blue/5 p-4">
-              <p className="text-sm font-black text-gray-950">¿Ya tienes cuenta?</p>
-              <p className="mt-1 text-sm leading-6 text-gray-600">
-                Inicia sesión o regístrate para guardar tu dirección y no llenar el formulario la próxima vez. También puedes continuar sin cuenta.
-              </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <Link
-                  href="/register?callbackUrl=/checkout"
-                  className="flex h-11 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-black text-white hover:brightness-95"
-                >
-                  Registrarme
-                </Link>
-                <Link
-                  href="/sign-in?callbackUrl=/checkout"
-                  className="flex h-11 items-center justify-center rounded-full border border-gray-300 bg-white px-5 text-sm font-black text-gray-900 hover:bg-gray-50"
-                >
-                  Ya tengo cuenta
-                </Link>
-              </div>
-            </div>
-          )}
-
           {isGuestCheckout ? (
             <>
               <h2 className="text-2xl font-black text-gray-950">Completa tu dirección de envío</h2>
