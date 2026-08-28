@@ -602,7 +602,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     <>
                       <form
                         onSubmit={submitMobileProductSearch}
-                        className="absolute right-0 top-0 z-20 flex h-11 w-[min(calc(100vw-112px),270px)] items-center overflow-hidden rounded-full border border-amazon_blue bg-white shadow-[0_8px_22px_rgba(17,24,39,0.16)]"
+                        className="animated fadeIn animate-fast absolute right-0 top-0 z-20 flex h-11 w-[min(calc(100vw-112px),270px)] items-center overflow-hidden rounded-full border border-amazon_blue bg-white shadow-[0_8px_22px_rgba(17,24,39,0.16)]"
                       >
                         <input
                           value={mobileProductSearchQuery}
@@ -620,7 +620,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                         </button>
                       </form>
                       {mobileProductSearchQuery.trim().length >= 2 ? (
-                        <div className="absolute right-0 top-12 z-20 w-[min(calc(100vw-112px),270px)] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-[0_10px_26px_rgba(17,24,39,0.18)]">
+                        <div className="animated fadeIn animate-fast absolute right-0 top-12 z-20 w-[min(calc(100vw-112px),270px)] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-[0_10px_26px_rgba(17,24,39,0.18)]">
                           {mobileProductSearchResults.length > 0 ? (
                             mobileProductSearchResults.map((item) => (
                               <Link
@@ -774,7 +774,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     />
                   </button>
                   {mobileVariantsExpanded && (
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="animated fadeIn animate-fast mt-2 flex flex-wrap gap-2">
                       {productVariants.map((v: any) => (
                         <button
                           key={v.id}
@@ -849,7 +849,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                         <p className="text-sm font-semibold text-gray-900">Envío a todo el Perú</p>
                         <p className="mt-0.5 text-sm text-gray-600">Envíos 2 a 3 días</p>
                         {mobileShippingExpanded && (
-                          <div className="mt-2 flex items-center gap-4">
+                          <div className="animated fadeIn animate-fast mt-2 flex items-center gap-4">
                             <span className="text-sm text-gray-600">Envíos por</span>
                             <div className="flex items-center gap-4">
                               <Image src="/logos/shalom.png" alt="Shalom" width={120} height={24} className="h-6 w-auto object-contain" />

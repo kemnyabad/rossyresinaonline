@@ -463,10 +463,10 @@ export default function CheckoutPage() {
       {mounted && isGuestCheckout && showAccountBanner
         ? createPortal(
             <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+              className="animated fadeIn animate-fast fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
               onClick={(e) => e.target === e.currentTarget && setShowAccountBanner(false)}
             >
-              <div className="relative grid w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl md:grid-cols-2">
+              <div className="animated zoomIn animate-fast relative grid w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl md:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => setShowAccountBanner(false)}
