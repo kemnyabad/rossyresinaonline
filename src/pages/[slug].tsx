@@ -592,7 +592,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="absolute left-3 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white shadow-[0_4px_16px_rgba(15,23,42,0.28)] backdrop-blur"
+                className="absolute left-3 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-black shadow-[0_4px_16px_rgba(15,23,42,0.28)] backdrop-blur"
                 aria-label="Volver"
               >
                 <ArrowLeftIcon className="h-6 w-6" />
@@ -661,7 +661,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     <button
                       type="button"
                       onClick={() => setMobileProductSearchOpen(true)}
-                      className="flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white shadow-[0_4px_16px_rgba(15,23,42,0.28)] backdrop-blur"
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-black shadow-[0_4px_16px_rgba(15,23,42,0.28)] backdrop-blur"
                       aria-label="Buscar productos"
                     >
                       <MagnifyingGlassIcon className="h-6 w-6" />
@@ -671,7 +671,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                 <button
                   type="button"
                   onClick={shareProduct}
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white shadow-[0_4px_16px_rgba(15,23,42,0.28)] backdrop-blur"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-black shadow-[0_4px_16px_rgba(15,23,42,0.28)] backdrop-blur"
                   aria-label="Compartir producto"
                 >
                   <ShareIcon className="h-6 w-6" />
