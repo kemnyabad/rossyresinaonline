@@ -75,7 +75,7 @@ export default function SpinWheelPopup() {
 
   return createPortal(
     <div
-      className="animated fadeIn animate-fast fixed inset-0 z-[130] flex items-center justify-center bg-black/55 px-4"
+      className="animated fadeIn animate-fast fixed inset-0 z-[130] flex items-center justify-center bg-black/60 px-4"
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div className="animated zoomIn animate-fast relative w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff0f7] to-white p-6 text-center shadow-2xl">

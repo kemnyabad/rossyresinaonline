@@ -370,9 +370,7 @@ function AppContent({
     </div>
   );
 
-  return isClient ? (
-    <PersistGate persistor={persistor} loading={content}>{content}</PersistGate>
-  ) : content;
+  return <PersistGate persistor={persistor} loading={content}>{content}</PersistGate>;
 }
 
 export default function App({
