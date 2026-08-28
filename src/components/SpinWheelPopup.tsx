@@ -68,31 +68,31 @@ export default function SpinWheelPopup() {
 
   return createPortal(
     <div
-      className="animated fadeIn animate-fast fixed inset-0 z-[130] flex items-center justify-center bg-black/60 px-4"
+      className="animated fadeIn animate-fast fixed inset-0 z-[130] flex items-center justify-center overflow-y-auto bg-black/60 px-4 py-8"
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
-      <div className="animated zoomIn animate-fast relative w-full max-w-sm p-6 text-center">
+      <div className="animated zoomIn animate-fast relative w-full max-w-md p-6 text-center sm:max-w-lg">
         <button
           type="button"
           onClick={handleClose}
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow hover:bg-gray-100"
+          className="absolute right-1 top-1 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow hover:bg-gray-100"
           aria-label="Cerrar"
         >
-          <XMarkIcon className="h-5 w-5" />
+          <XMarkIcon className="h-6 w-6" />
         </button>
 
         {!won ? (
           <>
-            <h2 className="text-xl font-black text-white">Regalo especial para ti</h2>
-            <p className="mt-1 text-sm font-semibold text-white/80">Gira para obtener tu premio</p>
+            <h2 className="text-3xl font-black leading-tight text-white sm:text-4xl">Regalo especial para ti</h2>
+            <p className="mt-2 text-lg font-semibold text-white/90 sm:text-xl">Gira para obtener tu premio</p>
 
-            <div className="relative mx-auto mt-6 h-64 w-64">
+            <div className="relative mx-auto mt-8 h-64 w-64 sm:h-96 sm:w-96">
               <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
-                <div className="h-0 w-0 border-x-[10px] border-t-[16px] border-x-transparent border-t-amazon_blue drop-shadow" />
+                <div className="h-0 w-0 border-x-[10px] border-t-[16px] border-x-transparent border-t-amazon_blue drop-shadow sm:border-x-[14px] sm:border-t-[22px]" />
               </div>
 
               <div
-                className="h-full w-full rounded-full border-[6px] border-white shadow-[0_10px_30px_rgba(17,24,39,0.25)]"
+                className="h-full w-full rounded-full border-[6px] border-white shadow-[0_14px_40px_rgba(0,0,0,0.4)] sm:border-[8px]"
                 style={{
                   background: wheelBackground,
                   transform: `rotate(${rotation}deg)`,
@@ -107,34 +107,34 @@ export default function SpinWheelPopup() {
                       className="absolute left-1/2 top-1/2 h-1/2 origin-top"
                       style={{ transform: `rotate(${angle}deg)` }}
                     >
-                      <span className="mt-4 block -translate-x-1/2 text-2xl">{seg.label}</span>
+                      <span className="mt-4 block -translate-x-1/2 text-2xl sm:mt-5 sm:text-4xl">{seg.label}</span>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amazon_blue shadow" />
+              <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amazon_blue shadow sm:h-6 sm:w-6" />
             </div>
 
             <button
               type="button"
               onClick={handleSpin}
               disabled={spinning}
-              className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-amazon_blue text-base font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)] disabled:opacity-70"
+              className="mt-8 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)] disabled:opacity-70"
             >
               {spinning ? "Girando..." : "Girar"}
             </button>
-            <p className="mt-2 text-xs font-semibold text-white/70">100% probabilidad de ganar</p>
+            <p className="mt-3 text-base font-semibold text-white/80">100% probabilidad de ganar</p>
           </>
         ) : (
           <div className="py-4">
-            <p className="text-5xl">🎉</p>
-            <h2 className="mt-3 text-xl font-black text-white">{PRIZE.label}</h2>
-            <p className="mt-2 text-sm text-white/80">{PRIZE.description}</p>
+            <p className="text-7xl">🎉</p>
+            <h2 className="mt-4 text-3xl font-black text-white sm:text-4xl">{PRIZE.label}</h2>
+            <p className="mt-3 text-lg text-white/90">{PRIZE.description}</p>
             <button
               type="button"
               onClick={handleClose}
-              className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-amazon_blue text-base font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
+              className="mt-8 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
             >
               {PRIZE.ctaLabel}
             </button>
