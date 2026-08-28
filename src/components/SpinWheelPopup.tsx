@@ -29,8 +29,6 @@ const PRIZE_CENTER_ANGLE = PRIZE_INDEX * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
 const EXTRA_SPINS = 5;
 const TARGET_ROTATION = EXTRA_SPINS * 360 + ((360 - PRIZE_CENTER_ANGLE) % 360);
 const SPIN_DURATION_MS = 3600;
-const STORAGE_KEY = "rr_spin_wheel_seen_at";
-const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 const wheelBackground = `conic-gradient(from 0deg, ${SEGMENTS.map((seg, i) => {
   const color = seg.isPrize ? "#e4147f" : i % 2 === 0 ? "#fdf2f8" : "#f0fdf4";
@@ -47,12 +45,7 @@ export default function SpinWheelPopup() {
 
   useEffect(() => {
     setMounted(true);
-    if (typeof window === "undefined") return;
-    const lastSeen = Number(window.localStorage.getItem(STORAGE_KEY) || 0);
-    if (!lastSeen || Date.now() - lastSeen > COOLDOWN_MS) {
-      setOpen(true);
-      window.localStorage.setItem(STORAGE_KEY, String(Date.now()));
-    }
+    setOpen(true);
   }, []);
 
   useEffect(() => () => {
