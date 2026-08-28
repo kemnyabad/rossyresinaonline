@@ -881,7 +881,6 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                         </div>
                       </div>
                     </div>
-                    <ChevronRightIcon className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
                   </Link>
 
                   <a
