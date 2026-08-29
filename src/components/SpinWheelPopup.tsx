@@ -3,36 +3,27 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import {
-  WHEEL_PRIZES,
   type WheelPrize,
+  getSessionWheelPrizes,
   pickWeightedPrize,
   storeWonPrize,
 } from "@/lib/wheelPrizes";
 
-const SEGMENT_ANGLE = 360 / WHEEL_PRIZES.length;
 const EXTRA_SPINS = 5;
 const SPIN_DURATION_MS = 3600;
 const SEGMENT_COLORS = ["#e4147f", "#fdf2f8", "#c21885", "#f0fdf4", "#e4147f"];
 
-const wheelBackground = `conic-gradient(from 0deg, ${WHEEL_PRIZES.map((_, i) => {
-  const color = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
-  return `${color} ${i * SEGMENT_ANGLE}deg ${(i + 1) * SEGMENT_ANGLE}deg`;
-}).join(", ")})`;
-
-const rotationToLand = (index: number) => {
-  const centerAngle = index * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
-  return EXTRA_SPINS * 360 + ((360 - centerAngle) % 360);
-};
-
 export default function SpinWheelPopup() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
+  const [prizes, setPrizes] = useState<WheelPrize[]>([]);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [won, setWon] = useState<WheelPrize | null>(null);
   const spinTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    setPrizes(getSessionWheelPrizes());
     setMounted(true);
     setOpen(true);
   }, []);
@@ -41,10 +32,20 @@ export default function SpinWheelPopup() {
     if (spinTimer.current) clearTimeout(spinTimer.current);
   }, []);
 
+  const segmentAngle = 360 / (prizes.length || 1);
+  const wheelBackground = `conic-gradient(from 0deg, ${prizes.map((_, i) => {
+    const color = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
+    return `${color} ${i * segmentAngle}deg ${(i + 1) * segmentAngle}deg`;
+  }).join(", ")})`;
+  const rotationToLand = (index: number) => {
+    const centerAngle = index * segmentAngle + segmentAngle / 2;
+    return EXTRA_SPINS * 360 + ((360 - centerAngle) % 360);
+  };
+
   const handleSpin = () => {
-    if (spinning || won) return;
-    const prize = pickWeightedPrize();
-    const index = WHEEL_PRIZES.findIndex((p) => p.id === prize.id);
+    if (spinning || won || prizes.length === 0) return;
+    const prize = pickWeightedPrize(prizes);
+    const index = prizes.findIndex((p) => p.id === prize.id);
     setSpinning(true);
     setRotation(rotationToLand(index));
     spinTimer.current = setTimeout(() => {
@@ -56,7 +57,7 @@ export default function SpinWheelPopup() {
 
   const handleClose = () => setOpen(false);
 
-  if (!mounted || !open) return null;
+  if (!mounted || !open || prizes.length === 0) return null;
 
   return createPortal(
     <div
@@ -91,8 +92,8 @@ export default function SpinWheelPopup() {
                   transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.16, 0.86, 0.20, 1)` : "none",
                 }}
               >
-                {WHEEL_PRIZES.map((_, i) => {
-                  const boundaryAngle = i * SEGMENT_ANGLE - 180;
+                {prizes.map((_, i) => {
+                  const boundaryAngle = i * segmentAngle - 180;
                   return (
                     <div
                       key={`divider-${i}`}
@@ -104,8 +105,8 @@ export default function SpinWheelPopup() {
                   );
                 })}
 
-                {WHEEL_PRIZES.map((prize, i) => {
-                  const angle = i * SEGMENT_ANGLE + SEGMENT_ANGLE / 2 - 180;
+                {prizes.map((prize, i) => {
+                  const angle = i * segmentAngle + segmentAngle / 2 - 180;
                   return (
                     <div
                       key={prize.id}
