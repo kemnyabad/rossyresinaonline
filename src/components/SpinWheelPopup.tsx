@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch } from "react-redux";
+import Image from "next/image";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { addToCart } from "@/store/nextSlice";
 import {
@@ -123,7 +124,13 @@ export default function SpinWheelPopup() {
                       className="absolute left-1/2 top-1/2 h-1/2 origin-top"
                       style={{ transform: `rotate(${angle}deg)` }}
                     >
-                      <span className="mt-4 block -translate-x-1/2 text-2xl sm:mt-5 sm:text-4xl">{prize.icon}</span>
+                      {prize.type === "mold" ? (
+                        <div className="relative mt-3 h-10 w-10 -translate-x-1/2 overflow-hidden rounded-full border-2 border-white shadow sm:mt-4 sm:h-14 sm:w-14">
+                          <Image src={prize.productImage} alt={prize.productTitle} fill sizes="56px" className="object-cover" />
+                        </div>
+                      ) : (
+                        <span className="mt-4 block -translate-x-1/2 text-2xl sm:mt-5 sm:text-4xl">{prize.icon}</span>
+                      )}
                     </div>
                   );
                 })}
@@ -144,7 +151,13 @@ export default function SpinWheelPopup() {
           </>
         ) : (
           <div className="py-4">
-            <p className="text-7xl">{won.icon}</p>
+            {won.type === "mold" ? (
+              <div className="relative mx-auto h-40 w-40 overflow-hidden rounded-2xl border-4 border-white shadow-lg sm:h-48 sm:w-48">
+                <Image src={won.productImage} alt={won.productTitle} fill sizes="192px" className="object-cover" />
+              </div>
+            ) : (
+              <p className="text-7xl">{won.icon}</p>
+            )}
             <h2 className="mt-4 text-3xl font-black text-white sm:text-4xl">{won.wonLabel}</h2>
             {won.type === "mold" ? (
               <>
