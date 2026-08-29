@@ -32,6 +32,12 @@ const CartPage = () => {
     const total = Math.max(0, Number((subtotal - discount).toFixed(2)));
     return { subtotal, discount, total };
   }, [cartItems, mounted]);
+  const activePrize = useMemo(() => (mounted ? getActiveWonPrize() : null), [mounted]);
+  const prizeThresholdText = useMemo(() => {
+    if (!activePrize) return "";
+    const suffix = activePrize.type === "mold" ? "para llevarte tu premio gratis" : "para que se aplique tu descuento";
+    return `Haz una compra de S/${activePrize.minSubtotal.toFixed(0)} ${suffix}.`;
+  }, [activePrize]);
   const totalUnits = useMemo(
     () => cartItems.reduce((sum: number, p: StoreProduct) => sum + p.quantity, 0),
     [cartItems]
@@ -142,6 +148,9 @@ const CartPage = () => {
           </div>
 
           <div className="md:hidden">
+            {prizeThresholdText && (
+              <p className="bg-[#f5f5f5] px-3 pt-2 text-sm font-semibold text-amazon_blue">{prizeThresholdText}</p>
+            )}
             <section className="space-y-2 bg-[#f5f5f5] px-2 py-2">
               {cartItems.map((item) => {
                 const itemDiscount = discountLabel(item.oldPrice, item.price);
@@ -270,6 +279,9 @@ const CartPage = () => {
                 <h1 className="text-2xl font-black text-gray-950 md:text-3xl">Carro de Compras</h1>
                 <span className="hidden pr-14 text-lg text-gray-950 md:block">Precio</span>
               </div>
+              {prizeThresholdText && (
+                <p className="hidden px-4 py-2 text-sm font-semibold text-amazon_blue md:block">{prizeThresholdText}</p>
+              )}
 
               <div className="space-y-4 md:space-y-0">
                 {cartItems.map((item: StoreProduct) => (
