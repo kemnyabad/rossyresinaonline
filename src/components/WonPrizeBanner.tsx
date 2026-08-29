@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useDispatch } from "react-redux";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { addToCart } from "@/store/nextSlice";
@@ -6,15 +7,17 @@ import { getActiveWonPrize, buildMoldCartPayload, type WheelPrize } from "@/lib/
 
 export default function WonPrizeBanner() {
   const dispatch = useDispatch();
+  const [mounted, setMounted] = useState(false);
   const [prize, setPrize] = useState<WheelPrize | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [claimed, setClaimed] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     setPrize(getActiveWonPrize());
   }, []);
 
-  if (!prize || dismissed) return null;
+  if (!mounted || !prize || dismissed) return null;
 
   const handleClaim = () => {
     if (prize.type !== "mold") return;
@@ -22,8 +25,8 @@ export default function WonPrizeBanner() {
     setClaimed(true);
   };
 
-  return (
-    <div className="animated fadeIn animate-fast relative mx-4 mb-3 overflow-hidden rounded-lg bg-gradient-to-r from-[#e4147f] to-[#c21885] px-4 py-3 text-white shadow-[0_8px_20px_rgba(203,41,158,0.28)] md:mx-0">
+  return createPortal(
+    <div className="animated fadeIn animate-fast fixed left-3 right-3 top-16 z-[95] mx-auto max-w-sm overflow-hidden rounded-lg bg-gradient-to-r from-[#e4147f] to-[#c21885] px-4 py-3 text-white shadow-[0_8px_20px_rgba(203,41,158,0.35)] md:left-auto md:right-6 md:top-24 md:w-[340px]">
       <button
         type="button"
         onClick={() => setDismissed(true)}
@@ -60,6 +63,7 @@ export default function WonPrizeBanner() {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
