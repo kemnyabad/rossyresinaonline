@@ -116,6 +116,19 @@ export default function SpinWheelPopup() {
                   transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.16, 0.86, 0.20, 1)` : "none",
                 }}
               >
+                {WHEEL_PRIZES.map((_, i) => {
+                  const boundaryAngle = i * SEGMENT_ANGLE - 180;
+                  return (
+                    <div
+                      key={`divider-${i}`}
+                      className="absolute left-1/2 top-1/2 h-1/2 w-0 origin-top"
+                      style={{ transform: `rotate(${boundaryAngle}deg)` }}
+                    >
+                      <div className="absolute left-0 top-0 h-full w-[2px] -translate-x-1/2 bg-white/80 sm:w-[3px]" />
+                    </div>
+                  );
+                })}
+
                 {WHEEL_PRIZES.map((prize, i) => {
                   const angle = i * SEGMENT_ANGLE + SEGMENT_ANGLE / 2 - 180;
                   return (
