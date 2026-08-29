@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import FormattedPrice from "@/components/FormattedPrice";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { getBundleLineTotal } from "@/lib/bundlePromo";
+import { computeWheelDiscount, getActiveWonPrize, clearWonPrize } from "@/lib/wheelPrizes";
 import { resetCart } from "@/store/nextSlice";
 import { useSession, signIn } from "next-auth/react";
 import { Bars3Icon, ChevronLeftIcon, ShieldCheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -228,10 +229,10 @@ export default function CheckoutPage() {
 
   const totals = useMemo(() => {
     const subtotal = productData.reduce((sum: number, p: StoreProduct) => sum + getBundleLineTotal(p), 0);
-    const discount = 0;
-    const total = subtotal;
+    const discount = mounted ? computeWheelDiscount(subtotal) : 0;
+    const total = Math.max(0, Number((subtotal - discount).toFixed(2)));
     return { subtotal, discount, total };
-  }, [productData]);
+  }, [productData, mounted]);
   const totalUnits = useMemo(
     () => productData.reduce((sum: number, p: StoreProduct) => sum + p.quantity, 0),
     [productData]
@@ -378,6 +379,7 @@ export default function CheckoutPage() {
           items: productData,
           total: totals.total,
           promoCode: "",
+          wheelPrizeId: getActiveWonPrize()?.id || "",
         }),
       });
 
@@ -396,6 +398,7 @@ export default function CheckoutPage() {
       saveLocalShippingProfile();
       setSuccessId(orderCode);
       dispatch(resetCart());
+      clearWonPrize();
     } catch (e: any) {
       setErrorMsg(e?.message || "Error inesperado");
     } finally {
@@ -857,6 +860,12 @@ export default function CheckoutPage() {
               </ul>
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between"><span>Subtotal</span><span><FormattedPrice amount={totals.subtotal} /></span></div>
+                {totals.discount > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span>Descuento</span>
+                    <span>-<FormattedPrice amount={totals.discount} /></span>
+                  </div>
+                )}
                 <div className="flex justify-between font-semibold text-lg"><span>Total</span><span><FormattedPrice amount={totals.total} /></span></div>
               </div>
             </div>

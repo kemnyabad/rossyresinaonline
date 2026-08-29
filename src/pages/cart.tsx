@@ -10,6 +10,7 @@ import Image from "next/image";
 import FormattedPrice from "@/components/FormattedPrice";
 import Products from "@/components/Products";
 import { getBundleLineTotal } from "@/lib/bundlePromo";
+import { computeWheelDiscount } from "@/lib/wheelPrizes";
 import {
   Bars3Icon,
   ChevronLeftIcon,
@@ -27,10 +28,10 @@ const CartPage = () => {
 
   const totals = useMemo(() => {
     const subtotal = cartItems.reduce((sum: number, p: StoreProduct) => sum + getBundleLineTotal(p), 0);
-    const discount = 0;
-    const total = subtotal;
+    const discount = mounted ? computeWheelDiscount(subtotal) : 0;
+    const total = Math.max(0, Number((subtotal - discount).toFixed(2)));
     return { subtotal, discount, total };
-  }, [cartItems]);
+  }, [cartItems, mounted]);
   const totalUnits = useMemo(
     () => cartItems.reduce((sum: number, p: StoreProduct) => sum + p.quantity, 0),
     [cartItems]
@@ -291,6 +292,14 @@ const CartPage = () => {
                       <FormattedPrice amount={shippingAmount} />
                     </span>
                   </div>
+                  {totals.discount > 0 && (
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500 md:text-gray-950">Descuento</span>
+                      <span className="text-emerald-600">
+                        -<FormattedPrice amount={totals.discount} />
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-[auto_minmax(0,1fr)_152px] items-center gap-3 md:mt-4 md:flex md:justify-between md:gap-4 md:text-xl md:font-black">
                   <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 md:hidden">

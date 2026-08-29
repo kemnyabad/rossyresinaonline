@@ -1,46 +1,38 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useDispatch } from "react-redux";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { addToCart } from "@/store/nextSlice";
+import {
+  WHEEL_PRIZES,
+  type WheelPrize,
+  pickWeightedPrize,
+  storeWonPrize,
+} from "@/lib/wheelPrizes";
 
-/**
- * TODO(premio real): esta ruleta todavia usa un premio de relleno.
- * Cuando se defina el premio real (cupon, descuento, etc.), reemplazar
- * PRIZE con el titulo/descripcion/CTA definitivos.
- */
-const PRIZE = {
-  label: "¡Ganaste un premio especial!",
-  description: "Muy pronto podrás canjearlo.",
-  ctaLabel: "Entendido",
-  ctaHref: "" as string,
-};
-
-const SEGMENTS = [
-  { label: "🎁", isPrize: true },
-  { label: "✨", isPrize: false },
-  { label: "🎉", isPrize: false },
-  { label: "💝", isPrize: false },
-  { label: "🌟", isPrize: false },
-  { label: "🎊", isPrize: false },
-];
-
-const SEGMENT_ANGLE = 360 / SEGMENTS.length;
-const PRIZE_INDEX = SEGMENTS.findIndex((s) => s.isPrize);
-const PRIZE_CENTER_ANGLE = PRIZE_INDEX * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
+const SEGMENT_ANGLE = 360 / WHEEL_PRIZES.length;
 const EXTRA_SPINS = 5;
-const TARGET_ROTATION = EXTRA_SPINS * 360 + ((360 - PRIZE_CENTER_ANGLE) % 360);
 const SPIN_DURATION_MS = 3600;
+const SEGMENT_COLORS = ["#e4147f", "#fdf2f8", "#c21885", "#f0fdf4", "#e4147f"];
 
-const wheelBackground = `conic-gradient(from 0deg, ${SEGMENTS.map((seg, i) => {
-  const color = seg.isPrize ? "#e4147f" : i % 2 === 0 ? "#fdf2f8" : "#f0fdf4";
+const wheelBackground = `conic-gradient(from 0deg, ${WHEEL_PRIZES.map((_, i) => {
+  const color = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
   return `${color} ${i * SEGMENT_ANGLE}deg ${(i + 1) * SEGMENT_ANGLE}deg`;
 }).join(", ")})`;
 
+const rotationToLand = (index: number) => {
+  const centerAngle = index * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
+  return EXTRA_SPINS * 360 + ((360 - centerAngle) % 360);
+};
+
 export default function SpinWheelPopup() {
+  const dispatch = useDispatch();
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  const [won, setWon] = useState(false);
+  const [won, setWon] = useState<WheelPrize | null>(null);
+  const [claimed, setClaimed] = useState(false);
   const spinTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -54,15 +46,39 @@ export default function SpinWheelPopup() {
 
   const handleSpin = () => {
     if (spinning || won) return;
+    const prize = pickWeightedPrize();
+    const index = WHEEL_PRIZES.findIndex((p) => p.id === prize.id);
     setSpinning(true);
-    setRotation(TARGET_ROTATION);
+    setRotation(rotationToLand(index));
     spinTimer.current = setTimeout(() => {
       setSpinning(false);
-      setWon(true);
+      setWon(prize);
+      storeWonPrize(prize.id);
     }, SPIN_DURATION_MS);
   };
 
   const handleClose = () => setOpen(false);
+
+  const handleClaimMold = (prize: Extract<WheelPrize, { type: "mold" }>) => {
+    dispatch(
+      addToCart({
+        cartKey: `wheel-prize:${prize.productId}`,
+        productId: prize.productId,
+        _id: prize.productId,
+        slug: prize.productSlug,
+        brand: "Rossy Resina",
+        category: "Moldes de silicona",
+        description: "",
+        image: prize.productImage,
+        isNew: false,
+        price: 0,
+        oldPrice: prize.productPrice,
+        title: prize.productTitle,
+        quantity: 1,
+      } as any)
+    );
+    setClaimed(true);
+  };
 
   if (!mounted || !open) return null;
 
@@ -99,15 +115,15 @@ export default function SpinWheelPopup() {
                   transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.16, 0.86, 0.20, 1)` : "none",
                 }}
               >
-                {SEGMENTS.map((seg, i) => {
+                {WHEEL_PRIZES.map((prize, i) => {
                   const angle = i * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
                   return (
                     <div
-                      key={i}
+                      key={prize.id}
                       className="absolute left-1/2 top-1/2 h-1/2 origin-top"
                       style={{ transform: `rotate(${angle}deg)` }}
                     >
-                      <span className="mt-4 block -translate-x-1/2 text-2xl sm:mt-5 sm:text-4xl">{seg.label}</span>
+                      <span className="mt-4 block -translate-x-1/2 text-2xl sm:mt-5 sm:text-4xl">{prize.icon}</span>
                     </div>
                   );
                 })}
@@ -128,16 +144,44 @@ export default function SpinWheelPopup() {
           </>
         ) : (
           <div className="py-4">
-            <p className="text-7xl">🎉</p>
-            <h2 className="mt-4 text-3xl font-black text-white sm:text-4xl">{PRIZE.label}</h2>
-            <p className="mt-3 text-lg text-white/90">{PRIZE.description}</p>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="mt-8 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
-            >
-              {PRIZE.ctaLabel}
-            </button>
+            <p className="text-7xl">{won.icon}</p>
+            <h2 className="mt-4 text-3xl font-black text-white sm:text-4xl">{won.wonLabel}</h2>
+            {won.type === "mold" ? (
+              <>
+                <p className="mt-3 text-lg text-white/90">Resérvalo antes de que se acabe el stock.</p>
+                {!claimed ? (
+                  <button
+                    type="button"
+                    onClick={() => handleClaimMold(won)}
+                    className="mt-8 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
+                  >
+                    Reclamar premio
+                  </button>
+                ) : (
+                  <>
+                    <p className="mt-3 text-base font-semibold text-white">Se agregó a tu carrito.</p>
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      className="mt-6 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
+                    >
+                      Entendido
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-lg text-white/90">Se aplicará automáticamente en tu próxima compra.</p>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="mt-8 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
+                >
+                  Entendido
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

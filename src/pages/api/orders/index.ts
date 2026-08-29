@@ -19,6 +19,7 @@ import { getPresentationTotalPrice } from "@/lib/productPricing";
 import { getBundleLineTotal } from "@/lib/bundlePromo";
 import { isInternalTestOrder } from "@/lib/testOrders";
 import { isLocalOrderSimulationRequest, readOrdersStore, upsertLocalOrder } from "@/lib/orderStore";
+import { getWheelPrizeById } from "@/lib/wheelPrizes";
 
 type DbOrderStatus = "PENDING" | "PAID" | "SHIPPED";
 const db = prisma as any;
@@ -126,6 +127,22 @@ const serializeOrder = (order: any) => {
   };
 };
 
+const applyWheelPrizeDiscount = (
+  wheelPrizeId: unknown,
+  computedTotal: number,
+  normalizedItems: Array<{ productId: string; price: number }>
+): number => {
+  const prize = getWheelPrizeById(String(wheelPrizeId || ""));
+  if (!prize) return 0;
+  if (prize.type === "discount") {
+    if (computedTotal < prize.minSubtotal) return 0;
+    return Math.min(prize.discountValue, computedTotal);
+  }
+  const line = normalizedItems.find((it) => it.productId === prize.productId);
+  if (!line) return 0;
+  return Math.min(line.price, computedTotal);
+};
+
 const createLocalSimulatedOrder = async (body: any) => {
   const customer = body.customer || {};
   const items = Array.isArray(body.items) ? (body.items as IncomingItem[]) : [];
@@ -221,8 +238,9 @@ const createLocalSimulatedOrder = async (body: any) => {
     });
   }
 
-  let couponDiscount = 0;
-  let couponSubtotal = 0;
+  const wheelDiscount = applyWheelPrizeDiscount(body.wheelPrizeId, computedTotal, normalizedItems);
+  let couponDiscount = wheelDiscount;
+  let couponSubtotal = wheelDiscount > 0 ? computedTotal : 0;
   const finalTotal = Math.max(0, Number((computedTotal - couponDiscount).toFixed(2)));
   const createdAt = new Date();
   const id = `local_${createdAt.getTime()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -546,8 +564,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         : email
         ? await db.user.findUnique({ where: { email } })
         : null;
-      let couponDiscount = 0;
-      let couponSubtotal = 0;
+      const wheelDiscount = applyWheelPrizeDiscount(body.wheelPrizeId, computedTotal, normalizedItems);
+      let couponDiscount = wheelDiscount;
+      let couponSubtotal = wheelDiscount > 0 ? computedTotal : 0;
       const finalTotal = Math.max(0, Number((computedTotal - couponDiscount).toFixed(2)));
 
       const created = await db.order.create({
