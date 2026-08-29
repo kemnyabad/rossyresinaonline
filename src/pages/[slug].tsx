@@ -741,7 +741,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                     </span>
                   </>
                 )}
-                <span className="ml-auto md:hidden">
+                <span className="ml-auto min-w-[170px] max-w-[260px] flex-1 md:hidden">
                   <WonPrizeBanner variant="inline" />
                 </span>
               </div>

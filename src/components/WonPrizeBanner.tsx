@@ -21,7 +21,7 @@ export default function WonPrizeBanner({ variant = "floating" }: { variant?: "fl
     <div
       className={
         isInline
-          ? "animated fadeIn animate-fast relative max-w-[220px] overflow-hidden rounded-lg bg-gradient-to-r from-[#e4147f] to-[#c21885] px-3 py-2 text-white shadow-[0_6px_16px_rgba(203,41,158,0.3)]"
+          ? "animated fadeIn animate-fast relative w-full overflow-hidden rounded-lg bg-gradient-to-r from-[#e4147f] to-[#c21885] px-3 py-2.5 text-white shadow-[0_6px_16px_rgba(203,41,158,0.3)]"
           : "animated fadeIn animate-fast fixed hidden md:block left-3 right-3 top-16 z-[95] mx-auto max-w-sm overflow-hidden rounded-lg bg-gradient-to-r from-[#e4147f] to-[#c21885] px-4 py-3 text-white shadow-[0_8px_20px_rgba(203,41,158,0.35)] md:left-auto md:right-6 md:top-24 md:w-[340px]"
       }
     >
@@ -37,28 +37,24 @@ export default function WonPrizeBanner({ variant = "floating" }: { variant?: "fl
       >
         <XMarkIcon className={isInline ? "h-3 w-3" : "h-4 w-4"} />
       </button>
-      <div className={isInline ? "pr-5" : "pr-8"}>
+      <div className={isInline ? "pr-6" : "pr-8"}>
         {prize.type === "mold" ? (
           <>
-            <p className={isInline ? "text-xs font-black uppercase tracking-wide" : "text-sm font-black uppercase tracking-wide"}>
-              🎁 {isInline ? "¡Premio esperando!" : "¡Tienes un premio esperando!"}
+            <p className={isInline ? "text-sm font-black uppercase tracking-wide" : "text-sm font-black uppercase tracking-wide"}>
+              🎁 ¡Tienes un premio esperando!
             </p>
-            {!isInline && (
-              <p className="mt-0.5 text-sm font-semibold text-white/90">
-                Ganaste el molde {prize.productTitle}. Aprovéchalo antes de que se pierda.
-              </p>
-            )}
+            <p className={isInline ? "mt-1 text-xs font-semibold text-white/90" : "mt-0.5 text-sm font-semibold text-white/90"}>
+              Ganaste el molde {prize.productTitle}. Aprovéchalo antes de que se pierda.
+            </p>
           </>
         ) : (
           <>
-            <p className={isInline ? "text-xs font-black uppercase tracking-wide" : "text-sm font-black uppercase tracking-wide"}>
+            <p className="text-sm font-black uppercase tracking-wide">
               🎉 ¡Tienes S/{prize.discountValue}{prize.themeLabel ? ` para ${prize.themeLabel}` : " de descuento"}!
             </p>
-            {!isInline && (
-              <p className="mt-0.5 text-sm font-semibold text-white/90">
-                Aprovéchalo antes de que se pierda.
-              </p>
-            )}
+            <p className={isInline ? "mt-1 text-xs font-semibold text-white/90" : "mt-0.5 text-sm font-semibold text-white/90"}>
+              Aprovéchalo antes de que se pierda.
+            </p>
           </>
         )}
       </div>
