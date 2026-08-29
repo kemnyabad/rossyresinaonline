@@ -124,13 +124,17 @@ export default function SpinWheelPopup() {
                       className="absolute left-1/2 top-1/2 h-1/2 origin-top"
                       style={{ transform: `rotate(${angle}deg)` }}
                     >
-                      {prize.type === "mold" ? (
-                        <div className="relative mt-3 h-10 w-10 -translate-x-1/2 overflow-hidden rounded-full border-2 border-white shadow sm:mt-4 sm:h-14 sm:w-14">
-                          <Image src={prize.productImage} alt={prize.productTitle} fill sizes="56px" className="object-cover" />
-                        </div>
-                      ) : (
-                        <span className="mt-4 block -translate-x-1/2 text-2xl sm:mt-5 sm:text-4xl">{prize.icon}</span>
-                      )}
+                      <div className="absolute left-1/2 top-[62%] -translate-x-1/2 -translate-y-1/2">
+                        {prize.type === "mold" ? (
+                          <div className="relative h-11 w-11 overflow-hidden rounded-full border-2 border-white shadow-md sm:h-16 sm:w-16">
+                            <Image src={prize.productImage} alt={prize.productTitle} fill sizes="64px" className="object-cover" />
+                          </div>
+                        ) : (
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-white bg-white/90 text-2xl shadow-md sm:h-16 sm:w-16 sm:text-4xl">
+                            {prize.icon}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
