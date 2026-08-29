@@ -117,11 +117,11 @@ export default function SpinWheelPopup() {
                 }}
               >
                 {WHEEL_PRIZES.map((prize, i) => {
-                  const angle = i * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
+                  const angle = i * SEGMENT_ANGLE + SEGMENT_ANGLE / 2 - 180;
                   return (
                     <div
                       key={prize.id}
-                      className="absolute left-1/2 top-1/2 h-1/2 origin-top"
+                      className="absolute left-1/2 top-1/2 h-1/2 w-0 origin-top"
                       style={{ transform: `rotate(${angle}deg)` }}
                     >
                       <div className="absolute left-1/2 top-[62%] -translate-x-1/2 -translate-y-1/2">
