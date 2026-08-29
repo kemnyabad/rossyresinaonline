@@ -952,10 +952,6 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               : null}
           </div>
 
-          <div className="hidden md:block">
-            <WonPrizeBanner />
-          </div>
-
           <div className="hidden md:flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
             <div className="w-full lg:flex-1 lg:max-w-[760px]">
               <div className="flex flex-col gap-3">
@@ -975,6 +971,9 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                       )}
                     </button>
                   ))}
+                  <div className="min-w-[220px] flex-1">
+                    <WonPrizeBanner />
+                  </div>
                 </div>
 
                 <div className="relative bg-transparent rounded-xl p-0 w-full">
