@@ -124,14 +124,19 @@ export default function SpinWheelPopup() {
                       className="absolute left-1/2 top-1/2 h-1/2 w-0 origin-top"
                       style={{ transform: `rotate(${angle}deg)` }}
                     >
-                      <div className="absolute left-1/2 top-[62%] -translate-x-1/2 -translate-y-1/2">
+                      <div className="absolute left-1/2 top-[60%] -translate-x-1/2 -translate-y-1/2">
                         {prize.type === "mold" ? (
-                          <div className="relative h-11 w-11 overflow-hidden rounded-full border-2 border-white shadow-md sm:h-16 sm:w-16">
-                            <Image src={prize.productImage} alt={prize.productTitle} fill sizes="64px" className="object-cover" />
+                          <div className="relative h-16 w-16 overflow-hidden rounded-full border-[3px] border-white shadow-md sm:h-24 sm:w-24">
+                            <Image src={prize.productImage} alt={prize.productTitle} fill sizes="96px" className="object-cover" />
                           </div>
                         ) : (
-                          <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-white bg-white/90 text-2xl shadow-md sm:h-16 sm:w-16 sm:text-4xl">
-                            {prize.icon}
+                          <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-[3px] border-white bg-white shadow-md sm:h-24 sm:w-24">
+                            <span className="text-lg font-black leading-none text-amazon_blue sm:text-2xl">
+                              S/{prize.discountValue}
+                            </span>
+                            <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-500 sm:text-xs">
+                              dscto.
+                            </span>
                           </div>
                         )}
                       </div>
@@ -160,7 +165,10 @@ export default function SpinWheelPopup() {
                 <Image src={won.productImage} alt={won.productTitle} fill sizes="192px" className="object-cover" />
               </div>
             ) : (
-              <p className="text-7xl">{won.icon}</p>
+              <div className="mx-auto flex h-32 w-32 flex-col items-center justify-center rounded-full border-4 border-white bg-white shadow-lg sm:h-40 sm:w-40">
+                <span className="text-4xl font-black leading-none text-amazon_blue sm:text-5xl">S/{won.discountValue}</span>
+                <span className="mt-1 text-xs font-bold uppercase tracking-wide text-gray-500 sm:text-sm">descuento</span>
+              </div>
             )}
             <h2 className="mt-4 text-3xl font-black text-white sm:text-4xl">{won.wonLabel}</h2>
             {won.type === "mold" ? (
