@@ -10,7 +10,7 @@ import Image from "next/image";
 import FormattedPrice from "@/components/FormattedPrice";
 import Products from "@/components/Products";
 import { getBundleLineTotal } from "@/lib/bundlePromo";
-import { computeWheelDiscount } from "@/lib/wheelPrizes";
+import { computeWheelDiscount, getActiveWonPrize, buildMoldCartPayload } from "@/lib/wheelPrizes";
 import {
   Bars3Icon,
   ChevronLeftIcon,
@@ -56,6 +56,24 @@ const CartPage = () => {
     setMounted(true);
     dispatch(clearPromoCoupon());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const prize = getActiveWonPrize();
+    if (!prize || prize.type !== "mold") return;
+    const cartKey = `wheel-prize:${prize.productId}`;
+    const existingLine = cartItems.find((item) => item.cartKey === cartKey);
+    const othersSubtotal = cartItems
+      .filter((item) => item.cartKey !== cartKey)
+      .reduce((sum, item) => sum + getBundleLineTotal(item), 0);
+    const qualifies = othersSubtotal >= prize.minSubtotal;
+
+    if (qualifies && !existingLine) {
+      dispatch(addToCart(buildMoldCartPayload(prize) as any));
+    } else if (!qualifies && existingLine) {
+      dispatch(deleteProduct({ cartKey }));
+    }
+  }, [mounted, cartItems, dispatch]);
 
   useEffect(() => {
     let alive = true;

@@ -8,8 +8,8 @@ import { useRouter } from "next/router";
 import FormattedPrice from "@/components/FormattedPrice";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { getBundleLineTotal } from "@/lib/bundlePromo";
-import { computeWheelDiscount, getActiveWonPrize, clearWonPrize } from "@/lib/wheelPrizes";
-import { resetCart } from "@/store/nextSlice";
+import { computeWheelDiscount, getActiveWonPrize, clearWonPrize, buildMoldCartPayload } from "@/lib/wheelPrizes";
+import { addToCart, deleteProduct, resetCart } from "@/store/nextSlice";
 import { useSession, signIn } from "next-auth/react";
 import { Bars3Icon, ChevronLeftIcon, ShieldCheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { FcGoogle } from "react-icons/fc";
@@ -141,6 +141,24 @@ export default function CheckoutPage() {
     setMounted(true);
     setIsLocalhost(["localhost", "127.0.0.1", "::1"].includes(window.location.hostname));
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const prize = getActiveWonPrize();
+    if (!prize || prize.type !== "mold") return;
+    const cartKey = `wheel-prize:${prize.productId}`;
+    const existingLine = productData.find((item: StoreProduct) => item.cartKey === cartKey);
+    const othersSubtotal = productData
+      .filter((item: StoreProduct) => item.cartKey !== cartKey)
+      .reduce((sum: number, item: StoreProduct) => sum + getBundleLineTotal(item), 0);
+    const qualifies = othersSubtotal >= prize.minSubtotal;
+
+    if (qualifies && !existingLine) {
+      dispatch(addToCart(buildMoldCartPayload(prize) as any));
+    } else if (!qualifies && existingLine) {
+      dispatch(deleteProduct({ cartKey }));
+    }
+  }, [mounted, productData, dispatch]);
 
   useEffect(() => {
     if (storeUser) {

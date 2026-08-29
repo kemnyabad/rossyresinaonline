@@ -140,6 +140,8 @@ const applyWheelPrizeDiscount = (
   }
   const line = normalizedItems.find((it) => it.productId === prize.productId);
   if (!line) return 0;
+  const othersTotal = computedTotal - line.price;
+  if (othersTotal < prize.minSubtotal) return 0;
   return Math.min(line.price, computedTotal);
 };
 

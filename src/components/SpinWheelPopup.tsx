@@ -1,15 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useDispatch } from "react-redux";
 import Image from "next/image";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { addToCart } from "@/store/nextSlice";
 import {
   WHEEL_PRIZES,
   type WheelPrize,
   pickWeightedPrize,
   storeWonPrize,
-  buildMoldCartPayload,
 } from "@/lib/wheelPrizes";
 
 const SEGMENT_ANGLE = 360 / WHEEL_PRIZES.length;
@@ -28,13 +25,11 @@ const rotationToLand = (index: number) => {
 };
 
 export default function SpinWheelPopup() {
-  const dispatch = useDispatch();
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [won, setWon] = useState<WheelPrize | null>(null);
-  const [claimed, setClaimed] = useState(false);
   const spinTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -60,11 +55,6 @@ export default function SpinWheelPopup() {
   };
 
   const handleClose = () => setOpen(false);
-
-  const handleClaimMold = (prize: Extract<WheelPrize, { type: "mold" }>) => {
-    dispatch(addToCart(buildMoldCartPayload(prize) as any));
-    setClaimed(true);
-  };
 
   if (!mounted || !open) return null;
 
@@ -127,6 +117,10 @@ export default function SpinWheelPopup() {
                           <div className="relative h-16 w-16 overflow-hidden rounded-full border-[3px] border-white shadow-md sm:h-24 sm:w-24">
                             <Image src={prize.productImage} alt={prize.productTitle} fill sizes="96px" className="object-cover" />
                           </div>
+                        ) : prize.themeImage ? (
+                          <div className="relative h-16 w-16 overflow-hidden rounded-full border-[3px] border-white shadow-md sm:h-24 sm:w-24">
+                            <Image src={prize.themeImage} alt={prize.themeLabel || "Premio"} fill sizes="96px" className="object-cover" />
+                          </div>
                         ) : (
                           <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-[3px] border-white bg-white shadow-md sm:h-24 sm:w-24">
                             <span className="text-lg font-black leading-none text-amazon_blue sm:text-2xl">
@@ -162,6 +156,10 @@ export default function SpinWheelPopup() {
               <div className="relative mx-auto h-40 w-40 overflow-hidden rounded-2xl border-4 border-white shadow-lg sm:h-48 sm:w-48">
                 <Image src={won.productImage} alt={won.productTitle} fill sizes="192px" className="object-cover" />
               </div>
+            ) : won.themeImage ? (
+              <div className="relative mx-auto h-40 w-40 overflow-hidden rounded-2xl border-4 border-white shadow-lg sm:h-48 sm:w-48">
+                <Image src={won.themeImage} alt={won.themeLabel || "Premio"} fill sizes="192px" className="object-cover" />
+              </div>
             ) : (
               <div className="mx-auto flex h-32 w-32 flex-col items-center justify-center rounded-full border-4 border-white bg-white shadow-lg sm:h-40 sm:w-40">
                 <span className="text-4xl font-black leading-none text-amazon_blue sm:text-5xl">S/{won.discountValue}</span>
@@ -169,42 +167,14 @@ export default function SpinWheelPopup() {
               </div>
             )}
             <h2 className="mt-4 text-3xl font-black text-white sm:text-4xl">{won.wonLabel}</h2>
-            {won.type === "mold" ? (
-              <>
-                <p className="mt-3 text-lg text-white/90">Resérvalo antes de que se acabe el stock.</p>
-                {!claimed ? (
-                  <button
-                    type="button"
-                    onClick={() => handleClaimMold(won)}
-                    className="mt-8 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
-                  >
-                    Reclamar premio
-                  </button>
-                ) : (
-                  <>
-                    <p className="mt-3 text-base font-semibold text-white">Se agregó a tu carrito.</p>
-                    <button
-                      type="button"
-                      onClick={handleClose}
-                      className="mt-6 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
-                    >
-                      Entendido
-                    </button>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                <p className="mt-3 text-lg text-white/90">Se aplicará automáticamente en tu próxima compra.</p>
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="mt-8 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
-                >
-                  Entendido
-                </button>
-              </>
-            )}
+            <p className="mt-3 text-lg text-white/90">Se aplicará automáticamente en tu próxima compra.</p>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="mt-8 flex h-16 w-full items-center justify-center rounded-full bg-amazon_blue text-2xl font-black text-white shadow-[0_10px_22px_rgba(203,41,158,0.24)]"
+            >
+              Entendido
+            </button>
           </div>
         )}
       </div>

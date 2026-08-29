@@ -9,6 +9,7 @@ export type WheelPrize =
       productTitle: string;
       productImage: string;
       productPrice: number;
+      minSubtotal: number;
       weight: number;
     }
   | {
@@ -19,6 +20,8 @@ export type WheelPrize =
       discountValue: number;
       minSubtotal: number;
       weight: number;
+      themeImage?: string;
+      themeLabel?: string;
     };
 
 export const WHEEL_PRIZES: WheelPrize[] = [
@@ -32,6 +35,7 @@ export const WHEEL_PRIZES: WheelPrize[] = [
     productTitle: "Dije arbol de Vida",
     productImage: "https://res.cloudinary.com/dndj6lrqh/image/upload/v1777251191/products/molde_dije_arbol_de_vida_03_1777251191528_724ecf43.jpg",
     productPrice: 5,
+    minSubtotal: 30,
     weight: 20,
   },
   {
@@ -44,6 +48,7 @@ export const WHEEL_PRIZES: WheelPrize[] = [
     productTitle: "Corazón Partido",
     productImage: "https://res.cloudinary.com/dndj6lrqh/image/upload/v1777251886/products/corazon_partido_02_1777251886152_2cf11004.avif",
     productPrice: 10,
+    minSubtotal: 30,
     weight: 20,
   },
   {
@@ -56,6 +61,7 @@ export const WHEEL_PRIZES: WheelPrize[] = [
     productTitle: "Luna y Estrella",
     productImage: "https://res.cloudinary.com/dndj6lrqh/image/upload/v1777251576/products/molde_luna_y_estrella_03_1777251576482_021e04fd.avif",
     productPrice: 10,
+    minSubtotal: 30,
     weight: 20,
   },
   {
@@ -71,10 +77,12 @@ export const WHEEL_PRIZES: WheelPrize[] = [
     id: "discount-50",
     type: "discount",
     icon: "💎",
-    wonLabel: "¡Ganaste S/50 de descuento en tu próxima compra!",
+    wonLabel: "¡Ganaste S/50 para resina epóxica!",
     discountValue: 50,
     minSubtotal: 150,
     weight: 10,
+    themeImage: "https://res.cloudinary.com/dndj6lrqh/image/upload/v1780040633/products/maa6a5w7i5oebmyzopjd.png",
+    themeLabel: "Resina epóxica",
   },
 ];
 
