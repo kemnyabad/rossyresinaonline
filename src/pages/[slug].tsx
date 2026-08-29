@@ -19,6 +19,7 @@ import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@
 import { getPresentationTotalPrice } from "@/lib/productPricing";
 import { getBundlePromoLabel } from "@/lib/bundlePromo";
 import WonPrizeBanner from "@/components/WonPrizeBanner";
+import { getActiveWonPrize } from "@/lib/wheelPrizes";
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -63,6 +64,11 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [mobileBuyBarReady, setMobileBuyBarReady] = useState(false);
+  const [hasWonPrize, setHasWonPrize] = useState(false);
+
+  useEffect(() => {
+    setHasWonPrize(Boolean(getActiveWonPrize()));
+  }, []);
   const [salesCount, setSalesCount] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
@@ -731,19 +737,23 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                 <ChevronRightIcon className="h-4 w-4 text-gray-400" />
               </div>
 
-              <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <span className="text-[28px] font-black leading-none text-red-600">S/ {activePrice.toFixed(2)}</span>
-                {hasActiveDiscount && (
-                  <>
-                    <span className="text-sm font-black italic text-orange-500">-{activeDiscountPercent}% dto.</span>
-                    <span className="text-sm text-gray-400 line-through">
-                      <FormattedPrice amount={activeOldPriceValue} />
-                    </span>
-                  </>
+              <div className={`mt-3 flex items-start gap-3 ${hasWonPrize ? "justify-between" : ""}`}>
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  <span className="text-[28px] font-black leading-none text-red-600">S/ {activePrice.toFixed(2)}</span>
+                  {hasActiveDiscount && (
+                    <>
+                      <span className="text-sm font-black italic text-orange-500">-{activeDiscountPercent}% dto.</span>
+                      <span className="text-sm text-gray-400 line-through">
+                        <FormattedPrice amount={activeOldPriceValue} />
+                      </span>
+                    </>
+                  )}
+                </div>
+                {hasWonPrize && (
+                  <span className="w-[58%] shrink-0 md:hidden">
+                    <WonPrizeBanner variant="inline" />
+                  </span>
                 )}
-                <span className="ml-auto min-w-[170px] max-w-[260px] flex-1 md:hidden">
-                  <WonPrizeBanner variant="inline" />
-                </span>
               </div>
               <p className="mt-0.5 text-xs text-gray-500">Precio por unidad</p>
 
