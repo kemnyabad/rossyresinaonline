@@ -91,6 +91,22 @@ export const pickWeightedPrize = (): WheelPrize => {
 export const getWheelPrizeById = (id: string): WheelPrize | undefined =>
   WHEEL_PRIZES.find((p) => p.id === id);
 
+export const buildMoldCartPayload = (prize: Extract<WheelPrize, { type: "mold" }>) => ({
+  cartKey: `wheel-prize:${prize.productId}`,
+  productId: prize.productId,
+  _id: prize.productId,
+  slug: prize.productSlug,
+  brand: "Rossy Resina",
+  category: "Moldes de silicona",
+  description: "",
+  image: prize.productImage,
+  isNew: false,
+  price: 0,
+  oldPrice: prize.productPrice,
+  title: prize.productTitle,
+  quantity: 1,
+});
+
 const STORAGE_KEY = "rr_wheel_prize";
 const PRIZE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 

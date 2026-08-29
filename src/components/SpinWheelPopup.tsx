@@ -9,6 +9,7 @@ import {
   type WheelPrize,
   pickWeightedPrize,
   storeWonPrize,
+  buildMoldCartPayload,
 } from "@/lib/wheelPrizes";
 
 const SEGMENT_ANGLE = 360 / WHEEL_PRIZES.length;
@@ -61,23 +62,7 @@ export default function SpinWheelPopup() {
   const handleClose = () => setOpen(false);
 
   const handleClaimMold = (prize: Extract<WheelPrize, { type: "mold" }>) => {
-    dispatch(
-      addToCart({
-        cartKey: `wheel-prize:${prize.productId}`,
-        productId: prize.productId,
-        _id: prize.productId,
-        slug: prize.productSlug,
-        brand: "Rossy Resina",
-        category: "Moldes de silicona",
-        description: "",
-        image: prize.productImage,
-        isNew: false,
-        price: 0,
-        oldPrice: prize.productPrice,
-        title: prize.productTitle,
-        quantity: 1,
-      } as any)
-    );
+    dispatch(addToCart(buildMoldCartPayload(prize) as any));
     setClaimed(true);
   };
 

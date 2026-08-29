@@ -18,6 +18,7 @@ import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { absoluteImageUrl, absoluteUrl, breadcrumbJsonLd, truncateMeta } from "@/lib/seo";
 import { getPresentationTotalPrice } from "@/lib/productPricing";
 import { getBundlePromoLabel } from "@/lib/bundlePromo";
+import WonPrizeBanner from "@/components/WonPrizeBanner";
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -691,6 +692,10 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               ) : null}
             </div>
 
+            <div className="pt-3">
+              <WonPrizeBanner />
+            </div>
+
             <div className="bg-white px-4 py-3">
               <button
                 type="button"
@@ -945,6 +950,10 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   document.body
                 )
               : null}
+          </div>
+
+          <div className="hidden md:block">
+            <WonPrizeBanner />
           </div>
 
           <div className="hidden md:flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
