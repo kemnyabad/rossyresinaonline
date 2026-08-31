@@ -491,8 +491,8 @@ export default function AdminCapacitacionesPage() {
                   <input type="number" min={1} value={cursoForm.duracionHoras} onChange={(e) => setCursoForm({ ...cursoForm, duracionHoras: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-slate-900" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600">Total cupos (max. 6)</label>
-                  <input type="number" min={1} max={6} value={cursoForm.cupoMax} onChange={(e) => setCursoForm({ ...cursoForm, cupoMax: Math.min(6, Number(e.target.value)) })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-slate-900" />
+                  <label className="text-xs font-semibold text-gray-600">Total cupos</label>
+                  <input type="number" min={1} value={cursoForm.cupoMax} onChange={(e) => setCursoForm({ ...cursoForm, cupoMax: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-slate-900" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600">Precio (S/) *</label>
