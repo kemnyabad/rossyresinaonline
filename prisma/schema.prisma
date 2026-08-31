@@ -214,7 +214,7 @@ model Curso {
   id             String       @id @default(cuid())
   nombre         String
   nivel          String       @default("Basico")
-  descripcion    String       @default("")
+  descripcion    String       @default("") @db.Text
   modalidad      String       @default("Presencial")
   ciudad         String       @default("")
   sede           String       @default("")
