@@ -4,6 +4,7 @@ import Image from "next/image";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import {
   type WheelPrize,
+  getActiveWonPrize,
   getSessionWheelPrizes,
   pickWeightedPrize,
   storeWonPrize,
@@ -20,10 +21,16 @@ export default function SpinWheelPopup() {
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [won, setWon] = useState<WheelPrize | null>(null);
+  const [isReminder, setIsReminder] = useState(false);
   const spinTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setPrizes(getSessionWheelPrizes());
+    const pending = getActiveWonPrize();
+    if (pending) {
+      setWon(pending);
+      setIsReminder(true);
+    }
     setMounted(true);
     setOpen(true);
   }, []);
@@ -153,6 +160,11 @@ export default function SpinWheelPopup() {
           </>
         ) : (
           <div className="py-4">
+            {isReminder && (
+              <p className="mb-2 text-sm font-black uppercase tracking-wide text-white/80">
+                Aún tienes un premio pendiente
+              </p>
+            )}
             {won.type === "mold" ? (
               <div className="relative mx-auto h-40 w-40 overflow-hidden rounded-2xl border-4 border-white shadow-lg sm:h-48 sm:w-48">
                 <Image src={won.productImage} alt={won.productTitle} fill sizes="192px" className="object-cover" />
