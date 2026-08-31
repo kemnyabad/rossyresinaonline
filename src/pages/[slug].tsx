@@ -738,16 +738,19 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
               </div>
 
               <div className={`mt-3 flex items-start gap-3 ${hasWonPrize ? "justify-between" : ""}`}>
-                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <span className="text-[28px] font-black leading-none text-red-600">S/ {activePrice.toFixed(2)}</span>
-                  {hasActiveDiscount && (
-                    <>
-                      <span className="text-sm font-black italic text-orange-500">-{activeDiscountPercent}% dto.</span>
-                      <span className="text-sm text-gray-400 line-through">
-                        <FormattedPrice amount={activeOldPriceValue} />
-                      </span>
-                    </>
-                  )}
+                <div>
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="text-[28px] font-black leading-none text-red-600">S/ {activePrice.toFixed(2)}</span>
+                    {hasActiveDiscount && (
+                      <>
+                        <span className="text-sm font-black italic text-orange-500">-{activeDiscountPercent}% dto.</span>
+                        <span className="text-sm text-gray-400 line-through">
+                          <FormattedPrice amount={activeOldPriceValue} />
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-gray-500">Precio por unidad</p>
                 </div>
                 {hasWonPrize && (
                   <span className="w-[58%] shrink-0 md:hidden">
@@ -755,7 +758,6 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   </span>
                 )}
               </div>
-              <p className="mt-0.5 text-xs text-gray-500">Precio por unidad</p>
 
               {typeof product.stock === "number" && product.stock > 0 && product.stock <= 5 && (
                 <p className="mt-2 text-sm font-semibold text-red-500">
