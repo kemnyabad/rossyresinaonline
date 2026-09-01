@@ -79,8 +79,11 @@ export default function AdminCapacitacionesPage() {
   // Fechas del formulario (nuevas a agregar)
   const [fechasForm, setFechasForm] = useState<string[]>([]);
   const [nuevaFecha, setNuevaFecha] = useState("");
-  // Fechas a eliminar al editar
-  const [fechasRemove, setFechasRemove] = useState<string[]>([]);
+  // Edicion/eliminacion directa de fechas existentes
+  const [editingFechaId, setEditingFechaId] = useState<string | null>(null);
+  const [editFechaValue, setEditFechaValue] = useState("");
+  const [savingFechaId, setSavingFechaId] = useState<string | null>(null);
+  const [deletingFechaId, setDeletingFechaId] = useState<string | null>(null);
   const flyerInputRef = useRef<HTMLInputElement>(null);
 
   const fetchCursos = async () => {
@@ -120,7 +123,7 @@ export default function AdminCapacitacionesPage() {
     }
     const method = editingCursoId ? "PATCH" : "POST";
     const body = editingCursoId
-      ? { id: editingCursoId, ...cursoForm, fechasAdd: fechasForm, fechasRemove }
+      ? { id: editingCursoId, ...cursoForm, fechasAdd: fechasForm }
       : { ...cursoForm, fechas: fechasForm };
     const res = await fetch("/api/talleres/cursos", {
       method,
@@ -131,7 +134,6 @@ export default function AdminCapacitacionesPage() {
       await fetchCursos();
       setCursoForm(emptyCurso());
       setFechasForm([]);
-      setFechasRemove([]);
       setNuevaFecha("");
       setEditingCursoId(null);
       setShowCursoForm(false);
@@ -150,8 +152,8 @@ export default function AdminCapacitacionesPage() {
       imagen: c.imagen, notaAdmin: c.notaAdmin,
     });
     setFechasForm([]);
-    setFechasRemove([]);
     setNuevaFecha("");
+    setEditingFechaId(null);
     setEditingCursoId(c.id);
     setShowCursoForm(true);
   };
@@ -172,10 +174,60 @@ export default function AdminCapacitacionesPage() {
     setFechasForm((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const toggleFechaRemove = (fechaId: string) => {
-    setFechasRemove((prev) =>
-      prev.includes(fechaId) ? prev.filter((id) => id !== fechaId) : [...prev, fechaId]
-    );
+  const toDatetimeLocalValue = (iso: string) => {
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const startEditFecha = (f: CursoFecha) => {
+    setEditingFechaId(f.id);
+    setEditFechaValue(toDatetimeLocalValue(f.fecha));
+  };
+
+  const cancelEditFecha = () => {
+    setEditingFechaId(null);
+    setEditFechaValue("");
+  };
+
+  const saveEditFecha = async (id: string) => {
+    if (!editFechaValue) return;
+    setSavingFechaId(id);
+    try {
+      const res = await fetch("/api/talleres/fechas", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, fecha: editFechaValue }),
+      });
+      if (res.ok) {
+        await fetchCursos();
+        cancelEditFecha();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "No se pudo actualizar la fecha");
+      }
+    } finally {
+      setSavingFechaId(null);
+    }
+  };
+
+  const deleteFechaDirect = async (f: CursoFecha) => {
+    const warning = f.inscripciones.length > 0
+      ? `Esta fecha tiene ${f.inscripciones.length} inscripcion(es). ¿Eliminarla de todas formas? Se perderán esas inscripciones.`
+      : "¿Eliminar esta fecha?";
+    if (!confirm(warning)) return;
+    setDeletingFechaId(f.id);
+    try {
+      const res = await fetch(`/api/talleres/fechas?id=${f.id}`, { method: "DELETE" });
+      if (res.ok) {
+        await fetchCursos();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "No se pudo eliminar la fecha");
+      }
+    } finally {
+      setDeletingFechaId(null);
+    }
   };
 
   // Videos state
@@ -446,7 +498,7 @@ export default function AdminCapacitacionesPage() {
           <div className="flex justify-between items-center mb-4">
             <p className="text-sm text-gray-500">{cursos.length} cursos registrados</p>
             <button
-              onClick={() => { setCursoForm(emptyCurso()); setEditingCursoId(null); setShowCursoForm(true); setFechasForm([]); setFechasRemove([]); setNuevaFecha(""); }}
+              onClick={() => { setCursoForm(emptyCurso()); setEditingCursoId(null); setShowCursoForm(true); setFechasForm([]); setNuevaFecha(""); }}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amazon_blue text-white text-sm font-semibold hover:brightness-95"
             >
               <PlusIcon className="w-4 h-4" /> Agregar curso
@@ -554,13 +606,66 @@ export default function AdminCapacitacionesPage() {
 
                 {editingCurso && editingCurso.fechas.length > 0 && (
                   <div className="md:col-span-2">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">Fechas existentes (marca para eliminar)</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-1">Fechas existentes</p>
                     <div className="grid gap-2">
                       {editingCurso.fechas.map((f) => (
-                        <label key={f.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm">
-                          <span>{fmtFecha(f.fecha)} {fmtHora(f.fecha)}</span>
-                          <input type="checkbox" checked={fechasRemove.includes(f.id)} onChange={() => toggleFechaRemove(f.id)} />
-                        </label>
+                        <div key={f.id} className="rounded-lg border border-gray-200 px-3 py-2 text-sm">
+                          {editingFechaId === f.id ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <input
+                                type="datetime-local"
+                                value={editFechaValue}
+                                onChange={(e) => setEditFechaValue(e.target.value)}
+                                className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm outline-none focus:border-slate-900"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => saveEditFecha(f.id)}
+                                disabled={savingFechaId === f.id || !editFechaValue}
+                                className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                              >
+                                {savingFechaId === f.id ? "Guardando..." : "Guardar"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelEditFecha}
+                                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between gap-2">
+                              <span>
+                                {fmtFecha(f.fecha)} {fmtHora(f.fecha)}
+                                {f.inscripciones.length > 0 && (
+                                  <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                    {f.inscripciones.length} inscritas
+                                  </span>
+                                )}
+                              </span>
+                              <div className="flex shrink-0 gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => startEditFecha(f)}
+                                  className="p-1.5 rounded border border-gray-200 hover:bg-gray-50"
+                                  title="Editar fecha"
+                                >
+                                  <PencilIcon className="w-3.5 h-3.5 text-gray-600" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteFechaDirect(f)}
+                                  disabled={deletingFechaId === f.id}
+                                  className="p-1.5 rounded border border-red-200 hover:bg-red-50 disabled:opacity-50"
+                                  title="Eliminar fecha"
+                                >
+                                  <TrashIcon className="w-3.5 h-3.5 text-red-600" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>
