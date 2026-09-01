@@ -678,6 +678,9 @@ const Header = () => {
                   {category.label}
                 </Link>
               ))}
+              <Link href="/capacitaciones" className="text-slate-800 transition-colors hover:text-[#e4147f]">
+                Cursos
+              </Link>
             </nav>
           </div>
         </div>

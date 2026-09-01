@@ -28,7 +28,7 @@ const BottomHeader = () => {
     { href: "/", label: "Inicio" },
     { href: "/rifas", label: "Rifas" },
   ];
-  const menuItems = [mainNav[0], ...categories, ...mainNav.slice(1)];
+  const menuItems = [mainNav[0], { href: "/capacitaciones", label: "Cursos" }, ...categories, ...mainNav.slice(1)];
 
   useEffect(() => {
     const timer = window.setInterval(() => {
