@@ -161,7 +161,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const hasOffer = typeof product?.oldPrice === "number" && Number(product.oldPrice) > Number(product?.price || 0);
   const showMobileMegaOffer = String(router.query?.oferta || "").trim() === "mega" && hasOffer;
   const productVariants: any[] = (product as any)?.variants || [];
-  const productOptionGroups: Array<{ name: string; options: Array<{ label: string; image?: string }> }> =
+  const productOptionGroups: Array<{ name: string; options: Array<{ label: string }> }> =
     (product as any)?.optionGroups || [];
   const activePrice = selectedVariant
     ? getPresentationTotalPrice(selectedVariant.price, selectedVariant.label)
@@ -355,17 +355,12 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                       setSelectedOptions((prev) => ({ ...prev, [group.name]: opt.label }));
                       setOptionGroupsError("");
                     }}
-                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
+                    className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
                       isSelected
                         ? "border-slate-900 bg-slate-900 text-white"
                         : "border-gray-300 text-gray-700 hover:border-slate-900"
                     }`}
                   >
-                    {opt.image ? (
-                      <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded border border-white/40 bg-white">
-                        <Image src={opt.image} alt={opt.label} fill sizes="24px" className="object-cover" />
-                      </span>
-                    ) : null}
                     {opt.label}
                   </button>
                 );

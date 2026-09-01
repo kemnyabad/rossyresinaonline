@@ -188,19 +188,16 @@ const normalizeSpecs = (specs: any): Array<{ label: string; value: string }> => 
 
 const normalizeOptionGroups = (
   groups: any
-): Array<{ name: string; options: Array<{ label: string; image?: string }> }> => {
+): Array<{ name: string; options: Array<{ label: string }> }> => {
   if (!Array.isArray(groups)) return [];
   return groups
     .map((g: any) => ({
       name: fixMojibakeText(String(g?.name || "").trim()),
       options: Array.isArray(g?.options)
         ? g.options
-            .map((o: any) => {
-              const label = fixMojibakeText(String(o?.label || "").trim());
-              const image = String(o?.image || "").trim();
-              return label ? (image ? { label, image } : { label }) : null;
-            })
+            .map((o: any) => fixMojibakeText(String(o?.label || "").trim()))
             .filter(Boolean)
+            .map((label: string) => ({ label }))
         : [],
     }))
     .filter((g: any) => g.name && g.options.length > 0);

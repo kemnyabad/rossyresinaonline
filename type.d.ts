@@ -29,7 +29,7 @@ export interface ProductProps {
   }>;
   optionGroups?: Array<{
     name: string;
-    options: Array<{ label: string; image?: string }>;
+    options: Array<{ label: string }>;
   }>;
 }
 export interface StoreProduct {
