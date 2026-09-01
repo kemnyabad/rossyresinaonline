@@ -142,79 +142,83 @@ export default function CapacitacionesPage({ cursos }: Props) {
               </a>
             </div>
           ) : (
-            <div className="mt-8 grid gap-6 md:grid-cols-2">
+            <div className="mt-8 grid gap-6">
               {cursos.map((curso) => (
                 <article key={curso.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-                  <div className="relative flex h-40 items-center justify-center bg-slate-100">
-                    {curso.imagen ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={curso.imagen} alt={curso.nombre} className="h-full w-full object-cover" />
-                    ) : (
-                      <AcademicCapIcon className="h-12 w-12 text-slate-300" />
-                    )}
-                  </div>
-
-                  <div className="p-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-[#eef2ff] px-3 py-1 text-xs font-semibold text-[#3730a3]">
-                        {curso.modalidad}
-                      </span>
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                        Nivel {curso.nivel}
-                      </span>
-                    </div>
-
-                    <h2 className="mt-3 text-xl font-black text-slate-950">{curso.nombre}</h2>
-                    {curso.descripcion ? (
-                      <p className="mt-1 line-clamp-3 text-sm leading-6 text-slate-600">{curso.descripcion}</p>
-                    ) : null}
-
-                    <div className="mt-3 space-y-1 text-sm text-slate-700">
-                      <p className="flex items-center gap-2">
-                        <ClockIcon className="h-4 w-4 shrink-0 text-[#d4001a]" />
-                        Duración: {curso.duracionHoras} h
-                      </p>
-                      {(curso.ciudad || curso.sede) && (
-                        <p className="flex items-center gap-2">
-                          <MapPinIcon className="h-4 w-4 shrink-0 text-[#d4001a]" />
-                          {[curso.ciudad, curso.sede].filter(Boolean).join(" · ")}
-                        </p>
+                  <div className="grid lg:grid-cols-[200px_1fr_270px]">
+                    <div className="relative flex h-40 items-center justify-center bg-slate-100 lg:h-full">
+                      {curso.imagen ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={curso.imagen} alt={curso.nombre} className="h-full w-full object-cover" />
+                      ) : (
+                        <AcademicCapIcon className="h-12 w-12 text-slate-300" />
                       )}
                     </div>
 
-                    <div className="mt-3 flex items-baseline gap-2">
-                      <span className="text-2xl font-black text-red-600">S/ {curso.precio.toFixed(2)}</span>
-                      {curso.precioAnterior ? (
-                        <span className="text-sm text-slate-400 line-through">S/ {curso.precioAnterior.toFixed(2)}</span>
+                    <div className="p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-[#eef2ff] px-3 py-1 text-xs font-semibold text-[#3730a3]">
+                          {curso.modalidad}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                          Nivel {curso.nivel}
+                        </span>
+                      </div>
+
+                      <h2 className="mt-3 text-xl font-black text-slate-950">{curso.nombre}</h2>
+                      {curso.descripcion ? (
+                        <p className="mt-1 line-clamp-3 text-sm leading-6 text-slate-600">{curso.descripcion}</p>
                       ) : null}
+
+                      <div className="mt-3 space-y-1 text-sm text-slate-700">
+                        <p className="flex items-center gap-2">
+                          <ClockIcon className="h-4 w-4 shrink-0 text-[#d4001a]" />
+                          Duración: {curso.duracionHoras} h
+                        </p>
+                        {(curso.ciudad || curso.sede) && (
+                          <p className="flex items-center gap-2">
+                            <MapPinIcon className="h-4 w-4 shrink-0 text-[#d4001a]" />
+                            {[curso.ciudad, curso.sede].filter(Boolean).join(" · ")}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="mt-4 border-t border-slate-100 pt-3">
-                      <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
-                        <CalendarDaysIcon className="h-4 w-4" />
-                        Fechas disponibles
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {curso.fechas.map((fecha) => {
-                          const cupos = cuposDe(fecha);
-                          const lleno = cupos <= 0;
-                          return (
-                            <button
-                              key={fecha.id}
-                              type="button"
-                              disabled={lleno}
-                              onClick={() => openForm(curso, fecha)}
-                              className={`rounded-lg border px-3 py-2 text-left text-xs font-semibold transition ${
-                                lleno
-                                  ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
-                                  : "border-[#c21885]/30 bg-[#fdf2fa] text-[#c21885] hover:border-[#c21885] hover:bg-[#c21885] hover:text-white"
-                              }`}
-                            >
-                              <span className="block capitalize">{fmtFecha(fecha.fecha)}</span>
-                              <span className="block">{fmtHora(fecha.fecha)} · {lleno ? "Sin cupo" : `${cupos} cupos`}</span>
-                            </button>
-                          );
-                        })}
+                    <div className="border-t border-dashed border-slate-200 p-4 lg:border-l lg:border-t-0">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-red-600">S/ {curso.precio.toFixed(2)}</span>
+                        {curso.precioAnterior ? (
+                          <span className="text-sm text-slate-400 line-through">S/ {curso.precioAnterior.toFixed(2)}</span>
+                        ) : null}
+                      </div>
+
+                      <div className="mt-4 border-t border-slate-100 pt-3">
+                        <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                          <CalendarDaysIcon className="h-4 w-4" />
+                          Fechas disponibles
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {curso.fechas.map((fecha) => {
+                            const cupos = cuposDe(fecha);
+                            const lleno = cupos <= 0;
+                            return (
+                              <button
+                                key={fecha.id}
+                                type="button"
+                                disabled={lleno}
+                                onClick={() => openForm(curso, fecha)}
+                                className={`rounded-lg border px-3 py-2 text-left text-xs font-semibold transition ${
+                                  lleno
+                                    ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                                    : "border-[#c21885]/30 bg-[#fdf2fa] text-[#c21885] hover:border-[#c21885] hover:bg-[#c21885] hover:text-white"
+                                }`}
+                              >
+                                <span className="block capitalize">{fmtFecha(fecha.fecha)}</span>
+                                <span className="block">{fmtHora(fecha.fecha)} · {lleno ? "Sin cupo" : `${cupos} cupos`}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
