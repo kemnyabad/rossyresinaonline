@@ -870,6 +870,11 @@ export default function CheckoutPage() {
                     <img src={normImg(p.image)} alt={p.title} className="rounded object-cover w-[60px] h-[60px]" loading="lazy" />
                     <div className="flex-1">
                       <p className="font-medium">{p.title}</p>
+                      {p.selectedOptions && (
+                        <p className="text-xs text-gray-500">
+                          {Object.entries(p.selectedOptions).map(([name, value]) => `${name}: ${value}`).join(" · ")}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-600">Cantidad: {p.quantity}</p>
                     </div>
                     <div className="font-semibold text-red-600"><FormattedPrice amount={getBundleLineTotal(p)} /></div>

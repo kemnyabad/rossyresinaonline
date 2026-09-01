@@ -27,12 +27,17 @@ export interface ProductProps {
     oldPrice?: number | null;
     stock?: number;
   }>;
+  optionGroups?: Array<{
+    name: string;
+    options: Array<{ label: string; image?: string }>;
+  }>;
 }
 export interface StoreProduct {
   cartKey?: string;
   productId?: number | string;
   variantId?: string;
   variantLabel?: string;
+  selectedOptions?: Record<string, string>;
   slug?: string;
   code?: string;
   barcode?: string;

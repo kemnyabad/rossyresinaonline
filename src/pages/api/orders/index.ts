@@ -51,6 +51,15 @@ type IncomingItem = {
   sku?: string;
   bundleQuantity?: number;
   bundlePrice?: number;
+  selectedOptions?: Record<string, string>;
+};
+
+const normalizeSelectedOptions = (value: any): Record<string, string> | undefined => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const entries = Object.entries(value)
+    .map(([k, v]) => [String(k || "").trim(), String(v || "").trim()])
+    .filter(([k, v]) => k && v);
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 };
 
 const toLegacyStatus = (status: DbOrderStatus): string => {
@@ -232,6 +241,7 @@ const createLocalSimulatedOrder = async (body: any) => {
       sku: product.sku || null,
       variantId: null,
       variantLabel: "",
+      selectedOptions: normalizeSelectedOptions(item.selectedOptions),
       quantity: qty,
       price,
       bundleQuantity: product.bundleQuantity != null ? Number(product.bundleQuantity) : undefined,
@@ -501,6 +511,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         sku: string | null;
         variantId: string | null;
         variantLabel: string;
+        selectedOptions?: Record<string, string>;
         quantity: number;
         price: number;
         bundleQuantity?: number;
@@ -551,6 +562,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           sku: product.sku || null,
           variantId: variant?.id || null,
           variantLabel: variant?.label || "",
+          selectedOptions: normalizeSelectedOptions(item.selectedOptions),
           quantity: qty,
           price,
           bundleQuantity: !variant && product.bundleQuantity != null ? Number(product.bundleQuantity) : undefined,

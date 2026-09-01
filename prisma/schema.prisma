@@ -83,6 +83,7 @@ model Product {
   image       String
   images      Json?
   specs       Json?
+  optionGroups Json?
   price       Decimal  @db.Decimal(10, 2)
   oldPrice    Decimal? @db.Decimal(10, 2)
   bundleQuantity Int?

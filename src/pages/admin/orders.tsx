@@ -316,7 +316,12 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-500 max-w-[160px]">
                       {(o.items || []).slice(0, 2).map((it: any, i: number) => (
-                        <p key={i} className="truncate">{it.title} x{it.quantity || 1}</p>
+                        <p key={i} className="truncate">
+                          {it.title} x{it.quantity || 1}
+                          {it.selectedOptions && Object.keys(it.selectedOptions).length > 0
+                            ? ` (${Object.values(it.selectedOptions).join(", ")})`
+                            : ""}
+                        </p>
                       ))}
                       {(o.items || []).length > 2 && <p className="text-gray-400">+{o.items.length - 2} más</p>}
                     </td>
@@ -404,9 +409,18 @@ export default function AdminOrdersPage() {
               <Section title="Productos">
                 <ul className="space-y-1.5">
                   {(detailOrder.items || []).map((it: any, i: number) => (
-                    <li key={i} className="flex justify-between text-xs text-gray-700">
-                      <span className="truncate mr-2">{it.title} x{it.quantity || 1}</span>
-                      <span className="font-semibold shrink-0">S/ {fmt(Number(it.price || 0))}</span>
+                    <li key={i} className="text-xs text-gray-700">
+                      <div className="flex justify-between">
+                        <span className="truncate mr-2">{it.title} x{it.quantity || 1}</span>
+                        <span className="font-semibold shrink-0">S/ {fmt(Number(it.price || 0))}</span>
+                      </div>
+                      {it.selectedOptions && Object.keys(it.selectedOptions).length > 0 && (
+                        <p className="mt-0.5 text-gray-400">
+                          {Object.entries(it.selectedOptions as Record<string, string>)
+                            .map(([name, value]) => `${name}: ${value}`)
+                            .join(" · ")}
+                        </p>
+                      )}
                     </li>
                   ))}
                 </ul>

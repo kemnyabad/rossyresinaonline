@@ -23,6 +23,7 @@ interface Item {
   _id: number | string;
   cartKey?: string;
   variantLabel?: string;
+  selectedOptions?: Record<string, string>;
   quantity: number;
 }
 interface cartProductsProps {
@@ -79,6 +80,17 @@ const CartProduct = ({ item }: cartProductsProps) => {
               {bundlePromoLabel}
             </p>
           ) : null}
+          {(item.variantLabel || item.selectedOptions) && (
+            <div className="mt-1 space-y-0.5 text-xs font-medium text-gray-600 md:hidden">
+              {item.variantLabel && <p>Presentación: <span className="font-bold text-gray-900">{item.variantLabel}</span></p>}
+              {item.selectedOptions &&
+                Object.entries(item.selectedOptions).map(([name, value]) => (
+                  <p key={name}>
+                    {name}: <span className="font-bold text-gray-900">{value}</span>
+                  </p>
+                ))}
+            </div>
+          )}
           <div className="mt-4 hidden space-y-0.5 text-sm text-gray-800 md:block md:text-[15px]">
             <p>Origen: Perú</p>
             <p>Envío: Envío coordinado por WhatsApp</p>
@@ -86,6 +98,12 @@ const CartProduct = ({ item }: cartProductsProps) => {
               Estado: <span className="font-bold">Nuevo</span>
             </p>
             {item.variantLabel && <p>Presentación: <span className="font-bold">{item.variantLabel}</span></p>}
+            {item.selectedOptions &&
+              Object.entries(item.selectedOptions).map(([name, value]) => (
+                <p key={name}>
+                  {name}: <span className="font-bold">{value}</span>
+                </p>
+              ))}
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-end gap-3 text-sm md:mt-5 md:justify-start">

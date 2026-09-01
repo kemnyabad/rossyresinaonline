@@ -57,6 +57,8 @@ type Review = {
 const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const [qty, setQty] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [optionGroupsError, setOptionGroupsError] = useState("");
   const [justAdded, setJustAdded] = useState(false);
   const addNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const trackedViewContentId = useRef("");
@@ -159,6 +161,8 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
   const hasOffer = typeof product?.oldPrice === "number" && Number(product.oldPrice) > Number(product?.price || 0);
   const showMobileMegaOffer = String(router.query?.oferta || "").trim() === "mega" && hasOffer;
   const productVariants: any[] = (product as any)?.variants || [];
+  const productOptionGroups: Array<{ name: string; options: Array<{ label: string; image?: string }> }> =
+    (product as any)?.optionGroups || [];
   const activePrice = selectedVariant
     ? getPresentationTotalPrice(selectedVariant.price, selectedVariant.label)
     : Number(product?.price || 0);
@@ -283,9 +287,19 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
 
   const addProductToCart = (quantity: number) => {
     if (!product) return;
+    const missingGroup = productOptionGroups.find((g) => !selectedOptions[g.name]);
+    if (missingGroup) {
+      setOptionGroupsError(`Elige una opción de "${missingGroup.name}" antes de continuar.`);
+      return;
+    }
+    setOptionGroupsError("");
     const variantId = selectedVariant?.id ? String(selectedVariant.id) : "";
     const variantLabel = selectedVariant?.label ? String(selectedVariant.label) : "";
-    const cartKey = variantId ? `${product._id}:${variantId}` : String(product._id);
+    const hasSelectedOptions = productOptionGroups.length > 0;
+    const optionsSuffix = hasSelectedOptions
+      ? productOptionGroups.map((g) => selectedOptions[g.name]).join("|")
+      : "";
+    const cartKey = [String(product._id), variantId, optionsSuffix].filter(Boolean).join(":");
     dispatch(
       addToCart({
         cartKey,
@@ -293,6 +307,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
         productId: product._id,
         variantId: variantId || undefined,
         variantLabel: variantLabel || undefined,
+        selectedOptions: hasSelectedOptions ? { ...selectedOptions } : undefined,
         brand: product.brand,
         category: product.category,
         description: product.description,
@@ -317,9 +332,62 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
     };
   }, []);
 
+  const renderOptionGroups = () => {
+    if (productOptionGroups.length === 0) return null;
+    return (
+      <>
+        {productOptionGroups.map((group) => (
+          <div key={group.name} className="mt-3 border-t border-gray-100 pt-3">
+            <p className="mb-2 text-sm text-gray-600">
+              {group.name}:{" "}
+              <span className="font-semibold text-gray-900">
+                {selectedOptions[group.name] || "Elegir opción"}
+              </span>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {group.options.map((opt) => {
+                const isSelected = selectedOptions[group.name] === opt.label;
+                return (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => {
+                      setSelectedOptions((prev) => ({ ...prev, [group.name]: opt.label }));
+                      setOptionGroupsError("");
+                    }}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
+                      isSelected
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-gray-300 text-gray-700 hover:border-slate-900"
+                    }`}
+                  >
+                    {opt.image ? (
+                      <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded border border-white/40 bg-white">
+                        <Image src={opt.image} alt={opt.label} fill sizes="24px" className="object-cover" />
+                      </span>
+                    ) : null}
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {optionGroupsError ? (
+          <p className="mt-2 text-xs font-semibold text-red-600">{optionGroupsError}</p>
+        ) : null}
+      </>
+    );
+  };
+
   useEffect(() => {
     setActiveImage(preferredMainImage);
   }, [preferredMainImage, product?._id]);
+
+  useEffect(() => {
+    setSelectedOptions({});
+    setOptionGroupsError("");
+  }, [product?._id]);
 
   useEffect(() => {
     setViewerReady(true);
@@ -814,6 +882,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                   )}
                 </div>
               )}
+              {renderOptionGroups()}
             </div>
 
             {(productSpecs.length > 0 || descriptionBullets.length > 0) && (
@@ -1231,6 +1300,7 @@ const DynamicPage = ({ product, recs, allProducts }: Props) => {
                       </div>
                     </div>
                   )}
+                  {renderOptionGroups()}
                 </div>
                 <div className="mt-3 text-lg font-bold text-emerald-700 md:text-xl">
                   {"Sin mínimo ni máximo de pedidos enviados"}

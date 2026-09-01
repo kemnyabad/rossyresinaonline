@@ -15,6 +15,26 @@ const normalizeSpecs = (specs: any): Array<{ label: string; value: string }> => 
     .filter((s) => s.label && s.value);
 };
 
+const normalizeOptionGroups = (
+  groups: any
+): Array<{ name: string; options: Array<{ label: string; image?: string }> }> => {
+  if (!Array.isArray(groups)) return [];
+  return groups
+    .map((g: any) => ({
+      name: String(g?.name || "").trim(),
+      options: Array.isArray(g?.options)
+        ? g.options
+            .map((o: any) => {
+              const label = String(o?.label || "").trim();
+              const image = String(o?.image || "").trim();
+              return label ? (image ? { label, image } : { label }) : null;
+            })
+            .filter(Boolean)
+        : [],
+    }))
+    .filter((g: any) => g.name && g.options.length > 0);
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Método no permitido" });
 
@@ -29,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       select: {
         id: true, legacyId: true, code: true, slug: true, barcode: true, sku: true,
         title: true, description: true, brand: true, category: true,
-        image: true, images: true, specs: true, price: true, oldPrice: true,
+        image: true, images: true, specs: true, optionGroups: true, price: true, oldPrice: true,
         bundleQuantity: true, bundlePrice: true,
         isNew: true, stock: true,
       },
@@ -52,6 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       image: product.image || "",
       images: normalizeImages(product.images),
       specs: normalizeSpecs(product.specs),
+      optionGroups: normalizeOptionGroups(product.optionGroups),
       price: Number(product.price || 0),
       oldPrice: product.oldPrice != null ? Number(product.oldPrice) : 0,
       bundleQuantity: product.bundleQuantity != null ? Number(product.bundleQuantity) : "",

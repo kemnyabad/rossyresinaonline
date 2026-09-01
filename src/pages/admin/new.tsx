@@ -5,6 +5,7 @@ import { requireAdminPage } from "@/lib/adminAuth";
 import Image from "next/image";
 import ProductVariants, { type Variant } from "@/components/admin/ProductVariants";
 import ProductSpecs, { type Spec } from "@/components/admin/ProductSpecs";
+import ProductOptionGroups, { type ProductOptionGroup } from "@/components/admin/ProductOptionGroups";
 import { uploadImageToCloudinary } from "@/lib/cloudinaryUpload";
 
 const normalizeUrls = (value: any): string[] => {
@@ -60,6 +61,7 @@ export default function NewProduct() {
     category: "Resinas",
     description: "",
     specs: [] as Spec[],
+    optionGroups: [] as ProductOptionGroup[],
     barcode: "",
     sku: "",
     stock: 0,
@@ -350,6 +352,11 @@ export default function NewProduct() {
           )}
 
           <ProductSpecs specs={form.specs || []} onChange={(specs) => setForm({ ...form, specs })} />
+
+          <ProductOptionGroups
+            groups={form.optionGroups || []}
+            onChange={(optionGroups) => setForm({ ...form, optionGroups })}
+          />
 
           <div className="space-y-3 border-t border-gray-100 pt-4">
             {saveError ? <p className="text-sm text-red-600">{saveError}</p> : null}

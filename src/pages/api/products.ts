@@ -19,6 +19,7 @@ const productBaseSelect = {
   category: true,
   image: true,
   specs: true,
+  optionGroups: true,
   price: true,
   oldPrice: true,
   bundleQuantity: true,
@@ -185,6 +186,26 @@ const normalizeSpecs = (specs: any): Array<{ label: string; value: string }> => 
     .filter((s) => s.label && s.value);
 };
 
+const normalizeOptionGroups = (
+  groups: any
+): Array<{ name: string; options: Array<{ label: string; image?: string }> }> => {
+  if (!Array.isArray(groups)) return [];
+  return groups
+    .map((g: any) => ({
+      name: fixMojibakeText(String(g?.name || "").trim()),
+      options: Array.isArray(g?.options)
+        ? g.options
+            .map((o: any) => {
+              const label = fixMojibakeText(String(o?.label || "").trim());
+              const image = String(o?.image || "").trim();
+              return label ? (image ? { label, image } : { label }) : null;
+            })
+            .filter(Boolean)
+        : [],
+    }))
+    .filter((g: any) => g.name && g.options.length > 0);
+};
+
 const toLegacyProduct = (p: any) => ({
   _id: p.legacyId ?? p.id,
   slug: p.slug || "",
@@ -198,6 +219,7 @@ const toLegacyProduct = (p: any) => ({
   category: fixMojibakeText(p.category || ""),
   image: pickMainImage(p.image, p?.images),
   specs: normalizeSpecs(p?.specs),
+  optionGroups: normalizeOptionGroups(p?.optionGroups),
   isNew: Boolean(p.isNew),
   oldPrice: p.oldPrice != null ? Number(p.oldPrice) : undefined,
   price: Number(p.price || 0),
@@ -224,6 +246,7 @@ const toDbData = (body: any) => {
   const barcode = sanitizeBarcode(body?.barcode);
   const sku = fixMojibakeText(String(body?.sku || "").trim()) || null;
   const specs = normalizeSpecs(body?.specs);
+  const optionGroups = normalizeOptionGroups(body?.optionGroups);
   return {
     legacyId,
     code,
@@ -237,6 +260,7 @@ const toDbData = (body: any) => {
     image,
     images: gallery,
     specs,
+    optionGroups,
     price,
     oldPrice,
     bundleQuantity,
