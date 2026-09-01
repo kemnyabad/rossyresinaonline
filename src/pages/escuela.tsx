@@ -224,10 +224,16 @@ export default function EscuelaPage() {
               <p className="mt-4 text-base leading-7 text-white/85">
                 Programas modulares para aprender técnicas, producir piezas y emprender con productos hechos a mano.
               </p>
-              <a href={whatsappUrl} className="mt-6 inline-flex items-center gap-2 rounded bg-[#25d366] px-5 py-3 text-sm font-bold text-white hover:brightness-95">
-                <PhoneIcon className="h-5 w-5" />
-                WhatsApp: informes e inscripciones
-              </a>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href="/capacitaciones" className="inline-flex items-center gap-2 rounded bg-[#c21885] px-5 py-3 text-sm font-bold text-white hover:brightness-95">
+                  <CalendarDaysIcon className="h-5 w-5" />
+                  Ver cursos y apartar cupo
+                </Link>
+                <a href={whatsappUrl} className="inline-flex items-center gap-2 rounded bg-[#25d366] px-5 py-3 text-sm font-bold text-white hover:brightness-95">
+                  <PhoneIcon className="h-5 w-5" />
+                  WhatsApp: informes e inscripciones
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -341,9 +347,9 @@ export default function EscuelaPage() {
             <p className="mt-2 text-slate-700">
               Capacítate desde cualquier lugar, a tu ritmo y con acompañamiento especializado en resina, moldes, pigmentos y venta artesanal.
             </p>
-            <a href="#programas" className="mt-5 inline-flex rounded bg-slate-900 px-5 py-3 text-sm font-bold text-white">
+            <Link href="/capacitaciones" className="mt-5 inline-flex rounded bg-slate-900 px-5 py-3 text-sm font-bold text-white">
               Acceder a revisar nuestros cursos virtuales
-            </a>
+            </Link>
           </div>
         </section>
 
