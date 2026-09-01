@@ -130,7 +130,7 @@ export default function AdminUsersPage() {
       `Alumno: ${created.name}`,
       `Usuario: ${created.email}`,
       `Contraseña: ${created.password}`,
-      `Acceso: ${window.location.origin}/escuela`,
+      `Acceso: ${window.location.origin}/sign-in`,
     ].join("\n");
     await navigator.clipboard.writeText(text);
     setNotice("Credenciales copiadas.");
@@ -199,7 +199,7 @@ export default function AdminUsersPage() {
                 <p><strong>Alumno:</strong> {created.name}</p>
                 <p><strong>Usuario:</strong> {created.email}</p>
                 <p><strong>Contraseña:</strong> {created.password}</p>
-                <p><strong>Acceso:</strong> /escuela</p>
+                <p><strong>Acceso:</strong> /sign-in</p>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <button onClick={copyCredentials} className="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-black text-white">

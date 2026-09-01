@@ -25,7 +25,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     "/categoria/pigmentos",
     "/categoria/accesorios",
     "/categoria/creaciones",
-    "/escuela",
+    "/capacitaciones",
     "/mayoristas",
     "/contact",
     "/faq",

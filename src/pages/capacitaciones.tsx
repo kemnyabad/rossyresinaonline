@@ -112,8 +112,8 @@ export default function CapacitacionesPage({ cursos }: Props) {
       <main className="min-h-screen bg-[#f5f5f5] text-[#1f2933]">
         <section className="border-b border-slate-200 bg-white">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-            <Link href="/escuela" className="text-sm font-semibold text-[#c21885] hover:underline">
-              ← Volver a la escuela
+            <Link href="/" className="text-sm font-semibold text-[#c21885] hover:underline">
+              ← Volver a inicio
             </Link>
             <a href={whatsappUrl} className="inline-flex items-center gap-2 rounded bg-[#25d366] px-4 py-2 text-sm font-bold text-white hover:brightness-95">
               <PhoneIcon className="h-4 w-4" />
@@ -197,7 +197,7 @@ export default function CapacitacionesPage({ cursos }: Props) {
                           <CalendarDaysIcon className="h-4 w-4" />
                           Fechas disponibles
                         </p>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-col gap-2.5">
                           {curso.fechas.map((fecha) => {
                             const cupos = cuposDe(fecha);
                             const lleno = cupos <= 0;
@@ -207,14 +207,25 @@ export default function CapacitacionesPage({ cursos }: Props) {
                                 type="button"
                                 disabled={lleno}
                                 onClick={() => openForm(curso, fecha)}
-                                className={`rounded-lg border px-3 py-2 text-left text-xs font-semibold transition ${
+                                className={`font-bodyFont w-full rounded-xl border-2 px-4 py-3 text-left transition ${
                                   lleno
                                     ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
                                     : "border-[#c21885]/30 bg-[#fdf2fa] text-[#c21885] hover:border-[#c21885] hover:bg-[#c21885] hover:text-white"
                                 }`}
                               >
-                                <span className="block capitalize">{fmtFecha(fecha.fecha)}</span>
-                                <span className="block">{fmtHora(fecha.fecha)} · {lleno ? "Sin cupo" : `${cupos} cupos`}</span>
+                                <span className="block text-base font-bold capitalize leading-tight">
+                                  {fmtFecha(fecha.fecha)}
+                                </span>
+                                <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold">
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <ClockIcon className="h-4 w-4 shrink-0" />
+                                    {fmtHora(fecha.fecha)}
+                                  </span>
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <UserGroupIcon className="h-4 w-4 shrink-0" />
+                                    {lleno ? "Sin cupo" : `${cupos} cupos`}
+                                  </span>
+                                </span>
                               </button>
                             );
                           })}

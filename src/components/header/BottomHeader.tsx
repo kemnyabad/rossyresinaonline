@@ -22,13 +22,13 @@ const BottomHeader = () => {
     { href: "/categoria/resina", label: "Resina" },
     { href: "/categoria/creaciones", label: "Creaciones" },
     { href: "/mercado-creativo", label: "Mercado Creativo" },
-    { href: "/escuela", label: "Escuela" },
+    { href: "/capacitaciones", label: "Cursos" },
   ];
   const mainNav = [
     { href: "/", label: "Inicio" },
     { href: "/rifas", label: "Rifas" },
   ];
-  const menuItems = [mainNav[0], { href: "/capacitaciones", label: "Cursos" }, ...categories, ...mainNav.slice(1)];
+  const menuItems = [mainNav[0], ...categories, ...mainNav.slice(1)];
 
   useEffect(() => {
     const timer = window.setInterval(() => {

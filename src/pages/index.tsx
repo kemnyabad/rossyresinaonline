@@ -232,7 +232,7 @@ export default function Home({ productData, behavior, marketplaceProducts, ofert
     { label: "Resina", href: "/categoria/resina" },
     { label: "Pigmentos", href: "/categoria/pigmentos" },
     { label: "Accesorios", href: "/categoria/accesorios" },
-    { label: "Escuela", href: "/escuela" },
+    { label: "Cursos", href: "/capacitaciones" },
   ];
   const mobileGridProducts = interestProducts.slice(0, 20);
   const mobilePromoSlides = useMemo(

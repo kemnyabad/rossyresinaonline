@@ -110,12 +110,12 @@ export default function StudentProfilePage({ student, capacitaciones, talleres, 
               <p className="mt-1 text-[15px] font-normal leading-6 text-slate-500">Escuela Rossy Resina</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link href="/escuela" className="rounded-md border border-slate-300 bg-white px-4 py-2 text-[14px] font-medium text-slate-700 hover:bg-slate-50">
-                Volver a Escuela
+              <Link href="/capacitaciones" className="rounded-md border border-slate-300 bg-white px-4 py-2 text-[14px] font-medium text-slate-700 hover:bg-slate-50">
+                Volver a Cursos
               </Link>
               <button
                 type="button"
-                onClick={() => signOut({ callbackUrl: "/escuela" })}
+                onClick={() => signOut({ callbackUrl: "/capacitaciones" })}
                 className="rounded-md bg-slate-900 px-4 py-2 text-[14px] font-medium text-white"
               >
                 Cerrar sesión
@@ -355,8 +355,8 @@ function EmptyState() {
       <p className="mt-2 text-[14px] font-normal leading-6 text-slate-600">
         Cuando completemos tu inscripción, tus programas aparecerán aquí.
       </p>
-      <Link href="/escuela#programas" className="mt-4 inline-flex rounded-md bg-[#c21885] px-4 py-2 text-[14px] font-semibold text-white">
-        Ver programas
+      <Link href="/capacitaciones" className="mt-4 inline-flex rounded-md bg-[#c21885] px-4 py-2 text-[14px] font-semibold text-white">
+        Ver cursos disponibles
       </Link>
     </div>
   );
@@ -367,7 +367,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   if (!session?.user?.email) {
     return {
       redirect: {
-        destination: "/escuela",
+        destination: "/sign-in?callbackUrl=/estudiante",
         permanent: false,
       },
     };
@@ -379,7 +379,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   if (!user || user.role === "ADMIN") {
     return {
       redirect: {
-        destination: "/escuela",
+        destination: "/sign-in?callbackUrl=/estudiante",
         permanent: false,
       },
     };

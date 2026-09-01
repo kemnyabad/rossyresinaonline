@@ -244,14 +244,14 @@ export function ResinEducationSchool() {
           key="description"
           content="Escuela de formación para el trabajo en artesanía en resina. Aprende técnicas, seguridad, producción artesanal y emprendimiento."
         />
-        <link rel="canonical" href={absoluteUrl("/escuela")} />
+        <link rel="canonical" href={absoluteUrl("/capacitaciones")} />
         <meta property="og:title" content="Escuela de formación en resina - Rossy Resina" />
         <meta
           property="og:description"
           content="Formación práctica en artesanía en resina para aprender, crear y emprender."
         />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={absoluteUrl("/escuela")} />
+        <meta property="og:url" content={absoluteUrl("/capacitaciones")} />
         <meta property="og:image" content={absoluteImageUrl("/web-app-manifest-512x512.png")} />
       </Head>
 
@@ -456,7 +456,7 @@ export const getServerSideProps = async (ctx: any) => {
   const slug: string = String(ctx.params.slug || "");
 
   if (slug === "talleres") {
-    return { redirect: { destination: "/escuela", permanent: false } };
+    return { redirect: { destination: "/capacitaciones", permanent: false } };
   }
 
   try {

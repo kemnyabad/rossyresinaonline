@@ -42,7 +42,6 @@ function AppContent({
     router.pathname.startsWith("/comunidad") ||
     router.pathname.startsWith("/suscriptores") ||
     isRifasRoute ||
-    router.pathname === "/escuela" ||
     router.pathname === "/estudiante" ||
     router.pathname === "/suscripcion" ||
     router.pathname === "/sign-in" ||
