@@ -43,10 +43,10 @@ type Props = {
 const whatsappUrl = "https://wa.me/51962507061";
 
 const fmtFecha = (iso: string) =>
-  new Date(iso).toLocaleDateString("es-PE", { weekday: "long", day: "2-digit", month: "long" });
+  new Date(iso).toLocaleDateString("es-PE", { weekday: "long", day: "2-digit", month: "long", timeZone: "America/Lima" });
 
 const fmtHora = (iso: string) =>
-  new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
+  new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", timeZone: "America/Lima" });
 
 export default function CapacitacionesPage({ cursos }: Props) {
   const [activeFecha, setActiveFecha] = useState<{ curso: PublicCurso; fecha: PublicFecha } | null>(null);

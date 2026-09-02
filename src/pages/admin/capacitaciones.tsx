@@ -4,6 +4,7 @@ import type { GetServerSideProps } from "next";
 import { requireAdminPage } from "@/lib/adminAuth";
 import { PlusIcon, PencilIcon, TrashIcon, VideoCameraIcon, AcademicCapIcon, FilmIcon, UserGroupIcon, ChevronDownIcon, ChevronUpIcon, PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import type { VideoItem, ShortItem } from "@/data/capacitaciones";
+import { peruDateToDatetimeLocalValue } from "@/lib/peruTime";
 
 type CursoFecha = {
   id: string;
@@ -45,8 +46,8 @@ type CursoForm = {
 
 const emptyCurso = (): CursoForm => ({ nombre: "", nivel: "Basico", descripcion: "", modalidad: "Presencial", ciudad: "", sede: "", duracionHoras: 2, precio: 0, precioAnterior: "", cupoMax: 6, imagen: "", notaAdmin: "" });
 
-const fmtFecha = (iso: string) => new Date(iso).toLocaleDateString("es-PE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
-const fmtHora = (iso: string) => new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
+const fmtFecha = (iso: string) => new Date(iso).toLocaleDateString("es-PE", { weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "America/Lima" });
+const fmtHora = (iso: string) => new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", timeZone: "America/Lima" });
 const waLink = (tel: string, msg: string) => `https://wa.me/${tel.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
 
 const LEVELS = ["Basico", "Intermedio", "Avanzado"];
@@ -174,15 +175,9 @@ export default function AdminCapacitacionesPage() {
     setFechasForm((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const toDatetimeLocalValue = (iso: string) => {
-    const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  };
-
   const startEditFecha = (f: CursoFecha) => {
     setEditingFechaId(f.id);
-    setEditFechaValue(toDatetimeLocalValue(f.fecha));
+    setEditFechaValue(peruDateToDatetimeLocalValue(f.fecha));
   };
 
   const cancelEditFecha = () => {

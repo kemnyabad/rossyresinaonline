@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
+import { datetimeLocalToPeruDate } from "@/lib/peruTime";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "PATCH") {
@@ -8,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const updated = await prisma.cursoFecha.update({
         where: { id: String(id) },
-        data: { fecha: new Date(fecha) },
+        data: { fecha: datetimeLocalToPeruDate(fecha) },
         include: { inscripciones: { select: { id: true, nombre: true, email: true, telefono: true, notas: true, createdAt: true } } },
       });
       return res.status(200).json(updated);
