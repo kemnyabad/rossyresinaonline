@@ -40,7 +40,7 @@ export default function NotFoundPage() {
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Link href="/faq" className="rounded-lg p-4 bg-gray-100 border border-gray-200 hover:bg-gray-200">Preguntas frecuentes</Link>
             <Link href="/contact" className="rounded-lg p-4 bg-gray-100 border border-gray-200 hover:bg-gray-200">Contacto</Link>
-            <Link href="/blog" className="rounded-lg p-4 bg-gray-100 border border-gray-200 hover:bg-gray-200">Blog</Link>
+            <Link href="/productos" className="rounded-lg p-4 bg-gray-100 border border-gray-200 hover:bg-gray-200">Productos</Link>
           </div>
         </div>
       </div>

@@ -167,6 +167,7 @@ npm run dev          # Inicia el servidor de desarrollo
 npm run build        # Compila el proyecto para producción
 npm run start        # Inicia el servidor en modo producción
 npm run lint         # Revisa errores de código con ESLint
+npm run backup:weekly # Genera backup local de datos clave
 ```
 
 
@@ -207,6 +208,9 @@ Notas:
 5. Vercel despliega automáticamente `main`.
 
 Con esto dejas de publicar con comandos manuales a ciegas y pasas a un flujo controlado por revisión y merge.
+
+Checklist operativo detallado:
+- `docs/DEPLOY_CHECKLIST.md`
 
 ---
 

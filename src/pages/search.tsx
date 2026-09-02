@@ -1,53 +1,104 @@
 import Head from "next/head";
 import Products from "@/components/Products";
+import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import type { ProductProps } from "../../type";
 import { filterAndSortProducts } from "@/lib/services/productCatalogService";
 import { getAllProducts } from "@/lib/repositories/productRepository";
+import { absoluteUrl } from "@/lib/seo";
+import { useLiveProducts } from "@/lib/useLiveProducts";
 
 interface Props {
   q: string;
+  category: string;
   results: ProductProps[];
 }
 
-export default function SearchPage({ q, results }: Props) {
+export default function SearchPage({ q, category, results }: Props) {
+  const { products: liveProducts } = useLiveProducts(results);
+  const categoryLabel = category ? ` en ${category}` : "";
+  const categoryTerms: Record<string, string[]> = {
+    moldes: ["molde", "silicona"],
+    resina: ["resina", "epoxi", "epoxica", "uv"],
+    pigmentos: ["pigmento", "mica", "tinte", "colorante"],
+    accesorios: ["accesorio", "dije", "llavero", "arete", "collar", "gancho"],
+    creaciones: ["creacion", "creaciones"],
+  };
+  const visibleResults = filterAndSortProducts(
+    categoryTerms[category]
+      ? liveProducts.filter((product) => {
+          const hay = [product.title, product.category, product.brand, product.code, product.description]
+            .filter(Boolean)
+            .join(" ")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase();
+          return categoryTerms[category].some((term) => hay.includes(term));
+        })
+      : liveProducts,
+    { query: q, sort: "relevance" }
+  );
   return (
-    <div className="max-w-screen-2xl mx-auto px-6 py-8">
+    <StoreWithAdsLayout className="py-8">
       <Head>
         <title>Buscar productos | Rossy Resina</title>
         <meta
           name="description"
-          content={`Resultados de b?squeda para ${q || "productos"} en Rossy Resina.`}
+          key="description"
+          content={`Resultados de búsqueda para ${q || "productos"}${categoryLabel} en Rossy Resina.`}
         />
+        <meta name="robots" content="noindex,follow" key="robots" />
+        <link rel="canonical" href={absoluteUrl("/search")} />
       </Head>
 
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold text-gray-900">Buscar productos</h1>
-        <span className="text-sm text-gray-500">{results.length} resultados</span>
-      </div>
-
-      {results.length > 0 ? (
-        <Products
-          productData={results}
-          gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
-        />
-      ) : (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
-          No se encontraron productos para tu b?squeda.
+      <div className="min-w-0">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h1 className="text-xl font-semibold text-gray-900">Buscar productos</h1>
+          <span className="text-sm text-gray-500">{visibleResults.length} resultados</span>
         </div>
-      )}
-    </div>
+
+        {visibleResults.length > 0 ? (
+          <Products
+            productData={visibleResults}
+            gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
+          />
+        ) : (
+          <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
+            No se encontraron productos para tu búsqueda.
+          </div>
+        )}
+      </div>
+    </StoreWithAdsLayout>
   );
 }
 
 export async function getServerSideProps(ctx: any) {
   const q = String(ctx.query?.q || "").trim();
+  const category = String(ctx.query?.category || "").trim();
   const allProducts = await getAllProducts();
-  const results = filterAndSortProducts(allProducts, {
+  const categoryTerms: Record<string, string[]> = {
+    moldes: ["molde", "silicona"],
+    resina: ["resina", "epoxi", "epoxica", "uv"],
+    pigmentos: ["pigmento", "mica", "tinte", "colorante"],
+    accesorios: ["accesorio", "dije", "llavero", "arete", "collar", "gancho"],
+    creaciones: ["creacion", "creaciones"],
+  };
+  const filteredByCategory = categoryTerms[category]
+    ? allProducts.filter((product) => {
+        const hay = [product.title, product.category, product.brand, product.code, product.description]
+          .filter(Boolean)
+          .join(" ")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase();
+        return categoryTerms[category].some((term) => hay.includes(term));
+      })
+    : allProducts;
+  const results = filterAndSortProducts(filteredByCategory, {
     query: q,
     sort: "relevance",
   });
 
   return {
-    props: { q, results },
+    props: { q, category, results },
   };
 }

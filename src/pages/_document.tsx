@@ -1,6 +1,8 @@
 import { Html, Head, Main, NextScript } from 'next/document'
 
 export default function Document() {
+  const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
+
   return (
     <Html lang="es">
       <Head>
@@ -8,12 +10,25 @@ export default function Document() {
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Nunito:wght@400;500;600;700;800;900&family=Montserrat:wght@400;700;800;900&display=swap" rel="stylesheet" />
-        <meta name="theme-color" content="#6E2CA1" />
+        <meta name="application-name" content="Rossy Resina" />
+        <meta name="apple-mobile-web-app-title" content="Rossy Resina" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#e4147f" />
+        <meta name="facebook-domain-verification" content="jw1yv4g85tapmk99ztmoh67hz5qjzg" />
       </Head>
       <body>
+        {metaPixelId ? (
+          <noscript>
+            <img
+              height="1"
+              width="1"
+              style={{ display: "none" }}
+              src={`https://www.facebook.com/tr?id=${metaPixelId}&ev=PageView&noscript=1`}
+              alt=""
+            />
+          </noscript>
+        ) : null}
         <Main />
         <NextScript />
       </body>

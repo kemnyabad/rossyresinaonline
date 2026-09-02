@@ -1,8 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import fs from "fs";
-import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export const config = {
   api: {
@@ -12,60 +17,54 @@ export const config = {
   },
 };
 
-function ensureDir(dir: string) {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
-function getExtension(mimeType: string) {
-  const map: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/jpg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-    "video/mp4": "mp4",
-    "video/webm": "webm",
-    "video/ogg": "ogv",
-    "video/quicktime": "mov",
-  };
-  return map[mimeType] || "";
-}
+const ALLOWED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/webm",
+  "video/ogg",
+  "video/quicktime",
+]);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    if (req.method !== "POST") return res.status(405).json({ error: "M?todo no permitido" });
+    if (req.method !== "POST") return res.status(405).json({ error: "Metodo no permitido" });
 
     const session = (await getServerSession(req, res, authOptions as any)) as any;
     if (!session?.user?.email) return res.status(401).json({ error: "No autenticado" });
 
-    const { filename, data } = (req.body || {}) as { filename?: string; data?: string };
+    const { data } = (req.body || {}) as { filename?: string; data?: string };
     if (!data || typeof data !== "string") return res.status(400).json({ error: "Datos invalidos" });
 
     const match = data.match(/^data:([a-z]+\/[a-z0-9+.-]+);base64,(.+)$/i);
     if (!match) return res.status(400).json({ error: "Formato de archivo invalido" });
 
     const mimeType = match[1].toLowerCase();
-    const base64 = match[2];
-    const ext = getExtension(mimeType);
-    if (!ext) return res.status(400).json({ error: "Tipo de archivo no permitido" });
+    if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+      return res.status(400).json({ error: "Tipo de archivo no permitido" });
+    }
 
     const isVideo = mimeType.startsWith("video/");
-    const buffer = Buffer.from(base64, "base64");
+    const base64Length = match[2].length;
+    const approxBytes = Math.floor((base64Length * 3) / 4);
     const maxBytes = isVideo ? 20 * 1024 * 1024 : 8 * 1024 * 1024;
-    if (buffer.length > maxBytes) {
+    if (approxBytes > maxBytes) {
       return res.status(413).json({ error: isVideo ? "Video muy grande" : "Imagen muy grande" });
     }
 
-    const rawName = String(filename || `creation_${Date.now()}.${ext}`).replace(/[^a-zA-Z0-9_.-]/g, "_");
-    const finalName = rawName.endsWith(`.${ext}`) ? rawName : `${rawName}.${ext}`;
-    const dir = path.join(process.cwd(), "public", "creations");
-    ensureDir(dir);
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
+      return res.status(500).json({ error: "Credenciales de Cloudinary no configuradas" });
+    }
 
-    const uniqueName = `${Date.now()}_${finalName}`;
-    const filePath = path.join(dir, uniqueName);
-    fs.writeFileSync(filePath, buffer);
+    const uploadResult = await cloudinary.uploader.upload(data, {
+      folder: "capacitaciones_creations",
+      resource_type: isVideo ? "video" : "image",
+    });
 
     return res.status(201).json({
-      url: `/creations/${uniqueName}`,
+      url: uploadResult.secure_url,
       mimeType,
     });
   } catch {

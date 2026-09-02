@@ -56,6 +56,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     const visitorId = String(body.visitorId || "anon").trim() || "anon";
     const userEmail = String(body.userEmail || "").trim().toLowerCase();
     const userName = String(body.userName || "").trim();
+    const appMode = Boolean(body.appMode);
+    const appEvent = String(body.appEvent || "").trim().toLowerCase();
     const clientIp = getClientIp(req);
 
     const host = String(req.headers.host || "").toLowerCase();
@@ -87,6 +89,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       visitorId,
       userEmail,
       userName,
+      appMode,
+      appEvent,
       country,
       city: getCity(req),
     });

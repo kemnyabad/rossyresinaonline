@@ -19,6 +19,9 @@ export type OrderMeta = {
   shalomPickupCode: string;
   olvaTrackingImage: string;
   notes: string;
+  couponCode: string;
+  couponDiscount: number;
+  couponSubtotal: number;
 };
 
 const PREFIX = "__ORDER_META__:";
@@ -41,6 +44,9 @@ const DEFAULT_META: OrderMeta = {
   shalomPickupCode: "",
   olvaTrackingImage: "",
   notes: "",
+  couponCode: "",
+  couponDiscount: 0,
+  couponSubtotal: 0,
 };
 
 export const paymentMethodLabel = (method: PaymentMethod): string =>
@@ -61,7 +67,12 @@ export const normalizeShippingCarrier = (raw: unknown): ShippingCarrier => {
   return "SHALOM";
 };
 
-const normalizeMeta = (partial: Partial<OrderMeta>): OrderMeta => ({
+type RawOrderMeta = Omit<Partial<OrderMeta>, "paymentMethod" | "shippingCarrier"> & {
+  paymentMethod?: string;
+  shippingCarrier?: string;
+};
+
+const normalizeMeta = (partial: RawOrderMeta): OrderMeta => ({
   version: 2,
   orderCode: String(partial.orderCode || "").trim(),
   workflowStatus: String(partial.workflowStatus || "").trim() || "Pendiente por confirmar",
@@ -79,6 +90,9 @@ const normalizeMeta = (partial: Partial<OrderMeta>): OrderMeta => ({
   shalomPickupCode: String(partial.shalomPickupCode || "").trim(),
   olvaTrackingImage: String(partial.olvaTrackingImage || "").trim(),
   notes: String(partial.notes || "").trim(),
+  couponCode: String((partial as any).couponCode || "").trim().toUpperCase(),
+  couponDiscount: Number((partial as any).couponDiscount || 0),
+  couponSubtotal: Number((partial as any).couponSubtotal || 0),
 });
 
 export const encodeOrderMeta = (meta: Partial<OrderMeta>): string => {

@@ -1,10 +1,12 @@
-﻿import { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import { useMemo, useState, useEffect } from "react";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { GetServerSideProps } from "next";
+import { requireAdminPage } from "@/lib/adminAuth";
 import Image from "next/image";
 import ProductVariants, { type Variant } from "@/components/admin/ProductVariants";
+import ProductSpecs, { type Spec } from "@/components/admin/ProductSpecs";
+import ProductOptionGroups, { type ProductOptionGroup } from "@/components/admin/ProductOptionGroups";
+import { uploadImageToCloudinary } from "@/lib/cloudinaryUpload";
 
 const normalizeUrls = (value: any): string[] => {
   if (!Array.isArray(value)) return [];
@@ -31,6 +33,26 @@ const pickMainFromGallery = (currentImage: any, nextImages: string[]): string =>
   return nextImages[0] || "";
 };
 
+const sanitizePriceInput = (value: any): string => {
+  const cleaned = String(value ?? "")
+    .replace(",", ".")
+    .replace(/[^\d.]/g, "");
+  const [whole, ...decimalParts] = cleaned.split(".");
+  return decimalParts.length > 0 ? `${whole}.${decimalParts.join("")}` : whole;
+};
+
+const sanitizeStockInput = (value: any): string => String(value ?? "").replace(/\D/g, "");
+
+const isResinCategory = (value: any): boolean =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .includes("resina");
+
+const uploadProductImage = (file: File): Promise<string> => uploadImageToCloudinary(file, "products");
+
 export default function NewProduct() {
   const router = useRouter();
   const [form, setForm] = useState<any>({
@@ -38,6 +60,8 @@ export default function NewProduct() {
     brand: "Rossy Resina",
     category: "Resinas",
     description: "",
+    specs: [] as Spec[],
+    optionGroups: [] as ProductOptionGroup[],
     barcode: "",
     sku: "",
     stock: 0,
@@ -46,6 +70,8 @@ export default function NewProduct() {
     isNew: true,
     oldPrice: 0,
     price: 0,
+    bundleQuantity: "",
+    bundlePrice: "",
   });
 
   const [files, setFiles] = useState<File[]>([]);
@@ -127,28 +153,10 @@ export default function NewProduct() {
     setUploadError("");
     setUploading(true);
 
-    const toDataUrl = (f: File) =>
-      new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(String(r.result));
-        r.onerror = reject;
-        r.readAsDataURL(f);
-      });
-
     try {
       const uploadedUrls: string[] = [];
       for (const file of files) {
-        const dataUrl = await toDataUrl(file);
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: file.name, data: dataUrl }),
-        });
-
-        const json = await res.json();
-        if (!res.ok) throw new Error(String(json?.error || "No se pudo subir la imagen"));
-
-        const url = String(json.url || "").trim();
+        const url = await uploadProductImage(file);
         if (url) uploadedUrls.push(url);
       }
 
@@ -224,43 +232,90 @@ export default function NewProduct() {
             <label className="grid gap-1 md:col-span-2">
               <span className="text-sm text-gray-700">Descripción</span>
               <textarea
-                rows={5}
+                rows={10}
                 className="rounded-md border border-gray-300 px-3 py-2"
                 value={form.description || ""}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder={"Escribe cada punto en una línea aparte.\nSe mostrarán como viñetas \"Sobre este producto\"."}
               />
+              <span className="text-xs text-gray-500">Cada línea se muestra como una viñeta en la página del producto.</span>
             </label>
 
             <label className="grid gap-1">
               <span className="text-sm text-gray-700">Precio anterior</span>
-              <input
-                type="number"
-                className="rounded-md border border-gray-300 px-3 py-2"
-                value={form.oldPrice || 0}
-                onChange={(e) => setForm({ ...form, oldPrice: Number(e.target.value) })}
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500">S/</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
+                  className="w-full rounded-md border border-gray-300 py-2 pl-10 pr-3"
+                  value={form.oldPrice ?? ""}
+                  onChange={(e) => setForm({ ...form, oldPrice: sanitizePriceInput(e.target.value) })}
+                />
+              </div>
             </label>
 
             <label className="grid gap-1">
               <span className="text-sm text-gray-700">Precio</span>
-              <input
-                type="number"
-                className="rounded-md border border-gray-300 px-3 py-2"
-                value={form.price || 0}
-                onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500">S/</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
+                  className="w-full rounded-md border border-gray-300 py-2 pl-10 pr-3"
+                  value={form.price ?? ""}
+                  onChange={(e) => setForm({ ...form, price: sanitizePriceInput(e.target.value) })}
+                />
+              </div>
             </label>
 
             <label className="grid gap-1">
               <span className="text-sm text-gray-700">Inventario (stock)</span>
               <input
-                type="number"
-                min={0}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className="rounded-md border border-gray-300 px-3 py-2"
-                value={form.stock ?? 0}
-                onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
+                value={form.stock ?? ""}
+                onChange={(e) => setForm({ ...form, stock: sanitizeStockInput(e.target.value) })}
               />
             </label>
+
+            <div className="grid gap-3 rounded-lg border border-pink-100 bg-pink-50/60 p-3 md:col-span-2 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <p className="text-sm font-semibold text-gray-800">Promo por cantidad</p>
+                <p className="text-xs text-gray-500">Ejemplo: cantidad 4 y precio 10 mostrara 4X10 SOLES.</p>
+              </div>
+              <label className="grid gap-1">
+                <span className="text-sm text-gray-700">Cantidad</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="rounded-md border border-gray-300 px-3 py-2"
+                  value={form.bundleQuantity ?? ""}
+                  onChange={(e) => setForm({ ...form, bundleQuantity: sanitizeStockInput(e.target.value) })}
+                  placeholder="4"
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className="text-sm text-gray-700">Precio total promo</span>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500">S/</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
+                    className="w-full rounded-md border border-gray-300 py-2 pl-10 pr-3"
+                    value={form.bundlePrice ?? ""}
+                    onChange={(e) => setForm({ ...form, bundlePrice: sanitizePriceInput(e.target.value) })}
+                    placeholder="10"
+                  />
+                </div>
+              </label>
+            </div>
 
             <label className="grid gap-1">
               <span className="text-sm text-gray-700">Codigo de barras</span>
@@ -292,9 +347,16 @@ export default function NewProduct() {
             </label>
           </div>
 
-          {form.category === "Resinas" && (
+          {isResinCategory(form.category) && (
             <ProductVariants variants={variants} onChange={setVariants} />
           )}
+
+          <ProductSpecs specs={form.specs || []} onChange={(specs) => setForm({ ...form, specs })} />
+
+          <ProductOptionGroups
+            groups={form.optionGroups || []}
+            onChange={(optionGroups) => setForm({ ...form, optionGroups })}
+          />
 
           <div className="space-y-3 border-t border-gray-100 pt-4">
             {saveError ? <p className="text-sm text-red-600">{saveError}</p> : null}
@@ -327,7 +389,7 @@ export default function NewProduct() {
             <div className="flex flex-wrap items-center gap-2">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 multiple
                 onChange={(e) => setFiles(Array.from(e.target.files || []))}
               />
@@ -400,11 +462,8 @@ export default function NewProduct() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) {
-    return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/new", permanent: false } };
-  }
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };
 

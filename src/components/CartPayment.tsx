@@ -3,6 +3,7 @@ import FormattedPrice from "./FormattedPrice";
 import { useSelector } from "react-redux";
 import { StateProps, StoreProduct } from "../../type";
 import { useEffect, useMemo, useState } from "react";
+import { getBundleLineTotal } from "@/lib/bundlePromo";
 
 interface Props {
   email?: string;
@@ -24,13 +25,13 @@ const CartPayment = ({ email, onConfirm, confirmLabel = "Confirmar pedido por Wh
   useEffect(() => {
     let amt = 0;
     productData.map((item: StoreProduct) => {
-      amt += item.price * item.quantity;
+      amt += getBundleLineTotal(item);
       return;
     });
     setTotalAmount(amt);
   }, [productData]);
   const orderText = useMemo(() => {
-    const lines = productData.map((p: StoreProduct) => `- ${p.title} x ${p.quantity} = S/ ${(p.price * p.quantity).toFixed(2)}`);
+    const lines = productData.map((p: StoreProduct) => `- ${p.title} x ${p.quantity} = S/ ${getBundleLineTotal(p).toFixed(2)}`);
     const base = [
       `Hola, quiero confirmar mi pedido`,
       `Método: Yape`,

@@ -5,6 +5,44 @@
   return lowered.charAt(0).toLocaleUpperCase("es") + lowered.slice(1);
 }
 
+export function buildExtendedProductTitle(product: {
+  title?: string;
+  category?: string;
+  measure?: string;
+  specs?: Array<{ label: string; value: string }>;
+}): string {
+  const base = formatProductTitle(product.title || "Producto");
+  const parts: string[] = [base];
+  const MAX_LEN = 160;
+
+  const addPart = (text?: string) => {
+    const clean = sanitizeHumanText(String(text || "").trim());
+    if (!clean) return;
+    const lowered = clean.toLocaleLowerCase("es");
+    if (parts.join(" ").toLocaleLowerCase("es").includes(lowered)) return;
+    parts.push(clean);
+  };
+
+  addPart(product.measure);
+  (product.specs || []).slice(0, 4).forEach((s) => addPart(s.value));
+  addPart(product.category);
+
+  let extended = parts.join(", ");
+  if (extended.length > MAX_LEN) {
+    extended = extended.slice(0, MAX_LEN + 1);
+    const lastComma = extended.lastIndexOf(",");
+    extended = (lastComma > base.length ? extended.slice(0, lastComma) : extended.slice(0, MAX_LEN)).trim();
+  }
+  return extended;
+}
+
+export function formatDescriptionBullets(description?: string): string[] {
+  return String(description || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^[-•*]\s*/, ""))
+    .filter(Boolean);
+}
+
 export function sanitizeHumanText(input: string): string {
   let out = String(input || "");
 

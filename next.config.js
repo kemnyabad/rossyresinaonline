@@ -8,10 +8,13 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ["i.ibb.co"],
+    domains: ["i.ibb.co", "lh3.googleusercontent.com", "graph.facebook.com", "platform-lookaside.fbsbx.com"],
     remotePatterns: [
       { protocol: "https", hostname: "i.ibb.co" },
       { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "graph.facebook.com" },
+      { protocol: "https", hostname: "platform-lookaside.fbsbx.com" },
     ],
   },
   async redirects() {
@@ -19,19 +22,19 @@ const nextConfig = {
       {
         source: "/p/:slug",
         destination: "/:slug",
-        permanent: false,
+        permanent: true,
       },
       {
         source: "/c/:slug",
         destination: "/categoria/:slug",
-        permanent: false,
+        permanent: true,
       },
     ];
 
     if (process.env.TEMP_REDIRECT_TO_TIENDANUBE === "1") {
       const base = process.env.TIENDANUBE_URL || "https://rossyresina.mitiendanube.com";
       redirects.push({
-        source: "/:path((?!api|_next|favicon.ico|robots.txt|sitemap.xml|site.webmanifest).*)",
+        source: "/:path((?!api|_next|favicon.ico|robots.txt|sitemap.xml|site.webmanifest|googledc520f3f37b4e175.html).*)",
         destination: `${base}/:path`,
         permanent: false,
       });

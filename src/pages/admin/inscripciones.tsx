@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import type { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { requireAdminPage } from "@/lib/adminAuth";
 import {
   UserIcon,
   EnvelopeIcon,
@@ -29,10 +28,11 @@ type Inscripcion = {
   createdAt: string;
 };
 
-const ESTADOS = ["PENDIENTE", "CONTACTADO", "PROGRAMADO", "COMPLETADO", "CANCELADO"];
+const ESTADOS = ["PENDIENTE", "ACTIVO", "CONTACTADO", "PROGRAMADO", "COMPLETADO", "CANCELADO"];
 
 const estadoBadge: Record<string, string> = {
   PENDIENTE:   "bg-amber-50 text-amber-700 border-amber-200",
+  ACTIVO:      "bg-emerald-50 text-emerald-700 border-emerald-200",
   CONTACTADO:  "bg-blue-50 text-blue-700 border-blue-200",
   PROGRAMADO:  "bg-violet-50 text-violet-700 border-violet-200",
   COMPLETADO:  "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -41,6 +41,7 @@ const estadoBadge: Record<string, string> = {
 
 const estadoIcon: Record<string, React.ReactNode> = {
   PENDIENTE:   <ClockIcon className="w-3.5 h-3.5" />,
+  ACTIVO:      <CheckCircleIcon className="w-3.5 h-3.5" />,
   CONTACTADO:  <EnvelopeIcon className="w-3.5 h-3.5" />,
   PROGRAMADO:  <CalendarDaysIcon className="w-3.5 h-3.5" />,
   COMPLETADO:  <CheckCircleIcon className="w-3.5 h-3.5" />,
@@ -240,9 +241,7 @@ export default function AdminInscripcionesPage() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  if (!session || (session.user as any)?.role !== "ADMIN") {
-    return { redirect: { destination: "/admin/sign-in", permanent: false } };
-  }
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };

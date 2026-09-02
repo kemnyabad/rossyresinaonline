@@ -1,12 +1,15 @@
-import React, { ReactElement, useEffect, useRef, useState } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Header from "./header/Header";
-import BottomHeader from "./header/BottomHeader";
 import Footer from "./Footer";
 import Link from "next/link";
-import { HomeIcon, MagnifyingGlassIcon, HeartIcon, ShoppingCartIcon, UserIcon } from "@heroicons/react/24/outline";
+import {
+  HomeIcon,
+  ShoppingCartIcon, 
+  UserIcon,
+  ArrowRightIcon,
+} from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
-import AssistantRossy from "./AssistantRossy";
 
 interface Props {
   children: ReactElement;
@@ -14,81 +17,194 @@ interface Props {
 
 const RootLayout = ({ children }: Props) => {
   const router = useRouter();
-  const hideBottomHeader = router.pathname === "/cart";
-  const footerRef = useRef<HTMLDivElement | null>(null);
-  const [hideAssistant, setHideAssistant] = useState(false);
-  const cartCount = useSelector((state: any) =>
+  const isRifasPage =
+    router.pathname.startsWith("/rifas") ||
+    router.pathname.startsWith("/rifa/") ||
+    router.pathname.startsWith("/admin/rifa");
+  const isProductDetailPage = router.pathname === "/[slug]";
+  const isCartPage = router.pathname === "/cart";
+  const isCheckoutPage = router.pathname === "/checkout";
+  const isAccountPage = router.pathname === "/account";
+  const isCursoRedesSocialesPage = router.pathname === "/curso-redes-sociales";
+  const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
+  const showHeader = !isRifasPage;
+  const showMobileBottomNav = !isProductDetailPage && !isCartPage && !isCheckoutPage;
+  const hideFooter = isRifasPage || isResinyPage || isCartPage || isCheckoutPage || isCursoRedesSocialesPage;
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
+  const [hasActiveRifas, setHasActiveRifas] = useState(false);
+  const showMobilePromoBanner = !isRifasPage && !isResinyPage && !isCartPage && !isCheckoutPage && !isAccountPage && hasActiveRifas;
+  const storedCartCount = useSelector((state: any) =>
     Array.isArray(state?.next?.productData) ? state.next.productData.length : 0
   );
+  const cartCount = isHydrated ? storedCartCount : 0;
+
+  const mobilePromoSlides = [
+    {
+      eyebrow: "Especial Mamá",
+      title: "¡Sorteo Día de la Madre!",
+      icon: "💝",
+      decor: "🌸",
+      eyebrowClass: "text-pink-100",
+    },
+  ];
 
   useEffect(() => {
-    const footerEl = footerRef.current;
-    if (!footerEl || typeof window === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        setHideAssistant(Boolean(entry?.isIntersecting));
-      },
-      { threshold: 0.05 }
-    );
-
-    observer.observe(footerEl);
-    return () => observer.disconnect();
+    setIsHydrated(true);
   }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setMobilePromoIndex((prev) => (prev + 1) % mobilePromoSlides.length);
+    }, 4200);
+    return () => window.clearInterval(interval);
+  }, [mobilePromoSlides.length]);
+
+  useEffect(() => {
+    if (isRifasPage || isResinyPage || isCartPage || isCheckoutPage) {
+      setHasActiveRifas(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    fetch("/api/rifas", { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setHasActiveRifas(Array.isArray(data) && data.length > 0);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setHasActiveRifas(false);
+      });
+
+    return () => controller.abort();
+  }, [isRifasPage, isResinyPage, isCartPage, isCheckoutPage]);
 
   const mobileTabs = [
     { href: "/", label: "Inicio", icon: HomeIcon, active: router.pathname === "/" },
-    { href: "/search", label: "Buscar", icon: MagnifyingGlassIcon, active: router.pathname.startsWith("/search") },
-    { href: "/favorite", label: "Favoritos", icon: HeartIcon, active: router.pathname.startsWith("/favorite") },
-    { href: "/cart", label: "Carrito", icon: ShoppingCartIcon, active: router.pathname.startsWith("/cart") },
     {
       href: "/account",
       label: "Cuenta",
       icon: UserIcon,
       active: router.pathname.startsWith("/account") || router.pathname.startsWith("/sign-in"),
     },
+    { href: "/cart", label: "Carrito", icon: ShoppingCartIcon, active: router.pathname.startsWith("/cart"), promo: true },
   ];
 
   return (
     <>
-      <Header />
-      {!hideBottomHeader && (
-        <div className="hidden md:block">
-          <BottomHeader />
+      {showHeader && (
+        isResinyPage ? (
+          <div className="resiny-fixed-header fixed left-0 right-0 top-0 z-[9998] bg-white">
+            <style jsx global>{`
+              .resiny-fixed-header > div {
+                position: static !important;
+                border-bottom: 1px solid #e5e7eb !important;
+                box-shadow: none !important;
+              }
+            `}</style>
+            <Header />
+          </div>
+        ) : isProductDetailPage || isCartPage || isCheckoutPage ? (
+          <div className="hidden lg:block">
+            <Header />
+          </div>
+        ) : isAccountPage ? (
+          <div className="hidden md:block">
+            <Header />
+          </div>
+        ) : (
+          <Header />
+        )
+      )}
+
+      {/* Banner Móvil Temático: sorteos activos (Solo visible en móviles y fuera de rifas) */}
+      {showMobilePromoBanner && (
+        <div className="md:hidden">
+          <Link href="/rifas">
+            <div className="relative overflow-hidden border-b border-amazon_light/20 bg-amazon_blue px-4 py-3 shadow-sm">
+              {/* Elemento decorativo de fondo */}
+              <div className="pointer-events-none absolute -right-2 -top-1 opacity-20">
+                <span className="text-5xl">{mobilePromoSlides[mobilePromoIndex].decor}</span>
+              </div>
+
+              <div className="relative z-10 flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-xl shadow-inner">
+                    {mobilePromoSlides[mobilePromoIndex].icon}
+                  </div>
+                  <div className="min-w-0 text-white">
+                    <p className={`mb-1 truncate text-[9px] font-semibold uppercase leading-none tracking-wide ${mobilePromoSlides[mobilePromoIndex].eyebrowClass}`}>
+                      {mobilePromoSlides[mobilePromoIndex].eyebrow}
+                    </p>
+                    <p className="truncate text-sm font-semibold uppercase leading-tight">
+                      {mobilePromoSlides[mobilePromoIndex].title}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex gap-1">
+                    {mobilePromoSlides.map((slide, index) => (
+                      <span
+                        key={slide.eyebrow}
+                        className={`h-1.5 rounded-full transition-all ${
+                          index === mobilePromoIndex ? "w-4 bg-white" : "w-1.5 bg-white/40"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-lg border border-white/35 bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-amazon_blue shadow-sm">
+                    Participar <ArrowRightIcon className="h-3 w-3 stroke-[3]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
       )}
-      <div className="pb-20 md:pb-0">{children}</div>
-      <div ref={footerRef}>
-        <Footer />
+
+      <div className={`${showMobileBottomNav ? "pb-20 md:pb-0" : ""} ${isResinyPage ? "bg-white pt-[72px] md:pt-[76px]" : ""}`}>{children}</div>
+      <div>
+        {!hideFooter && <Footer />} {/* Renderiza Footer solo en páginas públicas de tienda */}
       </div>
-      <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white/95 backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5 px-2 py-2">
+      {showMobileBottomNav && <nav className="fixed bottom-0 left-0 right-0 z-[75] border-t border-gray-200 bg-white md:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-3 px-1.5 py-1.5">
           {mobileTabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex flex-col items-center justify-center gap-0.5 rounded-lg py-1 text-[11px] ${
-                  tab.active ? "font-semibold text-amazon_blue" : "text-gray-500"
+                className={`relative flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 text-[11px] leading-tight ${
+                  tab.active ? "font-bold text-amazon_blue" : "font-semibold text-gray-700"
                 }`}
               >
-                <span className="relative">
-                  <Icon className={`h-5 w-5 ${tab.active ? "text-amazon_blue" : "text-gray-500"}`} />
+                {tab.promo ? (
+                  <span className="absolute right-0 top-0 rounded-full bg-amazon_blue px-1.5 py-0.5 text-[8px] font-bold leading-none text-white">
+                    Oferta
+                  </span>
+                ) : null}
+                <span className="relative flex h-6 items-center justify-center">
+                  <Icon className={`h-6 w-6 ${tab.active ? "text-amazon_blue" : "text-black"}`} />
                   {tab.href === "/cart" && cartCount > 0 ? (
-                    <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amazon_blue px-1 text-[9px] font-bold text-white">
+                    <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amazon_blue px-1 text-[9px] font-semibold text-white">
                       {cartCount}
                     </span>
                   ) : null}
                 </span>
                 <span>{tab.label}</span>
+                {tab.promo ? (
+                  <span className="-mt-0.5 rounded-full border border-amazon_blue px-1.5 py-0.5 text-[9px] font-bold leading-none text-amazon_blue">
+                    Envío rápido
+                  </span>
+                ) : null}
               </Link>
             );
           })}
         </div>
-      </nav>
-      {!hideAssistant && <AssistantRossy />}
+      </nav>}
     </>
   );
 };

@@ -1,9 +1,8 @@
 import Head from "next/head";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { ArrowPathIcon, ArrowDownTrayIcon, ShieldExclamationIcon, GlobeAltIcon, UsersIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { requireAdminPage } from "@/lib/adminAuth";
+import { ArrowPathIcon, ArrowDownTrayIcon, ShieldExclamationIcon, GlobeAltIcon, UsersIcon, EyeIcon, DevicePhoneMobileIcon } from "@heroicons/react/24/outline";
 
 type WindowPreset = "24h" | "7d" | "30d" | "90d" | "365d" | "all";
 
@@ -169,6 +168,9 @@ export default function AdminVisitsPage() {
               { label: "Total visitas",        value: stats.overview?.totalVisits,          icon: EyeIcon,      color: "bg-blue-500" },
               { label: "Visitantes únicos",    value: stats.overview?.uniqueVisitors,       icon: UsersIcon,    color: "bg-purple-500" },
               { label: "Usuarios registrados", value: stats.overview?.registeredUserVisits, icon: UsersIcon,    color: "bg-green-500" },
+              { label: "Instalaron app",        value: stats.overview?.appInstalls,          icon: DevicePhoneMobileIcon, color: "bg-emerald-500" },
+              { label: "Abrieron como app",     value: stats.overview?.appUniqueVisitors,    icon: DevicePhoneMobileIcon, color: "bg-pink-500" },
+              { label: "Aperturas app",         value: stats.overview?.appOpens,             icon: DevicePhoneMobileIcon, color: "bg-indigo-500" },
               { label: "Promedio por visitante", value: Number(stats.overview?.avgVisitsPerVisitor || 0).toFixed(1), icon: GlobeAltIcon, color: "bg-amazon_blue" },
             ].map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-3">
@@ -254,8 +256,7 @@ export default function AdminVisitsPage() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/visits", permanent: false } };
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };

@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
+import { recordCartAdd } from "@/lib/productMetricsStore";
+import { isInternalTestOrder } from "@/lib/testOrders";
 const db = prisma as any;
 
 const findProductByIdentifier = async (identifier: string) => {
@@ -23,11 +25,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       const orders = await db.order.findMany({
         where: { status: { in: ["PAID", "SHIPPED"] } },
-        select: { items: true },
+        select: { items: true, customerName: true, customerPhone: true, customerEmail: true, customerNotes: true },
       });
 
       let paidUnits = 0;
       for (const order of orders) {
+        if (isInternalTestOrder(order)) continue;
         const items = Array.isArray(order.items) ? (order.items as any[]) : [];
         for (const item of items) {
           if (String(item?.productId || "") !== product.id) continue;
@@ -41,6 +44,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     } catch {
       return res.status(500).json({ error: "No se pudo obtener m?tricas" });
+    }
+  }
+
+  if (req.method === "POST") {
+    const event = String(req.body?.event || "").trim();
+    if (event !== "cart_add") return res.status(400).json({ error: "Evento no soportado" });
+
+    const quantity = Math.max(1, Math.floor(Number(req.body?.quantity || 1)));
+    try {
+      const product = await findProductByIdentifier(productIdentifier);
+      const metricKey = String(product?.id || productIdentifier);
+      const cartAdds = await recordCartAdd(metricKey, quantity);
+      return res.status(200).json({ ok: true, productId: productIdentifier, cartAdds });
+    } catch {
+      return res.status(500).json({ error: "No se pudo registrar la metrica" });
     }
   }
 
