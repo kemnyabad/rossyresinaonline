@@ -50,10 +50,9 @@ const fmtHora = (iso: string) =>
   new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", timeZone: "America/Lima" });
 
 const yapeNumber = process.env.NEXT_PUBLIC_YAPE_NUMBER || "961770723";
-const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "Banco";
-const accountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "00000000000";
-const cci = process.env.NEXT_PUBLIC_BANK_CCI || "00000000000000000000";
-const accountHolder = process.env.NEXT_PUBLIC_ACCOUNT_HOLDER || "";
+const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "BCP";
+const accountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "19397649019070";
+const accountHolder = process.env.NEXT_PUBLIC_ACCOUNT_HOLDER || "Rosa Maribel Abad Landacay";
 
 export default function CapacitacionesPage({ cursos }: Props) {
   const [activeFecha, setActiveFecha] = useState<{ curso: PublicCurso; fecha: PublicFecha } | null>(null);
@@ -283,7 +282,6 @@ export default function CapacitacionesPage({ cursos }: Props) {
                     <p className="mt-1 text-sm text-slate-700">
                       Transferencia: <span className="font-semibold text-slate-900">{bankName}</span> — Cuenta {accountNumber}
                     </p>
-                    <p className="text-sm text-slate-700">CCI: {cci}</p>
                     {accountHolder ? <p className="mt-1 text-sm text-slate-700">Titular: {accountHolder}</p> : null}
                   </div>
 

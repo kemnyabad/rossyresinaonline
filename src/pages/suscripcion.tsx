@@ -11,10 +11,10 @@ export default function SuscripcionPage() {
   const subscriptionPrice = 20;
   const contactPhoneRaw = process.env.NEXT_PUBLIC_CONTACT_PHONE || "900000000";
   const whatsapp = useMemo(() => contactPhoneRaw.replace(/[^0-9]/g, ""), [contactPhoneRaw]);
-  const yapeNumber = process.env.NEXT_PUBLIC_YAPE_NUMBER || contactPhoneRaw;
-  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "Transferencia bancaria";
-  const bankAccount = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "Cuenta por confirmar";
-  const bankCci = process.env.NEXT_PUBLIC_BANK_CCI || "CCI por confirmar";
+  const yapeNumber = process.env.NEXT_PUBLIC_YAPE_NUMBER || "961770723";
+  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "BCP";
+  const bankAccount = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "19397649019070";
+  const accountHolder = process.env.NEXT_PUBLIC_ACCOUNT_HOLDER || "Rosa Maribel Abad Landacay";
 
   const whatsappHref = useMemo(() => {
     const methodLabel = subMethod === "yape" ? "Yape" : "Transferencia";
@@ -172,7 +172,7 @@ export default function SuscripcionPage() {
                   <div className="mt-2 text-gray-700">
                     <p>{bankName}</p>
                     <p className="text-xs mt-1">Cuenta: {bankAccount}</p>
-                    <p className="text-xs">CCI: {bankCci}</p>
+                    <p className="text-xs mt-1">Titular: {accountHolder}</p>
                   </div>
                 )}
                 <button

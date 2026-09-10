@@ -16,10 +16,9 @@ const CartPayment = ({ email, onConfirm, confirmLabel = "Confirmar pedido por Wh
   );
   const [totalAmount, setTotalAmount] = useState(0);
   const yapeNumber = process.env.NEXT_PUBLIC_YAPE_NUMBER || "961770723";
-  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "Banco";
-  const accountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "00000000000";
-  const cci = process.env.NEXT_PUBLIC_BANK_CCI || "00000000000000000000";
-  const holder = process.env.NEXT_PUBLIC_ACCOUNT_HOLDER || "";
+  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "BCP";
+  const accountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "19397649019070";
+  const holder = process.env.NEXT_PUBLIC_ACCOUNT_HOLDER || "Rosa Maribel Abad Landacay";
   const contactPhoneRaw = process.env.NEXT_PUBLIC_CONTACT_PHONE || yapeNumber;
   const contactPhone = useMemo(() => contactPhoneRaw.replace(/[^0-9]/g, ""), [contactPhoneRaw]);
   useEffect(() => {
@@ -43,11 +42,11 @@ const CartPayment = ({ email, onConfirm, confirmLabel = "Confirmar pedido por Wh
       "",
       "Datos de pago:",
       `Yape: ${yapeNumber}`,
-      `Transferencia: ${bankName} Cuenta: ${accountNumber} CCI: ${cci}`,
+      `Transferencia: ${bankName} Cuenta: ${accountNumber}`,
       holder ? `Titular: ${holder}` : "",
     ].filter(Boolean);
     return base.join("\n");
-  }, [productData, totalAmount, email, yapeNumber, bankName, accountNumber, cci, holder]);
+  }, [productData, totalAmount, email, yapeNumber, bankName, accountNumber, holder]);
 
   const handleConfirm = () => {
     if (onConfirm) {
