@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
+import { datetimeLocalToPeruDate } from "@/lib/peruTime";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
@@ -35,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           cupoMax: Number(cupoMax || 6),
           imagen: String(imagen || ""),
           notaAdmin: String(notaAdmin || ""),
-          fechas: { create: (fechas as string[]).map((f) => ({ fecha: new Date(f) })) },
+          fechas: { create: (fechas as string[]).map((f) => ({ fecha: datetimeLocalToPeruDate(f) })) },
         },
         include: { fechas: { include: { inscripciones: true } } },
       });
@@ -65,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ...(cupoMax && { cupoMax: Number(cupoMax) }),
         ...(imagen !== undefined && { imagen: String(imagen) }),
         ...(notaAdmin !== undefined && { notaAdmin: String(notaAdmin) }),
-        ...(fechasAdd?.length && { fechas: { create: (fechasAdd as string[]).map((f) => ({ fecha: new Date(f) })) } }),
+        ...(fechasAdd?.length && { fechas: { create: (fechasAdd as string[]).map((f) => ({ fecha: datetimeLocalToPeruDate(f) })) } }),
       },
       include: { fechas: { orderBy: { fecha: "asc" }, include: { inscripciones: true } } },
     });

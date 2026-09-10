@@ -1,0 +1,9 @@
+{
+  "code": "WEB20",
+  "active": true,
+  "minimumSubtotal": 100,
+  "discountValue": 20,
+  "startsAt": "2026-06-01T00:00:00.000-05:00",
+  "endsAt": "2026-12-31T23:59:59.000-05:00",
+  "maxUses": 0
+}

@@ -1,5 +1,6 @@
 import type { GetServerSideProps } from "next";
 import { getAllProducts } from "@/lib/repositories/productRepository";
+import { getSiteUrl } from "@/lib/seo";
 
 function xmlEscape(value: string) {
   return value
@@ -11,23 +12,66 @@ function xmlEscape(value: string) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://rossyresinaonlineweb.vercel.app";
+  const siteUrl = getSiteUrl();
   const products = await getAllProducts();
   const now = new Date().toISOString();
 
-  const staticUrls = ["/", "/productos", "/search", "/cart", "/checkout", "/contact", "/faq"];
-  const categoryUrls = Array.from(
-    new Set(products.map((p) => String(p.category || "").trim()).filter(Boolean))
-  ).map((c) => `/categoria/${encodeURIComponent(c.toLowerCase().replace(/\s+/g, "-"))}`);
-  const productUrls = products.map((p) => `/${encodeURIComponent(String(p.code || p._id))}`);
+  const staticUrls = [
+    "/",
+    "/productos",
+    "/productos?ofertas=1",
+    "/categoria/resina",
+    "/categoria/moldes-de-silicona",
+    "/categoria/pigmentos",
+    "/categoria/accesorios",
+    "/categoria/creaciones",
+    "/capacitaciones",
+    "/mayoristas",
+    "/contact",
+    "/faq",
+    "/about-us",
+    "/proceso-envio",
+    "/privacy",
+    "/terms",
+  ];
+  const dynamicCategoryUrls = Array.from(
+    new Set(
+      products
+        .map((p: any) => String(p.category || "").trim())
+        .filter(Boolean)
+        .map((category) =>
+          `/categoria/${encodeURIComponent(
+            category
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .toLowerCase()
+              .trim()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/(^-|-$)/g, "")
+          )}`
+        )
+    )
+  );
+  const productUrls = products
+    .filter((p: any) => p.slug)
+    .map((p: any) => ({
+      path: `/${encodeURIComponent(String(p.slug))}`,
+      lastmod: new Date(p.updatedAt || p.createdAt || now).toISOString(),
+    }));
 
-  const urls = Array.from(new Set([...staticUrls, ...categoryUrls, ...productUrls]));
+  const urls = [
+    ...Array.from(new Set([...staticUrls, ...dynamicCategoryUrls])).map((path) => ({ path, lastmod: now })),
+    ...productUrls,
+  ];
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls
   .map(
-    (path) => `<url><loc>${xmlEscape(`${siteUrl}${path}`)}</loc><lastmod>${now}</lastmod></url>`
+    ({ path, lastmod }) => {
+      const priority = path === "/" ? "1.0" : path.startsWith("/categoria") || path === "/productos" ? "0.8" : path.startsWith("/") && !path.includes("?") ? "0.7" : "0.6";
+      const changefreq = path === "/" || path === "/productos" || path.startsWith("/categoria") ? "daily" : "weekly";
+      return `<url><loc>${xmlEscape(`${siteUrl}${path}`)}</loc><lastmod>${lastmod}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
+    }
   )
   .join("")}
 </urlset>`;

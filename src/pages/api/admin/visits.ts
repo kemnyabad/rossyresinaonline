@@ -1,15 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import { getVisitStatsDb, parseWindowPreset, statsToCsv } from "@/lib/visitAnalytics";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "M?todo no permitido" });
 
   try {
-    const session = await getServerSession(req, res, authOptions as any);
-    const ok = session && (session.user as any)?.role === "ADMIN";
-    if (!ok) return res.status(401).json({ error: "No autorizado" });
+  if (!isAdminApiRequest(req)) return res.status(401).json({ error: 'No autorizado' });
 
     const windowPreset = parseWindowPreset(req.query.window);
     const payload = await getVisitStatsDb(windowPreset);

@@ -55,15 +55,9 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
           name="description"
           content="Comunidad resinera estilo red social para compartir creaciones e interactuar entre artistas."
         />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
       </Head>
 
-      <div className="min-h-screen bg-[#f0f2f5] text-[#1c1e21]" style={{ fontFamily: '"Manrope", sans-serif' }}>
+      <div className="min-h-screen bg-[#f0f2f5] text-[#1c1e21]">
         <header className="sticky top-0 z-40 border-b border-[#d9dde3] bg-[#1877f2]">
           <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -71,7 +65,7 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
                 <img src="/logo.png" alt="Rossy Resina" className="h-full w-full object-cover" />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold uppercase tracking-[0.2em] text-white" style={{ fontFamily: '"Oswald", sans-serif' }}>
+                <p className="truncate text-sm font-semibold uppercase tracking-wide text-white">
                   Comunidad
                 </p>
                 <p className="truncate text-xs text-white/80">Artistas resineros conectados</p>
@@ -80,7 +74,7 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
 
             <div className="hidden flex-1 justify-center px-8 md:flex">
               <input
-                placeholder="Buscar artistas, moldes o t?cnicas..."
+                placeholder="Buscar artistas, moldes o técnicas..."
                 className="w-full max-w-[520px] rounded-full border border-white/30 bg-white px-4 py-2 text-sm outline-none"
               />
             </div>
@@ -90,11 +84,11 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
                 Capacitaciones
               </Link>
               <Link href="/suscripcion" className="rounded-full bg-[#0f5fd6] px-3 py-1.5 font-semibold text-white hover:bg-[#0c53bd]">
-                Suscripci?n
+                Suscripción
               </Link>
               {session?.user?.email && (
                 <span className="rounded-full bg-white/20 px-3 py-1.5 font-semibold text-white">
-                  En linea
+                  En línea
                 </span>
               )}
             </div>
@@ -103,7 +97,7 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
 
         <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-5 px-4 py-5 lg:grid-cols-[280px_minmax(0,1fr)_340px]">
           <aside className="h-fit rounded-2xl border border-[#d9dde3] bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#6b7280]">Menu</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-[#6b7280]">Menú</p>
             <div className="mt-3 grid gap-2 text-sm">
               <Link href="/comunidad" className="rounded-xl bg-[#e7f3ff] px-3 py-2 font-semibold text-[#1877f2]">
                 Comunidad
@@ -119,7 +113,7 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
             <div className="mt-5 rounded-xl bg-gradient-to-br from-[#1877f2] to-[#0e5bd7] p-4 text-white">
               <p className="text-sm font-semibold">Reto semanal</p>
               <p className="mt-1 text-xs text-white/90">
-                Publica una pieza con acabado marmol y comenta el trabajo de otra artista.
+                Publica una pieza con acabado mármol y comenta el trabajo de otra artista.
               </p>
             </div>
           </aside>
@@ -131,7 +125,7 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
                   <img src="/logo.png" alt="Tu perfil" className="h-full w-full object-cover" />
                 </div>
                 <button className="w-full rounded-full bg-[#f0f2f5] px-4 py-3 text-left text-sm text-[#65676b]">
-                  Que estas creando hoy, resinera?
+                  ¿Qué estás creando hoy, resinera?
                 </button>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2 border-t border-[#eef0f3] pt-3 text-sm font-semibold text-[#65676b]">
@@ -143,11 +137,11 @@ export default function ComunidadPage({ feed }: ComunidadProps) {
 
             {feed.length === 0 ? (
               <section className="rounded-2xl border border-[#d9dde3] bg-white p-10 text-center shadow-sm">
-                <h2 className="text-2xl font-semibold" style={{ fontFamily: '"Oswald", sans-serif' }}>
-                  No hay publicaciones a?n
+                <h2 className="text-2xl font-semibold">
+                  No hay publicaciones aún
                 </h2>
                 <p className="mt-2 text-sm text-[#65676b]">
-                  Cuando los artistas publiquen sus creaciones, apareceran aqu?.
+                  Cuando los artistas publiquen sus creaciones, aparecerán aquí.
                 </p>
               </section>
             ) : (

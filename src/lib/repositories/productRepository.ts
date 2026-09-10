@@ -4,16 +4,31 @@ const productBaseSelect = {
   id: true,
   legacyId: true,
   code: true,
+  slug: true,
   barcode: true,
   title: true,
   description: true,
   brand: true,
   category: true,
   image: true,
+  specs: true,
+  optionGroups: true,
   price: true,
   oldPrice: true,
+  bundleQuantity: true,
+  bundlePrice: true,
   isNew: true,
   stock: true,
+  variants: {
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      label: true,
+      price: true,
+      oldPrice: true,
+      stock: true,
+    },
+  },
 };
 const normalizeImages = (images: any): string[] => {
   if (Array.isArray(images)) return images.map((x) => String(x || "").trim()).filter(Boolean);
@@ -48,8 +63,33 @@ const pickMainImage = (image: any, images: any): string => {
   return "";
 };
 
+const normalizeSpecs = (specs: any): Array<{ label: string; value: string }> => {
+  if (!Array.isArray(specs)) return [];
+  return specs
+    .map((s) => ({ label: String(s?.label || "").trim(), value: String(s?.value || "").trim() }))
+    .filter((s) => s.label && s.value);
+};
+
+const normalizeOptionGroups = (
+  groups: any
+): Array<{ name: string; options: Array<{ label: string }> }> => {
+  if (!Array.isArray(groups)) return [];
+  return groups
+    .map((g: any) => ({
+      name: String(g?.name || "").trim(),
+      options: Array.isArray(g?.options)
+        ? g.options
+            .map((o: any) => String(o?.label || "").trim())
+            .filter(Boolean)
+            .map((label: string) => ({ label }))
+        : [],
+    }))
+    .filter((g: any) => g.name && g.options.length > 0);
+};
+
 const toLegacyFromDb = (p: any): ProductProps => ({
   _id: p?.legacyId ?? p?.id,
+  slug: p?.slug || "",
   code: p?.code || "",
   barcode: p?.barcode || "",
   stock: Number(p?.stock || 0),
@@ -59,20 +99,42 @@ const toLegacyFromDb = (p: any): ProductProps => ({
   category: p?.category || "",
   image: pickMainImage(p?.image, p?.images),
   images: normalizeImages(p?.images),
+  specs: normalizeSpecs(p?.specs),
   isNew: Boolean(p?.isNew),
   oldPrice: p?.oldPrice != null ? Number(p.oldPrice) : undefined,
   price: Number(p?.price || 0),
+  bundleQuantity: p?.bundleQuantity != null ? Number(p.bundleQuantity) : undefined,
+  bundlePrice: p?.bundlePrice != null ? Number(p.bundlePrice) : undefined,
+  variants: Array.isArray(p?.variants)
+    ? p.variants.map((v: any) => ({
+        id: v.id,
+        label: v.label,
+        price: Number(v.price || 0),
+        oldPrice: v.oldPrice != null ? Number(v.oldPrice) : null,
+        stock: Number(v.stock || 0),
+      }))
+    : [],
 });
 
 const toSerializable = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
+const PRODUCT_CACHE_TTL_MS = 10000;
+let productCache: { expiresAt: number; products: ProductProps[] } | null = null;
+
 export async function getAllProducts(): Promise<ProductProps[]> {
   try {
+    const now = Date.now();
+    if (productCache && productCache.expiresAt > now) {
+      return productCache.products;
+    }
+
     const dbRows = await (prisma as any).product.findMany({
       orderBy: { createdAt: "desc" },
       select: { ...productBaseSelect, images: true },
     });
-    return toSerializable((dbRows || []).map(toLegacyFromDb));
+    const products = toSerializable((dbRows || []).map(toLegacyFromDb));
+    productCache = { expiresAt: now + PRODUCT_CACHE_TTL_MS, products };
+    return products;
   } catch {
     return [];
   }

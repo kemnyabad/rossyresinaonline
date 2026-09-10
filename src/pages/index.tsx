@@ -1,45 +1,86 @@
 import HeroCarousel from "@/components/HeroCarousel";
+import SpinWheelPopup from "@/components/SpinWheelPopup";
 import Products from "@/components/Products";
+import MarketplaceProductGrid from "@/components/MarketplaceProductGrid";
+import StoreWithAdsLayout from "@/components/store/StoreWithAdsLayout";
 import { ProductProps } from "../../type";
 import { useDispatch } from "react-redux";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ElementType, useEffect, useMemo, useRef, useState } from "react";
 import { setAllProducts } from "@/store/nextSlice";
 import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
 import {
+  ChatBubbleLeftRightIcon,
+  CheckBadgeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  QuestionMarkCircleIcon,
+  ShoppingCartIcon,
+  TruckIcon,
+  UserGroupIcon,
+} from "@heroicons/react/24/solid";
+import { FaClock } from "react-icons/fa";
+import {
   getOfferProducts,
 } from "@/lib/services/productCatalogService";
 import { getAllProducts } from "@/lib/repositories/productRepository";
+import { getPublishedMarketplaceProducts } from "@/lib/marketplaceStore";
+import { getActiveOfertasExpress, type OfertaExpressItem } from "@/lib/ofertasExpress";
 import { getPurchaseBehaviorSnapshot, type PurchaseBehaviorSnapshot } from "@/lib/repositories/categoryInsightsRepository";
+import { absoluteImageUrl, absoluteUrl, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
+import { useLiveProducts } from "@/lib/useLiveProducts";
 
 interface Props {
   productData: ProductProps[];
   behavior: PurchaseBehaviorSnapshot;
-  ofertasExpress: { id: string; nombre: string; imagen: string }[];
+  marketplaceProducts: any[];
+  ofertasExpress: OfertaExpressItem[];
+  promotionSeed: string;
 }
 
-export default function Home({ productData, behavior, ofertasExpress }: Props) {
-  const SITE_URL = "https://rossyresinaonlineweb.vercel.app";
+function promotionKey(item: ProductProps) {
+  return String(item.code || item._id || item.title || "");
+}
+
+function hashPromotionValue(value: string) {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function shufflePromotionItems<T extends ProductProps>(items: T[], seed: string): T[] {
+  return [...items].sort((a, b) => {
+    const scoreA = hashPromotionValue(`${seed}:${promotionKey(a)}`);
+    const scoreB = hashPromotionValue(`${seed}:${promotionKey(b)}`);
+    if (scoreA !== scoreB) return scoreA - scoreB;
+    return promotionKey(a).localeCompare(promotionKey(b));
+  });
+}
+
+export default function Home({ productData, behavior, marketplaceProducts, ofertasExpress, promotionSeed }: Props) {
   const pageTitle = "Rossy Resina | Resina epóxica, moldes y pigmentos en Perú";
   const pageDesc =
     "Compra resina epóxica, moldes de silicona, pigmentos y accesorios. Envío a todo Perú y atención por WhatsApp.";
   const dispatch = useDispatch();
+  const { products: liveProductData } = useLiveProducts(productData);
   const allProducts = useMemo(
-    () => (productData && productData.length > 0 ? productData : []),
-    [productData]
+    () => (liveProductData && liveProductData.length > 0 ? liveProductData : []),
+    [liveProductData]
   );
   const [visibleCount, setVisibleCount] = useState(30);
+  const [mobilePromoIndex, setMobilePromoIndex] = useState(0);
   
   // Carousel refs
   const visitedCarouselRef = useRef<HTMLDivElement>(null);
-  const offersCarouselRef = useRef<HTMLDivElement>(null);
-  const desktopOffersRef = useRef<HTMLDivElement>(null);
   const topProductsRef = useRef<HTMLDivElement>(null);
   
   // Carousel scroll function
-  const scrollMobile = (direction: 'left' | 'right', carousel: 'visited' | 'offers') => {
-    const ref = carousel === 'visited' ? visitedCarouselRef : offersCarouselRef;
+  const scrollMobile = (direction: 'left' | 'right', carousel: 'visited') => {
+    const ref = visitedCarouselRef;
     if (!ref.current) return;
     
     const scrollAmount = 160; // Width of one card + gap
@@ -55,19 +96,8 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
   };
   
   // Desktop carousel scroll function
-  const scrollDesktop = (direction: 'left' | 'right', carousel: 'offers' | 'topProducts') => {
-    if (carousel === 'offers' && desktopOffersRef.current) {
-      const scrollAmount = 270; // Width of one desktop card + gap
-      const currentScroll = desktopOffersRef.current.scrollLeft;
-      const newScroll = direction === 'left' 
-        ? Math.max(0, currentScroll - scrollAmount)
-        : currentScroll + scrollAmount;
-      
-      desktopOffersRef.current.scrollTo({
-        left: newScroll,
-        behavior: 'smooth'
-      });
-    } else if (carousel === 'topProducts' && topProductsRef.current) {
+  const scrollDesktop = (direction: 'left' | 'right', carousel: 'topProducts') => {
+    if (carousel === 'topProducts' && topProductsRef.current) {
       const scrollAmount = 270; // Width of one desktop card + gap
       const currentScroll = topProductsRef.current.scrollLeft;
       const newScroll = direction === 'left' 
@@ -127,7 +157,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
     return keys.map((k) => productByLookup.get(String(k))).filter(Boolean) as ProductProps[];
   }, [behavior?.topProductKeys, productByLookup]);
 
-  const offerProducts = useMemo(() => getOfferProducts(allProducts, 10), [allProducts]);
+  const offerProducts = useMemo(() => shufflePromotionItems(getOfferProducts(allProducts, Math.max(allProducts.length, 1)), promotionSeed), [allProducts, promotionSeed]);
 
   const hasBehaviorData = !!behavior?.hasRealData;
   const remateProducts = useMemo(() => {
@@ -157,7 +187,6 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
     () => (realTopProducts.length > 0 ? realTopProducts : allProducts).slice(0, 8),
     [realTopProducts, allProducts]
   );
-
   const moldProductsForHero = useMemo(() => {
     return allProducts.filter((p) => {
       const cat = String(p?.category || "").toLowerCase();
@@ -166,21 +195,14 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
       return cat.includes("molde") || title.includes("molde") || code.includes("mol_");
     });
   }, [allProducts]);
-  const mobileOfferProducts = useMemo(() => offerProducts.slice(0, 8), [offerProducts]);
   const interestProducts = diversifiedProducts.slice(0, visibleCount);
-  const interestsRef = useRef<HTMLDivElement | null>(null);
-  const offersRef = useRef<HTMLDivElement | null>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const [canOfferScrollLeft, setCanOfferScrollLeft] = useState(false);
-  const [canOfferScrollRight, setCanOfferScrollRight] = useState(false);
   const normalizeImage = (img?: string) => {
     const s = String(img || "");
-    if (!s) return `${SITE_URL}/favicon-96x96.png`;
+    if (!s) return absoluteImageUrl("/favicon-96x96.png");
     const u = s.replace(/\\/g, "/");
     if (/^https?:\/\//i.test(u)) return u;
     const fixed = u.startsWith("/") ? u : `/${u}`;
-    return `${SITE_URL}${fixed}`;
+    return absoluteUrl(fixed);
   };
   const normalizeMobileImage = (img?: string) => {
     const s = String(img || "");
@@ -204,247 +226,193 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
     });
   });
   const keywords = Array.from(keywordSet).slice(0, 60).join(", ");
-  const productListSchema = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: "Catalogo de productos Rossy Resina",
-    numberOfItems: allProducts.length,
-    itemListElement: allProducts.slice(0, 200).map((p, idx) => ({
-      "@type": "ListItem",
-      position: idx + 1,
-      url: `${SITE_URL}/${encodeURIComponent(String(p.code || p._id))}`,
-      item: {
-        "@type": "Product",
-        name: p.title || p.code || "Producto",
-        image: normalizeImage(p.image),
-        category: p.category,
-        brand: p.brand ? { "@type": "Brand", name: p.brand } : undefined,
+  const mobileCategories = [
+    { label: "Todo", href: "/" },
+    { label: "Moldes", href: "/categoria/moldes-de-silicona" },
+    { label: "Resina", href: "/categoria/resina" },
+    { label: "Pigmentos", href: "/categoria/pigmentos" },
+    { label: "Accesorios", href: "/categoria/accesorios" },
+    { label: "Cursos", href: "/capacitaciones" },
+  ];
+  const mobileGridProducts = interestProducts.slice(0, 20);
+  const mobilePromoSlides = useMemo(
+    () => [
+      {
+        href: "/proceso-envio",
+        title: "Entrega rápida",
+        text: "Soporte ante inconvenientes",
+        icon: TruckIcon,
+        endIcon: CheckBadgeIcon,
       },
-    })),
+    ],
+    []
+  );
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setMobilePromoIndex((prev) => (prev + 1) % mobilePromoSlides.length);
+    }, 4200);
+    return () => window.clearInterval(timer);
+  }, [mobilePromoSlides.length]);
+  const getDiscountLabel = (product: ProductProps) => {
+    const oldPrice = Number(product.oldPrice || 0);
+    const price = Number(product.price || 0);
+    if (oldPrice > price && oldPrice > 0) return `-${Math.round(((oldPrice - price) / oldPrice) * 100)}%`;
+    return "Oferta";
   };
-  const storeSchema = {
-    "@context": "https://schema.org",
-    "@type": "Store",
-    name: "Rossy Resina",
-    url: SITE_URL,
-    description: pageDesc,
-    image: `${SITE_URL}/favicon-96x96.png`,
-    keywords,
-  };
 
-  useEffect(() => {
-    dispatch(setAllProducts(productData));
-  }, [productData, dispatch]);
-
-  useEffect(() => {
-    const el = interestsRef.current;
-    if (!el) return;
-
-    const updateScrollState = () => {
-      const { scrollLeft, scrollWidth, clientWidth } = el;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
-    };
-
-    updateScrollState();
-    el.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
-    return () => {
-      el.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateScrollState);
-    };
-  }, []);
-
-  useEffect(() => {
-    const el = offersRef.current;
-    if (!el) return;
-
-    const updateScrollState = () => {
-      const { scrollLeft, scrollWidth, clientWidth } = el;
-      setCanOfferScrollLeft(scrollLeft > 0);
-      setCanOfferScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
-    };
-
-    updateScrollState();
-    el.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
-    return () => {
-      el.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateScrollState);
-    };
-  }, [offerProducts.length]);
+  const categoryShowcasePanels = useMemo(() => {
+    const buckets = new Map<string, ProductProps[]>();
+    allProducts.forEach((p) => {
+      const cat = String(p.category || "").trim();
+      if (!cat) return;
+      if (!buckets.has(cat)) buckets.set(cat, []);
+      buckets.get(cat)!.push(p);
+    });
+    return Array.from(buckets.entries())
+      .map(([name, items]) => ({ name, items: shufflePromotionItems(items, promotionSeed).slice(0, 10) }))
+      .filter((c) => c.items.length >= 3)
+      .sort((a, b) => b.items.length - a.items.length)
+      .slice(0, 2);
+  }, [allProducts, promotionSeed]);
 
   return (
     <>
       <Head>
         <title>{pageTitle}</title>
-        <meta name="description" content={pageDesc} />
+        <meta name="description" content={pageDesc} key="description" />
         <meta name="keywords" content={keywords} />
-        <link rel="canonical" href={SITE_URL} />
+        <link rel="canonical" href={absoluteUrl("/")} />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDesc} />
-        <meta property="og:url" content={SITE_URL} />
+        <meta property="og:url" content={absoluteUrl("/")} />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content={`${SITE_URL}/favicon-96x96.png`} />
-        <meta name="twitter:card" content="summary" />
+        <meta property="og:image" content={absoluteImageUrl("/web-app-manifest-512x512.png")} />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(storeSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(productListSchema) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify([organizationJsonLd(), websiteJsonLd()]) }}
         />
       </Head>
+      <SpinWheelPopup />
       <main>
-        {/* Hero desktop */}
-        <section className="hidden md:block w-full">
-          <HeroCarousel remateProducts={remateProducts} topVisitedProducts={topVisitedForHero} moldProducts={moldProductsForHero} />
-        </section>
-
-        {/* Home mobile app-like */}
-        <section className="md:hidden px-4 pt-2 pb-2 space-y-4">
-          <div className="rounded-2xl bg-gradient-to-r from-[#1a5f3f] to-[#40a373] p-5 text-white shadow-lg">
-            <p className="text-xs uppercase tracking-wide font-medium">Tu especialista en resina</p>
-            <h1 className="mt-1 text-2xl font-bold leading-tight">Materiales premium para tus creaciones</h1>
-            <p className="mt-2 text-sm">Resina epóxica, moldes y pigmentos de calidad</p>
-            <Link href="/search" className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-white px-4 text-sm font-bold text-[#1a5f3f] hover:scale-105 transition-transform">
-              Explorar productos
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
-            {["Resina Epóxica", "Moldes Premium", "Pigmentos", "Accesorios", "Kits", "Ofertas"].map((chip) => (
+        <h1 className="sr-only">Rossy Resina - resina epóxica, moldes de silicona y pigmentos en Perú</h1>
+        <OfertasExpressSection items={ofertasExpress} />
+        {/* Home mobile storefront */}
+        <section className="md:hidden bg-white pb-3">
+          <nav className="no-scrollbar flex gap-6 overflow-x-auto border-b border-gray-100 px-4 pt-1 text-[15px] font-medium text-gray-500">
+            {mobileCategories.map((item, index) => (
               <Link
-                key={chip}
-                href={chip === "Ofertas" ? "/productos?ofertas=1" : `/search?q=${encodeURIComponent(chip.toLowerCase())}`}
-                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:border-[#1a5f3f] hover:text-[#1a5f3f] transition-colors"
+                key={item.href}
+                href={item.href}
+                className={`shrink-0 border-b-[3px] pb-2 ${
+                  index === 0 ? "border-amazon_blue font-semibold text-amazon_blue" : "border-transparent"
+                }`}
               >
-                {chip}
+                {item.label}
               </Link>
             ))}
-          </div>
+          </nav>
 
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-gray-900">Más visitados</h2>
-              <Link href="/productos" className="text-xs font-semibold text-amazon_blue">Ver todo</Link>
-            </div>
-            <div className="relative">
-              {/* Navigation buttons */}
-              <button
-                onClick={() => scrollMobile('left', 'visited')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-                aria-label="Anterior"
-              >
-                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                onClick={() => scrollMobile('right', 'visited')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-                aria-label="Siguiente"
-              >
-                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              
-              <div 
-                ref={visitedCarouselRef}
-                className="flex gap-3 overflow-x-auto no-scrollbar pb-1 scroll-smooth"
-                style={{ scrollBehavior: 'smooth' }}
-              >
-                {mobileTopVisited.map((p, idx) => (
-                  <Link
-                    key={`m-visit-${p._id}`}
-                    href={`/${p.code || p._id}`}
-                    className="w-[150px] shrink-0 rounded-xl border border-gray-200 bg-white p-2 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group"
-                  >
-                    <div className="relative h-24 overflow-hidden rounded-lg bg-gray-100">
-                      <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                    </div>
-                    <p className="mt-2 line-clamp-1 text-xs font-semibold text-gray-900 group-hover:text-amazon_blue transition-colors">{p.title || "Producto"}</p>
-                    <p className="text-sm font-extrabold text-gray-900">S/ {Number(p.price || 0).toFixed(2)} c/unidad</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-gray-900">Ofertas relámpago</h2>
-              <Link href="/productos?ofertas=1" className="text-xs font-semibold text-[#cb299e]">Ver ofertas</Link>
-            </div>
-          <div className="relative">
-            {/* Navigation buttons */}
-            <button
-              onClick={() => scrollMobile('left', 'offers')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Anterior"
+          <div className="grid grid-cols-2 border-b border-gray-200 bg-white px-4 py-2">
+            <Link href="/resiny" className="flex items-start gap-2 border-r border-gray-200 pr-3">
+              <ChatBubbleLeftRightIcon className="rr-icon-float mt-0.5 h-5 w-5 shrink-0 text-amazon_blue" />
+              <span className="min-w-0">
+                <span className="block text-sm font-bold leading-tight text-amazon_blue">Resiny</span>
+                <span className="block truncate text-xs text-gray-600">Asistente IA</span>
+              </span>
+            </Link>
+            <a
+              href="https://chat.whatsapp.com/LL8QQddRrGYLxuV8j7BnBA"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-start gap-2 pl-3"
             >
-              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => scrollMobile('right', 'offers')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Siguiente"
-            >
-              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            
-            <Products
-              productData={mobileOfferProducts}
-              gridClass="grid-flow-col auto-cols-[72%] gap-3 snap-x snap-mandatory overflow-x-auto no-scrollbar pb-1 scroll-smooth"
-              ref={offersCarouselRef}
-            />
-          </div>
+              <UserGroupIcon className="rr-icon-float mt-0.5 h-5 w-5 shrink-0 text-amazon_light" />
+              <span className="min-w-0">
+                <span className="block text-sm font-bold leading-tight text-gray-900">Comunidad</span>
+                <span className="block truncate text-xs text-gray-600">Grupo WhatsApp</span>
+              </span>
+            </a>
           </div>
 
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-gray-900">Todos los productos</h2>
-              <Link href="/productos" className="text-xs font-semibold text-amazon_blue">Ver catálogo</Link>
-            </div>
-            <Products
-              productData={interestProducts.slice(0, 12)}
-              gridClass="grid-cols-2 gap-3"
-            />
-            <div className="mt-3 flex justify-center">
-              <Link
-                href="/productos"
-                className="inline-flex h-10 items-center justify-center rounded-full bg-amazon_blue px-5 text-sm font-semibold text-white"
-              >
-                Ver más productos
+          <MobilePromoSlider
+            slides={mobilePromoSlides}
+            activeIndex={mobilePromoIndex}
+            onSelect={setMobilePromoIndex}
+          />
+
+
+          <section className="columns-2 gap-1.5 bg-gray-100 p-1.5">
+            {mobileGridProducts.map((p) => (
+              <Link key={`mobile-grid-${p._id}`} href={`/${p.slug || p.code || p._id}`} className="mb-1.5 inline-block w-full min-w-0 break-inside-avoid bg-white align-top">
+                <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
+                  <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover" />
+                  {typeof p.oldPrice === "number" && p.oldPrice > p.price ? (
+                    <>
+                      <span className="absolute left-1.5 top-1.5 rounded-sm bg-amazon_blue px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        {getDiscountLabel(p)}
+                      </span>
+                      <span className="absolute bottom-0 left-0 flex h-7 w-[58px] items-center justify-center rounded-tr-xl bg-yellow-300 px-1 text-center text-[10px] font-black leading-[10px] text-amazon_blue shadow-[0_-2px_8px_rgba(17,24,39,0.18)]">
+                        Mega<br />Oferta
+                      </span>
+                    </>
+                  ) : null}
+                </div>
+                <div className="p-2">
+                  <p className="line-clamp-2 text-xs font-medium leading-4 text-gray-900">{p.title || "Producto"}</p>
+                  <div className="mt-1 flex items-end gap-1">
+                    <p className="text-lg font-bold leading-none text-red-600">S/ {Number(p.price || 0).toFixed(2)}</p>
+                    <span className="pb-0.5 text-[10px] text-gray-500">c/u</span>
+                    {typeof p.oldPrice === "number" && p.oldPrice > p.price ? (
+                      <span className="pb-0.5 text-[10px] text-gray-400 line-through">
+                        S/ {Number(p.oldPrice || 0).toFixed(2)}
+                      </span>
+                    ) : null}
+                    <span className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-amazon_blue bg-white text-amazon_blue">
+                      <ShoppingCartIcon className="h-4 w-4" />
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
+                    <TruckIcon className="h-3.5 w-3.5 text-amazon_blue" />
+                    Envío disponible
+                  </div>
+                </div>
               </Link>
-            </div>
+            ))}
+          </section>
+
+          <div className="mt-4 flex justify-center">
+            <Link href="/productos" className="inline-flex h-10 items-center justify-center rounded-full bg-amazon_blue px-6 text-sm font-semibold text-white">
+              Ver más productos
+            </Link>
           </div>
         </section>
 
-        <div className="hidden md:block max-w-screen-2xl mx-auto space-y-6 md:space-y-8 pb-10 pt-6">
+        <section className="hidden md:block">
+          <StoreWithAdsLayout className="pb-2 pt-3">
+            <div className="space-y-6 md:space-y-8">
+              <section className="w-full">
+                <HeroCarousel
+                  productData={allProducts}
+                  remateProducts={remateProducts}
+                  topVisitedProducts={topVisitedForHero}
+                  moldProducts={moldProductsForHero}
+                />
+              </section>
+        {hasBehaviorData && realTopProducts.length > 0 && (
         <section className="px-4 md:px-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-semibold uppercase tracking-wide text-gray-900">
-              Productos más comprados
-            </h2>
-            <Link href="/productos" className="text-sm font-semibold text-amazon_blue hover:underline">
-              Ver todos
-            </Link>
-          </div>
-          {hasBehaviorData && realTopProducts.length > 0 ? (
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold text-gray-900">
+                Productos más comprados
+              </h2>
+            </div>
             <div className="relative">
               {/* Desktop navigation buttons */}
               <button
                 onClick={() => scrollDesktop('left', 'topProducts')}
-                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+                className="absolute left-0 top-1/2 z-10 hidden -translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-all duration-200 hover:bg-gray-50 md:flex"
                 aria-label="Anterior"
               >
                 <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -453,7 +421,7 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
               </button>
               <button
                 onClick={() => scrollDesktop('right', 'topProducts')}
-                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+                className="absolute right-0 top-1/2 z-10 hidden translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-all duration-200 hover:bg-gray-50 md:flex"
                 aria-label="Siguiente"
               >
                 <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -473,181 +441,284 @@ export default function Home({ productData, behavior, ofertasExpress }: Props) {
                 ))}
               </div>
             </div>
-          ) : (
-            <div className="p-1 text-sm text-gray-600">
-              Aún no hay compras confirmadas para mostrar productos más comprados.
-            </div>
-          )}
-        </section>
-
-        {/* Ofertas Express */}
-        {ofertasExpress.length > 0 && (
-        <section className="px-4 md:px-6">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-xl">⚡</span>
-            <h2 className="text-xl font-semibold uppercase tracking-wide text-orange-500">Ofertas Express</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-            {ofertasExpress.map((item) => (
-              <div key={item.id} className="rounded-xl border border-orange-100 bg-white p-2 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
-                <div className="relative h-32 w-full overflow-hidden rounded-lg bg-gray-50">
-                  <Image src={item.imagen} alt={item.nombre} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                  <div className="absolute top-1.5 left-1.5">
-                    <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">EXPRESS</span>
-                  </div>
-                </div>
-                <p className="mt-2 text-xs font-semibold text-gray-800 text-center line-clamp-2 group-hover:text-orange-500 transition-colors">{item.nombre}</p>
-              </div>
-            ))}
-          </div>
         </section>
         )}
 
-        {/* Ofertas relámpago */}
-        <section className="px-4 md:px-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg"></span>
-              <h2 className="text-xl font-semibold uppercase tracking-wide text-[#cb299e]">
-                Ofertas relámpago
-              </h2>
+        {marketplaceProducts.length > 0 && (
+          <section className="px-4 md:px-6">
+            <MarketplaceProductGrid
+              products={marketplaceProducts.slice(0, 10)}
+              title="Productos del marketplace"
+            />
+          </section>
+        )}
+
             </div>
-            <Link href="/productos?ofertas=1" className="text-sm font-semibold text-[#cb299e] hover:underline">
-              Ver todas
-            </Link>
-          </div>
-          <div className="relative">
-            {/* Desktop navigation buttons */}
-            <button
-              onClick={() => scrollDesktop('left', 'offers')}
-              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Anterior"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => scrollDesktop('right', 'offers')}
-              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-              aria-label="Siguiente"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            
-            <div 
-              ref={desktopOffersRef}
-              className="flex gap-4 overflow-x-auto no-scrollbar pb-2 scroll-smooth"
-              style={{ scrollBehavior: 'smooth' }}
-            >
-              {offerProducts.map((product) => (
-                <div key={product._id} className="w-[200px] md:w-[250px] shrink-0">
-                  <Products productData={[product]} gridClass="grid-cols-1" />
+          </StoreWithAdsLayout>
+
+          <div className="mx-auto max-w-screen-2xl space-y-6 px-4 pb-10 md:px-6">
+            <CategoryShowcaseSection panels={categoryShowcasePanels} />
+
+            {/* Productos por intereses */}
+            <section>
+              <div className="mb-4 flex items-center justify-center">
+                <h2 className="text-center text-xl font-bold text-gray-900">
+                  Explora tus intereses
+                </h2>
+              </div>
+              <Products
+                productData={interestProducts}
+                gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
+              />
+              {visibleCount < diversifiedProducts.length && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((prev) => Math.min(prev + 30, diversifiedProducts.length))}
+                    className="px-6 py-3 rounded-full bg-amazon_blue text-white font-semibold hover:brightness-95"
+                  >
+                    Ver más
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </section>
           </div>
         </section>
 
-        {/* Explora tus intereses */}
-        <section className="px-4 md:px-6">
-          <div className="text-center mb-4">
-            <h2 className="text-xl font-semibold uppercase tracking-wide">
-              Explora tus intereses
-            </h2>
-          </div>
-          <div className="relative">
-            <div
-              ref={interestsRef}
-              className="no-scrollbar flex items-center gap-3 overflow-x-auto whitespace-nowrap pb-2 scroll-smooth"
-            >
-              {[
-                "Moldes de silicona",
-                "Moldes ecoresina",
-                "Moldes jabones",
-                "Moldes velas",
-                "Resina epóxica",
-                "Ecoresina",
-                "Accesorios bisutería",
-                "Accesorios eco resina",
-                "Accesorios resina epóxica",
-                "Accesorios manualidades",
-              ].map((label) => (
-                <span
-                  key={label}
-                  className="px-5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-800"
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
-            {canScrollLeft && (
-              <button
-                type="button"
-                aria-label="Ver categoras anteriores"
-                onClick={() => interestsRef.current?.scrollBy({ left: -260, behavior: "smooth" })}
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-              >
-                <span className="sr-only">Anterior</span>
-                <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
-                  <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            )}
-            {canScrollRight && (
-              <button
-                type="button"
-                aria-label="Ver más categorías"
-                onClick={() => interestsRef.current?.scrollBy({ left: 260, behavior: "smooth" })}
-                className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-              >
-                <span className="sr-only">Siguiente</span>
-                <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
-                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </section>
-
-        {/* Productos por intereses */}
-        <section className="px-4 md:px-6">
-          <Products
-            productData={interestProducts}
-            gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
-          />
-          {visibleCount < diversifiedProducts.length && (
-            <div className="mt-6 flex justify-center">
-              <button
-                type="button"
-                onClick={() => setVisibleCount((prev) => Math.min(prev + 30, diversifiedProducts.length))}
-                className="px-6 py-3 rounded-full bg-amazon_blue text-white font-semibold hover:brightness-95"
-              >
-                Ver más
-              </button>
-            </div>
-          )}
-        </section>
-
-        </div>
       </main>
     </>
   );
 }
 
+function OfertasExpressSection({ items }: { items: OfertaExpressItem[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  if (items.length === 0) return null;
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = 220;
+    el.scrollTo({
+      left: direction === "left" ? el.scrollLeft - amount : el.scrollLeft + amount,
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <section className="border-b border-gray-100 bg-white px-4 py-4 md:px-6">
+      <div className="mx-auto max-w-screen-2xl">
+        <div className="relative mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-black text-gray-950 md:text-xl">
+            <FaClock className="text-red-600" />
+            Ofertas Express
+          </h2>
+          <div className="hidden gap-2 md:flex">
+            <button
+              type="button"
+              onClick={() => scroll("left")}
+              aria-label="Ver ofertas anteriores"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-700 hover:border-amazon_blue hover:text-amazon_blue"
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scroll("right")}
+              aria-label="Ver más ofertas"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-700 hover:border-amazon_blue hover:text-amazon_blue"
+            >
+              <ChevronRightIcon className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        <div
+          ref={scrollRef}
+          className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-1"
+        >
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="w-[42%] shrink-0 snap-start sm:w-[28%] md:w-[19%] lg:w-[15%]"
+            >
+              <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50">
+                <Image src={item.imagen} alt={item.nombre} fill className="object-cover" />
+                <span className="absolute left-1.5 top-1.5 rounded-sm bg-red-600 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                  Express
+                </span>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-2 pb-2 pt-8">
+                  <p className="line-clamp-1 text-xs font-semibold text-white">{item.nombre}</p>
+                  {item.precio !== null ? (
+                    <p className="text-sm font-black text-white">S/ {item.precio.toFixed(2)}</p>
+                  ) : (
+                    <p className="text-[11px] font-bold uppercase text-yellow-300">Precio especial</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CategoryShowcaseSection({
+  panels,
+}: {
+  panels: Array<{ name: string; items: ProductProps[] }>;
+}) {
+  if (panels.length === 0) return null;
+
+  return (
+    <section>
+      <h2 className="mb-4 text-center text-2xl font-bold text-gray-900">Explora por categoría</h2>
+      <div className={`grid gap-4 ${panels.length > 1 ? "md:grid-cols-2" : ""}`}>
+        {panels.map((panel) => (
+          <CategoryPanelCard key={panel.name} name={panel.name} items={panel.items} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CategoryPanelCard({ name, items }: { name: string; items: ProductProps[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = 200;
+    el.scrollTo({
+      left: direction === "left" ? el.scrollLeft - amount : el.scrollLeft + amount,
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <div className="group rounded-xl border border-gray-200 p-5">
+      <div className="mb-4 flex flex-col items-center gap-2">
+        <h3 className="text-xl font-bold text-gray-900">{name}</h3>
+        <Link
+          href={`/productos?categoria=${encodeURIComponent(name)}`}
+          className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1.5 text-sm font-semibold text-amazon_blue"
+        >
+          Ver todo en {name}
+          <ChevronRightIcon className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => scroll("left")}
+          aria-label="Ver anteriores"
+          className="absolute left-0 top-1/2 z-10 hidden -translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 opacity-0 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-opacity hover:bg-gray-50 group-hover:opacity-100 md:flex"
+        >
+          <ChevronLeftIcon className="h-5 w-5 text-gray-700" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scroll("right")}
+          aria-label="Ver más"
+          className="absolute right-0 top-1/2 z-10 hidden translate-x-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-2 opacity-0 shadow-[0_6px_16px_rgba(17,24,39,0.10)] transition-opacity hover:bg-gray-50 group-hover:opacity-100 md:flex"
+        >
+          <ChevronRightIcon className="h-5 w-5 text-gray-700" />
+        </button>
+        <div ref={scrollRef} className="no-scrollbar flex gap-3 overflow-x-auto scroll-smooth pb-1">
+          {items.map((product) => (
+            <Link
+              key={`${name}-${product._id}`}
+              href={`/${product.slug || product.code || product._id}`}
+              className="w-[140px] shrink-0"
+            >
+              <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+                <Image src={product.image || "/favicon-96x96.png"} alt={product.title || "Producto"} fill className="object-cover" />
+              </div>
+              <p className="mt-2 line-clamp-2 text-sm text-gray-700">{product.title || "Producto"}</p>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="font-bold text-red-600">S/ {Number(product.price || 0).toFixed(2)}</span>
+                {typeof product.oldPrice === "number" && product.oldPrice > product.price ? (
+                  <span className="text-xs text-gray-400 line-through">S/ {Number(product.oldPrice).toFixed(2)}</span>
+                ) : null}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type MobilePromoSlide = {
+  href: string;
+  title: string;
+  text: string;
+  icon: ElementType;
+  endIcon: ElementType;
+};
+
+function MobilePromoSlider({
+  slides,
+  activeIndex,
+  onSelect,
+}: {
+  slides: MobilePromoSlide[];
+  activeIndex: number;
+  onSelect: (index: number) => void;
+}) {
+  const current = slides[activeIndex] || slides[0];
+  const Icon = current.icon;
+  const EndIcon = current.endIcon;
+
+  return (
+    <div className="mx-4 mt-2">
+      <Link
+        href={current.href}
+        className="rr-shine flex h-11 items-center gap-3 overflow-hidden rounded-md bg-amazon_blue px-3 text-white"
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
+          <Icon className="rr-icon-pop h-5 w-5" />
+        </span>
+        <span key={current.href} className="min-w-0 flex-1 truncate text-sm font-bold animate-[rrFadeIn_.28s_ease-out]">
+          {current.title}
+          <span className="ml-2 font-semibold text-white/90">{current.text}</span>
+        </span>
+        <EndIcon className="h-6 w-6 shrink-0 text-white/85" />
+        <QuestionMarkCircleIcon className="h-5 w-5 shrink-0 text-white/75" />
+      </Link>
+      <div className="mt-1.5 flex justify-center gap-1.5">
+        {slides.map((slide, index) => (
+          <button
+            key={slide.href}
+            type="button"
+            onClick={() => onSelect(index)}
+            className={`h-1.5 rounded-full transition-all ${index === activeIndex ? "w-4 bg-amazon_blue" : "w-1.5 bg-gray-300"}`}
+            aria-label={`Ver mensaje ${index + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export const getServerSideProps = async () => {
+  const promotionSeed = String(Date.now());
   try {
     const productData = await getAllProducts();
-    const behavior = await getPurchaseBehaviorSnapshot(8, 12, 180);
-    const prisma = (await import("@/lib/prisma")).default as any;
-    const ofertasExpress = await prisma.ofertaExpress.findMany({
-      where: { activo: true },
-      orderBy: [{ orden: "asc" }, { createdAt: "desc" }],
-      select: { id: true, nombre: true, imagen: true },
-    });
-    return { props: { productData, behavior, ofertasExpress: JSON.parse(JSON.stringify(ofertasExpress)) } };
+    const [behavior, marketplaceProducts, ofertasExpress] = await Promise.all([
+      getPurchaseBehaviorSnapshot(8, 12, 180),
+      getPublishedMarketplaceProducts(),
+      getActiveOfertasExpress(),
+    ]);
+    return {
+      props: {
+        productData,
+        behavior,
+        marketplaceProducts: JSON.parse(JSON.stringify(marketplaceProducts)),
+        ofertasExpress,
+        promotionSeed,
+      },
+    };
   } catch (e) {
     return {
       props: {
@@ -658,7 +729,9 @@ export const getServerSideProps = async () => {
           topProductKeys: [],
           topOfferProductKeys: [],
         } as PurchaseBehaviorSnapshot,
+        marketplaceProducts: [],
         ofertasExpress: [],
+        promotionSeed,
       },
     };
   }

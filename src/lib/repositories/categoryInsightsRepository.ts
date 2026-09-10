@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { isInternalTestOrder } from "@/lib/testOrders";
 
 type ProductRow = {
   id: string;
@@ -34,7 +35,7 @@ export async function getTopPurchasedCategories(limit = 8, lookbackDays = 180): 
           status: { in: ["PAID", "SHIPPED"] },
           createdAt: { gte: since },
         },
-        select: { items: true },
+        select: { items: true, customerName: true, customerPhone: true, customerEmail: true, customerNotes: true },
       }),
     ]);
 
@@ -50,6 +51,7 @@ export async function getTopPurchasedCategories(limit = 8, lookbackDays = 180): 
 
     const categoryUnits = new Map<string, number>();
     for (const order of orders as Array<{ items: any }>) {
+      if (isInternalTestOrder(order)) continue;
       const items = Array.isArray(order.items) ? order.items : [];
       for (const item of items) {
         const key = String(item?.productId || item?._id || item?.code || "").trim();
@@ -93,7 +95,7 @@ export async function getPurchaseBehaviorSnapshot(
           status: { in: ["PAID", "SHIPPED"] },
           createdAt: { gte: since },
         },
-        select: { items: true },
+        select: { items: true, customerName: true, customerPhone: true, customerEmail: true, customerNotes: true },
       }),
     ]);
 
@@ -111,6 +113,7 @@ export async function getPurchaseBehaviorSnapshot(
     const offerProductUnits = new Map<string, number>();
 
     for (const order of orders as Array<{ items: any }>) {
+      if (isInternalTestOrder(order)) continue;
       const items = Array.isArray(order.items) ? order.items : [];
       for (const item of items) {
         const key = String(item?.productId || item?._id || item?.code || "").trim();

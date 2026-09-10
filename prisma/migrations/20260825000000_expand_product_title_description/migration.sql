@@ -1,0 +1,2 @@
+ALTER TABLE `Product` MODIFY `title` TEXT NOT NULL;
+ALTER TABLE `Product` MODIFY `description` TEXT NOT NULL;

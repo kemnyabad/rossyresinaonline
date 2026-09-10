@@ -1,11 +1,18 @@
 import type { GetServerSideProps } from "next";
+import { getSiteUrl } from "@/lib/seo";
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://rossyresinaonlineweb.vercel.app";
+  const siteUrl = getSiteUrl();
   const body = `User-agent: *
 Allow: /
+Disallow: /admin/
 Disallow: /api/
+Disallow: /account
+Disallow: /cart
+Disallow: /checkout
+Disallow: /shipping-address
+Disallow: /success
+Disallow: /search
 Sitemap: ${siteUrl}/sitemap.xml
 `;
 

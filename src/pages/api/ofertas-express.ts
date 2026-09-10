@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 
 const db = prisma as any;
@@ -15,12 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(items);
   }
 
-  const session = await getServerSession(req, res, authOptions as any);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return res.status(401).json({ error: "No autorizado" });
+  if (!isAdminApiRequest(req)) return res.status(401).json({ error: "No autorizado" });
 
   if (req.method === "POST") {
-    const { nombre, imagen, activo, orden, productoId, precio } = req.body || {};
+    const { nombre, imagen, activo, orden, productoId, precio, startDate, endDate } = req.body || {};
     if (!nombre || !imagen) return res.status(400).json({ error: "Nombre e imagen requeridos" });
     const item = await db.ofertaExpress.create({
       data: {
@@ -30,13 +27,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         orden: Number(orden || 0),
         productoId: productoId ? String(productoId).trim() : null,
         precio: precio ? Number(precio) : null,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
       },
     });
     return res.status(201).json(item);
   }
 
   if (req.method === "PUT") {
-    const { id, nombre, imagen, activo, orden, productoId, precio } = req.body || {};
+    const { id, nombre, imagen, activo, orden, productoId, precio, startDate, endDate } = req.body || {};
     if (!id) return res.status(400).json({ error: "ID requerido" });
     const item = await db.ofertaExpress.update({
       where: { id: String(id) },
@@ -47,6 +46,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         orden: Number(orden || 0),
         productoId: productoId ? String(productoId).trim() : null,
         precio: precio ? Number(precio) : null,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
       },
     });
     return res.status(200).json(item);

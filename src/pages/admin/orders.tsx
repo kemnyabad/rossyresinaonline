@@ -1,8 +1,7 @@
 import Head from "next/head";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { requireAdminPage } from "@/lib/adminAuth";
 import {
   MagnifyingGlassIcon,
   ArrowPathIcon,
@@ -41,6 +40,7 @@ type Order = {
     notes?: string;
   };
   paymentImage?: string;
+  isInternalTestOrder?: boolean;
 };
 
 const STATUS_OPTIONS = [
@@ -78,13 +78,18 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("Todos");
   const [search, setSearch]           = useState("");
   const [includeHistory, setIncludeHistory] = useState(false);
+  const [showTestOrders, setShowTestOrders] = useState(false);
   const [detailOrder, setDetailOrder] = useState<Order | null>(null);
   const [shipModalOrder, setShipModalOrder] = useState<Order | null>(null);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const res  = await fetch(`/api/orders${includeHistory ? "?includeHistory=1" : ""}`);
+      const params = new URLSearchParams();
+      if (includeHistory) params.set("includeHistory", "1");
+      if (showTestOrders) params.set("includeTestOrders", "1");
+      const query = params.toString();
+      const res  = await fetch(`/api/orders${query ? `?${query}` : ""}`);
       const data = await res.json();
       const rows = Array.isArray(data) ? data : [];
       setOrders(rows);
@@ -102,12 +107,15 @@ export default function AdminOrdersPage() {
       });
     } catch { setOrders([]); }
     finally  { setLoading(false); }
-  }, [includeHistory]);
+  }, [includeHistory, showTestOrders]);
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
 
   const setShipField = (id: string, key: "shalomVoucherImage" | "shalomPickupCode" | "olvaTrackingImage", val: string) =>
-    setShipData((prev) => ({ ...prev, [id]: { shalomVoucherImage: "", shalomPickupCode: "", olvaTrackingImage: "", ...prev[id], [key]: val } }));
+    setShipData((prev) => {
+      const current = prev[id] || { shalomVoucherImage: "", shalomPickupCode: "", olvaTrackingImage: "" };
+      return { ...prev, [id]: { ...current, [key]: val } };
+    });
 
   const uploadImage = async (file: File) => {
     const reader  = new FileReader();
@@ -220,6 +228,10 @@ export default function AdminOrdersPage() {
             <input type="checkbox" checked={includeHistory} onChange={(e) => setIncludeHistory(e.target.checked)} className="rounded" />
             Historial completo
           </label>
+          <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
+            <input type="checkbox" checked={showTestOrders} onChange={(e) => setShowTestOrders(e.target.checked)} className="rounded" />
+            Mostrar pruebas
+          </label>
           <button onClick={loadOrders} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition">
             <ArrowPathIcon className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Actualizar
@@ -292,6 +304,11 @@ export default function AdminOrdersPage() {
                   <tr key={o.id} className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">
                       {o.orderCode || o.id.slice(0, 8) + "…"}
+                      {o.isInternalTestOrder && (
+                        <span className="mt-1 block w-fit rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 font-sans text-[10px] font-bold uppercase text-slate-600">
+                          Prueba
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-semibold text-gray-800 whitespace-nowrap">{o.customer?.name || "—"}</p>
@@ -299,7 +316,12 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-500 max-w-[160px]">
                       {(o.items || []).slice(0, 2).map((it: any, i: number) => (
-                        <p key={i} className="truncate">{it.title} x{it.quantity || 1}</p>
+                        <p key={i} className="truncate">
+                          {it.title} x{it.quantity || 1}
+                          {it.selectedOptions && Object.keys(it.selectedOptions).length > 0
+                            ? ` (${Object.values(it.selectedOptions).join(", ")})`
+                            : ""}
+                        </p>
                       ))}
                       {(o.items || []).length > 2 && <p className="text-gray-400">+{o.items.length - 2} más</p>}
                     </td>
@@ -387,9 +409,18 @@ export default function AdminOrdersPage() {
               <Section title="Productos">
                 <ul className="space-y-1.5">
                   {(detailOrder.items || []).map((it: any, i: number) => (
-                    <li key={i} className="flex justify-between text-xs text-gray-700">
-                      <span className="truncate mr-2">{it.title} x{it.quantity || 1}</span>
-                      <span className="font-semibold shrink-0">S/ {fmt(Number(it.price || 0))}</span>
+                    <li key={i} className="text-xs text-gray-700">
+                      <div className="flex justify-between">
+                        <span className="truncate mr-2">{it.title} x{it.quantity || 1}</span>
+                        <span className="font-semibold shrink-0">S/ {fmt(Number(it.price || 0))}</span>
+                      </div>
+                      {it.selectedOptions && Object.keys(it.selectedOptions).length > 0 && (
+                        <p className="mt-0.5 text-gray-400">
+                          {Object.entries(it.selectedOptions as Record<string, string>)
+                            .map(([name, value]) => `${name}: ${value}`)
+                            .join(" · ")}
+                        </p>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -433,13 +464,13 @@ export default function AdminOrdersPage() {
                 <input value={shipData[shipModalOrder.id]?.shalomPickupCode || ""} onChange={(e) => setShipField(shipModalOrder.id, "shalomPickupCode", e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
               </Field>
               <Field label="Voucher Shalom (imagen)">
-                <input type="file" accept="image/*" onChange={(e) => handleShipImage(shipModalOrder.id, "shalomVoucherImage", e.target.files?.[0])} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" />
+                <input type="file" accept="image/*,.heic,.heif" onChange={(e) => handleShipImage(shipModalOrder.id, "shalomVoucherImage", e.target.files?.[0])} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" />
                 {shipData[shipModalOrder.id]?.shalomVoucherImage && <a href={shipData[shipModalOrder.id].shalomVoucherImage} target="_blank" rel="noreferrer" className="text-xs text-amazon_blue hover:underline mt-1 block">Ver voucher cargado</a>}
               </Field>
             </div>
           ) : (
             <Field label="Tracking Olva (imagen voucher)">
-              <input type="file" accept="image/*" onChange={(e) => handleShipImage(shipModalOrder.id, "olvaTrackingImage", e.target.files?.[0])} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" />
+              <input type="file" accept="image/*,.heic,.heif" onChange={(e) => handleShipImage(shipModalOrder.id, "olvaTrackingImage", e.target.files?.[0])} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" />
               {shipData[shipModalOrder.id]?.olvaTrackingImage && <a href={shipData[shipModalOrder.id].olvaTrackingImage} target="_blank" rel="noreferrer" className="text-xs text-amazon_blue hover:underline mt-1 block">Ver tracking cargado</a>}
             </Field>
           )}
@@ -498,8 +529,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/orders", permanent: false } };
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };

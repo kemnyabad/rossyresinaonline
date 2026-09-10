@@ -4,9 +4,9 @@ import { PlusIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
 export type Variant = {
   id?: string;
   label: string;
-  price: number;
-  oldPrice: number | null;
-  stock: number;
+  price: number | string;
+  oldPrice: number | string | null;
+  stock: number | string;
 };
 
 type Props = {
@@ -16,6 +16,16 @@ type Props = {
 };
 
 const emptyVariant = (): Variant => ({ label: "", price: 0, oldPrice: null, stock: 0 });
+
+const sanitizePriceInput = (value: any): string => {
+  const cleaned = String(value ?? "")
+    .replace(",", ".")
+    .replace(/[^\d.]/g, "");
+  const [whole, ...decimalParts] = cleaned.split(".");
+  return decimalParts.length > 0 ? `${whole}.${decimalParts.join("")}` : whole;
+};
+
+const sanitizeStockInput = (value: any): string => String(value ?? "").replace(/\D/g, "");
 
 export default function ProductVariants({ productId, variants, onChange }: Props) {
   const [form, setForm] = useState<Variant>(emptyVariant());
@@ -119,26 +129,41 @@ export default function ProductVariants({ productId, variants, onChange }: Props
           </div>
           <div>
             <label className="text-xs text-gray-500">Precio (S/) *</label>
-            <input
-              type="number" min={0} value={form.price}
-              onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-              className="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm outline-none focus:border-slate-900"
-            />
+            <div className="relative mt-1">
+              <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500">S/</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*[.]?[0-9]*"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: sanitizePriceInput(e.target.value) })}
+                className="w-full rounded border border-gray-300 py-1.5 pl-8 pr-2 text-sm outline-none focus:border-slate-900"
+              />
+            </div>
           </div>
           <div>
             <label className="text-xs text-gray-500">Precio anterior</label>
-            <input
-              type="number" min={0} value={form.oldPrice ?? ""}
-              onChange={(e) => setForm({ ...form, oldPrice: e.target.value ? Number(e.target.value) : null })}
-              className="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm outline-none focus:border-slate-900"
-              placeholder="Opcional"
-            />
+            <div className="relative mt-1">
+              <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500">S/</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*[.]?[0-9]*"
+                value={form.oldPrice ?? ""}
+                onChange={(e) => setForm({ ...form, oldPrice: e.target.value ? sanitizePriceInput(e.target.value) : null })}
+                className="w-full rounded border border-gray-300 py-1.5 pl-8 pr-2 text-sm outline-none focus:border-slate-900"
+                placeholder="Opcional"
+              />
+            </div>
           </div>
           <div>
             <label className="text-xs text-gray-500">Stock</label>
             <input
-              type="number" min={0} value={form.stock}
-              onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={form.stock}
+              onChange={(e) => setForm({ ...form, stock: sanitizeStockInput(e.target.value) })}
               className="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm outline-none focus:border-slate-900"
             />
           </div>

@@ -1,26 +1,52 @@
 import Image from "next/image";
 import logo from "../../images/logo.jpg";
-import { MagnifyingGlassIcon, UserIcon, HeartIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
+import {
+  MagnifyingGlassIcon,
+  CameraIcon,
+  UserIcon,
+  ShoppingCartIcon,
+  ShoppingBagIcon,
+  XMarkIcon,
+  ChevronDownIcon,
+  Bars3Icon,
+} from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useSelector, useDispatch } from "react-redux";
 import { StateProps, StoreProduct } from "../../../type";
 import { useSession, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useEffect, useState, useRef, useMemo, useDeferredValue } from "react";
-import { addUser } from "@/store/nextSlice";
+import { addUser, removeUser } from "@/store/nextSlice";
 import SearchProducts from "../SearchProducts";
 import FormattedPrice from "@/components/FormattedPrice";
+import { getBundleLineTotal } from "@/lib/bundlePromo";
+import { FcGoogle } from "react-icons/fc";
+import { MdOutlineEmail } from "react-icons/md";
+
+const RESINY_IMAGE = "/resiny.png";
 
 const Header = () => {
   const router = useRouter();
+  const isHomePage = router.pathname === "/";
+  const isResinyPage = router.pathname === "/resiny" || router.pathname.startsWith("/resiny/");
   const { data: session } = useSession();
   const [allData, setAllData] = useState<StoreProduct[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  const { productData, favoriteData, userInfo, allProducts } = useSelector(
+  const { productData, userInfo, allProducts } = useSelector(
     (state: StateProps) => state.next
   );
   const dispatch = useDispatch();
+  const sessionRole = (session?.user as any)?.role;
+  const isAdminSession = sessionRole === "ADMIN";
+  const storeUser = isAdminSession ? null : (userInfo as any);
+  const sessionUser = !isAdminSession ? session?.user : null;
+  const handleSignOut = async () => {
+    dispatch(removeUser());
+    setProfileOpen(false);
+    await signOut({ callbackUrl: "/" });
+  };
   useEffect(() => {
     const list = Array.isArray(allProducts) ? allProducts : [];
     if (list.length > 0) setAllData(list);
@@ -40,7 +66,11 @@ const Header = () => {
     };
   }, [allProducts]);
   useEffect(() => {
-    if (session) {
+    if (isAdminSession) {
+      dispatch(removeUser());
+      return;
+    }
+    if (session?.user) {
       dispatch(
         addUser({
           name: session?.user?.name,
@@ -49,7 +79,7 @@ const Header = () => {
         })
       );
     }
-  }, [session, dispatch]);
+  }, [session, isAdminSession, dispatch]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -57,10 +87,15 @@ const Header = () => {
 
   // Search area
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSearchCategory, setSelectedSearchCategory] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchCategoryOpen, setSearchCategoryOpen] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchCategoryRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [sellerContext, setSellerContext] = useState<any>(null);
   const deferredQuery = useDeferredValue(searchQuery);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,30 +108,56 @@ const Header = () => {
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
-      return;
     }
-    router.push("/");
   };
   const submitSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
     const q = searchQuery.trim();
-    router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+    const category = searchCategories.find((item) => item.value === selectedSearchCategory);
+    if (!q && category?.value) {
+      router.push(category.href);
+    } else {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      if (category?.value) params.set("category", category.value);
+      const query = params.toString();
+      router.push(query ? `/search?${query}` : "/search");
+    }
     setMobileSearchOpen(false);
   };
 
+  const searchCategories = useMemo(() => [
+    { label: "Categorías", value: "", href: "/search", terms: [] as string[] },
+    { label: "Moldes", value: "moldes", href: "/categoria/moldes-de-silicona", terms: ["molde", "silicona"] },
+    { label: "Resina", value: "resina", href: "/categoria/resina", terms: ["resina", "epoxi", "epoxica", "uv"] },
+    { label: "Pigmentos", value: "pigmentos", href: "/categoria/pigmentos", terms: ["pigmento", "mica", "tinte", "colorante"] },
+    { label: "Accesorios", value: "accesorios", href: "/categoria/accesorios", terms: ["accesorio", "dije", "llavero", "arete", "collar", "gancho"] },
+    { label: "Creaciones", value: "creaciones", href: "/categoria/creaciones", terms: ["creacion", "creaciones"] },
+  ], []);
+  const navCategories = useMemo(() => searchCategories.filter((category) => category.value), [searchCategories]);
+
   const filteredProducts = useMemo(() => {
-    const q = deferredQuery.trim().toLowerCase();
-    if (!q) return [];
-    return allData
-      .filter((item: StoreProduct) => {
-        const hay = [item.title, item.category, item.brand, item.code, item.description]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return hay.includes(q);
-      })
-      .slice(0, 12);
-  }, [deferredQuery, allData]);
+    const normalizeSearchText = (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    const q = normalizeSearchText(deferredQuery.trim());
+    const category = searchCategories.find((item) => item.value === selectedSearchCategory);
+    if (!q && !category?.value) return [];
+    const terms = q.split(/\s+/).filter(Boolean);
+    return allData.filter((item: StoreProduct) => {
+      const hay = [item.title, item.category, item.brand, item.code, item.description]
+        .filter(Boolean)
+        .join(" ")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+      const matchesQuery = terms.every((term) => hay.includes(term));
+      const matchesCategory = !category?.terms.length || category.terms.some((term) => hay.includes(term));
+      return matchesQuery && matchesCategory;
+    });
+  }, [deferredQuery, allData, selectedSearchCategory, searchCategories]);
 
   useEffect(() => {
     if (!profileOpen) return;
@@ -111,6 +172,18 @@ const Header = () => {
   }, [profileOpen]);
 
   useEffect(() => {
+    if (!searchCategoryOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (!searchCategoryRef.current) return;
+      if (!searchCategoryRef.current.contains(e.target as Node)) {
+        setSearchCategoryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [searchCategoryOpen]);
+
+  useEffect(() => {
     if (!mobileSearchOpen) return;
     document.body.style.overflow = "hidden";
     const t = window.setTimeout(() => {
@@ -123,6 +196,18 @@ const Header = () => {
   }, [mobileSearchOpen]);
 
   useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [router.asPath]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     if (!mobileSearchOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMobileSearchOpen(false);
@@ -132,73 +217,188 @@ const Header = () => {
   }, [mobileSearchOpen]);
 
   const cartSubtotal = isHydrated
-    ? productData.reduce((s: number, p: any) => s + p.price * p.quantity, 0)
+    ? productData.reduce((s: number, p: any) => s + getBundleLineTotal(p), 0)
     : 0;
-  const favoriteCount = isHydrated && favoriteData ? favoriteData.length : 0;
   const cartCount = isHydrated && productData ? productData.length : 0;
+  const isAuthenticated = Boolean(sessionUser?.email || storeUser?.email);
+  const isSeller = sellerContext?.role === "SELLER";
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSellerContext(null);
+      return;
+    }
+    let alive = true;
+    fetch("/api/marketplace/me", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (alive) setSellerContext(data);
+      })
+      .catch(() => {
+        if (alive) setSellerContext(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [isAuthenticated]);
 
   return (
-    <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
-      <div className="md:hidden px-3 pt-2 pb-3 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          <Link href={"/"} onClick={handleLogoClick} className="flex items-center gap-2 group">
-            <div className="bg-white rounded-full p-1 shadow ring-1 ring-amazon_blue/20 group-hover:shadow-md transition-shadow duration-300">
-              <Image className="h-9 w-9 object-contain rounded-full" src={logo} alt="Logo Rossy Resina" priority />
-            </div>
-            <div className="leading-tight">
-              <span className="text-sm font-semibold text-amazon_blue block">Rossy Resina</span>
-              <span className="text-[11px] text-gray-500">Tienda artesana</span>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <Link href="/favorite" className="relative p-2 rounded-full border border-gray-200 text-gray-700 hover:border-amazon_blue hover:text-amazon_blue hover:shadow-md transition-all duration-300">
-              <HeartIcon className="w-5 h-5" />
-              {favoriteCount > 0 ? (
-                <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center shadow-sm">
-                  {favoriteCount}
-                </span>
-              ) : null}
-            </Link>
+    <div className="w-full bg-[#86b817] text-white sticky top-0 z-50 border-b border-[#749f14] shadow-sm">
+      <div className="lg:hidden border-b border-white/20 bg-[#86b817] px-3 pb-3 pt-2">
+        {isHomePage && !isResinyPage ? (
+          <div className="flex h-12 items-center overflow-hidden rounded-full border-2 border-white bg-white shadow-sm">
+            <label htmlFor="home-mobile-search-category" className="sr-only">Categoría</label>
+            <select
+              id="home-mobile-search-category"
+              value={selectedSearchCategory}
+              onChange={(e) => setSelectedSearchCategory(e.target.value)}
+              className="h-full w-[112px] shrink-0 border-r border-gray-200 bg-gray-50 pl-4 pr-2 text-xs font-semibold text-gray-700 outline-none"
+              aria-label="Filtrar por categoría"
+            >
+              {searchCategories.map((category) => (
+                <option key={category.value || "all"} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setMobileSearchOpen(true)}
+              className="relative h-full min-w-0 flex-1 pl-4 pr-20 text-left text-base text-gray-500"
+              aria-label="Abrir buscador"
+            >
+              <span className="block truncate">{searchQuery || "Buscar productos"}</span>
+              <span className="absolute right-12 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-gray-700">
+                <CameraIcon className="h-5 w-5" />
+              </span>
+              <span className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-amazon_blue text-white">
+                <MagnifyingGlassIcon className="h-6 w-6 stroke-[2.5]" />
+              </span>
+            </button>
           </div>
-        </div>
-
-        <div className="mt-3">
-          <button
-            type="button"
-            onClick={() => setMobileSearchOpen(true)}
-            className="relative w-full h-11 rounded-xl pl-11 pr-4 text-left text-sm text-gray-500 border border-gray-200 bg-gray-50 hover:border-amazon_blue hover:bg-white transition-colors duration-300"
-            aria-label="Abrir buscador"
-          >
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <span>{searchQuery || "Buscar moldes, resina, pigmentos..."}</span>
-          </button>
-        </div>
+        ) : (
+        <>
+        {!isResinyPage && <div>
+          <div className="flex h-11 overflow-hidden rounded-xl border border-white bg-white shadow-sm">
+            <label htmlFor="mobile-header-search-category" className="sr-only">Categoría</label>
+            <select
+              id="mobile-header-search-category"
+              value={selectedSearchCategory}
+              onChange={(e) => setSelectedSearchCategory(e.target.value)}
+              className="w-[112px] shrink-0 border-r border-gray-200 bg-gray-50 px-3 text-xs font-semibold text-gray-700 outline-none"
+              aria-label="Filtrar por categoría"
+            >
+              {searchCategories.map((category) => (
+                <option key={category.value || "all"} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setMobileSearchOpen(true)}
+              className="relative min-w-0 flex-1 pl-10 pr-3 text-left text-sm text-gray-500 transition-colors"
+              aria-label="Abrir buscador"
+            >
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <span className="block truncate">{searchQuery || "Buscar productos..."}</span>
+            </button>
+          </div>
+        </div>}
+        </>
+        )}
       </div>
 
-      <div className="hidden md:flex max-w-screen-2xl mx-auto min-h-[72px] px-3 py-2 sm:px-4 md:px-6 items-center gap-2 sm:gap-4">
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-[58]" role="dialog" aria-modal="true" aria-label="Menú de tienda">
+          <button
+            type="button"
+            className="absolute inset-0 h-full w-full bg-slate-950/35"
+            aria-label="Cerrar menú"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div id="mobile-store-menu" className="absolute left-3 right-3 top-[76px] mx-auto max-h-[calc(100vh-92px)] max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-[0_14px_34px_rgba(17,24,39,0.14)]">
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+              <div>
+                <p className="text-sm font-bold text-slate-900">Menú de tienda</p>
+                <p className="text-xs text-slate-500">Categorías principales y accesos claros</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-slate-500"
+                aria-label="Cerrar menú"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="grid gap-2 border-b border-gray-100 bg-[#fff7fb] p-3">
+              <p className="px-1 text-xs font-bold uppercase tracking-wide text-slate-500">Usuario</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
+                  className="flex min-h-[50px] items-center gap-3 rounded-xl border border-pink-100 bg-white px-3 py-2 text-left text-sm font-semibold text-slate-800"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff0f7] text-[#e4147f]">
+                    <UserIcon className="h-5 w-5" />
+                  </span>
+                  Mi cuenta
+                </Link>
+                <Link
+                  href="/vende-con-nosotros"
+                  className="flex min-h-[50px] items-center gap-3 rounded-xl border border-pink-100 bg-white px-3 py-2 text-left text-sm font-semibold text-slate-800"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff0f7] text-[#e4147f]">
+                    <ShoppingBagIcon className="h-5 w-5" />
+                  </span>
+                  <span className="leading-tight">
+                    <span className="block">Vende con nosotros</span>
+                    <span className="block text-xs font-semibold text-slate-500">Modo beta</span>
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="hidden lg:flex max-w-screen-2xl mx-auto min-h-[76px] px-3 py-2 sm:px-4 md:px-6 xl:px-8 items-center gap-3 lg:gap-5">
         {/* logo */}
         <Link
           href={"/"}
           onClick={handleLogoClick}
-          className="px-2 cursor-pointer duration-300 flex items-center justify-center"
+          className="group flex cursor-pointer items-center justify-center rounded-md py-1.5 pr-3 transition-colors duration-200"
         >
-          <div className="flex flex-col items-center md:flex-row md:items-center gap-1 md:gap-2">
-            <div className="bg-white rounded-full p-1.5 shadow-md ring-2 ring-amazon_blue/20 group-hover:shadow-lg transition-shadow duration-300">
-              <Image className="h-12 w-12 md:h-14 md:w-14 object-contain rounded-full" src={logo} alt="Logo Rossy Resina" priority />
+          <div className="flex min-w-[250px] items-center gap-3.5">
+            <div className="relative shrink-0 overflow-hidden rounded-full bg-white shadow-[0_6px_18px_rgba(17,24,39,0.16)] ring-2 ring-white transition-all duration-200 group-hover:-translate-y-0.5 group-hover:ring-[#e4147f]">
+              <Image className="h-[58px] w-[58px] object-contain" src={logo} alt="Logo Rossy Resina" priority />
             </div>
-            <span className="md:hidden text-sm leading-tight text-amazon_blue font-semibold">
-              Rossy Resina
-            </span>
-            <div className="hidden md:flex flex-col leading-tight">
-              <span className="text-amazon_blue font-semibold text-base md:text-lg">Rossy Resina</span>
-              <span className="text-xs text-gray-500 hidden md:block">Resina, moldes y pigmentos</span>
+            <div className="h-12 w-[3px] shrink-0 rounded-full bg-[#e4147f] shadow-[0_0_0_1px_rgba(255,255,255,0.18)] transition-all duration-200 group-hover:h-14" />
+            <div className="flex min-w-0 flex-col justify-center">
+              <span className="truncate text-[24px] font-bold leading-7 text-[#e4147f] [text-shadow:1.5px_0_0_#fff,-1.5px_0_0_#fff,0_1.5px_0_#fff,0_-1.5px_0_#fff,1px_1px_0_#fff,-1px_1px_0_#fff,1px_-1px_0_#fff,-1px_-1px_0_#fff]">
+                Rossy Resina
+              </span>
+              <span className="mt-0.5 truncate text-[13px] font-medium leading-5 text-white/85">
+                Tienda de Artesania
+              </span>
             </div>
           </div>
         </Link>
 
+        {isResinyPage && (
+          <div className="flex min-w-0 items-center gap-2 border-l border-white/30 pl-4">
+            <span className="relative h-16 w-16 shrink-0">
+              <Image src={RESINY_IMAGE} alt="Resiny" fill className="object-contain" priority />
+            </span>
+            <div className="min-w-0 leading-tight">
+              <p className="truncate text-lg font-bold text-white">Resiny</p>
+              <p className="truncate text-xs font-medium text-white/80">Asistente de Rossy Resina</p>
+            </div>
+          </div>
+        )}
+
         {/* mobile search */}
-        <div className="md:hidden flex-1 min-w-0">
+        {!isResinyPage && <div className="lg:hidden flex-1 min-w-0">
           <button
             type="button"
             onClick={() => setMobileSearchOpen(true)}
@@ -208,22 +408,22 @@ const Header = () => {
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <span>{searchQuery || "Buscar producto..."}</span>
           </button>
-        </div>
+        </div>}
 
         {/* searchbar */}
-        <div className="hidden md:flex flex-1 items-center justify-center">
-          <form onSubmit={submitSearch} className="w-full max-w-2xl h-11 inline-flex items-center justify-between relative">
+        {!isResinyPage && <div className="hidden lg:flex flex-1 min-w-[220px] items-center justify-center">
+          <form onSubmit={submitSearch} className="w-full max-w-3xl h-11 inline-flex items-center justify-between relative rounded-full border border-white bg-white shadow-sm focus-within:ring-2 focus-within:ring-[#e4147f]/35">
             <input
               onChange={handleSearch}
               value={searchQuery}
-              className="w-full h-full rounded-full pl-4 pr-28 placeholder:text-xs text-sm text-black border border-gray-300 outline-none focus-visible:border-amazon_blue focus:shadow-sm transition-all duration-300"
+              className="h-full min-w-0 flex-1 rounded-full bg-transparent pl-5 pr-28 text-sm text-black outline-none placeholder:text-xs placeholder:text-gray-400"
               type="text"
               placeholder="Buscar productos..."
             />
             <button type="submit" className="absolute right-0 top-0 h-full px-5 rounded-full bg-amazon_blue text-white text-sm font-semibold hover:brightness-95 transition-all duration-300 hover:shadow-md">Buscar</button>
             {/* ========== Searchfield ========== */}
             {searchQuery && (
-              <div className="absolute left-0 top-12 w-full mx-auto max-h-96 bg-gray-100 rounded-lg overflow-y-scroll cursor-pointer text-black border border-gray-200">
+              <div className="absolute left-0 top-12 z-20 w-full mx-auto max-h-96 bg-gray-100 rounded-lg overflow-y-scroll cursor-pointer text-black border border-gray-200">
                 {filteredProducts.length > 0 ? (
                   <>
                     {searchQuery &&
@@ -232,7 +432,7 @@ const Header = () => {
                           key={`${item._id}-${item.code || item.title}`}
                           className="w-full border-b-[1px] border-b-gray-200 flex items-center gap-4"
                           href={{
-                            pathname: `/${item.code || item._id}`,
+                            pathname: `/${item.slug || item.code || item._id}`,
                             query: {
                               _id: item._id,
                               brand: item.brand,
@@ -262,30 +462,46 @@ const Header = () => {
             )}
             {/* ========== Searchfield ========== */}
           </form>
-        </div>
+        </div>}
 
         {/* actions */}
-        <div className="ml-auto md:ml-0 flex items-center gap-2 sm:gap-4">
+        <div className={`ml-auto flex flex-none items-center justify-end gap-3 lg:gap-4 ${isResinyPage ? "min-w-0" : "min-w-[360px] lgl:min-w-[500px] lgl:max-w-[560px]"}`}>
           <Link
-            href={userInfo ? "/account" : "/sign-in"}
-            className="md:hidden p-2 rounded-full border border-gray-200 text-gray-700 hover:text-amazon_blue hover:border-amazon_blue"
-            aria-label={userInfo ? "Ir a mi perfil" : "Iniciar sesión"}
+            href={isAuthenticated ? "/account" : "/sign-in?callbackUrl=/account"}
+              className="lg:hidden p-2 rounded-full border border-white/35 text-white hover:border-white"
+            aria-label={isAuthenticated ? "Ir a mi perfil" : "Iniciar sesión"}
           >
             <UserIcon className="w-5 h-5" />
+          </Link>
+
+          <Link
+            href="/vende-con-nosotros"
+            className="group hidden min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-sm text-white transition-colors hover:border-white hover:bg-white hover:text-[#e4147f] md:flex lgl:px-3"
+            aria-label="Vende con nosotros"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-[#e4147f] group-hover:ring-[#e4147f]">
+              <ShoppingBagIcon className="h-5 w-5" />
+            </span>
+            <div className="hidden min-w-0 leading-tight text-left lgl:block">
+              <div className="whitespace-nowrap text-[15px] font-semibold text-white transition-colors group-hover:text-[#e4147f]">Vende con nosotros</div>
+              <div className="mt-0.5 text-xs font-semibold text-white/75 transition-colors group-hover:text-[#e4147f]/75">Modo beta</div>
+            </div>
           </Link>
 
           <div className="relative hidden md:block" ref={profileRef}>
             <button
               type="button"
               onClick={() => setProfileOpen((v) => !v)}
-              className="flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue"
+              className="group flex min-h-[48px] items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm text-white transition-colors hover:border-white hover:bg-white hover:text-[#e4147f]"
               aria-haspopup="menu"
               aria-expanded={profileOpen}
             >
-              <UserIcon className="w-5 h-5" />
-              <div className="leading-tight text-left">
-                <div className="text-xs text-gray-500">Cuenta</div>
-                <div className="font-semibold">Mi perfil</div>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-[#e4147f] group-hover:ring-[#e4147f]">
+                <UserIcon className="w-5 h-5" />
+              </span>
+              <div className="min-w-0 leading-tight text-left">
+                <div className="text-xs font-semibold text-white/80 transition-colors group-hover:!text-[#e4147f]">Cuenta</div>
+                <div className="whitespace-nowrap text-[15px] font-semibold text-white transition-colors group-hover:text-[#e4147f]">Mi perfil</div>
               </div>
             </button>
 
@@ -293,9 +509,9 @@ const Header = () => {
               <div className="absolute right-0 top-[calc(100%+10px)] w-72 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
                 <div className="p-4 border-b border-gray-100">
                   <div className="flex items-center gap-3">
-                    {userInfo?.image ? (
+                    {storeUser?.image ? (
                       <Image
-                        src={userInfo.image}
+                        src={storeUser.image}
                         alt="Avatar"
                         width={44}
                         height={44}
@@ -303,21 +519,21 @@ const Header = () => {
                       />
                     ) : (
                       <div className="h-11 w-11 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-semibold">
-                        {(userInfo?.name || userInfo?.email || "U").slice(0, 1)}
+                        {(storeUser?.name || storeUser?.email || "U").slice(0, 1)}
                       </div>
                     )}
                     <div>
                       <p className="text-sm text-gray-600">Bienvenido de nuevo</p>
                       <p className="text-sm font-semibold text-gray-900">
-                        {userInfo?.name || userInfo?.email || "Invitado"}
+                        {storeUser?.name || storeUser?.email || "Invitado"}
                       </p>
                     </div>
                   </div>
                   <div className="mt-3">
-                    {userInfo ? (
+                    {isAuthenticated ? (
                       <button
                         type="button"
-                        onClick={() => signOut()}
+                        onClick={handleSignOut}
                         className="text-sm text-amazon_blue hover:underline"
                       >
                         Cerrar sesión
@@ -329,63 +545,149 @@ const Header = () => {
                     )}
                   </div>
                 </div>
-                <div className="py-2">
-                  <Link href="/account" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Mi Cuenta
-                  </Link>
-                  <Link href="/track-orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Mis pedidos
-                  </Link>
-                  <Link href="/favorite" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Lista de deseos
-                  </Link>
-                  <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
-                    Centro de mensajes
-                  </Link>
-                </div>
+                {!isAuthenticated && (
+                  <div className="grid gap-2 border-b border-gray-100 p-4">
+                    <Link
+                      href="/track-orders"
+                      className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      Mis pedidos
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      <MdOutlineEmail className="h-5 w-5 text-amazon_blue" />
+                      Registrarme con correo
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => signIn("google", { callbackUrl: "/" })}
+                      className="flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      <FcGoogle className="h-5 w-5" />
+                      Continuar con Google
+                    </button>
+                  </div>
+                )}
+                {isAuthenticated && (
+                  <div className="grid gap-1 p-2 text-slate-800">
+                    <Link href="/account" className="flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-[#fff4f9] hover:text-[#e4147f]">
+                      <UserIcon className="h-4 w-4 text-[#e4147f]" />
+                      Mi Cuenta
+                    </Link>
+                    {isSeller && (
+                      <Link href="/mi-tienda" className="flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-[#fff4f9] hover:text-[#e4147f]">
+                        <ShoppingBagIcon className="h-4 w-4 text-[#e4147f]" />
+                        Mi Tienda
+                      </Link>
+                    )}
+                    <Link href="/vende-con-nosotros" className="flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-[#fff4f9] hover:text-[#e4147f]">
+                      <ShoppingBagIcon className="h-4 w-4 text-[#e4147f]" />
+                      <span className="leading-tight">
+                        <span className="block">Vende con nosotros</span>
+                        <span className="block text-xs font-semibold text-slate-500">Modo beta</span>
+                      </span>
+                    </Link>
+                    <Link href="/track-orders" className="flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-[#fff4f9] hover:text-[#e4147f]">
+                      <ShoppingCartIcon className="h-4 w-4 text-[#e4147f]" />
+                      Mis pedidos
+                    </Link>
+                    <Link href="/messages" className="flex min-h-[42px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-[#fff4f9] hover:text-[#e4147f]">
+                      <MdOutlineEmail className="h-4 w-4 text-[#e4147f]" />
+                      Centro de mensajes
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>
-          <Link
-            href="/favorite"
-            className="hidden md:flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue relative"
-          >
-            <HeartIcon className="w-5 h-5" />
-            {favoriteCount > 0 && (
-              <span className="absolute -top-2 left-3 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
-                {favoriteCount}
-              </span>
-            )}
-            <div className="leading-tight">
-              <div className="text-xs text-gray-500">Favoritos</div>
-              <div className="font-semibold">Guardados</div>
-            </div>
-          </Link>
-
           {/* cart */}
-          <Link
-            href="/cart"
-            className="px-1 sm:px-2 cursor-pointer duration-300 relative flex items-center"
-            aria-label="Abrir carrito"
-          >
-            <span className="flex items-center gap-2 relative">
-              <div className="relative">
-                <ShoppingCartIcon className="w-8 h-8 text-gray-700" />
-                <span className="absolute -top-2 -right-2 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              </div>
-              <div className="hidden md:block leading-tight text-left">
-                <div className="text-xs text-gray-500">Tu carrito</div>
-                <div className="text-sm font-semibold text-amazon_blue"><FormattedPrice amount={cartSubtotal} /></div>
-              </div>
-            </span>
-          </Link>
+          {!isResinyPage && (
+            <Link
+              href="/cart"
+              className="group relative flex min-h-[48px] cursor-pointer items-center rounded-lg border border-transparent px-3 py-2 transition-colors hover:border-white hover:bg-white"
+              aria-label="Abrir carrito"
+            >
+              <span className="flex items-center gap-3 relative">
+                <div className="relative">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-slate-700 ring-1 ring-gray-200 transition-colors group-hover:bg-white group-hover:text-[#e4147f] group-hover:ring-[#e4147f]">
+                    <ShoppingCartIcon className="w-6 h-6" />
+                  </span>
+                  <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center ring-2 ring-white">
+                    {cartCount}
+                  </span>
+                </div>
+                <div className="hidden md:block min-w-[78px] leading-tight text-left">
+                  <div className="text-xs font-semibold text-white/80 transition-colors group-hover:!text-[#e4147f]">Tu carrito</div>
+                  <div className="text-[15px] font-semibold text-white transition-colors group-hover:text-[#e4147f]"><FormattedPrice amount={cartSubtotal} /></div>
+                </div>
+              </span>
+            </Link>
+          )}
         </div>
       </div>
 
+      {!isResinyPage && (
+        <div className="hidden border-b-2 border-[#e4147f] bg-white lg:block">
+          <div className="mx-auto flex max-w-screen-2xl items-center gap-7 px-3 py-3 sm:px-4 md:px-6 xl:px-8">
+            <div ref={searchCategoryRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setSearchCategoryOpen((open) => !open)}
+                className="flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2.5 text-base font-bold text-slate-900 transition-colors hover:bg-gray-200"
+                aria-haspopup="listbox"
+                aria-expanded={searchCategoryOpen}
+              >
+                <Bars3Icon className="h-5 w-5" />
+                Todas las categorías
+                <ChevronDownIcon className={`h-4 w-4 transition-transform ${searchCategoryOpen ? "rotate-180" : ""}`} />
+              </button>
+              {searchCategoryOpen && (
+                <div
+                  className="absolute left-0 top-[calc(100%+8px)] z-40 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1.5 text-sm text-slate-800 shadow-[0_18px_40px_rgba(15,23,42,0.18)]"
+                  role="listbox"
+                >
+                  {navCategories.map((category) => (
+                    <Link
+                      key={category.value}
+                      href={category.href}
+                      onClick={() => {
+                        setSelectedSearchCategory(category.value);
+                        setSearchCategoryOpen(false);
+                      }}
+                      className="flex h-10 w-full items-center px-4 text-left font-semibold text-slate-700 transition-colors hover:bg-[#fff4f9] hover:text-[#e4147f]"
+                      role="option"
+                    >
+                      {category.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            <nav className="flex items-center gap-6 text-base font-bold">
+              {navCategories.map((category, index) => (
+                <Link
+                  key={category.value}
+                  href={category.href}
+                  onClick={() => setSelectedSearchCategory(category.value)}
+                  className={`transition-colors ${
+                    index === 0 ? "text-[#e4147f] hover:text-[#c21885]" : "text-slate-800 hover:text-[#e4147f]"
+                  }`}
+                >
+                  {category.label}
+                </Link>
+              ))}
+              <Link href="/capacitaciones" className="text-slate-800 transition-colors hover:text-[#e4147f]">
+                Cursos
+              </Link>
+            </nav>
+          </div>
+        </div>
+      )}
+
       {mobileSearchOpen && (
-        <div className="md:hidden fixed inset-0 z-[60] bg-white">
+        <div className="lg:hidden fixed inset-0 z-[60] bg-white">
           <div className="h-full flex flex-col">
             <div className="px-3 py-3 border-b border-gray-200 flex items-center gap-2">
               <button
@@ -395,6 +697,20 @@ const Header = () => {
               >
                 Cerrar
               </button>
+              <label htmlFor="mobile-search-category" className="sr-only">Categoría</label>
+              <select
+                id="mobile-search-category"
+                value={selectedSearchCategory}
+                onChange={(e) => setSelectedSearchCategory(e.target.value)}
+                className="h-11 w-[108px] shrink-0 rounded-full border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-700 outline-none"
+                aria-label="Filtrar por categoría"
+              >
+                {searchCategories.map((category) => (
+                  <option key={category.value || "all"} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
               <div className="relative flex-1">
                 <input
                   ref={mobileSearchInputRef}
@@ -419,7 +735,7 @@ const Header = () => {
                       key={`${item._id}-${item.code || item.title}`}
                       className="w-full border-b border-gray-200 flex items-center gap-4 px-3 py-2"
                       href={{
-                        pathname: `/${item.code || item._id}`,
+                        pathname: `/${item.slug || item.code || item._id}`,
                         query: {
                           _id: item._id,
                           brand: item.brand,

@@ -1,15 +1,16 @@
 ﻿import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import type { Session } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { ProductSchema } from "@/lib/validations";
+import { logger } from "@/lib/logger";
+import { uniqueSlug } from "@/lib/slug";
 
 const db = prisma as any;
 const productBaseSelect = {
   id: true,
   legacyId: true,
   code: true,
+  slug: true,
   barcode: true,
   sku: true,
   title: true,
@@ -17,8 +18,12 @@ const productBaseSelect = {
   brand: true,
   category: true,
   image: true,
+  specs: true,
+  optionGroups: true,
   price: true,
   oldPrice: true,
+  bundleQuantity: true,
+  bundlePrice: true,
   isNew: true,
   stock: true,
 };
@@ -54,6 +59,16 @@ const normalizeStock = (value: any): number => {
   const n = Number(value);
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.floor(n));
+};
+
+const normalizeBundleQuantity = (value: any): number | null => {
+  const n = Math.floor(Number(value || 0));
+  return Number.isFinite(n) && n >= 2 ? n : null;
+};
+
+const normalizeBundlePrice = (value: any): number | null => {
+  const n = Number(value || 0);
+  return Number.isFinite(n) && n > 0 ? Number(n.toFixed(2)) : null;
 };
 
 const sanitizeBarcode = (value: any): string | null => {
@@ -161,8 +176,36 @@ const pickMainImage = (image: any, images: any): string => {
   return "";
 };
 
+const normalizeSpecs = (specs: any): Array<{ label: string; value: string }> => {
+  if (!Array.isArray(specs)) return [];
+  return specs
+    .map((s: any) => ({
+      label: fixMojibakeText(String(s?.label || "").trim()),
+      value: fixMojibakeText(String(s?.value || "").trim()),
+    }))
+    .filter((s) => s.label && s.value);
+};
+
+const normalizeOptionGroups = (
+  groups: any
+): Array<{ name: string; options: Array<{ label: string }> }> => {
+  if (!Array.isArray(groups)) return [];
+  return groups
+    .map((g: any) => ({
+      name: fixMojibakeText(String(g?.name || "").trim()),
+      options: Array.isArray(g?.options)
+        ? g.options
+            .map((o: any) => fixMojibakeText(String(o?.label || "").trim()))
+            .filter(Boolean)
+            .map((label: string) => ({ label }))
+        : [],
+    }))
+    .filter((g: any) => g.name && g.options.length > 0);
+};
+
 const toLegacyProduct = (p: any) => ({
   _id: p.legacyId ?? p.id,
+  slug: p.slug || "",
   code: fixMojibakeText(p.code || ""),
   barcode: fixMojibakeText(p.barcode || ""),
   sku: fixMojibakeText(p.sku || ""),
@@ -172,9 +215,13 @@ const toLegacyProduct = (p: any) => ({
   brand: fixMojibakeText(p.brand || ""),
   category: fixMojibakeText(p.category || ""),
   image: pickMainImage(p.image, p?.images),
+  specs: normalizeSpecs(p?.specs),
+  optionGroups: normalizeOptionGroups(p?.optionGroups),
   isNew: Boolean(p.isNew),
   oldPrice: p.oldPrice != null ? Number(p.oldPrice) : undefined,
   price: Number(p.price || 0),
+  bundleQuantity: p.bundleQuantity != null ? Number(p.bundleQuantity) : undefined,
+  bundlePrice: p.bundlePrice != null ? Number(p.bundlePrice) : undefined,
   images: normalizeImages(p?.images),
 });
 
@@ -189,11 +236,35 @@ const toDbData = (body: any) => {
   const image = pickMainImage(body?.image, gallery);
   const price = Number(body?.price || 0);
   const oldPrice = body?.oldPrice != null && body.oldPrice !== "" ? Number(body.oldPrice) : null;
+  const bundleQuantity = normalizeBundleQuantity(body?.bundleQuantity);
+  const bundlePrice = normalizeBundlePrice(body?.bundlePrice);
   const isNew = Boolean(body?.isNew);
   const stock = normalizeStock(body?.stock);
   const barcode = sanitizeBarcode(body?.barcode);
   const sku = fixMojibakeText(String(body?.sku || "").trim()) || null;
-  return { legacyId, code, barcode, sku, title, description, brand, category, image, images: gallery, price, oldPrice, isNew, stock };
+  const specs = normalizeSpecs(body?.specs);
+  const optionGroups = normalizeOptionGroups(body?.optionGroups);
+  return {
+    legacyId,
+    code,
+    slug: undefined as string | undefined,
+    barcode,
+    sku,
+    title,
+    description,
+    brand,
+    category,
+    image,
+    images: gallery,
+    specs,
+    optionGroups,
+    price,
+    oldPrice,
+    bundleQuantity,
+    bundlePrice,
+    isNew,
+    stock,
+  };
 };
 
 const isTooManyClientsError = (error: any): boolean =>
@@ -242,14 +313,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return String(value || "").trim();
   };
 
-  const isAdmin = async () => {
-    const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
-    return !!session && (session.user as any)?.role === "ADMIN";
-  };
+  const isAdmin = () => isAdminApiRequest(req);
 
   if (req.method === "GET") {
     try {
-      const products = await withDbRetry(() =>
+      const products = await withDbRetry<any[]>(() =>
         db.product.findMany({
           orderBy: { createdAt: "desc" },
           select: { ...productBaseSelect, images: true },
@@ -257,12 +325,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
       return res.status(200).json(products.map(toLegacyProduct));
     } catch (error: any) {
+      logger.error("products.get_failed", {
+        error: String(error?.message || error),
+      });
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudieron obtener productos") });
     }
   }
 
   if (req.method === "POST") {
-    const ok = await isAdmin();
+    const ok = isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
 
     const validation = validateProductPayload(req.body);
@@ -283,6 +354,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!data.title || !Number.isFinite(data.price)) {
         return res.status(400).json({ error: "Datos de producto invalidos" });
       }
+      data.slug = await withDbRetry(() =>
+        uniqueSlug(data.title, async (candidate) =>
+          Boolean(await db.product.findFirst({ where: { slug: candidate }, select: { id: true } }))
+        )
+      );
 
       const where = data.code ? { code: data.code } : data.legacyId ? { legacyId: data.legacyId } : null;
       let created: any;
@@ -302,12 +378,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         images: cloudinaryImages,
       });
     } catch (error: any) {
+      logger.error("products.post_failed", {
+        error: String(error?.message || error),
+      });
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo crear producto") });
     }
   }
 
   if (req.method === "PUT") {
-    const ok = await isAdmin();
+    const ok = isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
 
     const validation = validateProductPayload(req.body);
@@ -325,17 +404,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (data.code) {
         existing = await withDbRetry(() => db.product.findFirst({
           where: { code: data.code },
-          select: { id: true, barcode: true, image: true, images: true },
+          select: { id: true, barcode: true, image: true, images: true, slug: true },
         }));
       }
       if (!existing) {
         const orWhere: any[] = [{ id: key }, { legacyId: key }, { code: key }];
         existing = await withDbRetry(() => db.product.findFirst({
           where: { OR: orWhere },
-          select: { id: true, barcode: true, image: true, images: true },
+          select: { id: true, barcode: true, image: true, images: true, slug: true },
         }));
       }
       if (!existing) return res.status(404).json({ error: "Producto no encontrado" });
+
+      // Conserva el slug existente (no lo cambia el editar el titulo) salvo que aun no tenga uno.
+      if (!existing.slug) {
+        data.slug = await withDbRetry(() =>
+          uniqueSlug(data.title, async (candidate) =>
+            Boolean(
+              await db.product.findFirst({
+                where: { slug: candidate, NOT: { id: existing.id } },
+                select: { id: true },
+              })
+            )
+          )
+        );
+      } else {
+        data.slug = undefined;
+      }
 
       const incomingImages = normalizeImages((req.body || {}).images);
       const incomingMain = String((req.body || {}).image || "").trim();
@@ -394,12 +489,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         images: finalImages,
       });
     } catch (error: any) {
+      logger.error("products.put_failed", {
+        error: String(error?.message || error),
+      });
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo actualizar producto") });
     }
   }
 
   if (req.method === "DELETE") {
-    const ok = await isAdmin();
+    const ok = isAdmin();
     if (!ok) return res.status(401).json({ error: "No autorizado" });
 
     try {
@@ -407,7 +505,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const code = firstQueryValue(req.query.code) || String(req.body?.code || "").trim();
       if (!key && !code) return res.status(400).json({ error: "ID o codigo requerido" });
 
-      const existing = code
+      const existing: any = code
         ? await withDbRetry(() => db.product.findFirst({
             where: { code },
             select: { id: true, legacyId: true, code: true },
@@ -427,6 +525,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       return res.status(204).end();
     } catch (error: any) {
+      logger.error("products.delete_failed", {
+        error: String(error?.message || error),
+      });
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo eliminar producto") });
     }
   }

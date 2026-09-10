@@ -1,12 +1,13 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { absoluteUrl } from "@/lib/seo";
 
 export default function ContactPage() {
   const shopEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contacto@rossyresina.pe";
   const phoneRaw = process.env.NEXT_PUBLIC_CONTACT_PHONE || "900000000";
   const whatsappRaw = process.env.NEXT_PUBLIC_CONTACT_PHONE || phoneRaw;
-  const address = process.env.NEXT_PUBLIC_CONTACT_ADDRESS || "Lima, Per";
+  const address = process.env.NEXT_PUBLIC_CONTACT_ADDRESS || "Lima, Perú";
 
   const phone = useMemo(() => phoneRaw.replace(/[^0-9]/g, ""), [phoneRaw]);
   const whatsapp = useMemo(() => whatsappRaw.replace(/[^0-9]/g, ""), [whatsappRaw]);
@@ -15,6 +16,8 @@ export default function ContactPage() {
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("Consulta");
   const [message, setMessage] = useState("");
+  const title = "Contacto | Rossy Resina";
+  const description = "Contacta a Rossy Resina por WhatsApp o correo para consultas sobre resina epóxica, moldes, pigmentos, accesorios y pedidos en Perú.";
 
   const mailtoHref = useMemo(() => {
     const s = encodeURIComponent(`[${subject}] ${name ? "- " + name : ""}`);
@@ -30,12 +33,17 @@ export default function ContactPage() {
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-6">
       <Head>
-        <title>Rossy Resina  -  Contacto</title>
+        <title>{title}</title>
+        <meta name="description" content={description} key="description" />
+        <link rel="canonical" href={absoluteUrl("/contact")} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={absoluteUrl("/contact")} />
       </Head>
 
       <div className="grid md:grid-cols-3 gap-6">
         <section className="md:col-span-2 bg-white rounded-lg p-6 shadow">
-          <h1 className="text-2xl font-semibold mb-4">Contctanos</h1>
+          <h1 className="text-2xl font-semibold mb-4">Contáctanos</h1>
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-gray-600">Nombre</label>
@@ -61,12 +69,12 @@ export default function ContactPage() {
         </section>
 
         <aside className="bg-white rounded-lg p-6 shadow">
-          <h2 className="text-xl font-semibold mb-3">Informacin</h2>
+          <h2 className="text-xl font-semibold mb-3">Información</h2>
           <ul className="text-sm text-gray-700 grid gap-2">
-            <li><span className="font-medium">Telfono:</span> {phoneRaw}</li>
+            <li><span className="font-medium">Teléfono:</span> {phoneRaw}</li>
             <li><span className="font-medium">WhatsApp:</span> {whatsappRaw}</li>
             <li><span className="font-medium">Correo:</span> {shopEmail}</li>
-            <li><span className="font-medium">Direcci?n:</span> {address}</li>
+            <li><span className="font-medium">Dirección:</span> {address}</li>
           </ul>
           <div className="mt-4 text-sm text-gray-600">
             <p>Atendemos consultas sobre resina, moldes, pigmentos y talleres.</p>

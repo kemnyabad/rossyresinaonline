@@ -1,8 +1,12 @@
 import { getServerSession } from "next-auth";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "../auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { upsertCustomer } from "@/lib/customerStore";
+import { logger } from "@/lib/logger";
+import { CreateOrderSchema } from "@/lib/validations";
+import { v2 as cloudinary } from "cloudinary";
 import {
   encodeOrderMeta,
   normalizePaymentMethod,
@@ -11,15 +15,51 @@ import {
   paymentMethodLabel,
   shippingCarrierLabel,
 } from "@/lib/orderMeta";
+import { getPresentationTotalPrice } from "@/lib/productPricing";
+import { getBundleLineTotal } from "@/lib/bundlePromo";
+import { isInternalTestOrder } from "@/lib/testOrders";
+import { isLocalOrderSimulationRequest, readOrdersStore, upsertLocalOrder } from "@/lib/orderStore";
+import { getWheelPrizeById } from "@/lib/wheelPrizes";
 
 type DbOrderStatus = "PENDING" | "PAID" | "SHIPPED";
 const db = prisma as any;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
+  },
+};
 
 type IncomingItem = {
   _id?: string | number;
   productId?: string | number;
   code?: string;
+  variantId?: string;
   quantity?: number;
+  title?: string;
+  category?: string;
+  description?: string;
+  brand?: string;
+  sku?: string;
+  bundleQuantity?: number;
+  bundlePrice?: number;
+  selectedOptions?: Record<string, string>;
+};
+
+const normalizeSelectedOptions = (value: any): Record<string, string> | undefined => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const entries = Object.entries(value)
+    .map(([k, v]) => [String(k || "").trim(), String(v || "").trim()])
+    .filter(([k, v]) => k && v);
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 };
 
 const toLegacyStatus = (status: DbOrderStatus): string => {
@@ -89,31 +129,226 @@ const serializeOrder = (order: any) => {
     shalomPickupCode: meta.shalomPickupCode || "",
     olvaTrackingImage: meta.olvaTrackingImage || "",
     paymentImage: order.paymentImage || "",
+    couponCode: meta.couponCode,
+    couponDiscount: Number(meta.couponDiscount || 0),
+    couponSubtotal: Number(meta.couponSubtotal || 0),
+    isInternalTestOrder: isInternalTestOrder(order),
   };
+};
+
+const applyWheelPrizeDiscount = (
+  wheelPrizeId: unknown,
+  computedTotal: number,
+  normalizedItems: Array<{ productId: string; price: number }>
+): number => {
+  const prize = getWheelPrizeById(String(wheelPrizeId || ""));
+  if (!prize) return 0;
+  if (prize.type === "discount") {
+    if (computedTotal < prize.minSubtotal) return 0;
+    return Math.min(prize.discountValue, computedTotal);
+  }
+  const line = normalizedItems.find((it) => it.productId === prize.productId);
+  if (!line) return 0;
+  const othersTotal = computedTotal - line.price;
+  if (othersTotal < prize.minSubtotal) return 0;
+  return Math.min(line.price, computedTotal);
+};
+
+const createLocalSimulatedOrder = async (body: any) => {
+  const customer = body.customer || {};
+  const items = Array.isArray(body.items) ? (body.items as IncomingItem[]) : [];
+  const name = String(customer.name || "").trim();
+  const dni = String(customer.dni || "").trim();
+  const phone = String(customer.phone || "").trim();
+  const email = String(customer.email || "").trim().toLowerCase() || "localhost@rossyresina.test";
+  const locationLine = String(customer.locationLine || "").trim();
+  const notes = String(customer.notes || "").trim();
+  const shippingCarrier = normalizeShippingCarrier(body.shippingCarrier || customer.shippingCarrier);
+  const shalomAgency = String(body.shalomAgency || customer.shalomAgency || "").trim();
+  const olvaAddress = String(body.olvaAddress || customer.olvaAddress || "").trim();
+  const olvaReference = String(body.olvaReference || customer.olvaReference || "").trim();
+  const paymentMethod = normalizePaymentMethod(body.paymentMethod || customer.paymentMethod);
+  const location = splitLocation(locationLine);
+
+  const keys = Array.from(
+    new Set(
+      items
+        .flatMap((it) => [
+          String(it.productId ?? "").trim(),
+          String(it._id ?? "").trim(),
+          String(it.code ?? "").trim(),
+        ])
+        .filter(Boolean)
+    )
+  );
+  if (keys.length === 0) throw new Error("Items invalidos");
+
+  const products: any[] = await db.product.findMany({
+    where: {
+      OR: [
+        { id: { in: keys } },
+        { legacyId: { in: keys } },
+        { code: { in: keys } },
+      ],
+    },
+    select: {
+      id: true,
+      legacyId: true,
+      code: true,
+      title: true,
+      category: true,
+      description: true,
+      brand: true,
+      sku: true,
+      price: true,
+      bundleQuantity: true,
+      bundlePrice: true,
+      variants: { select: { id: true, label: true, price: true, oldPrice: true } },
+    },
+  });
+
+  const byId = new Map(products.map((p: any) => [String(p.id), p]));
+  const byLegacyId = new Map(products.filter((p: any) => p.legacyId).map((p: any) => [String(p.legacyId), p]));
+  const byCode = new Map(products.filter((p: any) => p.code).map((p: any) => [String(p.code), p]));
+  const normalizedItems = [];
+  let computedTotal = 0;
+
+  for (const item of items) {
+    const candidateKeys = [
+      String(item.productId ?? "").trim(),
+      String(item._id ?? "").trim(),
+      String(item.code ?? "").trim(),
+    ].filter(Boolean);
+    const qty = Math.max(1, Number(item.quantity || 1));
+    const product: any = candidateKeys.map((k) => byId.get(k) || byLegacyId.get(k) || byCode.get(k)).find(Boolean);
+    if (!product) throw new Error(`Producto no encontrado: ${candidateKeys[0] || "sin-id"}`);
+    const price = Number(product.price);
+    const lineTotal = getBundleLineTotal({
+      price,
+      quantity: qty,
+      bundleQuantity: product.bundleQuantity,
+      bundlePrice: product.bundlePrice,
+    });
+    computedTotal += lineTotal;
+    normalizedItems.push({
+      productId: product.id,
+      legacyId: product.legacyId || null,
+      code: product.code || null,
+      title: product.title,
+      category: product.category || "",
+      description: product.description || "",
+      brand: product.brand || "",
+      sku: product.sku || null,
+      variantId: null,
+      variantLabel: "",
+      selectedOptions: normalizeSelectedOptions(item.selectedOptions),
+      quantity: qty,
+      price,
+      bundleQuantity: product.bundleQuantity != null ? Number(product.bundleQuantity) : undefined,
+      bundlePrice: product.bundlePrice != null ? Number(product.bundlePrice) : undefined,
+      lineTotal,
+    });
+  }
+
+  const wheelDiscount = applyWheelPrizeDiscount(body.wheelPrizeId, computedTotal, normalizedItems);
+  let couponDiscount = wheelDiscount;
+  let couponSubtotal = wheelDiscount > 0 ? computedTotal : 0;
+  const finalTotal = Math.max(0, Number((computedTotal - couponDiscount).toFixed(2)));
+  const createdAt = new Date();
+  const id = `local_${createdAt.getTime()}_${Math.random().toString(36).slice(2, 8)}`;
+  const orderCode = `LOCAL-${toYYYYMMDD(createdAt)}-${id.slice(-6).toUpperCase()}`;
+  const order = {
+    id,
+    userId: null,
+    status: "PENDING",
+    total: finalTotal,
+    items: normalizedItems,
+    customerName: name,
+    customerEmail: email,
+    customerPhone: phone,
+    customerAddress: shippingCarrier === "OLVA" ? olvaAddress : `Agencia Shalom: ${shalomAgency}`,
+    customerCity: location.province || "",
+    customerDistrict: location.district || locationLine,
+    customerNotes: encodeOrderMeta({
+      orderCode,
+      workflowStatus: "Pendiente por confirmar",
+      paymentMethod,
+      shippingCarrier,
+      dni,
+      locationLine,
+      department: location.department,
+      province: location.province,
+      district: location.district,
+      shalomAgency,
+      olvaAddress,
+      olvaReference,
+      notes: `[SIMULACION LOCAL] ${notes}`.trim(),
+      couponCode: "",
+      couponDiscount,
+      couponSubtotal,
+    }),
+    paymentImage: "",
+    createdAt: createdAt.toISOString(),
+    updatedAt: createdAt.toISOString(),
+  };
+  upsertLocalOrder(order);
+  return order;
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
     const email = String(req.query.email || "").trim().toLowerCase();
+    const orderQuery = String(req.query.order || req.query.orderCode || "").trim().toLowerCase();
     const includeHistory = String(req.query.includeHistory || "").trim() === "1";
     try {
+      const session: any = await getServerSession(req, res, authOptions as any);
+      const sessionEmail = String((session?.user as any)?.email || "").trim().toLowerCase();
+      const isAdminSession = (session?.user as any)?.role === "ADMIN";
+      const canBrowseByEmail = isAdminApiRequest(req) || isAdminSession || (email && sessionEmail === email);
+      if (isLocalOrderSimulationRequest(req)) {
+        const localOrders = readOrdersStore<any>().map(serializeOrder);
+        if (email) {
+          const filteredByEmail = localOrders.filter((o: any) => String(o.customer?.email || "").trim().toLowerCase() === email);
+          const filtered = orderQuery
+            ? filteredByEmail.filter((o: any) => {
+                const code = String(o.orderCode || "").trim().toLowerCase();
+                const id = String(o.id || "").trim().toLowerCase();
+                return code === orderQuery || id === orderQuery;
+              })
+            : filteredByEmail;
+          return res.status(200).json(filtered);
+        }
+        if (isAdminApiRequest(req) || isAdminSession) return res.status(200).json(localOrders);
+        if (!sessionEmail) return res.status(200).json([]);
+        return res.status(200).json(localOrders.filter((o: any) => String(o.customer?.email || "").trim().toLowerCase() === sessionEmail));
+      }
+
       if (email) {
+        if (!canBrowseByEmail && !orderQuery) {
+          return res.status(400).json({ error: "Correo y número de pedido requeridos" });
+        }
         const orders = await db.order.findMany({
           where: { customerEmail: email },
           orderBy: { createdAt: "desc" },
         });
-        return res.status(200).json(orders.map(serializeOrder));
+        const serialized = orders.map(serializeOrder);
+        const filtered = orderQuery
+          ? serialized.filter((o: any) => {
+              const code = String(o.orderCode || "").trim().toLowerCase();
+              const id = String(o.id || "").trim().toLowerCase();
+              return code === orderQuery || id === orderQuery;
+            })
+          : serialized;
+        return res.status(200).json(filtered);
       }
-      const session = await getServerSession(req, res, authOptions as any);
-      const role = (session?.user as any)?.role;
-      if (!session) return res.status(401).json({ error: "No autorizado" });
-
-      if (role === "ADMIN") {
+      if (isAdminApiRequest(req)) {
+        const includeTestOrders = String(req.query.includeTestOrders || "").trim() === "1";
         const orders = await db.order.findMany({ orderBy: { createdAt: "desc" } });
         const serialized = orders.map(serializeOrder);
-        if (includeHistory) return res.status(200).json(serialized);
+        const visible = includeTestOrders ? serialized : serialized.filter((o: any) => !o.isInternalTestOrder);
+        if (includeHistory) return res.status(200).json(visible);
         const now = Date.now();
-        const active = serialized.filter((o: any) => {
+        const active = visible.filter((o: any) => {
           if (String(o.workflowStatus || "").toLowerCase() !== "finalizado") return true;
           const createdAtMs = new Date(String(o.createdAt || "")).getTime();
           if (!Number.isFinite(createdAtMs)) return true;
@@ -122,7 +357,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json(active);
       }
 
-      const sessionEmail = String((session.user as any)?.email || "").trim().toLowerCase();
+      if (!session) return res.status(401).json({ error: "No autorizado" });
+
       if (!sessionEmail) return res.status(200).json([]);
       const user = await db.user.findUnique({ where: { email: sessionEmail } });
       const orders = await db.order.findMany({
@@ -135,13 +371,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         orderBy: { createdAt: "desc" },
       });
       return res.status(200).json(orders.map(serializeOrder));
-    } catch {
+    } catch (error: any) {
+      logger.error("orders.get_failed", {
+        error: String(error?.message || error),
+        email,
+      });
       return res.status(500).json({ error: "No se pudieron obtener pedidos" });
     }
   }
 
   if (req.method === "POST") {
-    const body = req.body || {};
+    const parsed = CreateOrderSchema.safeParse(req.body || {});
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    }
+
+    const body = parsed.data;
+    if (isLocalOrderSimulationRequest(req)) {
+      try {
+        const localOrder = await createLocalSimulatedOrder(body);
+        return res.status(201).json(serializeOrder(localOrder));
+      } catch (error: any) {
+        return res.status(400).json({ error: error?.message || "No se pudo simular el pedido local" });
+      }
+    }
+
     const customer = body.customer || {};
     const items = Array.isArray(body.items) ? (body.items as IncomingItem[]) : [];
 
@@ -162,10 +416,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!name) return res.status(400).json({ error: "Nombre completo requerido" });
     if (!dni || dni.length < 6) return res.status(400).json({ error: "DNI requerido" });
-    if (!phone) return res.status(400).json({ error: "Telefono requerido" });
+    if (!phone) return res.status(400).json({ error: "Teléfono o WhatsApp requerido" });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: "Correo requerido para consultar el pedido" });
+    }
     if (!locationLine) return res.status(400).json({ error: "Departamento, provincia y distrito requeridos" });
-    if (items.length === 0) return res.status(400).json({ error: "Carrito vacio" });
-
     if (shippingCarrier === "SHALOM" && !shalomAgency) {
       return res.status(400).json({ error: "Debes indicar la agencia Shalom" });
     }
@@ -176,13 +431,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!paymentImage) {
       return res.status(400).json({ error: "Debes adjuntar comprobante de pago" });
     }
-    if (paymentImage.length > 4_000_000) {
+    if (paymentImage.length > 10_000_000) {
       return res.status(400).json({ error: "El comprobante es demasiado pesado" });
     }
 
     const location = splitLocation(locationLine);
 
     try {
+      let finalPaymentImage = paymentImage;
+      if (paymentImage.startsWith("data:image")) {
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+          return res.status(500).json({ error: "Cloudinary no esta configurado para guardar comprobantes" });
+        }
+        const upload = await cloudinary.uploader.upload(paymentImage, {
+          folder: "order_payments",
+          resource_type: "image",
+        });
+        finalPaymentImage = String(upload.secure_url || "").trim();
+        if (!finalPaymentImage) {
+          return res.status(500).json({ error: "No se pudo guardar el comprobante" });
+        }
+      }
+
       const keys = Array.from(
         new Set(
           items
@@ -196,7 +466,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
       if (keys.length === 0) return res.status(400).json({ error: "Items invalidos" });
 
-      const products = await db.product.findMany({
+      const products: any[] = await db.product.findMany({
         where: {
           OR: [
             { id: { in: keys } },
@@ -209,20 +479,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           legacyId: true,
           code: true,
           title: true,
+          category: true,
+          description: true,
+          brand: true,
+          sku: true,
           price: true,
+          bundleQuantity: true,
+          bundlePrice: true,
+          variants: {
+            select: {
+              id: true,
+              label: true,
+              price: true,
+              oldPrice: true,
+            },
+          },
         },
       });
 
-      const byId = new Map(products.map((p) => [String(p.id), p]));
-      const byLegacyId = new Map(products.filter((p) => p.legacyId).map((p) => [String(p.legacyId), p]));
-      const byCode = new Map(products.filter((p) => p.code).map((p) => [String(p.code), p]));
+      const byId = new Map(products.map((p: any) => [String(p.id), p]));
+      const byLegacyId = new Map(products.filter((p: any) => p.legacyId).map((p: any) => [String(p.legacyId), p]));
+      const byCode = new Map(products.filter((p: any) => p.code).map((p: any) => [String(p.code), p]));
       const normalizedItems: Array<{
         productId: string;
         legacyId: string | null;
         code: string | null;
         title: string;
+        category: string;
+        description: string;
+        brand: string;
+        sku: string | null;
+        variantId: string | null;
+        variantLabel: string;
+        selectedOptions?: Record<string, string>;
         quantity: number;
         price: number;
+        bundleQuantity?: number;
+        bundlePrice?: number;
+        lineTotal?: number;
       }> = [];
 
       let computedTotal = 0;
@@ -233,7 +527,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           String(item.code ?? "").trim(),
         ].filter(Boolean);
         const qty = Math.max(1, Number(item.quantity || 1));
-        const product = candidateKeys
+        const product: any = candidateKeys
           .map((k) => byId.get(k) || byLegacyId.get(k) || byCode.get(k))
           .find(Boolean);
         if (!product) {
@@ -241,31 +535,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             error: `Producto no encontrado: ${candidateKeys[0] || "sin-id"}`,
           });
         }
-        const price = Number(product.price);
-        computedTotal += price * qty;
+        const variantId = String(item.variantId || "").trim();
+        const variant = variantId
+          ? (Array.isArray(product.variants) ? product.variants : []).find((v: any) => String(v.id) === variantId)
+          : null;
+        const price = variant
+          ? getPresentationTotalPrice(variant.price, variant.label)
+          : Number(product.price);
+        const lineTotal = variant
+          ? Number((price * qty).toFixed(2))
+          : getBundleLineTotal({
+              price,
+              quantity: qty,
+              bundleQuantity: product.bundleQuantity,
+              bundlePrice: product.bundlePrice,
+            });
+        computedTotal += lineTotal;
         normalizedItems.push({
           productId: product.id,
           legacyId: product.legacyId || null,
           code: product.code || null,
           title: product.title,
+          category: product.category || "",
+          description: product.description || "",
+          brand: product.brand || "",
+          sku: product.sku || null,
+          variantId: variant?.id || null,
+          variantLabel: variant?.label || "",
+          selectedOptions: normalizeSelectedOptions(item.selectedOptions),
           quantity: qty,
           price,
+          bundleQuantity: !variant && product.bundleQuantity != null ? Number(product.bundleQuantity) : undefined,
+          bundlePrice: !variant && product.bundlePrice != null ? Number(product.bundlePrice) : undefined,
+          lineTotal,
         });
       }
 
-      const session = await getServerSession(req, res, authOptions as any);
+      const session: any = await getServerSession(req, res, authOptions as any);
       const sessionEmail = String((session?.user as any)?.email || "").trim().toLowerCase();
       const user = sessionEmail
         ? await db.user.findUnique({ where: { email: sessionEmail } })
         : email
         ? await db.user.findUnique({ where: { email } })
         : null;
+      const wheelDiscount = applyWheelPrizeDiscount(body.wheelPrizeId, computedTotal, normalizedItems);
+      let couponDiscount = wheelDiscount;
+      let couponSubtotal = wheelDiscount > 0 ? computedTotal : 0;
+      const finalTotal = Math.max(0, Number((computedTotal - couponDiscount).toFixed(2)));
 
       const created = await db.order.create({
         data: {
           userId: user?.id || null,
           status: "PENDING",
-          total: computedTotal,
+          total: finalTotal,
           items: normalizedItems as any,
           customerName: name,
           customerEmail: email,
@@ -290,8 +612,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             shalomPickupCode: "",
             olvaTrackingImage: "",
             notes,
+            couponCode: "",
+            couponDiscount,
+            couponSubtotal,
           }),
-          paymentImage,
+          paymentImage: finalPaymentImage,
         },
       });
       const orderCode = buildOrderCode(new Date(created.createdAt), String(created.id || ""));
@@ -318,7 +643,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       return res.status(201).json(serializeOrder(updated));
-    } catch {
+    } catch (error: any) {
+      logger.error("orders.create_failed", {
+        error: String(error?.message || error),
+        email,
+        items: items.length,
+      });
       return res.status(500).json({ error: "No se pudo crear el pedido" });
     }
   }

@@ -11,10 +11,10 @@ export default function SuscripcionPage() {
   const subscriptionPrice = 20;
   const contactPhoneRaw = process.env.NEXT_PUBLIC_CONTACT_PHONE || "900000000";
   const whatsapp = useMemo(() => contactPhoneRaw.replace(/[^0-9]/g, ""), [contactPhoneRaw]);
-  const yapeNumber = process.env.NEXT_PUBLIC_YAPE_NUMBER || contactPhoneRaw;
-  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "Transferencia bancaria";
-  const bankAccount = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "Cuenta por confirmar";
-  const bankCci = process.env.NEXT_PUBLIC_BANK_CCI || "CCI por confirmar";
+  const yapeNumber = process.env.NEXT_PUBLIC_YAPE_NUMBER || "961770723";
+  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "BCP";
+  const bankAccount = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "19397649019070";
+  const accountHolder = process.env.NEXT_PUBLIC_ACCOUNT_HOLDER || "Rosa Maribel Abad Landacay";
 
   const whatsappHref = useMemo(() => {
     const methodLabel = subMethod === "yape" ? "Yape" : "Transferencia";
@@ -37,12 +37,6 @@ export default function SuscripcionPage() {
           name="description"
           content="Suscripción mensual para capacitaciones de Rossy Resina. Pago por Yape o transferencia."
         />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap"
-          rel="stylesheet"
-        />
       </Head>
 
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fce7f3,_#f8fafc_50%,_#e2e8f0_100%)] text-gray-900">
@@ -53,7 +47,7 @@ export default function SuscripcionPage() {
                 <img src="/logo.png" alt="Rossy Resina" className="h-full w-full object-cover" />
               </div>
               <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-pink-600" style={{ fontFamily: '"Oswald", sans-serif' }}>
+                <p className="text-sm uppercase tracking-wide text-pink-600">
                   Rossy Resina
                 </p>
                 <p className="text-xs text-gray-500">Studio de capacitaciones</p>
@@ -70,8 +64,8 @@ export default function SuscripcionPage() {
 
         <div className="mx-auto max-w-screen-2xl px-5 py-10">
           <div className="text-center max-w-2xl mx-auto">
-            <p className="text-xs uppercase tracking-[0.3em] text-pink-600">Suscripción mensual</p>
-            <h1 className="text-3xl md:text-4xl font-semibold mt-2" style={{ fontFamily: '"Oswald", sans-serif' }}>
+            <p className="text-xs uppercase tracking-wide text-pink-600">Suscripción mensual</p>
+            <h1 className="text-3xl md:text-4xl font-semibold mt-2">
               Potencia tu aprendizaje
             </h1>
             <p className="text-sm text-gray-600 mt-2">
@@ -178,7 +172,7 @@ export default function SuscripcionPage() {
                   <div className="mt-2 text-gray-700">
                     <p>{bankName}</p>
                     <p className="text-xs mt-1">Cuenta: {bankAccount}</p>
-                    <p className="text-xs">CCI: {bankCci}</p>
+                    <p className="text-xs mt-1">Titular: {accountHolder}</p>
                   </div>
                 )}
                 <button

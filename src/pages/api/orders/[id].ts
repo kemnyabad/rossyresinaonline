@@ -1,6 +1,5 @@
-import { getServerSession } from "next-auth";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { authOptions } from "../auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import {
   encodeOrderMeta,
@@ -8,6 +7,7 @@ import {
   paymentMethodLabel,
   shippingCarrierLabel,
 } from "@/lib/orderMeta";
+import { isLocalOrderSimulationRequest, readOrdersStore, writeOrdersStore } from "@/lib/orderStore";
 
 type DbOrderStatus = "PENDING" | "PAID" | "SHIPPED";
 const db = prisma as any;
@@ -81,9 +81,7 @@ const serializeOrder = (order: any) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getServerSession(req, res, authOptions as any);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return res.status(401).json({ error: "No autorizado" });
+  if (!isAdminApiRequest(req)) return res.status(401).json({ error: "No autorizado" });
 
   if (req.method === "PATCH") {
     const id = String(req.query.id || "").trim();
@@ -95,6 +93,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!dbStatus) return res.status(400).json({ error: "Status invalido" });
 
     try {
+      if (isLocalOrderSimulationRequest(req)) {
+        const orders = readOrdersStore<any>();
+        const index = orders.findIndex((order) => String(order.id) === id);
+        if (index < 0) return res.status(404).json({ error: "Pedido local no encontrado" });
+        const existing = orders[index];
+        const currentMeta = parseOrderMeta(existing.customerNotes);
+        const nextMeta = {
+          ...currentMeta,
+          workflowStatus: status,
+          shalomVoucherImage: String(body.shalomVoucherImage || currentMeta.shalomVoucherImage || "").trim(),
+          shalomPickupCode: String(body.shalomPickupCode || currentMeta.shalomPickupCode || "").trim(),
+          olvaTrackingImage: String(body.olvaTrackingImage || currentMeta.olvaTrackingImage || "").trim(),
+        };
+        const updated = {
+          ...existing,
+          status: dbStatus,
+          customerNotes: encodeOrderMeta(nextMeta),
+          updatedAt: new Date().toISOString(),
+        };
+        const next = [...orders];
+        next[index] = updated;
+        writeOrdersStore(next);
+        return res.status(200).json(serializeOrder(updated));
+      }
+
       const existing = await db.order.findUnique({ where: { id } });
       if (!existing) return res.status(404).json({ error: "Pedido no encontrado" });
       const currentMeta = parseOrderMeta(existing.customerNotes);

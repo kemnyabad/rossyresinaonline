@@ -12,11 +12,29 @@ const BYPASS_PATHS = [
   "/robots.txt",
   "/sitemap.xml",
   "/site.webmanifest",
+  "/googledc520f3f37b4e175.html",
 ];
 
 const isLocalHost = (req: NextRequest): boolean => {
   const host = String(req.headers.get("host") || "").toLowerCase();
   return host.includes("localhost") || host.startsWith("127.0.0.1");
+};
+
+const isSearchBot = (req: NextRequest): boolean => {
+  const ua = String(req.headers.get("user-agent") || "").toLowerCase();
+  return [
+    /googlebot/i,
+    /google-inspectiontool/i,
+    /googleother/i,
+    /adsbot-google/i,
+    /storebot-google/i,
+    /bingbot/i,
+    /slurp/i,
+    /duckduckbot/i,
+    /baiduspider/i,
+    /yandex/i,
+    /applebot/i,
+  ].some((rx) => rx.test(ua));
 };
 
 const getCountry = (req: NextRequest): string => {
@@ -51,12 +69,14 @@ export function middleware(req: NextRequest) {
   }
 
   // --- Lógica de restricción por país (solo en producción) ---
-  if (isLocalHost(req)) return NextResponse.next();
+  if (isLocalHost(req) || isSearchBot(req)) return NextResponse.next();
 
   const country = getCountry(req);
-  const allowPeruOnly = process.env.PERU_ONLY_MODE !== "0";
+  const peruOnlyMode = String(process.env.PERU_ONLY_MODE || "0").trim().toLowerCase();
+  const allowPeruOnly = peruOnlyMode === "1" || peruOnlyMode === "true";
 
   if (!allowPeruOnly) return NextResponse.next();
+  if (!country) return NextResponse.next();
   if (country === "PE") return NextResponse.next();
 
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Acceso restringido</title><style>body{font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px}.card{max-width:680px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:28px;box-shadow:0 10px 30px rgba(15,23,42,.06)}h1{margin:0 0 8px;font-size:28px}p{margin:0 0 10px;line-height:1.5;color:#334155}.muted{font-size:12px;color:#64748b}</style></head><body><div class="card"><h1>Acceso restringido</h1><p>Esta web solo esta disponible para visitantes de Peru.</p><p>Si estas en Peru y ves este mensaje, desactiva VPN/proxy e intenta nuevamente.</p><p class="muted">Ruta: ${pathname}</p></div></body></html>`;
@@ -71,5 +91,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico|robots.txt|sitemap.xml|site.webmanifest).*)" ],
+  matcher: ["/((?!_next|favicon.ico|robots.txt|sitemap.xml|site.webmanifest|googledc520f3f37b4e175.html).*)" ],
 };

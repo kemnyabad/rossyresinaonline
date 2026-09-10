@@ -1,6 +1,10 @@
 {
-  "name": "MyWebSite",
-  "short_name": "MySite",
+  "name": "Rossy Resina",
+  "short_name": "Rossy Resina",
+  "description": "Tienda peruana de resina epoxica, moldes, pigmentos y accesorios.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -17,5 +21,8 @@
   ],
   "theme_color": "#cb299e",
   "background_color": "#ffffff",
-  "display": "standalone"
+  "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["shopping", "business", "education"],
+  "lang": "es-PE"
 }

@@ -2,7 +2,7 @@
 const bcrypt = require("bcryptjs");
 import prisma from "./prisma";
 
-export type UserRole = "ADMIN" | "EDITOR" | "CUSTOMER";
+export type UserRole = "ADMIN" | "EDITOR" | "SELLER" | "CUSTOMER";
 
 export interface AppUser {
   id: string;
@@ -13,13 +13,20 @@ export interface AppUser {
   createdAt: string | Date;
 }
 
+const normalizeRole = (role: unknown): UserRole => {
+  if (role === "ADMIN" || role === "EDITOR" || role === "SELLER" || role === "CUSTOMER") return role;
+  return "CUSTOMER";
+};
+
 export async function getUsers(): Promise<AppUser[]> {
-  return prisma.user.findMany({ orderBy: { createdAt: "desc" } });
+  const users = await prisma.user.findMany({ orderBy: { createdAt: "desc" } });
+  return users.map((user) => ({ ...user, role: normalizeRole(user.role) } as AppUser));
 }
 
 export async function findUserByEmail(email: string): Promise<AppUser | null> {
   const needle = email.trim().toLowerCase();
-  return prisma.user.findUnique({ where: { email: needle } });
+  const user = await prisma.user.findUnique({ where: { email: needle } });
+  return user ? ({ ...user, role: normalizeRole(user.role) } as AppUser) : null;
 }
 
 export async function createUser(input: {
@@ -37,6 +44,27 @@ export async function createUser(input: {
   const user = await prisma.user.create({
     data: {
       name: input.name.trim() || "Usuario",
+      email,
+      passwordHash,
+      role: input.role || "CUSTOMER",
+    },
+  });
+  return user as AppUser;
+}
+
+export async function ensureOAuthUser(input: {
+  name?: string | null;
+  email: string;
+  role?: UserRole;
+}) {
+  const email = input.email.trim().toLowerCase();
+  const existing = await findUserByEmail(email);
+  if (existing) return existing;
+
+  const passwordHash = await bcrypt.hash(`oauth:${email}:${Date.now()}:${Math.random()}`, 10);
+  const user = await prisma.user.create({
+    data: {
+      name: String(input.name || "Usuario").trim() || "Usuario",
       email,
       passwordHash,
       role: input.role || "CUSTOMER",

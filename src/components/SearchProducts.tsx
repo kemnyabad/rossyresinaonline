@@ -50,7 +50,7 @@ const SearchProducts = ({ item }: Item) => {
         <p className="text-xs">{item.description.substring(0, 100)}</p>
         <p className="text-sm flex items-center gap-1">
           Precio:{" "}
-          <span className="font-semibold">
+          <span className="font-semibold text-red-600">
             <FormattedPrice amount={item.price} />
           </span>
           {typeof item.oldPrice === "number" && item.oldPrice > item.price && (

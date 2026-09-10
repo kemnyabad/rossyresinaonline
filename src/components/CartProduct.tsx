@@ -1,8 +1,8 @@
 import Image from "next/image";
 import React from "react";
 import FormattedPrice from "./FormattedPrice";
+import { getBundleLineTotal, getBundlePromoLabel } from "@/lib/bundlePromo";
 import { LuMinus, LuPlus } from "react-icons/lu";
-import { IoMdClose } from "react-icons/io";
 import { useDispatch } from "react-redux";
 import {
   decreaseQuantity,
@@ -17,8 +17,13 @@ interface Item {
   isNew: boolean;
   oldPrice?: number;
   price: number;
+  bundleQuantity?: number;
+  bundlePrice?: number;
   title: string;
-  _id: number;
+  _id: number | string;
+  cartKey?: string;
+  variantLabel?: string;
+  selectedOptions?: Record<string, string>;
   quantity: number;
 }
 interface cartProductsProps {
@@ -27,6 +32,11 @@ interface cartProductsProps {
 
 const CartProduct = ({ item }: cartProductsProps) => {
   const dispatch = useDispatch();
+  const hasDiscount = typeof item.oldPrice === "number" && item.oldPrice > item.price;
+  const bundlePromoLabel = getBundlePromoLabel(item);
+  const discountPercent = hasDiscount
+    ? Math.round(((Number(item.oldPrice) - Number(item.price)) / Number(item.oldPrice)) * 100)
+    : 0;
   const imageSrc = (() => {
     const s = String(item.image || "");
     let u = s.replace(/\\/g, "/");
@@ -35,99 +45,128 @@ const CartProduct = ({ item }: cartProductsProps) => {
   })();
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-3 md:p-4">
-      <div className="flex items-start gap-3 md:gap-4">
-        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-white md:h-28 md:w-28">
+    <article className="bg-white md:border-b md:border-gray-200 md:px-4 md:py-4 md:last:border-b-0">
+      <div className="grid grid-cols-[24px_108px_minmax(0,1fr)] gap-3 md:grid-cols-[220px_minmax(0,1fr)_150px] md:gap-3 lg:grid-cols-[220px_minmax(0,1fr)_150px]">
+        <div className="flex items-center md:hidden">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amazon_blue text-xs font-black text-white">
+            ✓
+          </span>
+        </div>
+        <div className="flex gap-4">
+          <div className="relative h-[120px] w-[108px] shrink-0 overflow-hidden rounded-lg bg-gray-100 md:h-48 md:w-48 md:rounded-none md:border md:border-gray-100 md:bg-white">
           <Image
-            className="object-cover"
+            className="object-contain"
             fill
             src={imageSrc}
             alt={item.title || "Producto"}
-            sizes="(max-width: 768px) 96px, 112px"
+            sizes="(max-width: 768px) 112px, 192px"
           />
+          </div>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-gray-900 md:text-base">{item.title}</p>
-          <p className="mt-1 line-clamp-2 text-xs text-gray-500 md:text-sm">{item.description}</p>
-          <p className="mt-1 text-xs text-gray-600 md:text-sm">
-            Precio unitario{" "}
-            <span className="font-semibold text-gray-900">
-              <FormattedPrice amount={item.price} />
-            </span>
+          <h2 className="line-clamp-2 text-[15px] font-semibold leading-5 text-gray-950 md:text-xl md:font-black md:uppercase md:leading-tight md:tracking-wide">
+            {item.title}
+          </h2>
+          <p className="mt-1.5 line-clamp-1 text-[13px] font-medium text-gray-500 md:text-base md:text-gray-700">
+            {item.brand ? `${item.brand} · ` : ""}
+            {item.category || "Producto Rossy Resina"}
           </p>
+          <p className="mt-1 text-xl font-black text-red-600 md:hidden">
+            <FormattedPrice amount={item.price} />
+          </p>
+          {bundlePromoLabel ? (
+            <p className="mt-1 inline-flex rounded bg-[#f01891] px-2 py-0.5 text-xs font-black italic text-white">
+              {bundlePromoLabel}
+            </p>
+          ) : null}
+          {(item.variantLabel || item.selectedOptions) && (
+            <div className="mt-1 space-y-0.5 text-xs font-medium text-gray-600 md:hidden">
+              {item.variantLabel && <p>Presentación: <span className="font-bold text-gray-900">{item.variantLabel}</span></p>}
+              {item.selectedOptions &&
+                Object.entries(item.selectedOptions).map(([name, value]) => (
+                  <p key={name}>
+                    {name}: <span className="font-bold text-gray-900">{value}</span>
+                  </p>
+                ))}
+            </div>
+          )}
+          <div className="mt-4 hidden space-y-0.5 text-sm text-gray-800 md:block md:text-[15px]">
+            <p>Origen: Perú</p>
+            <p>Envío: Envío coordinado por WhatsApp</p>
+            <p>
+              Estado: <span className="font-bold">Nuevo</span>
+            </p>
+            {item.variantLabel && <p>Presentación: <span className="font-bold">{item.variantLabel}</span></p>}
+            {item.selectedOptions &&
+              Object.entries(item.selectedOptions).map(([name, value]) => (
+                <p key={name}>
+                  {name}: <span className="font-bold">{value}</span>
+                </p>
+              ))}
+          </div>
 
-          <div className="mt-3 flex items-center gap-2 md:gap-3">
-            <div className="flex h-10 items-center justify-between rounded-full border border-gray-300 bg-white px-3 w-[120px] shrink-0">
+          <div className="mt-3 flex flex-wrap items-center justify-end gap-3 text-sm md:mt-5 md:justify-start">
+            <div className="inline-flex h-9 shrink-0 items-center overflow-hidden rounded-full border border-gray-200 bg-white text-gray-950 md:h-9 md:gap-3 md:rounded-md md:border-gray-300 md:bg-gray-50 md:px-3">
+              <span className="hidden md:inline">Cantidad:</span>
               <button
                 type="button"
-                onClick={() =>
-                  dispatch(
-                    decreaseQuantity({
-                      _id: item._id,
-                      brand: item.brand,
-                      category: item.category,
-                      description: item.description,
-                      image: item.image,
-                      isNew: item.isNew,
-                      oldPrice: item.oldPrice,
-                      price: item.price,
-                      title: item.title,
-                      quantity: 1,
-                    })
-                  )
-                }
-                className="flex h-7 w-7 items-center justify-center rounded-full text-base hover:bg-gray-100"
+                onClick={() => dispatch(decreaseQuantity({ _id: item._id, cartKey: item.cartKey }))}
+                className="flex h-9 w-10 items-center justify-center text-gray-700 hover:bg-gray-100 md:h-6 md:w-6 md:rounded md:hover:bg-gray-200"
                 aria-label="Disminuir cantidad"
               >
-                <LuMinus />
+                <LuMinus className="h-4 w-4" />
               </button>
-              <span className="text-sm font-semibold text-gray-900">{item.quantity}</span>
+              <span className="min-w-[34px] text-center text-base font-semibold md:min-w-[18px] md:text-sm">{item.quantity}</span>
               <button
                 type="button"
-                onClick={() =>
-                  dispatch(
-                    increaseQuantity({
-                      _id: item._id,
-                      brand: item.brand,
-                      category: item.category,
-                      description: item.description,
-                      image: item.image,
-                      isNew: item.isNew,
-                      oldPrice: item.oldPrice,
-                      price: item.price,
-                      title: item.title,
-                      quantity: 1,
-                    })
-                  )
-                }
-                className="flex h-7 w-7 items-center justify-center rounded-full text-base hover:bg-gray-100"
+                onClick={() => dispatch(increaseQuantity({ _id: item._id, cartKey: item.cartKey }))}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-amazon_blue text-white hover:brightness-95 md:h-6 md:w-6 md:rounded md:bg-transparent md:text-gray-700 md:hover:bg-gray-200"
                 aria-label="Aumentar cantidad"
               >
-                <LuPlus />
+                <LuPlus className="h-4 w-4" />
               </button>
             </div>
-
+            <span className="hidden h-6 w-px bg-gray-200 sm:block" />
             <button
               type="button"
-              onClick={() => dispatch(deleteProduct(item._id))}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg font-semibold text-gray-400 hover:bg-red-50 hover:text-red-600"
+              onClick={() => dispatch(deleteProduct({ _id: item._id, cartKey: item.cartKey }))}
+              className="hidden shrink-0 font-medium text-orange-600 hover:text-orange-700 hover:underline md:inline"
               aria-label="Eliminar producto"
             >
-              <IoMdClose className="h-5 w-5" />
+              Eliminar
             </button>
           </div>
         </div>
 
-        <div className="ml-auto text-right">
-          <p className="text-xs text-gray-500">Subtotal</p>
-          <p className="text-lg font-semibold text-gray-900">
-            <FormattedPrice amount={item.price * item.quantity} />
+        <div className="hidden text-left md:block md:text-right">
+          {hasDiscount && (
+            <p className="text-sm text-gray-400 line-through">
+              <FormattedPrice amount={item.oldPrice} />
+            </p>
+          )}
+          <div className="mt-1 flex items-center gap-2 md:justify-end">
+            <p className="text-lg text-red-600">
+              <FormattedPrice amount={item.price} />
+            </p>
+            {hasDiscount && (
+              <span className="rounded-md bg-orange-600 px-2 py-1 text-sm font-bold text-white">
+                -{discountPercent}%
+              </span>
+            )}
+          </div>
+          <p className="mt-3 text-base text-gray-950">x {item.quantity} unidad{item.quantity > 1 ? "es" : ""}</p>
+          {bundlePromoLabel ? (
+            <p className="mt-1 inline-flex rounded bg-[#f01891] px-2 py-0.5 text-xs font-black italic text-white">
+              {bundlePromoLabel}
+            </p>
+          ) : null}
+          <p className="mt-1 text-xl font-black text-red-600">
+            <FormattedPrice amount={getBundleLineTotal(item)} />
           </p>
         </div>
       </div>
-
-    </div>
+    </article>
   );
 };
 

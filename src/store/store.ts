@@ -1,5 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import nextReducer from "./nextSlice";
+import { getBundleLineTotal } from "@/lib/bundlePromo";
+import { trackAddToCart } from "@/lib/metaPixel";
 import {
   persistStore,
   persistReducer,
@@ -28,6 +30,18 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
+    }).concat((storeApi) => (next) => (action) => {
+      const result = next(action);
+      if (action?.type === "next/addToCart") {
+        const item = action.payload || {};
+        trackAddToCart({
+          contentName: String(item.title || ""),
+          contentId: String(item.productId || item._id || ""),
+          value: getBundleLineTotal(item),
+          quantity: Number(item.quantity || 1),
+        });
+      }
+      return result;
     }),
 });
 export let persistor = persistStore(store);

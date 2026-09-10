@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "POST") {
-    const session = await getServerSession(req, res, authOptions as any);
+    const session: any = await getServerSession(req, res, authOptions as any);
     if (!session?.user?.email) return res.status(401).json({ error: "Debes iniciar sesión" });
 
     const body = req.body || {};

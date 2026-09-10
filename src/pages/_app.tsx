@@ -1,9 +1,11 @@
 import RootLayout from "@/components/RootLayout";
 import AdminLayout from "@/components/admin/AdminLayout";
 import TopBar from "@/components/header/TopBar";
+import MaintenancePage from "@/components/MaintenancePage";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
+import Script from "next/script";
 import { Provider } from "react-redux";
 import { persistor, store } from "@/store/store";
 import { PersistGate } from "redux-persist/integration/react";
@@ -11,6 +13,8 @@ import { SessionProvider, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { DEFAULT_OG_IMAGE, SITE_NAME, absoluteImageUrl, absoluteUrl, getSiteUrl } from "@/lib/seo";
+import { trackPageView } from "@/lib/metaPixel";
 
 function AppContent({
   Component,
@@ -22,22 +26,92 @@ function AppContent({
   session: any;
 }) {
   const [isClient, setIsClient] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [routeLoading, setRouteLoading] = useState(false);
   const router = useRouter();
-  const { status } = useSession();
+  const { data: clientSession, status } = useSession();
 
   const isAdminRoute = router.pathname.startsWith("/admin");
+  const isSellerCenterRoute = router.pathname === "/vende-con-nosotros";
+  const isPublicSellerShopRoute = router.pathname.startsWith("/tienda/");
+  const isSellerDashboardRoute = router.pathname === "/mi-tienda";
+  const isWholesaleRoute = router.pathname === "/mayoristas" || router.pathname === "/mayorista";
+  const isRifasRoute = router.pathname.startsWith("/rifas") || router.pathname.startsWith("/rifa/");
   const isCapacitaciones =
     router.pathname.startsWith("/capacitaciones") ||
     router.pathname.startsWith("/comunidad") ||
     router.pathname.startsWith("/suscriptores") ||
+    isRifasRoute ||
+    router.pathname === "/estudiante" ||
     router.pathname === "/suscripcion" ||
     router.pathname === "/sign-in" ||
     router.pathname === "/register";
 
   const pageShellClass = "rr-page min-h-screen";
-  const pageTransitionStyle = { animation: "rrPageEnter .22s ease-out both" } as const;
+  const fixedHeaderPageShellClass = "min-h-screen";
+  const pageTransitionStyle = { animation: "rrPageEnter 0.22s ease-out both" } as const;
+  const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
 
   useEffect(() => { setIsClient(true); }, []);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    if (process.env.NODE_ENV !== "production") return;
+    if (!router.isReady) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const launchedAsApp =
+      params.get("source") === "pwa" ||
+      params.get("source") === "playstore" ||
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+
+    if (!launchedAsApp) return;
+
+    try {
+      window.localStorage.setItem("rr_app_mode", "1");
+    } catch {}
+
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        const notifyAppMode = () => {
+          navigator.serviceWorker.controller?.postMessage({ type: "ROSSY_APP_MODE" });
+          registration.active?.postMessage({ type: "ROSSY_APP_MODE" });
+        };
+        notifyAppMode();
+        navigator.serviceWorker.ready.then(notifyAppMode).catch(() => {});
+      })
+      .catch(() => {});
+  }, [router.isReady]);
+
+  useEffect(() => {
+    const role = (clientSession?.user as any)?.role;
+    setIsAdmin(role === "ADMIN");
+  }, [clientSession]);
+
+  useEffect(() => {
+    let timer: number | null = null;
+    const start = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(() => setRouteLoading(true), 120);
+    };
+    const stop = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = null;
+      setRouteLoading(false);
+    };
+
+    router.events.on("routeChangeStart", start);
+    router.events.on("routeChangeComplete", stop);
+    router.events.on("routeChangeError", stop);
+    return () => {
+      if (timer) window.clearTimeout(timer);
+      router.events.off("routeChangeStart", start);
+      router.events.off("routeChangeComplete", stop);
+      router.events.off("routeChangeError", stop);
+    };
+  }, [router.events]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -66,10 +140,94 @@ function AppContent({
         visitorId,
         userEmail: String((session as any)?.user?.email || ""),
         userName: String((session as any)?.user?.name || ""),
+        appMode:
+          window.matchMedia("(display-mode: standalone)").matches ||
+          (window.navigator as any).standalone === true ||
+          new URLSearchParams(window.location.search).get("source") === "pwa" ||
+          new URLSearchParams(window.location.search).get("source") === "playstore" ||
+          (() => {
+            try {
+              return window.localStorage.getItem("rr_app_mode") === "1";
+            } catch {
+              return false;
+            }
+          })(),
+        appEvent: "",
       }),
       keepalive: true,
     }).catch(() => {});
   }, [isClient, isAdminRoute, router.asPath, session]);
+
+  useEffect(() => {
+    if (!isClient) return;
+    if (isAdminRoute) return;
+
+    const onInstalled = () => {
+      const key = "rr_visitor_id";
+      let visitorId = "";
+      try {
+        visitorId = String(localStorage.getItem(key) || "").trim();
+        if (!visitorId) {
+          const rnd = Math.random().toString(36).slice(2, 10);
+          visitorId = `v-${Date.now()}-${rnd}`;
+          localStorage.setItem(key, visitorId);
+        }
+        localStorage.setItem("rr_app_mode", "1");
+      } catch {
+        visitorId = `v-${Date.now()}`;
+      }
+
+      fetch("/api/analytics/visit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          path: String(router.asPath || "/"),
+          visitorId,
+          userEmail: String((session as any)?.user?.email || ""),
+          userName: String((session as any)?.user?.name || ""),
+          appMode: true,
+          appEvent: "installed",
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    };
+
+    window.addEventListener("appinstalled", onInstalled);
+    return () => window.removeEventListener("appinstalled", onInstalled);
+  }, [isClient, isAdminRoute, router.asPath, session]);
+
+  useEffect(() => {
+    if (!isClient) return;
+    if (!metaPixelId) return;
+    if (isAdminRoute) return;
+
+    let retryTimer: number | undefined;
+    let attempts = 0;
+
+    const sendPageView = () => {
+      if (trackPageView()) {
+        return;
+      }
+
+      if (attempts < 20) {
+        attempts += 1;
+        retryTimer = window.setTimeout(sendPageView, 250);
+      }
+    };
+
+    const handleRouteChangeComplete = () => {
+      attempts = 0;
+      sendPageView();
+    };
+
+    sendPageView();
+    router.events.on("routeChangeComplete", handleRouteChangeComplete);
+
+    return () => {
+      if (retryTimer) window.clearTimeout(retryTimer);
+      router.events.off("routeChangeComplete", handleRouteChangeComplete);
+    };
+  }, [isClient, isAdminRoute, metaPixelId, router.events]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -120,80 +278,98 @@ function AppContent({
       }
     };
 
-    fixNode(document.body);
-    document.querySelectorAll("*").forEach((el) => fixElementAttrs(el));
+    const run = () => {
+      fixNode(document.body);
+      document.querySelectorAll("*").forEach((el) => fixElementAttrs(el));
+    };
+    const idle = (window as any).requestIdleCallback;
+    if (typeof idle === "function") {
+      const id = idle(run, { timeout: 1200 });
+      return () => (window as any).cancelIdleCallback?.(id);
+    }
+    const timer = window.setTimeout(run, 250);
+    return () => window.clearTimeout(timer);
+  }, [isClient, router.asPath]);
 
-    const observer = new MutationObserver((mutations) => {
-      for (const m of mutations) {
-        if (m.type === "characterData" && m.target.nodeType === Node.TEXT_NODE) {
-          const t = m.target as Text;
-          const next = fixText(t.nodeValue || "");
-          if (next !== t.nodeValue) t.nodeValue = next;
-        }
-        if (m.type === "attributes" && m.target instanceof Element) fixElementAttrs(m.target);
-        if (m.type === "childList") {
-          m.addedNodes.forEach((n) => {
-            if (n.nodeType === Node.TEXT_NODE) {
-              const t = n as Text;
-              const next = fixText(t.nodeValue || "");
-              if (next !== t.nodeValue) t.nodeValue = next;
-            } else if (n instanceof Element) {
-              fixNode(n);
-              fixElementAttrs(n);
-              n.querySelectorAll("*").forEach((el) => fixElementAttrs(el));
-            }
-          });
-        }
-      }
-    });
+  const MAINTENANCE = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
+  const isPreview = typeof window !== "undefined" && window.location.search.includes("preview=rossyresina2025");
+  const showMaintenance = MAINTENANCE && status !== "loading" && !isAdminRoute && !isPreview && !isAdmin;
 
-    observer.observe(document.body, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ["title", "placeholder", "aria-label", "alt"],
-    });
-
-    return () => observer.disconnect();
-  }, [isClient]);
-
-  if (status === "loading") {
-    return <div className="bg-white h-screen w-screen" />;
+  if (showMaintenance) {
+    return <MaintenancePage />;
   }
 
   const content = (
     <div className="font-bodyFont">
       <Head>
-        <title>Rossy Resina</title>
+        <title>{SITE_NAME}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Rossy Resina: tienda peruana de resina epóxica, moldes de silicona, pigmentos y accesorios para manualidades con envío a todo Perú." key="description" />
+        <meta name="robots" content={isAdminRoute ? "noindex,nofollow" : "index,follow"} key="robots" />
+        <meta name="author" content={SITE_NAME} />
+        <meta name="theme-color" content="#e4147f" />
+        <meta property="og:site_name" content={SITE_NAME} />
+        <meta property="og:locale" content="es_PE" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={absoluteUrl(router.asPath.split("?")[0] || "/")} />
+        <meta property="og:image" content={absoluteImageUrl(DEFAULT_OG_IMAGE)} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={absoluteImageUrl(DEFAULT_OG_IMAGE)} />
+        <link rel="alternate" hrefLang="es-PE" href={getSiteUrl()} />
       </Head>
-      <>
-        {!isAdminRoute && <TopBar />}
-        {isAdminRoute ? (
-          <AdminLayout>
-            <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
-              <Component {...pageProps} />
-            </div>
-          </AdminLayout>
-        ) : isCapacitaciones ? (
+      {metaPixelId && !isAdminRoute ? (
+        <Script
+          id="meta-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '${metaPixelId}');
+      `,
+    }}
+  />
+      ) : null}
+      <div
+        className={`fixed left-0 top-0 z-[9999] h-1 bg-amazon_blue shadow-sm transition-all duration-300 ${
+          routeLoading ? "w-2/3 opacity-100" : "w-full opacity-0"
+        }`}
+      />
+      {isAdminRoute ? (
+        <AdminLayout>
           <div key={router.asPath} className={pageShellClass} style={pageTransitionStyle}>
             <Component {...pageProps} />
           </div>
-        ) : (
-          <RootLayout>
-            <div key={router.asPath} className={`${pageShellClass} bg-gray-50`} style={pageTransitionStyle}>
-              <Component {...pageProps} />
-            </div>
-          </RootLayout>
-        )}
-      </>
+        </AdminLayout>
+      ) : isWholesaleRoute || isSellerCenterRoute || isPublicSellerShopRoute || isSellerDashboardRoute ? (
+        <div key={router.asPath} className="min-h-screen bg-white" style={pageTransitionStyle}>
+          <Component {...pageProps} />
+        </div>
+      ) : isCapacitaciones ? (
+        <div
+          key={router.asPath}
+          className={isRifasRoute ? fixedHeaderPageShellClass : pageShellClass}
+          style={isRifasRoute ? undefined : pageTransitionStyle}
+        >
+          <Component {...pageProps} />
+        </div>
+      ) : (
+        <RootLayout>
+          <div key={router.asPath} className={`${pageShellClass} bg-white`} style={pageTransitionStyle}>
+            <Component {...pageProps} />
+          </div>
+        </RootLayout>
+      )}
     </div>
   );
 
-  return isClient ? (
-    <PersistGate persistor={persistor} loading={null}>{content}</PersistGate>
-  ) : content;
+  return <PersistGate persistor={persistor} loading={content}>{content}</PersistGate>;
 }
 
 export default function App({

@@ -1,20 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { parseOrderMeta } from "@/lib/orderMeta";
+import { isInternalTestOrder } from "@/lib/testOrders";
 
 const db = prisma as any;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getServerSession(req, res, authOptions as any);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return res.status(401).json({ error: "No autorizado" });
+  if (!isAdminApiRequest(req)) return res.status(401).json({ error: 'No autorizado' });
   if (req.method !== "GET") return res.status(405).json({ error: "Método no permitido" });
 
   try {
     const orders = await db.order.findMany({
-      select: { createdAt: true, total: true, customerNotes: true },
+      select: { createdAt: true, total: true, customerName: true, customerPhone: true, customerEmail: true, customerNotes: true },
       orderBy: { createdAt: "asc" },
     });
 
@@ -27,6 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let currentYearOrders = 0;
 
     for (const order of orders) {
+      if (isInternalTestOrder(order)) continue;
       const createdAt = new Date(order.createdAt);
       const year = createdAt.getFullYear();
       const amount = Number(order.total || 0);

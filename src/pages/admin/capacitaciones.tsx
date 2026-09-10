@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import type { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { requireAdminPage } from "@/lib/adminAuth";
 import { PlusIcon, PencilIcon, TrashIcon, VideoCameraIcon, AcademicCapIcon, FilmIcon, UserGroupIcon, ChevronDownIcon, ChevronUpIcon, PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import type { VideoItem, ShortItem } from "@/data/capacitaciones";
+import { peruDateToDatetimeLocalValue } from "@/lib/peruTime";
 
 type CursoFecha = {
   id: string;
@@ -29,10 +29,25 @@ type Curso = {
   fechas: CursoFecha[];
 };
 
-const emptyCurso = () => ({ nombre: "", nivel: "Basico", descripcion: "", modalidad: "Presencial", ciudad: "", sede: "", duracionHoras: 2, precio: 0, precioAnterior: "", cupoMax: 6, imagen: "", notaAdmin: "" });
+type CursoForm = {
+  nombre: string;
+  nivel: string;
+  descripcion: string;
+  modalidad: string;
+  ciudad: string;
+  sede: string;
+  duracionHoras: number;
+  precio: number;
+  precioAnterior: number | "";
+  cupoMax: number;
+  imagen: string;
+  notaAdmin: string;
+};
 
-const fmtFecha = (iso: string) => new Date(iso).toLocaleDateString("es-PE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
-const fmtHora = (iso: string) => new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
+const emptyCurso = (): CursoForm => ({ nombre: "", nivel: "Basico", descripcion: "", modalidad: "Presencial", ciudad: "", sede: "", duracionHoras: 2, precio: 0, precioAnterior: "", cupoMax: 6, imagen: "", notaAdmin: "" });
+
+const fmtFecha = (iso: string) => new Date(iso).toLocaleDateString("es-PE", { weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "America/Lima" });
+const fmtHora = (iso: string) => new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", timeZone: "America/Lima" });
 const waLink = (tel: string, msg: string) => `https://wa.me/${tel.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
 
 const LEVELS = ["Basico", "Intermedio", "Avanzado"];
@@ -56,7 +71,7 @@ export default function AdminCapacitacionesPage() {
 
   // Cursos state
   const [cursos, setCursos] = useState<Curso[]>([]);
-  const [cursoForm, setCursoForm] = useState(emptyCurso());
+  const [cursoForm, setCursoForm] = useState<CursoForm>(emptyCurso());
   const [editingCursoId, setEditingCursoId] = useState<string | null>(null);
   const [showCursoForm, setShowCursoForm] = useState(false);
   const [expandedCurso, setExpandedCurso] = useState<string | null>(null);
@@ -65,8 +80,11 @@ export default function AdminCapacitacionesPage() {
   // Fechas del formulario (nuevas a agregar)
   const [fechasForm, setFechasForm] = useState<string[]>([]);
   const [nuevaFecha, setNuevaFecha] = useState("");
-  // Fechas a eliminar al editar
-  const [fechasRemove, setFechasRemove] = useState<string[]>([]);
+  // Edicion/eliminacion directa de fechas existentes
+  const [editingFechaId, setEditingFechaId] = useState<string | null>(null);
+  const [editFechaValue, setEditFechaValue] = useState("");
+  const [savingFechaId, setSavingFechaId] = useState<string | null>(null);
+  const [deletingFechaId, setDeletingFechaId] = useState<string | null>(null);
   const flyerInputRef = useRef<HTMLInputElement>(null);
 
   const fetchCursos = async () => {
@@ -106,7 +124,7 @@ export default function AdminCapacitacionesPage() {
     }
     const method = editingCursoId ? "PATCH" : "POST";
     const body = editingCursoId
-      ? { id: editingCursoId, ...cursoForm, fechasAdd: fechasForm, fechasRemove }
+      ? { id: editingCursoId, ...cursoForm, fechasAdd: fechasForm }
       : { ...cursoForm, fechas: fechasForm };
     const res = await fetch("/api/talleres/cursos", {
       method,
@@ -117,7 +135,6 @@ export default function AdminCapacitacionesPage() {
       await fetchCursos();
       setCursoForm(emptyCurso());
       setFechasForm([]);
-      setFechasRemove([]);
       setNuevaFecha("");
       setEditingCursoId(null);
       setShowCursoForm(false);
@@ -136,8 +153,8 @@ export default function AdminCapacitacionesPage() {
       imagen: c.imagen, notaAdmin: c.notaAdmin,
     });
     setFechasForm([]);
-    setFechasRemove([]);
     setNuevaFecha("");
+    setEditingFechaId(null);
     setEditingCursoId(c.id);
     setShowCursoForm(true);
   };
@@ -158,10 +175,54 @@ export default function AdminCapacitacionesPage() {
     setFechasForm((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const toggleFechaRemove = (fechaId: string) => {
-    setFechasRemove((prev) =>
-      prev.includes(fechaId) ? prev.filter((id) => id !== fechaId) : [...prev, fechaId]
-    );
+  const startEditFecha = (f: CursoFecha) => {
+    setEditingFechaId(f.id);
+    setEditFechaValue(peruDateToDatetimeLocalValue(f.fecha));
+  };
+
+  const cancelEditFecha = () => {
+    setEditingFechaId(null);
+    setEditFechaValue("");
+  };
+
+  const saveEditFecha = async (id: string) => {
+    if (!editFechaValue) return;
+    setSavingFechaId(id);
+    try {
+      const res = await fetch("/api/talleres/fechas", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, fecha: editFechaValue }),
+      });
+      if (res.ok) {
+        await fetchCursos();
+        cancelEditFecha();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "No se pudo actualizar la fecha");
+      }
+    } finally {
+      setSavingFechaId(null);
+    }
+  };
+
+  const deleteFechaDirect = async (f: CursoFecha) => {
+    const warning = f.inscripciones.length > 0
+      ? `Esta fecha tiene ${f.inscripciones.length} inscripcion(es). ¿Eliminarla de todas formas? Se perderán esas inscripciones.`
+      : "¿Eliminar esta fecha?";
+    if (!confirm(warning)) return;
+    setDeletingFechaId(f.id);
+    try {
+      const res = await fetch(`/api/talleres/fechas?id=${f.id}`, { method: "DELETE" });
+      if (res.ok) {
+        await fetchCursos();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "No se pudo eliminar la fecha");
+      }
+    } finally {
+      setDeletingFechaId(null);
+    }
   };
 
   // Videos state
@@ -432,7 +493,7 @@ export default function AdminCapacitacionesPage() {
           <div className="flex justify-between items-center mb-4">
             <p className="text-sm text-gray-500">{cursos.length} cursos registrados</p>
             <button
-              onClick={() => { setCursoForm(emptyCurso()); setEditingCursoId(null); setShowCursoForm(true); setFechasForm([]); setFechasRemove([]); setNuevaFecha(""); }}
+              onClick={() => { setCursoForm(emptyCurso()); setEditingCursoId(null); setShowCursoForm(true); setFechasForm([]); setNuevaFecha(""); }}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amazon_blue text-white text-sm font-semibold hover:brightness-95"
             >
               <PlusIcon className="w-4 h-4" /> Agregar curso
@@ -477,8 +538,8 @@ export default function AdminCapacitacionesPage() {
                   <input type="number" min={1} value={cursoForm.duracionHoras} onChange={(e) => setCursoForm({ ...cursoForm, duracionHoras: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-slate-900" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600">Total cupos (max. 6)</label>
-                  <input type="number" min={1} max={6} value={cursoForm.cupoMax} onChange={(e) => setCursoForm({ ...cursoForm, cupoMax: Math.min(6, Number(e.target.value)) })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-slate-900" />
+                  <label className="text-xs font-semibold text-gray-600">Total cupos</label>
+                  <input type="number" min={1} value={cursoForm.cupoMax} onChange={(e) => setCursoForm({ ...cursoForm, cupoMax: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-slate-900" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600">Precio (S/) *</label>
@@ -486,7 +547,7 @@ export default function AdminCapacitacionesPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600">Precio anterior (S/)</label>
-                  <input type="number" min={0} value={cursoForm.precioAnterior} onChange={(e) => setCursoForm({ ...cursoForm, precioAnterior: e.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-slate-900" placeholder="Opcional" />
+                  <input type="number" min={0} value={cursoForm.precioAnterior} onChange={(e) => setCursoForm({ ...cursoForm, precioAnterior: e.target.value === "" ? "" : Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-slate-900" placeholder="Opcional" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600">Flyer (opcional)</label>
@@ -494,7 +555,7 @@ export default function AdminCapacitacionesPage() {
                     <input
                       ref={flyerInputRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.heic,.heif"
                       className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
@@ -540,13 +601,66 @@ export default function AdminCapacitacionesPage() {
 
                 {editingCurso && editingCurso.fechas.length > 0 && (
                   <div className="md:col-span-2">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">Fechas existentes (marca para eliminar)</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-1">Fechas existentes</p>
                     <div className="grid gap-2">
                       {editingCurso.fechas.map((f) => (
-                        <label key={f.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm">
-                          <span>{fmtFecha(f.fecha)} {fmtHora(f.fecha)}</span>
-                          <input type="checkbox" checked={fechasRemove.includes(f.id)} onChange={() => toggleFechaRemove(f.id)} />
-                        </label>
+                        <div key={f.id} className="rounded-lg border border-gray-200 px-3 py-2 text-sm">
+                          {editingFechaId === f.id ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <input
+                                type="datetime-local"
+                                value={editFechaValue}
+                                onChange={(e) => setEditFechaValue(e.target.value)}
+                                className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm outline-none focus:border-slate-900"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => saveEditFecha(f.id)}
+                                disabled={savingFechaId === f.id || !editFechaValue}
+                                className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                              >
+                                {savingFechaId === f.id ? "Guardando..." : "Guardar"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelEditFecha}
+                                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between gap-2">
+                              <span>
+                                {fmtFecha(f.fecha)} {fmtHora(f.fecha)}
+                                {f.inscripciones.length > 0 && (
+                                  <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                    {f.inscripciones.length} inscritas
+                                  </span>
+                                )}
+                              </span>
+                              <div className="flex shrink-0 gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => startEditFecha(f)}
+                                  className="p-1.5 rounded border border-gray-200 hover:bg-gray-50"
+                                  title="Editar fecha"
+                                >
+                                  <PencilIcon className="w-3.5 h-3.5 text-gray-600" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteFechaDirect(f)}
+                                  disabled={deletingFechaId === f.id}
+                                  className="p-1.5 rounded border border-red-200 hover:bg-red-50 disabled:opacity-50"
+                                  title="Eliminar fecha"
+                                >
+                                  <TrashIcon className="w-3.5 h-3.5 text-red-600" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -652,10 +766,8 @@ export default function AdminCapacitacionesPage() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  if (!session || (session.user as any)?.role !== "ADMIN") {
-    return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/capacitaciones", permanent: false } };
-  }
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };
 

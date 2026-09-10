@@ -8,11 +8,13 @@ import { addToCart } from "@/store/nextSlice";
 import Link from "next/link";
 import FormattedPrice from "./FormattedPrice";
 import { formatProductTitle } from "@/lib/textFormat";
+import { getBundlePromoLabel } from "@/lib/bundlePromo";
 import {
   fetchProductStats,
   normalizeImageUrl,
   isPlaceholderImage,
   pickDisplayImage,
+  trackProductCartAdd,
   type ProductStat,
 } from "@/lib/productMetricsClient";
 
@@ -32,7 +34,8 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   const [stats, setStats] = useState<Record<string, ProductStat>>({});
   const [addedMap, setAddedMap] = useState<Record<string, boolean>>({});
 
-  const productSlug = (code?: string, id?: number) => code ? `/${code}` : `/${id}`;
+  const productSlug = (slug?: string, code?: string, id?: string | number) =>
+    slug ? `/${slug}` : code ? `/${code}` : `/${id}`;
 
   const idsParam = useMemo(() => {
     const ids = (Array.isArray(productData) ? productData : [])
@@ -50,8 +53,9 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   }, [idsParam]);
 
   const toProductHref = (
+    slug: string | undefined,
     code: string | undefined,
-    _id: number,
+    _id: string | number,
     brand: string,
     category: string,
     description: string,
@@ -59,13 +63,15 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
     isNew: boolean,
     oldPrice: number | undefined,
     price: number,
-    title: string
+    title: string,
+    bundleQuantity?: number,
+    bundlePrice?: number
   ) => ({
-    pathname: productSlug(code, _id),
-    query: { _id, brand, category, description, image, isNew, oldPrice, price, title },
+    pathname: productSlug(slug, code, _id),
+    query: { _id, brand, category, description, image, isNew, oldPrice, price, title, bundleQuantity, bundlePrice },
   });
 
-  const showAddedFeedback = (id: number) => {
+  const showAddedFeedback = (id: string | number) => {
     const key = String(id);
     setAddedMap((prev) => ({ ...prev, [key]: true }));
     setTimeout(() => {
@@ -81,21 +87,23 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
   return (
     <div ref={ref} className={`grid w-full items-stretch px-1 md:px-0 ${gridClass}`}>
       {(Array.isArray(productData) ? productData : []).map(
-        ({ _id, code, title, brand, category, description, image, images, isNew, oldPrice, price }: ProductProps) => {
+        ({ _id, slug, code, title, brand, category, description, image, images, isNew, oldPrice, price, bundleQuantity, bundlePrice }: ProductProps) => {
           const itemStats = stats[String(_id)] || { salesCount: 0, avgRating: 0, reviewCount: 0 };
           const wasAdded = Boolean(addedMap[String(_id)]);
           const hasDiscount = typeof oldPrice === "number" && oldPrice > price;
           const displayTitle = formatProductTitle(title || "Producto");
           const displayImage = pickDisplayImage(image, images);
-          const href = toProductHref(code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title);
-
+          const href = toProductHref(slug, code, _id, brand, category, description, displayImage, isNew, oldPrice, price, title, bundleQuantity, bundlePrice);
+          const bundlePromoLabel = getBundlePromoLabel({ bundleQuantity, bundlePrice });
+          const hasSales = itemStats.salesCount > 0;
+          const hasReviews = itemStats.reviewCount > 0;
           return (
             <div
               key={_id}
-              className="snap-start flex h-full flex-col rounded-xl border border-gray-200 bg-white p-2.5 text-black transition-all duration-300 hover:border-gray-300 hover:shadow-lg hover:-translate-y-1 group"
+              className="group snap-start flex h-full flex-col rounded-lg border border-gray-200 bg-white p-2.5 text-black shadow-[0_1px_3px_rgba(17,24,39,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amazon_blue/45 hover:shadow-[0_10px_22px_rgba(17,24,39,0.10)]"
             >
               <Link href={href} className="block">
-                <div className="relative w-full overflow-hidden rounded-lg bg-white pb-[100%] group-hover:bg-gray-50 transition-colors duration-300">
+                <div className="relative w-full overflow-hidden rounded-md bg-gray-50 pb-[100%] transition-colors duration-200 group-hover:bg-white">
                   {isPlaceholderImage(displayImage) ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-50 px-2 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                       Producto en Proceso
@@ -112,16 +120,21 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
 
                   <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1 z-10">
                     {isNew && (
-                      <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-md">
+                      <span className="rounded-full bg-gray-900 px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-sm">
                         Nuevo
                       </span>
                     )}
                     {hasDiscount && (
-                      <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-md">
+                      <span className="rounded-full bg-amazon_blue px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-sm">
                         Oferta
                       </span>
                     )}
                   </div>
+                  {bundlePromoLabel && (
+                    <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-10 rounded-md border border-lime-300 bg-[#f01891] px-2 py-1 text-center text-sm font-black italic text-white shadow-sm md:text-lg">
+                      {bundlePromoLabel}
+                    </div>
+                  )}
                 </div>
               </Link>
 
@@ -133,51 +146,73 @@ const Products = forwardRef<HTMLDivElement, ProductsProps>((
                 </Link>
 
                 <div className="mt-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-semibold text-gray-900 md:text-xl">
-                      <FormattedPrice amount={price} />
-                    </span>
-                    <span className="text-xs text-gray-500 md:text-sm">c/unidad</span>
-                    {hasDiscount && (
-                      <span className="text-xs text-gray-400 line-through md:text-sm">
-                        <FormattedPrice amount={oldPrice as number} />
-                      </span>
-                    )}
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 flex-wrap items-baseline gap-x-1 gap-y-0.5">
+                        <span className="text-base font-semibold text-red-600 md:text-xl">
+                          <FormattedPrice amount={price} />
+                        </span>
+                        <span className="text-xs text-gray-500 md:text-sm">c/unidad</span>
+                        {hasDiscount && (
+                          <span className="text-xs text-gray-400 line-through md:text-sm">
+                            <FormattedPrice amount={oldPrice as number} />
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        dispatch(addToCart({ _id, brand, category, description, image: displayImage, isNew, oldPrice, price, bundleQuantity, bundlePrice, title, quantity: 1 }));
+                        trackProductCartAdd(_id, 1);
+                        showAddedFeedback(_id);
+                      }}
+                      className={
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border md:hidden " +
+                        (wasAdded
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                          : "border-amazon_blue bg-white text-amazon_blue")
+                      }
+                      aria-label="Agregar al carrito"
+                    >
+                      {wasAdded ? <CheckIcon className="h-4 w-4" /> : <ShoppingCartIcon className="rr-cart-wiggle h-4 w-4" />}
+                    </button>
                   </div>
 
-                  <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-gray-500">
-                    <span>{itemStats.salesCount} ventas</span>
-                    <span>
-                      {itemStats.reviewCount > 0
-                        ? `${itemStats.avgRating.toFixed(1)} (${itemStats.reviewCount})`
-                        : "Sin reseñas"}
-                    </span>
-                  </div>
+                  {(hasSales || hasReviews) && (
+                    <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-gray-500">
+                      {hasSales && <span>{itemStats.salesCount} ventas</span>}
+                      {hasReviews && <span>{itemStats.avgRating.toFixed(1)} ({itemStats.reviewCount})</span>}
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-2 flex items-center gap-0.5 text-xs text-gray-900">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <StarIcon
-                      key={i}
-                      className={`h-3.5 w-3.5 ${i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-200"}`}
-                    />
-                  ))}
-                </div>
+                {hasReviews && (
+                  <div className="mt-2 flex items-center gap-0.5 text-xs text-gray-900">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <StarIcon
+                        key={i}
+                        className={`h-3.5 w-3.5 ${i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-200"}`}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 <button
                   onClick={() => {
-                    dispatch(addToCart({ _id, brand, category, description, image: displayImage, isNew, oldPrice, price, title, quantity: 1 }));
+                    dispatch(addToCart({ _id, brand, category, description, image: displayImage, isNew, oldPrice, price, bundleQuantity, bundlePrice, title, quantity: 1 }));
+                    trackProductCartAdd(_id, 1);
                     showAddedFeedback(_id);
                   }}
                   className={
-                    "mt-3 flex h-9 w-full items-center justify-center gap-1 rounded-full border text-xs font-semibold duration-300 transition-all " +
+                    "mt-3 hidden h-9 w-full items-center justify-center gap-1 rounded-full border text-xs font-semibold duration-300 transition-all md:flex " +
                     (wasAdded
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md"
-                      : "border-gray-300 hover:border-amazon_blue hover:bg-amazon_blue hover:text-white hover:shadow-md")
+                      : "border-gray-300 text-gray-800 hover:border-amazon_blue hover:bg-amazon_blue hover:text-white hover:shadow-[0_8px_18px_rgba(203,41,158,0.20)]")
                   }
                   aria-label="Agregar al carrito"
                 >
-                  {wasAdded ? <CheckIcon className="h-4 w-4" /> : <ShoppingCartIcon className="h-4 w-4" />}
+                  {wasAdded ? <CheckIcon className="h-4 w-4" /> : <ShoppingCartIcon className="rr-cart-wiggle h-4 w-4" />}
                   {wasAdded ? "Producto añadido" : "Agregar"}
                 </button>
               </div>

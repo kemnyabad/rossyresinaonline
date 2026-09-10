@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import { addExcludedIp, listExcludedIps, normalizeIp, removeExcludedIp } from "@/lib/visitAnalytics";
 
 const getClientIp = (req: NextApiRequest): string => {
@@ -16,9 +15,7 @@ const getClientIp = (req: NextApiRequest): string => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getServerSession(req, res, authOptions as any);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return res.status(401).json({ error: "No autorizado" });
+  if (!isAdminApiRequest(req)) return res.status(401).json({ error: 'No autorizado' });
 
   if (req.method === "GET") {
     const items = await listExcludedIps();

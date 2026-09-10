@@ -14,7 +14,7 @@ async function sendConfirmationEmail(to: string) {
 
   const html = `
     <div style="font-family: Arial, sans-serif; line-height:1.5; color:#111;">
-      <h2>Suscripci?n confirmada</h2>
+      <h2>Suscripción confirmada</h2>
       <p>Hola,</p>
       <p>Tu correo fue suscrito correctamente a las novedades de <strong>${brand}</strong>.</p>
       <p>Gracias por suscribirte.</p>
@@ -30,7 +30,7 @@ async function sendConfirmationEmail(to: string) {
     body: JSON.stringify({
       from,
       to: [to],
-      subject: "Suscripci?n confirmada",
+      subject: "Suscripción confirmada",
       html,
     }),
   });
@@ -45,7 +45,7 @@ async function sendConfirmationEmail(to: string) {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "M?todo no permitido" });
+    return res.status(405).json({ error: "Método no permitido" });
   }
 
   try {
@@ -63,12 +63,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       status: result.status,
       emailSent: mailResult.sent,
       message: mailResult.sent
-        ? "Suscripci?n completada. Revisa tu correo."
-        : "Suscripci?n guardada. Configura RESEND_API_KEY y RESEND_FROM_EMAIL para enviar confirmaciones.",
+        ? "Suscripción completada. Revisa tu correo."
+        : "Suscripción guardada. Configura RESEND_API_KEY y RESEND_FROM_EMAIL para enviar confirmaciones.",
     });
   } catch (error: any) {
     return res.status(500).json({
-      error: "Error al procesar la suscripci?n",
+      error: "Error al procesar la suscripción",
       detail: String(error?.message || ""),
     });
   }

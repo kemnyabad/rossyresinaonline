@@ -8,6 +8,30 @@ const normalizeImages = (images: any): string[] => {
   return [];
 };
 
+const normalizeSpecs = (specs: any): Array<{ label: string; value: string }> => {
+  if (!Array.isArray(specs)) return [];
+  return specs
+    .map((s: any) => ({ label: String(s?.label || "").trim(), value: String(s?.value || "").trim() }))
+    .filter((s) => s.label && s.value);
+};
+
+const normalizeOptionGroups = (
+  groups: any
+): Array<{ name: string; options: Array<{ label: string }> }> => {
+  if (!Array.isArray(groups)) return [];
+  return groups
+    .map((g: any) => ({
+      name: String(g?.name || "").trim(),
+      options: Array.isArray(g?.options)
+        ? g.options
+            .map((o: any) => String(o?.label || "").trim())
+            .filter(Boolean)
+            .map((label: string) => ({ label }))
+        : [],
+    }))
+    .filter((g: any) => g.name && g.options.length > 0);
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Método no permitido" });
 
@@ -20,9 +44,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         OR: [{ id: key }, { legacyId: key }, { code: key }],
       },
       select: {
-        id: true, legacyId: true, code: true, barcode: true, sku: true,
+        id: true, legacyId: true, code: true, slug: true, barcode: true, sku: true,
         title: true, description: true, brand: true, category: true,
-        image: true, images: true, price: true, oldPrice: true,
+        image: true, images: true, specs: true, optionGroups: true, price: true, oldPrice: true,
+        bundleQuantity: true, bundlePrice: true,
         isNew: true, stock: true,
       },
     });
@@ -32,6 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       id: product.id,
       _id: product.legacyId ?? product.id,
+      slug: product.slug || "",
       code: product.code || "",
       barcode: product.barcode || "",
       sku: product.sku || "",
@@ -42,8 +68,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       category: product.category || "",
       image: product.image || "",
       images: normalizeImages(product.images),
+      specs: normalizeSpecs(product.specs),
+      optionGroups: normalizeOptionGroups(product.optionGroups),
       price: Number(product.price || 0),
       oldPrice: product.oldPrice != null ? Number(product.oldPrice) : 0,
+      bundleQuantity: product.bundleQuantity != null ? Number(product.bundleQuantity) : "",
+      bundlePrice: product.bundlePrice != null ? Number(product.bundlePrice) : "",
       isNew: Boolean(product.isNew),
     });
   } catch {

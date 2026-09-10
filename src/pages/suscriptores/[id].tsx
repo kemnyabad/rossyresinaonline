@@ -128,15 +128,9 @@ export default function SuscriptorProfilePage({ profile }: any) {
           name="description"
           content={`Perfil de ${profile.displayName} en Capacitaciones Rossy Resina.`}
         />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&family=Manrope:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
       </Head>
 
-      <div className="min-h-screen bg-[#fafafa] text-[#111111]" style={{ fontFamily: '"Manrope", sans-serif' }}>
+      <div className="min-h-screen bg-[#fafafa] text-[#111111]">
         <div className="mx-auto min-h-screen max-w-[1440px]">
           <main>
             <header className="border-b border-[#dbdbdb] bg-white">
@@ -146,10 +140,7 @@ export default function SuscriptorProfilePage({ profile }: any) {
                     <img src="/logo.png" alt="Rossy Resina" className="h-full w-full object-cover" />
                   </div>
                   <div>
-                    <p
-                      className="text-sm font-semibold uppercase tracking-[0.28em] text-[#d62976]"
-                      style={{ fontFamily: '"Oswald", sans-serif' }}
-                    >
+                    <p className="text-sm font-semibold uppercase tracking-wide text-[#d62976]">
                       Rossy Resina
                     </p>
                     <p className="text-xs text-[#737373]">Capacitaciones</p>
@@ -238,7 +229,7 @@ export default function SuscriptorProfilePage({ profile }: any) {
                   <div className="max-w-full sm:max-w-[520px] space-y-1.5 text-sm">
                     <p className="font-semibold">{profile.displayName}</p>
                     <p className="text-[#262626]">{profile.bio || "Creadora en Rossy Resina."}</p>
-                    <p className="text-[#737373]">{profile.location || "Per?"}</p>
+                    <p className="text-[#737373]">{profile.location || "Perú"}</p>
                     <p className="text-[#737373]">{joinedText ? `Miembro desde ${joinedText}` : ""}</p>
                   </div>
 

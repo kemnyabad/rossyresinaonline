@@ -32,7 +32,7 @@ export default function TermsPage() {
             </ol>
           </section>
 
-          <section>
+          <section id="devolucion">
             <h2 className="text-xl font-semibold text-amazon_blue">Política de devolución</h2>
             <ol className="mt-3 list-decimal list-inside text-gray-700 grid gap-2">
               <li>Se aceptan cambios o devoluciones dentro de 7 días naturales desde la recepción del producto.</li>
@@ -41,7 +41,7 @@ export default function TermsPage() {
             </ol>
           </section>
 
-          <section>
+          <section id="envios">
             <h2 className="text-xl font-semibold text-amazon_blue">Envíos</h2>
             <ol className="mt-3 list-decimal list-inside text-gray-700 grid gap-2">
               <li>Realizamos envíos a todo el Perú. Tiempos de entrega estimados entre 2 y 7 días hábiles.</li>

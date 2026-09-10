@@ -1,15 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { isAdminApiRequest } from "@/lib/adminAuth";
 import prisma from "@/lib/prisma";
 import { parseOrderMeta } from "@/lib/orderMeta";
+import { isInternalTestOrder } from "@/lib/testOrders";
 
 const db = prisma as any;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getServerSession(req, res, authOptions as any);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return res.status(401).json({ error: "No autorizado" });
+  if (!isAdminApiRequest(req)) return res.status(401).json({ error: 'No autorizado' });
   if (req.method !== "GET") return res.status(405).json({ error: "Método no permitido" });
 
   try {
@@ -19,15 +17,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-    const [allOrders, products, customers, recentOrders] = await Promise.all([
+    const [allOrders, products, recentOrders] = await Promise.all([
       db.order.findMany({
-        select: { id: true, createdAt: true, total: true, customerNotes: true, customerName: true, customerEmail: true, status: true },
+        select: { id: true, createdAt: true, total: true, customerNotes: true, customerName: true, customerEmail: true, customerPhone: true, status: true },
         orderBy: { createdAt: "desc" },
       }),
       db.product.findMany({ select: { id: true, stock: true, title: true, price: true, category: true } }),
-      db.order.groupBy({ by: ["customerEmail"], _count: { id: true } }),
       db.order.findMany({
-        select: { id: true, createdAt: true, total: true, customerName: true, customerNotes: true },
+        select: { id: true, createdAt: true, total: true, customerName: true, customerEmail: true, customerPhone: true, customerNotes: true },
         orderBy: { createdAt: "desc" },
         take: 8,
       }),
@@ -39,12 +36,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let lastMonthRevenue = 0;
     let totalRevenue = 0;
     const byMonthMap = new Map<string, number>();
+    const realCustomerEmails = new Set<string>();
 
     for (const o of allOrders) {
+      if (isInternalTestOrder(o)) continue;
       const date = new Date(o.createdAt);
       const amount = Number(o.total || 0);
       const meta = parseOrderMeta(o.customerNotes);
       const status = String(meta.workflowStatus || o.status || "").toLowerCase();
+      const email = String(o.customerEmail || "").trim().toLowerCase();
+      if (email) realCustomerEmails.add(email);
 
       totalRevenue += amount;
 
@@ -73,13 +74,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Pedidos pendientes
     const pendingOrders = allOrders.filter((o: any) => {
+      if (isInternalTestOrder(o)) return false;
       const meta = parseOrderMeta(o.customerNotes);
       const s = String(meta.workflowStatus || o.status || "").toLowerCase();
       return s.includes("pendiente") || s === "pending";
     }).length;
 
     // Últimos pedidos formateados
-    const latestOrders = recentOrders.map((o: any) => {
+    const latestOrders = recentOrders.filter((o: any) => !isInternalTestOrder(o)).map((o: any) => {
       const meta = parseOrderMeta(o.customerNotes);
       return {
         id: o.id,
@@ -103,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         monthRevenue,
         totalRevenue,
         totalProducts: products.length,
-        totalCustomers: customers.length,
+        totalCustomers: realCustomerEmails.size,
         pendingOrders,
         growth,
       },

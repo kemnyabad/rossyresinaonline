@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { GetServerSideProps } from "next";
+import { requireAdminPage } from "@/lib/adminAuth";
 import { PlusIcon, TrashIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 
 interface OfertaExpress {
@@ -13,9 +12,11 @@ interface OfertaExpress {
   orden: number;
   productoId?: string | null;
   precio?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
-const emptyForm = { nombre: "", imagen: "", activo: true, orden: 0, productoId: "", precio: "" };
+const emptyForm = { nombre: "", imagen: "", activo: true, orden: 0, productoId: "", precio: "", startDate: "", endDate: "" };
 
 export default function AdminOfertasExpress() {
   const [items, setItems] = useState<OfertaExpress[]>([]);
@@ -51,8 +52,16 @@ export default function AdminOfertasExpress() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ filename: f.name, data: dataUrl }),
     });
+
+    if (!res.ok) {
+      const text = await res.text();
+      if (text.includes("Body exceeded")) {
+        throw new Error("La imagen es muy pesada. El límite por defecto es 1MB. Comprímela o aumenta el límite en el servidor.");
+      }
+      throw new Error(text || "Error al subir imagen");
+    }
+
     const json = await res.json();
-    if (!res.ok) throw new Error(json.error || "Error al subir imagen");
     return json.url;
   };
 
@@ -61,6 +70,11 @@ export default function AdminOfertasExpress() {
     setSaving(true);
     try {
       let imagen = form.imagen;
+      if (file && file.size > 10 * 1024 * 1024) { // Límite aumentado a 10MB
+        setNotice("Error: La imagen es demasiado grande (máximo 10MB). Redúcela antes de subirla.");
+        setSaving(false);
+        return;
+      }
       if (file) {
         setUploading(true);
         imagen = await uploadImage(file);
@@ -92,7 +106,16 @@ export default function AdminOfertasExpress() {
 
   const startEdit = (item: OfertaExpress) => {
     setEditId(item.id);
-    setForm({ nombre: item.nombre, imagen: item.imagen, activo: item.activo, orden: item.orden, productoId: item.productoId || "", precio: item.precio ?? "" });
+    setForm({
+      nombre: item.nombre,
+      imagen: item.imagen,
+      activo: item.activo,
+      orden: item.orden,
+      productoId: item.productoId || "",
+      precio: item.precio ?? "",
+      startDate: item.startDate || "",
+      endDate: item.endDate || "",
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -142,8 +165,28 @@ export default function AdminOfertasExpress() {
           </label>
 
           <label className="grid gap-1">
+            <span className="text-sm text-gray-700">Fecha inicio (visible desde)</span>
+            <input
+              type="datetime-local"
+              className="rounded-md border border-gray-300 px-3 py-2"
+              value={form.startDate || ""}
+              onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+            />
+          </label>
+
+          <label className="grid gap-1">
+            <span className="text-sm text-gray-700">Fecha fin (visible hasta)</span>
+            <input
+              type="datetime-local"
+              className="rounded-md border border-gray-300 px-3 py-2"
+              value={form.endDate || ""}
+              onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+            />
+          </label>
+
+          <label className="grid gap-1">
             <span className="text-sm text-gray-700">Imagen</span>
-            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <input type="file" accept="image/*,.heic,.heif" onChange={(e) => setFile(e.target.files?.[0] || null)} />
             {form.imagen && (
               <div className="relative h-24 w-24 rounded-lg overflow-hidden border border-gray-200 mt-1">
                 <Image src={form.imagen} alt="preview" fill className="object-cover" />
@@ -255,8 +298,7 @@ export default function AdminOfertasExpress() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) return { redirect: { destination: "/admin/sign-in", permanent: false } };
+  const redirect = requireAdminPage(ctx);
+  if (redirect) return redirect;
   return { props: {} };
 };
