@@ -5,6 +5,7 @@ import type { GetServerSideProps } from "next";
 import prisma from "@/lib/prisma";
 import {
   AcademicCapIcon,
+  BanknotesIcon,
   CalendarDaysIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -47,6 +48,12 @@ const fmtFecha = (iso: string) =>
 
 const fmtHora = (iso: string) =>
   new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", timeZone: "America/Lima" });
+
+const yapeNumber = process.env.NEXT_PUBLIC_YAPE_NUMBER || "961770723";
+const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "Banco";
+const accountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT || "00000000000";
+const cci = process.env.NEXT_PUBLIC_BANK_CCI || "00000000000000000000";
+const accountHolder = process.env.NEXT_PUBLIC_ACCOUNT_HOLDER || "";
 
 export default function CapacitacionesPage({ cursos }: Props) {
   const [activeFecha, setActiveFecha] = useState<{ curso: PublicCurso; fecha: PublicFecha } | null>(null);
@@ -112,7 +119,7 @@ export default function CapacitacionesPage({ cursos }: Props) {
       <main className="min-h-screen bg-[#f5f5f5] text-[#1f2933]">
         <section className="border-b border-slate-200 bg-white">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-            <Link href="/" className="text-sm font-semibold text-[#c21885] hover:underline">
+            <Link href="/" className="text-base font-semibold text-[#c21885] hover:underline">
               ← Volver a inicio
             </Link>
             <a href={whatsappUrl} className="inline-flex items-center gap-2 rounded bg-[#25d366] px-4 py-2 text-sm font-bold text-white hover:brightness-95">
@@ -123,9 +130,8 @@ export default function CapacitacionesPage({ cursos }: Props) {
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-8">
-          <p className="text-sm font-bold uppercase tracking-wide text-[#c21885]">Escuela Rossy Resina</p>
           <h1 className="mt-2 text-3xl font-black leading-tight text-slate-900 md:text-4xl">
-            Cursos y talleres con cupos disponibles
+            Cursos disponibles
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
             Elige el curso, escoge una fecha y regístrate directamente. Te contactaremos para confirmar tu cupo.
@@ -259,15 +265,51 @@ export default function CapacitacionesPage({ cursos }: Props) {
                   <CheckCircleIcon className="mx-auto h-12 w-12 text-emerald-500" />
                   <h3 className="mt-3 text-lg font-bold text-emerald-800">¡Inscripción recibida!</h3>
                   <p className="mt-2 text-sm text-slate-600">
-                    Te contactaremos por WhatsApp o correo para confirmar tu cupo en{" "}
-                    <strong>{activeFecha.curso.nombre}</strong> el {fmtFecha(activeFecha.fecha.fecha)}.
+                    Tu cupo en <strong>{activeFecha.curso.nombre}</strong> el {fmtFecha(activeFecha.fecha.fecha)} queda
+                    reservado. Para confirmarlo, realiza el pago y envíanos el comprobante por WhatsApp.
                   </p>
-                  <button
-                    onClick={closeForm}
-                    className="mt-5 inline-flex rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black"
-                  >
-                    Cerrar
-                  </button>
+
+                  <div className="mt-4 rounded-xl border border-[#c21885]/20 bg-[#fdf2fa] p-4 text-left">
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#c21885]">
+                      <BanknotesIcon className="h-4 w-4" />
+                      Medio de pago
+                    </p>
+                    <p className="mt-2 text-sm text-slate-700">
+                      Monto a pagar: <span className="font-bold text-slate-900">S/ {activeFecha.curso.precio.toFixed(2)}</span>
+                    </p>
+                    <p className="mt-1 text-sm text-slate-700">
+                      Yape / Plin: <span className="font-semibold text-slate-900">{yapeNumber}</span>
+                    </p>
+                    <p className="mt-1 text-sm text-slate-700">
+                      Transferencia: <span className="font-semibold text-slate-900">{bankName}</span> — Cuenta {accountNumber}
+                    </p>
+                    <p className="text-sm text-slate-700">CCI: {cci}</p>
+                    {accountHolder ? <p className="mt-1 text-sm text-slate-700">Titular: {accountHolder}</p> : null}
+                  </div>
+
+                  <div className="mt-5 flex flex-col gap-2">
+                    <a
+                      href={`${whatsappUrl}?text=${encodeURIComponent(
+                        `Hola, acabo de inscribirme en "${activeFecha.curso.nombre}" (${fmtFecha(
+                          activeFecha.fecha.fecha
+                        )}, ${fmtHora(activeFecha.fecha.fecha)}). Adjunto mi comprobante de pago de S/ ${activeFecha.curso.precio.toFixed(
+                          2
+                        )}.`
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#25d366] px-5 py-2.5 text-sm font-bold text-white hover:brightness-95"
+                    >
+                      <PhoneIcon className="h-4 w-4" />
+                      Enviar comprobante por WhatsApp
+                    </a>
+                    <button
+                      onClick={closeForm}
+                      className="inline-flex justify-center rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={submit} className="grid gap-3">
@@ -323,12 +365,17 @@ export default function CapacitacionesPage({ cursos }: Props) {
 
                   {error ? <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p> : null}
 
+                  <p className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <BanknotesIcon className="h-3.5 w-3.5 shrink-0" />
+                    Al registrarte te mostraremos el medio de pago (Yape / transferencia) para confirmar tu cupo.
+                  </p>
+
                   <button
                     type="submit"
                     disabled={sending}
                     className="h-11 rounded-lg bg-[#c21885] text-sm font-bold text-white hover:brightness-95 disabled:opacity-60"
                   >
-                    {sending ? "Enviando..." : "Reservar mi cupo"}
+                    {sending ? "Enviando..." : "Registrarme al curso"}
                   </button>
                 </form>
               )}
