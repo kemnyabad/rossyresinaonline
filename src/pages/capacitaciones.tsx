@@ -323,6 +323,23 @@ export default function CapacitacionesPage({ cursos }: Props) {
                     </p>
                   </div>
 
+                  <div className="rounded-lg border border-[#c21885]/20 bg-[#fdf2fa] px-3 py-2.5">
+                    <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[#c21885]">
+                      <BanknotesIcon className="h-3.5 w-3.5" />
+                      Medios de pago — S/ {activeFecha.curso.precio.toFixed(2)}
+                    </p>
+                    <p className="mt-1.5 text-xs text-slate-700">
+                      Yape / Plin: <span className="font-semibold text-slate-900">{yapeNumber}</span>
+                    </p>
+                    <p className="text-xs text-slate-700">
+                      {bankName}: <span className="font-semibold text-slate-900">Cuenta {accountNumber}</span>
+                    </p>
+                    {accountHolder ? <p className="text-xs text-slate-700">Titular: {accountHolder}</p> : null}
+                    <p className="mt-1.5 text-[11px] text-slate-500">
+                      Regístrate y luego envía tu comprobante por WhatsApp para confirmar tu cupo.
+                    </p>
+                  </div>
+
                   <div>
                     <label className="text-xs font-semibold text-slate-600">Nombre completo *</label>
                     <input
@@ -362,11 +379,6 @@ export default function CapacitacionesPage({ cursos }: Props) {
                   </div>
 
                   {error ? <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p> : null}
-
-                  <p className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <BanknotesIcon className="h-3.5 w-3.5 shrink-0" />
-                    Al registrarte te mostraremos el medio de pago (Yape / transferencia) para confirmar tu cupo.
-                  </p>
 
                   <button
                     type="submit"
